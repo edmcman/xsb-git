@@ -124,7 +124,7 @@ $GREP "bus" $LOG_FILE >> $RES_FILE
 # for really bad outcomes
 $GREP "Missing" $LOG_FILE >> $RES_FILE
 # for wrong results
-$GREP "different" $LOG_FILE >> $RES_FILE
+$GREP "differ!" $LOG_FILE >> $RES_FILE
 # when xsb aborts... it writes something like ! Aborting...
 $GREP "bort" $LOG_FILE >> $RES_FILE
 # for overflows (check for Overflow & overflow)
