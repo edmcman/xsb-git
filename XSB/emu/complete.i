@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: complete.i,v 1.3 1998-12-21 01:08:06 cbaoqiu Exp $
+** $Id: complete.i,v 1.4 1998-12-22 09:17:59 kostis Exp $
 ** 
 */
 
@@ -288,7 +288,6 @@ case check_complete: {
 	  pushreg(*cptr);
 	  VarsInCall++;
 	} /* for (i=0... */
-        reg_arrayptr = reg_array -1;
 	num_vars_in_var_regs = -1;
 	lpcreg = (byte *)subg_ans_root_ptr(SUBGOAL);
 	/* backtrack to prev tabled subgoal after returning answers */
