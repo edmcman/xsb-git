@@ -5,6 +5,38 @@
 
 %---------------- Transformed program ----------------------
 
+qsort__1([list],[list]).
+qsort__1(_h452,_h454) :- 
+        [list|_h129] = _h456, _h147 = _h458, 
+        partition(_h129,_h185,_h199,_h213),
+        qsort(_h199,_h251),
+        qsort(_h213,_h289),
+        append(_h251,[list|_h289],_h147),
+        ArgsOut = [_h452,_h454],
+        set_reduce([_h456,_h458], ArgsOut),
+        valid_types(ArgsOut).
+partition__1([list],[_h133],[list],[list]).
+partition__1(_h367,_h369,_h371,_h373) :- 
+        [list|_h129] = _h375, _h147 = _h377, [list|_h173] = _h379, _h191 = _h381, 
+        'my =<'(_h209,_h147),
+        partition(_h129,_h147,_h173,_h191),
+        ArgsOut = [_h367,_h369,_h371,_h373],
+        set_reduce([_h375,_h377,_h379,_h381], ArgsOut),
+        valid_types(ArgsOut).
+partition__1(_h367,_h369,_h371,_h373) :- 
+        [list|_h129] = _h375, _h147 = _h377, _h161 = _h379, [list|_h187] = _h381, 
+        'my >'(_h209,_h147),
+        partition(_h129,_h147,_h161,_h187),
+        ArgsOut = [_h367,_h369,_h371,_h373],
+        set_reduce([_h375,_h377,_h379,_h381], ArgsOut),
+        valid_types(ArgsOut).
+append__1([list],[_h133],[_h133]).
+append__1(_h290,_h292,_h294) :- 
+        [list|_h129] = _h296, _h147 = _h298, [list|_h173] = _h300, 
+        append(_h129,_h147,_h173),
+        ArgsOut = [_h290,_h292,_h294],
+        set_reduce([_h296,_h298,_h300], ArgsOut),
+        valid_types(ArgsOut).
 test :- abolish_all_tables, fail.
 test :- cputime(T0), tp, cputime(T1), T is T1-T0, nl,
    write('Iterate Tp without meta-interpretation took: '),
@@ -22,10 +54,25 @@ valid_types([T|Ts]) :- T\==[], valid_types(Ts).
 
 %---------------- Definitions of tabled preds --------------
 
+:- table append__1/3.
+:- table partition__1/4.
+:- table qsort__1/2.
 
+append(_h112,_h114,_h116) :- 
+        append__1(_h118,_h120,_h122),
+        unify_sets([_h112,_h114,_h116], [_h118,_h120,_h122]).
+partition(_h112,_h114,_h116,_h118) :- 
+        partition__1(_h120,_h122,_h124,_h126),
+        unify_sets([_h112,_h114,_h116,_h118], [_h120,_h122,_h124,_h126]).
+qsort(_h112,_h114) :- 
+        qsort__1(_h116,_h118),
+        unify_sets([_h112,_h114], [_h116,_h118]).
 
 %---------------- Tp ---------------------------------------
 
+tp :- append__1(_h113,_h115,_h117), fail.
+tp :- partition__1(_h113,_h115,_h117,_h119), fail.
+tp :- qsort__1(_h113,_h115), fail.
 tp.
 
 
@@ -57,4 +104,13 @@ tp.
 
 %---------------- Show Result ------------------------------
 
+show_facts :- append__1(_h114,_h115,_h116),
+              numbervars(append__1(_h114,_h115,_h116)),
+              write(append__1(_h114,_h115,_h116)), nl, fail.
+show_facts :- partition__1(_h114,_h115,_h116,_h117),
+              numbervars(partition__1(_h114,_h115,_h116,_h117)),
+              write(partition__1(_h114,_h115,_h116,_h117)), nl, fail.
+show_facts :- qsort__1(_h114,_h115),
+              numbervars(qsort__1(_h114,_h115)),
+              write(qsort__1(_h114,_h115)), nl, fail.
 show_facts.
