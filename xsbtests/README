@@ -1,6 +1,6 @@
 This is a set of tests for the XSB system.  To run all the tests:
 
-testsuite.csh EXECUTABLE
+testsuite.sh EXECUTABLE
 
 where EXECUTABLE is the full path for the XSB executable to be
 tested. It must be given by an absolute filename, since the testsuite
