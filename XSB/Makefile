@@ -18,14 +18,19 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.3 1998-11-18 04:41:32 kifer Exp $
+## $Id: Makefile,v 1.4 1998-12-20 19:36:48 kifer Exp $
 ## 
 ##
 
 
-SUBDIR = syslib lib cmplib packages
+SUBDIR = cmplib syslib lib packages
 
 all: $(SUBDIR)
+
+force: touch all
+
+touch::
+	touch cmplib/*.P lib/*.P syslib/*.P
 
 syslib::
 	@echo ""
