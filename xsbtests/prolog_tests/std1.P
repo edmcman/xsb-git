@@ -1,4 +1,4 @@
-:- import get_calls_for_table/3, set_pil_on/0,
+:- import get_calls_for_table/2, set_pil_on/0,
         table_state/2, get_returns_for_call/2
         from tables.
 :- import abolish_table_info/0 from machine.
@@ -27,7 +27,7 @@ int_c(G) :-
 
 
 in_table(G,Call) :-     % find completed table for call.
-        get_calls_for_table(int(_),Call,_),
+        get_calls_for_table(int(_),Call),
         table_state(Call,complete),
         Call = int(G1),
         variant(G1,G),
