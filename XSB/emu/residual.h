@@ -19,11 +19,11 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: residual.h,v 1.1.1.1 1998-11-05 16:55:21 sbprolog Exp $
+** $Id: residual.h,v 1.2 1998-12-09 03:15:47 cbaoqiu Exp $
 ** 
 */
 
 
-extern void build_delay_list(CPtr, IDEs);
+extern void build_delay_list(CPtr, DE);
 
 /*---------------------- end of file residual.h ------------------------*/
