@@ -18,7 +18,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: configure.in,v 1.17 1998-12-21 01:05:52 cbaoqiu Exp $
+## $Id: configure.in,v 1.18 1998-12-21 05:59:40 kifer Exp $
 ## 
 ##
 
@@ -690,7 +690,6 @@ LDFLAGS="-lm"
 
 # Set OS-specific variables for XSB
 case "$canonical" in
-     *amiga*) AC_DEFINE(AMIGA) ;;
      *alpha*) AC_DEFINE(DECALPHA)
 	      AC_DEFINE(FOREIGN_ELF)
 		;;
