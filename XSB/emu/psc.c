@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: psc.c,v 1.1.1.1 1998-11-05 16:55:20 sbprolog Exp $
+** $Id: psc.c,v 1.2 1998-12-09 03:10:48 cbaoqiu Exp $
 ** 
 */
 
@@ -297,3 +297,22 @@ Pair link_sym(Psc psc, Psc mod_psc)
     }
     return found_pair;
 } /* link_sym */
+
+/*
+ * Get the PSC for ret/n.  If it already exists, just return it.  Or
+ * create one and save it in ret_psc[n], and then set the
+ * ret_psc_exists[n] to be TRUE.
+ */
+
+Psc get_ret_psc(int n)
+{
+  Pair temp;
+  int new_indicator;
+
+  if (!ret_psc_exists[n]) {
+    temp = (Pair) insert("ret", n, global_mod, &new_indicator);
+    ret_psc[n] = pair_psc(temp);
+    ret_psc_exists[n] = 1;
+  }
+  return ret_psc[n];
+}
