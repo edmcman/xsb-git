@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: tables.H,v 1.1.1.1 1998/11/05 16:59:59 sbprolog Exp $
 ** 
 */
 
@@ -30,6 +30,7 @@
 	etnot/1,
 	get_returns_for_call/2,
 	get_calls_for_table/3,
+	get_calls_for_table/2,
 	robust_term_psc/2,
 	set_pil_on/0, set_pil_off/0, /* convenience */
 	set_prof_on/1, set_prof_off/0, /* convenience */
