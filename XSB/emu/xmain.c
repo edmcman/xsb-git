@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xmain.c,v 1.5 1998-11-17 08:07:03 kifer Exp $
+** $Id: xmain.c,v 1.6 1998-11-17 19:16:55 kifer Exp $
 ** 
 */
 
@@ -231,4 +231,3 @@ static void check_create_dir(char *path) {
     exit(1);
   }
 }
-
