@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xmain.c,v 1.4 1998-11-17 00:29:39 kifer Exp $
+** $Id: xmain.c,v 1.5 1998-11-17 08:07:03 kifer Exp $
 ** 
 */
 
@@ -152,12 +152,14 @@ int main(int argc, char *argv[])
   if ( user_home == NULL )
     user_home = install_dir;
 
+  xsb(0, argc, argv);  /* init xsb */
+
+  /* do it after initialization, so that typing xsb -v or xsb -h won't create
+     .xsb directory */
   set_xsbinfo_dir ();
 
-
-  xsb(0, argc, argv);  /* init xsb */
-  xsb(1, 0, 0);  /* */
-  xsb(2, 0, 0);  /* when halts, exit */
+  xsb(1, 0, 0);        /* normal execution */
+  xsb(2, 0, 0);        /* when halts, exit */
   return 0;
 }
 
