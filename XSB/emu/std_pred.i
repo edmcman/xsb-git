@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: std_pred.i,v 1.2 1998-11-14 05:05:28 kifer Exp $
+** $Id: std_pred.i,v 1.3 1998-12-17 16:58:19 kostis Exp $
 ** 
 */
 
@@ -175,6 +175,7 @@
 	} else { /* usage is construction; term is known to be a variable */
 	    if (islist(list)) {
 	        head = clref_val(list);
+		deref(cell(head));
 	        if (isatom(cell(head))) {
 		    if (isnil(cell(head+1))) {	/* atom construction */
 			bind_copy((CPtr)term, cell(head));
