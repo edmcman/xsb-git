@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: flpshell.P,v 1.7 1998-11-14 05:25:26 kifer Exp $
+** $Id: flpshell.P,v 1.8 1998-11-14 05:28:28 kifer Exp $
 ** 
 */
 
@@ -93,7 +93,6 @@ conv([C|Cs],Name) :-
 	!,
 	name(Name,[C|Cs]).
 conv(X,X).
-
 
 
 run(File) :- 
