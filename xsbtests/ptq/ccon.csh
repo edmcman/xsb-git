@@ -1,3 +1,4 @@
+#! /bin/csh
 if (-e temu_s) then
 	/bin/rm -f temu_s
 endif

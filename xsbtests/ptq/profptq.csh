@@ -1,3 +1,5 @@
+#! /bin/csh
+
 set XEMU = $argv[1]
 echo "-------------------------------------------------------"
 echo " running testptq.csh "

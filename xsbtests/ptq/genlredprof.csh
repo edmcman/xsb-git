@@ -1,3 +1,5 @@
+#! /bin/csh
+
 set XEMU = $argv[3]
 $XEMU -x 1024 -i << EOF
 [ptq,tables].

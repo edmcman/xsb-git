@@ -1,3 +1,5 @@
+#! /bin/csh
+
 if (-e emu_s) then
 	/bin/rm -f emu_s
 endif

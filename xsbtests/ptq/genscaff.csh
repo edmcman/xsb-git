@@ -1,3 +1,5 @@
+#! /bin/csh
+
 set XEMU = $argv[3]
 if (-e ${argv[2]}_s) then
 	/bin/rm -f ${argv[2]}_s

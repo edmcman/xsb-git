@@ -1,3 +1,4 @@
+#! /bin/csh
 if (-e int_s) then
 	/bin/rm -f int_s
 endif

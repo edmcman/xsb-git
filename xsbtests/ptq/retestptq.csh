@@ -1,3 +1,5 @@
+#! /bin/csh
+
 set XEMU = /home/u21/sbprolog/PSB-terry/PSB-terry3/emu/xemu
 echo "-------------------------------------------------------"
 echo " running retestptq.csh "

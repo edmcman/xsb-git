@@ -1,3 +1,5 @@
+#! /bin/csh
+
 #csh comptqlred.csh "tran([john,dates,mary])" jdmlred
 #csh comptqlred.csh "tran([a,price,rises])" aprlred
 #csh comptqlred.csh "tran([john,dates,him])" jdhlred 
