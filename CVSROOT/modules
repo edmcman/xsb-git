@@ -43,7 +43,7 @@ xsbadmin     -d admin      XSB/admin
 xsbcore	     -a !XSB/tests !XSB/admin !XSB/examples !XSB/docs XSB
 
 # What developers need, sans XSB/tests, because of the size of XSB/tests
-xsbdevel     -a !XSB/tests xsbcore
+xsbdevel     -a !XSB/tests XSB
 
 # This is how we'll be making releases
 xsbrelease   -a xsbexamples xsbcore
