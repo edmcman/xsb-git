@@ -42,11 +42,8 @@ xsbadmin     -d admin      XSB/admin
 # Everything but admin, tests, examples, docs. Note: negated part comes first!
 xsbcore	     -a !XSB/tests !XSB/admin !XSB/examples !XSB/docs XSB
 
-# Extras
-xsbextras    -a xsbdocs xsbexamples xsbadmin
-
 # What developers need, sans XSB/tests, because of the size of XSB/tests
-xsbdevel     -a xsbextras xsbcore
+xsbdevel     -a !XSB/tests xsbcore
 
 # This is how we'll be making releases
 xsbrelease   -a xsbexamples xsbcore
