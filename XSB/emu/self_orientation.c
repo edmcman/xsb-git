@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: self_orientation.c,v 1.4 1998-11-19 05:24:21 kifer Exp $
+** $Id: self_orientation.c,v 1.5 1998-11-23 23:09:55 kifer Exp $
 ** 
 */
 
@@ -134,17 +134,21 @@ char *xsb_executable_full_path(char *myname)
   char *path = getenv("PATH");
   int len, found = 0;
   char *pathcounter, save;
+  static char myname_augmented;
 
-  if (is_absolute_filename(myname))
-    strcpy(executable, myname);
+  strcpy(myname_augmented, myname);
+#ifdef WIN_NT
+  /* if executable doesn't end with .exe, then add it */
+  if (strcmp(myname + strlen(myname) - 4, ".exe") != 0)
+    sprintf(myname_augmented, "%s.exe", myname);
+#endif
+
+  if (is_absolute_filename(myname_augmented))
+    strcpy(executable, myname_augmented);
   else {
     getcwd(current_dir, MAXPATHLEN-1);
-    sprintf(executable, "%s%c%s", current_dir, SLASH, myname);
+    sprintf(executable, "%s%c%s", current_dir, SLASH, myname_augmented);
   }
-
-#ifdef WIN_NT
-    strcat(executable, ".exe");
-#endif
 
   /* found executable by prepending cwd */
   if (!stat(executable, &fileinfo)) return executable;
@@ -166,14 +170,13 @@ char *xsb_executable_full_path(char *myname)
     /* Now `len' holds the length of the PATH component 
        we are currently looking at.
        `pathcounter' points to the end of this component. */
-    sprintf(executable, "%s%c%s", pathcounter - len, SLASH, myname);
+    sprintf(executable, "%s%c%s", pathcounter - len, SLASH, myname_augmented);
 
     /* restore the separator and addvance the pathcounter */
     *pathcounter = save;
     if (*pathcounter) pathcounter++;
 
 #ifdef WIN_NT
-    strcat(executable, ".exe");
     found = (0 == access(executable, 02));	/* readable */
 #else
     found = (0 == access(executable, 01));	/* executable */
