@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: psc.h,v 1.1.1.1 1998-11-05 16:55:20 sbprolog Exp $
+** $Id: psc.h,v 1.2 1998-12-09 03:12:47 cbaoqiu Exp $
 ** 
 */
 
@@ -118,6 +118,10 @@ extern Psc delay_psc;
 extern char *nil_sym;
 extern Pair list_str;
 extern char *list_dot;
+
+extern byte ret_psc_exists[255];	/* PSC's for ret/n */
+extern Psc ret_psc[255];
+extern Psc get_ret_psc(int);
 
 /*======================================================================*/
 /*  HiLog related macros.						*/
