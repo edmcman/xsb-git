@@ -8,6 +8,18 @@ echo "Testing $TEST"
 
 $argv[1] -i << EOF
 
+[sem_lex].
+
+[semantica].
+
+[sem_pretty].
+
+[sem_dnf].
+
+EOF
+
+$argv[1] -i << EOF
+
 [sem_parse].
 
 import numbervars/3 from num_vars.
@@ -92,6 +104,14 @@ echo "---------------------------------------------------------------------"
 ############################################################
 set TEST = "sem3"
 echo "Testing $TEST"
+
+# needed to ensure .O files are there
+$argv[1] -i << EOF
+
+[sem_lex].
+
+EOF
+
 
 $argv[1] -i << EOF
 

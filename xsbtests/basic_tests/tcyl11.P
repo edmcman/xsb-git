@@ -1,3 +1,6 @@
+
+:- ['tcyl-24-24-2'].
+
 :- table(a/2).
 
 tw(X) :- a(X,Y), writeln(a(X,Y)), fail.

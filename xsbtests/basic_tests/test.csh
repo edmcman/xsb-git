@@ -44,9 +44,9 @@ gentest.csh $XEMU thstr23 "tw1."
 #------------------------------------
 # cylinder series
 #------------------------------------
-gentest.csh $XEMU tcyl11 "['tcyl-24-24-2'],tw(1)."
-gentest.csh $XEMU tcyl12 "['tcyl-24-24-2'],tw(1)."
-gentest.csh $XEMU testsg "[acyl,'tcyl-24-24-2'],tw."
+gentest.csh $XEMU tcyl11 "tw(1)."
+gentest.csh $XEMU tcyl12 "tw(1)."
+gentest.csh $XEMU testsg "tw."
 #------------------------------------
 # interpreter series.
 #------------------------------------
