@@ -9,7 +9,7 @@ DIR=`pwd`
 BASEDIR=`basename $DIR`
 
 echo "--------------------------------------------------------------------"
-echo "Testing $TEST_FILE"
+echo "Testing $BASEDIR/$TEST_FILE"
 $EMU -m 3000 -i << EOF
 [$CONSULT_FILE].
 tell(temp).
@@ -32,7 +32,7 @@ if test -z "$d"; then
 	echo "$BASEDIR/$TEST_FILE tested"
 	rm -f ${TEST_FILE}_new
 else
-	echo "$BASEDIR/$TEST_FILE different\!\!\!"
+	echo "$BASEDIR/$TEST_FILE differ!!!"
 	diff ${TEST_FILE}_new ${TEST_FILE}_old
 fi
 
