@@ -20,7 +20,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: copysubdirs.sh,v 1.1 1998-11-11 05:43:51 kifer Exp $
+## $Id: copysubdirs.sh,v 1.2 1998-11-11 09:16:33 kifer Exp $
 ## 
 ##
 
@@ -51,4 +51,4 @@ for f in $files ; do
 done
 
 # This also makes plain files executable. Any easy way to add x to dirs only? 
-chmod -R a=rx $2
+chmod -R a+rx,u+w $2
