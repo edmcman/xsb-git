@@ -25,7 +25,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: modMakefile.in,v 1.1 1998-11-19 17:59:56 kifer Exp $
+## $Id: modMakefile.in,v 1.2 1998-12-21 06:01:13 kifer Exp $
 ## 
 
 ## DON'T EDIT FROM HERE TIL NEXT NOTICE
@@ -50,7 +50,7 @@ SHELL=/bin/sh
 
 ###### END NO-EDIT ZONE
 
-##################### You may need to edit some of these!
+##################### You may need to edit some of the files below!
 
 # Where to install your C program that calls XSB binaries
 bindir=$(arch_dir)/bin
