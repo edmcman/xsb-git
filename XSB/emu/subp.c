@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: subp.c,v 1.1.1.1 1998/11/05 16:55:21 sbprolog Exp $
 ** 
 */
 
@@ -321,7 +321,7 @@ static int sign(Float num)
 /*	in the above ordering list.					*/
 /*======================================================================*/
 
-bool compare(Cell val1, Cell val2)
+int compare(Cell val1, Cell val2)
 {
 	int arity1, arity2, comp;
 	struct psc_rec *ptr1, *ptr2;
@@ -405,7 +405,7 @@ bool compare(Cell val1, Cell val2)
 /*	standard total order of Prolog terms (see compare()).		*/
 /*======================================================================*/
 
-bool key_compare(Cell term1, Cell term2)
+int key_compare(Cell term1, Cell term2)
 {
     deref(term1);		/* term1 is not in register! */
     deref(term2);		/* term2 is not in register! */

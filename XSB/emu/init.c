@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: init.c,v 1.4 1998-11-13 23:08:18 kifer Exp $
+** $Id: init.c,v 1.5 1998-11-14 05:05:25 kifer Exp $
 ** 
 */
 
@@ -82,7 +82,6 @@ extern char executable[];
 
 Exec_Mode xsb_mode;     /* How XSB is run: interp, disassem, user spec, etc. */
 
-extern char* strchr(char *, int);
 extern char *strip_names_from_path(char* path, int how_many);
 
 /* real_alloc uses malloc only to keep pspacesize straight. */

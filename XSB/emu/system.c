@@ -19,12 +19,13 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: system.c,v 1.2 1998-11-13 02:49:08 kifer Exp $
+** $Id: system.c,v 1.3 1998-11-14 05:05:32 kifer Exp $
 ** 
 */
 
 
 #include "configs/config.h"
+#include "basictypes.h"
 #include "cell.h"
 #include "cinterf.h"
 #include "msyscall.h"

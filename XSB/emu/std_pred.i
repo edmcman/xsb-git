@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: std_pred.i,v 1.1.1.1 1998-11-05 16:55:22 sbprolog Exp $
+** $Id: std_pred.i,v 1.2 1998-11-14 05:05:28 kifer Exp $
 ** 
 */
 
@@ -503,7 +503,7 @@
 		cell_tbl[i] = heap_addr;
 		term2 = cell(clref_val(term2)+1);
 	    }
-	    qsort(cell_tbl, len, sizeof(Cell), key_compare);
+	    qsort(cell_tbl, len, sizeof(Cell),  key_compare);
 	    new_list = makelist(hreg);
 	    for (i=0 ; i < len ; i++) {
 		follow(hreg++) = cell_tbl[i];

@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: cinterf.h,v 1.1.1.1 1998-11-05 16:55:13 sbprolog Exp $
+** $Id: cinterf.h,v 1.2 1998-11-14 05:05:23 kifer Exp $
 ** 
 */
 
@@ -156,7 +156,6 @@
 #define call_conv
 #endif
 
-#include "basictypes.h"
 
 #ifdef BITS64
 typedef long prolog_int ;
