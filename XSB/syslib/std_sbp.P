@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: std_sbp.P,v 1.2 1998-12-17 17:06:39 warren Exp $
+** $Id: std_sbp.P,v 1.3 1998-12-18 19:23:37 kostis Exp $
 ** 
 */
 
@@ -94,7 +94,11 @@ standard_symbol(fmt_write_string, 3, xsb_writ).
 
 standard_symbol(get, 1, standard).
 standard_symbol(get0, 1, standard).
-standard_symbol(get_calls_for_table, 3, tables).
+standard_symbol(get_call, 3, tables).
+standard_symbol(get_calls, 3, tables).
+standard_symbol(get_calls_for_table, 2, tables).
+standard_symbol(get_residual, 2, tables).
+standard_symbol(get_returns, 2, tables).
 standard_symbol(get_returns_for_call, 2, tables).
 standard_symbol(halt, 0, standard).
 standard_symbol((hilog), 1, standard).
