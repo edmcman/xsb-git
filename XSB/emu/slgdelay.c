@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: slgdelay.c,v 1.1.1.1 1998/11/05 16:55:22 sbprolog Exp $
+** $Id: slgdelay.c,v 1.2 1998/11/14 05:05:26 kifer Exp $
 ** 
 */
 
@@ -493,7 +493,8 @@ static bool remove_ide_from_idl(IDE ide, IDLT *idl_tab_entry)
     if (idl == idlt_idl(*idl_tab_entry)) {
       idlt_idl(*idl_tab_entry) = ides_next_ide(idl);
     }
-    return (bool) (NULL == idlt_idl(*idl_tab_entry));
+    /* return (bool) idlt_idl(*idl_tab_entry); */
+    return (NULL != idlt_idl(*idl_tab_entry));
 }
 
 /*----------------------------------------------------------------------*/
@@ -517,7 +518,8 @@ static bool remove_idl_from_idl_list(IDLT idl_tab_entry, ASI *asi)
     if (idls == asi_idl_list(*asi)) {
       asi_idl_list(*asi) = idl_list_next(idls);
     }
-    return (bool) (NULL == asi_idl_list(*asi));
+    /* return (bool) asi_idl_list(*asi); */
+    return (NULL != asi_idl_list(*asi));
 }
 
 /*----------------------------------------------------------------------*/
