@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: self_orientation.c,v 1.5 1998-11-23 23:09:55 kifer Exp $
+** $Id: self_orientation.c,v 1.6 1998-11-24 17:28:43 kifer Exp $
 ** 
 */
 
@@ -134,7 +134,7 @@ char *xsb_executable_full_path(char *myname)
   char *path = getenv("PATH");
   int len, found = 0;
   char *pathcounter, save;
-  static char myname_augmented;
+  static char myname_augmented[MAXPATHLEN];
 
   strcpy(myname_augmented, myname);
 #ifdef WIN_NT
