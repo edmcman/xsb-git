@@ -21,7 +21,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xsb_configuration.in,v 1.3 1998-11-13 07:08:56 kifer Exp $
+** $Id: xsb_configuration.in,v 1.4 1998-12-21 06:00:28 kifer Exp $
 ** 
 */
 
@@ -56,6 +56,7 @@ xsb_configuration(host_cpu,  '@host_cpu@').
 %% Set the right compile mode and XSB scheduling strategy
 xsb_configuration(compile_mode, '@compile_mode@').
 xsb_configuration(scheduling_strategy, '(@xsb_scheduling_strategy@)').
+xsb_configuration(engine_mode, '@engine_mode@').
 
 xsb_configuration(major_version, '@xsb_major_version@').
 xsb_configuration(minor_version, '@xsb_minor_version@').

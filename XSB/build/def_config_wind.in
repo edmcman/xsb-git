@@ -25,7 +25,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: def_config_wind.in,v 1.5 1998-11-19 17:59:56 kifer Exp $
+** $Id: def_config_wind.in,v 1.6 1998-12-21 06:00:27 kifer Exp $
 ** 
 */
 
@@ -90,6 +90,14 @@
 /*  Files needed for XSB to get the configuration information */
 #undef CONFIGURATION
 #undef FULL_CONFIG_NAME
+
+#undef CHAT
+
+#undef WAM_TRAIL
+#undef CHAT_TREE_COPY
+#undef INCREMENTAL_CP_TRAVERSAL
+
+#undef PTCP_IN_CP
 
 /* Define if you have the gethostbyname function.  */
 #define HAVE_GETHOSTBYNAME 1
