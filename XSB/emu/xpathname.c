@@ -18,14 +18,20 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xpathname.c,v 1.1.1.1 1998-11-05 16:55:28 sbprolog Exp $
+** $Id: xpathname.c,v 1.2 1998-11-13 02:49:12 kifer Exp $
 ** 
 */
 
 #include "configs/config.h"
 #include "debugs/debug.h"
 
+#ifdef WIN_NT
+#include <direct.h>
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
+
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -34,6 +40,8 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+/* special.h must be included after sys/stat.h */
+#include "configs/special.h"
 
 #ifndef NeXT
 #include <malloc.h>

@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xmain.c,v 1.1.1.1 1998-11-05 16:55:26 sbprolog Exp $
+** $Id: xmain.c,v 1.2 1998-11-13 02:49:10 kifer Exp $
 ** 
 */
 
@@ -33,13 +33,22 @@ char *xsb_config_file;     		/* XSB configuration file */
 char *user_home;     	     	     	/* the user $HOME dir or install dir,
 					   if $HOME is null */ 
 
+#ifdef WIN_NT
+#include <direct.h>
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+/* special.h must be included after sys/stat.h */
+#include "configs/special.h"
+
 #include "emuloop.h"
 
 #ifdef HAVE_SOCKET

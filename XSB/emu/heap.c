@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: heap.c,v 1.1.1.1 1998-11-05 16:55:16 sbprolog Exp $
+** $Id: heap.c,v 1.2 1998-11-13 02:49:03 kifer Exp $
 ** 
 */
 
@@ -57,6 +57,8 @@ This module provides
 #include <stdlib.h>
 #include <malloc.h>
 #include <sys/stat.h>
+/* special.h must be included after sys/stat.h */
+#include "configs/special.h"
 
 #include "auxlry.h"
 #include "cell.h"
