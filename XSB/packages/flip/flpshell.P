@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: flpshell.P,v 1.9 1998-11-14 07:03:21 kifer Exp $
+** $Id: flpshell.P,v 1.10 1998-11-15 02:15:45 kifer Exp $
 ** 
 */
 
@@ -63,7 +63,7 @@ shell :-
 welcome_msg :- nl,
       write('FLIP Version '), package_configuration(version(flip), I),
       write(I), writeln(' loaded.'),
-      writeln('*** `help.'' displays help;  `rundemo(demoName).'' runs demos in'),
+      writeln('`help.'' displays help;  `rundemo(demoName).'' runs demos in'),
       slash(Slash),
       package_configuration(dir(flip), FlipDir),
       fmt_write_string(DemoDir, '       %s%sdemos', f(FlipDir,Slash)),
