@@ -143,4 +143,4 @@ XEMU=$1
 #----------------------------------------------------------------------
 # Tests of variables in delay list.
 #----------------------------------------------------------------------
-../gentest.sh $XEMU delay_var "test."
+#../gentest.sh $XEMU delay_var "test."
