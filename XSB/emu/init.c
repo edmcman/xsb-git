@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: init.c,v 1.2 1998-11-07 01:47:50 sbprolog Exp $
+** $Id: init.c,v 1.3 1998-11-09 03:08:03 sbprolog Exp $
 ** 
 */
 
@@ -174,7 +174,7 @@ void static version_message(void) {
 
 
   sprintf(licensemsg, "%s%cetc%ccopying.msg", install_dir, SLASH, SLASH);
-  sprintf(configmsg, "%s%cconfig.msg", 
+  sprintf(configmsg, "%s%cbanner.msg", 
 	  strip_names_from_path(xsb_config_file, 1), SLASH);
 
   display_file(configmsg);

@@ -20,7 +20,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: x_interp.P,v 1.1.1.1 1998/11/05 16:59:55 sbprolog Exp $
+** $Id: x_interp.P,v 1.2 1998/11/07 02:09:08 sbprolog Exp $
 ** 
 */
 
@@ -188,7 +188,7 @@ version_message :-
 	%% fmt_write_string(CopyingMsg, '%s%scopying.msg', f(ConfigDir,Slash)),
 	%% print_file_contents(CopyingMsg),
 	%% file_nl(2),
-	fmt_write_string(ConfMsg, '%s%sconfig.msg', f(ConfigDir,Slash)),
+	fmt_write_string(ConfMsg, '%s%sbanner.msg', f(ConfigDir,Slash)),
 	print_file_contents(ConfMsg).
 
 /* === utilities ======================================================= */
