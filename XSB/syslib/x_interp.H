@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: x_interp.H,v 1.1.1.1 1998/11/05 16:59:55 sbprolog Exp $
+** $Id: x_interp.H,v 1.2 1998/11/09 22:27:48 kifer Exp $
 ** 
 */
 
@@ -32,7 +32,7 @@
 
 :- import
        abort/0, call_c/1, call_expose/1, goal_cut_trans/3, repeat/0,
-       see/1, seen/0, call/1
+       see/1, seen/0, call/1, push_abort_cutpoint/0, pop_abort_cutpoint/0
    from standard.
 
 :- import

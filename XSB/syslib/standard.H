@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: standard.H,v 1.1.1.1 1998/11/05 16:59:51 sbprolog Exp $
 ** 
 */
 
@@ -70,7 +70,8 @@
 :- export
 	call_c/1,	goal_cut_trans/3,	goal_cut_untrans/2,
 	tcall/1,	arity_integer/1,	prolog_arglist/4,
-	warning/1,	abort/1,		abort/0,
+        warning/1,	push_abort_cutpoint/0,  pop_abort_cutpoint/0,
+        abort/1,	abort/0,
 	(import)/1,	(multifile)/1.
 
 
@@ -102,5 +103,6 @@
 :- import retract0/1, assertz/1, clause/2 from assert.
 :- import numbervars/1 from num_vars.
 :- import predicate_property/2 from curr_sym.
+:- import (dynamic)/1, asserta/1, retract/1 from assert.
 
 /* --------------------- end of file standard.H ----------------------- */
