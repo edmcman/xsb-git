@@ -9,4 +9,5 @@
 # "ALL" or "DEFAULT" can be used in place of the regular expression.
 #
 # For example:
-#ALL mail %s -s "CVS notification"
+
+DEFAULT mail %s -s "CVS notification"
