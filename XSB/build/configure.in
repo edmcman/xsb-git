@@ -18,7 +18,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: configure.in,v 1.12 1998-11-16 00:23:03 kifer Exp $
+## $Id: configure.in,v 1.13 1998-11-17 00:36:48 kifer Exp $
 ## 
 ##
 
@@ -194,6 +194,11 @@ if test -z "${config_tag}" ; then
     if test "${enable_debug}" ; then
        config_tag="${config_tag}-dbg"
     fi
+fi
+dnl Config tag is more of a hassle when configuring for Windows or DOS
+dnl because things must be done manually on those systems
+if test -n "$with_os" ; then
+	config_tag=
 fi
 
 config_tag_sans_dash=`echo ${config_tag} | sed 's/^-//'`
