@@ -6,7 +6,18 @@ echo "-------------------------------------------------------"
 
 XEMU=$1
 
-../gentest.sh $XEMU makefile ""
+$XEMU << EOF
+
+[set_reduce].
+
+[sets].
+
+[correct].
+
+[utils].
+
+EOF
+
 #--------------------------------------------------
 # Tests get_calls and get_returns and tries as code
 #--------------------------------------------------
