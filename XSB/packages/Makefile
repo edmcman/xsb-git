@@ -18,7 +18,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.2 1998-11-15 02:15:25 kifer Exp $
+## $Id: Makefile,v 1.3 1998-11-15 02:56:33 kifer Exp $
 ## 
 ##
 
@@ -52,20 +52,20 @@ Prolog = $(XSB) -i -s -m 2000 -c 2000
 
 
 all: $(ALL) $(SUBDIR)
-	echo 'statistics.' >> cmd...
+	@touch cmd...
 	$(Prolog) < cmd...
 	/bin/rm cmd...
 
 slx::
-	echo ""
+	@echo ""
 	cd slx; make
 
 flip::
-	echo ""
+	@echo ""
 	cd flip; make
 
 perlmatch::
-	echo ""
+	@echo ""
 	cd perlmatch; make
 
 
@@ -73,4 +73,4 @@ perlmatch::
 # %.O:	%.H
 
 .DONE:
-	echo Done
+	@echo Done

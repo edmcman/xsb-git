@@ -18,7 +18,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.1.1.1 1998-11-05 17:01:23 sbprolog Exp $
+## $Id: Makefile,v 1.2 1998-11-15 02:56:48 kifer Exp $
 ## 
 ##
 
@@ -45,7 +45,7 @@ Prolog = $(XSB) -i -s -m 2000 -c 2000
 	echo 'mc($*, $(Option)).' >> cmd...
 
 all: $(ALL)
-	echo 'statistics.' >> cmd...
+	@touch cmd...
 	$(Prolog) < cmd...
 	/bin/rm cmd...
 
