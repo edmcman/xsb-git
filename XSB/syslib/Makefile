@@ -19,13 +19,15 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id$
+## $Id: Makefile,v 1.1.1.1 1998/11/05 16:59:46 sbprolog Exp $
 ## 
 ##
 
-ALL =	assert.O basics.O consult.O curr_sym.O dcg.O debugger.O \
+ALL =	assert.O basics.O consult.O curr_sym.O \
+	db.O dbclause.O dbcmpl.O \
+	dcg.O debugger.O \
 	domain.O eval.O file_op.O foreign.O hilogsym.O loader.O \
-	machine.O setof.O standard.O std_sbp.O \
+	machine.O num_vars.O setof.O standard.O std_sbp.O \
 	string.O subsumes.O term_exp.O \
 	x_interp.O xcallxsb.O xsb_read.O xsb_tok.O xsb_writ.O \
 	packaging.O sysinitrc.O tables.O unix.O
