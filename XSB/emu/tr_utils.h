@@ -18,12 +18,12 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: tr_utils.h,v 1.2 1998-12-21 01:09:04 cbaoqiu Exp $
+** $Id: tr_utils.h,v 1.3 1998-12-22 15:48:48 kostis Exp $
 ** 
 */
 
 
-extern void aux_breg_retskel(void);
+extern void breg_retskel(void);
 extern void trie_node_element(void);
 extern void construct_ret_for_call(void);
 extern void delete_predicate_table(void);
