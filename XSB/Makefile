@@ -1,4 +1,4 @@
-## File:      Makefile
+## File:      Makefile - recompiles all .O files in all directories
 ## Author(s): kifer
 ## Contact:   xsb-contact@cs.sunysb.edu
 ## 
@@ -18,7 +18,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.2 1998-11-15 02:56:07 kifer Exp $
+## $Id: Makefile,v 1.3 1998-11-18 04:41:32 kifer Exp $
 ## 
 ##
 
