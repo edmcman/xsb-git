@@ -1,9 +1,8 @@
-/* File:      c_to_xsb.H
+/* File:      xcallxsb.H
 ** Author(s): Ernie Johnson
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
-** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
-** Copyright (C) ECRC, Germany, 1990
+** Copyright (C) The Research Foundation of SUNY, 1997-1998
 ** 
 ** XSB is free software; you can redistribute it and/or modify it under the
 ** terms of the GNU Library General Public License as published by the Free
@@ -19,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xcallxsb.H,v 1.1 1998-11-15 05:44:26 kifer Exp $
+** $Id: xcallxsb.H,v 1.2 1998-11-15 06:07:55 kifer Exp $
 ** 
 */
 
