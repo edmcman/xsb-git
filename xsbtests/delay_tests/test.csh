@@ -138,3 +138,7 @@ gentest.csh $XEMU residual1 "test."
 # Tests of residual program and findall/3.
 #----------------------------------------------------------------------
 gentest.csh $XEMU fa "test."
+#----------------------------------------------------------------------
+# Tests of delay list with variables.
+#----------------------------------------------------------------------
+gentest.csh $XEMU delay_var "test."
