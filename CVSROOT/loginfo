@@ -16,4 +16,5 @@
 # name and listing the modified file names.
 #
 # For example:
-#DEFAULT		(echo ""; who am i; echo %s; date; cat) >> $CVSROOT/CVSROOT/commitlog
+
+DEFAULT		(echo ""; who am i; echo %s; date; cat) >> $CVSROOT/CVSROOT/commitlog
