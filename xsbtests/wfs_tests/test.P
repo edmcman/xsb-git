@@ -9,7 +9,7 @@
 :- import numbervars/1 from num_vars.
 
 test(P) :- 
-	consult(P),
+	consult(P), tell(temp),
 	query(P,Q,SGs,Tr,Un),
 	call_top_query(P,Q),
 	test_tv(SGs,Tr,Un).
