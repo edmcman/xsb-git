@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: builtin.c,v 1.2 1998-11-13 02:48:54 kifer Exp $
+** $Id: builtin.c,v 1.3 1998-11-18 03:20:19 kifer Exp $
 ** 
 */
 
@@ -201,10 +201,6 @@ static int (*proc_ptr)();		/* working variable */
 #endif
 
 static struct stat stat_buff;
-
-extern char slash_string[];    	       /* from xmain.c */
-
-
 
 /* ------- utility for sockets ---------------------------------------- */
 
@@ -1421,9 +1417,13 @@ int  builtin_call(byte number)
     break;
   case FMT_WRITE:
     return fmt_write();
-  case SLASH_BUILTIN:
+  case SLASH_BUILTIN: {  /* R1: -Slash. Tells what kind of slash the OS uses */
+    static char slash_string[2];
+    slash_string[0] = SLASH;
+    slash_string[1] = '\0';
     ctop_string(1, string_find(slash_string, 1));
     break;
+  }
   case FMT_WRITE_STRING:
     return fmt_write_string();
   case FILE_READ_LINE:
