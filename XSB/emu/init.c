@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: init.c,v 1.3 1998-11-09 03:08:03 sbprolog Exp $
+** $Id: init.c,v 1.4 1998-11-13 23:08:18 kifer Exp $
 ** 
 */
 
@@ -82,7 +82,7 @@ extern char executable[];
 
 Exec_Mode xsb_mode;     /* How XSB is run: interp, disassem, user spec, etc. */
 
-extern char* index(char *, int);
+extern char* strchr(char *, int);
 extern char *strip_names_from_path(char* path, int how_many);
 
 /* real_alloc uses malloc only to keep pspacesize straight. */
@@ -406,7 +406,7 @@ char *init_para(int argc, char *argv[])
 	   xsb_warn("Missing command line goal");
       }
 
-      if (index(cmd_line_goal, '.') == NULL) {
+      if (strchr(cmd_line_goal, '.') == NULL) {
 	char tmpbuf[100];
 	sprintf(tmpbuf, "Syntax error in command line goal:\n\t`%s'",
 		cmd_line_goal);

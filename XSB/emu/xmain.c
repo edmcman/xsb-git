@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xmain.c,v 1.2 1998-11-13 02:49:10 kifer Exp $
+** $Id: xmain.c,v 1.3 1998-11-13 23:08:19 kifer Exp $
 ** 
 */
 
@@ -213,7 +213,11 @@ static void check_create_dir(char *path) {
   }
 
   if (retcode != 0) 
+#ifdef WIN_NT
+    retcode = mkdir(path);
+#else
     retcode = mkdir(path, 0755);
+#endif
 
   if (retcode != 0) {
     fprintf(stderr,

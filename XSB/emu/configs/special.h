@@ -18,12 +18,16 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: special.h,v 1.1 1998-11-13 02:51:01 kifer Exp $
+** $Id: special.h,v 1.2 1998-11-13 23:08:22 kifer Exp $
 ** 
 */
 
 
 /* This stuff isn't defined in NT */
 #ifndef S_ISDIR
-#define S_ISDIR(fileinfo) ((fileinfo.st_mode & S_IFMT) == S_IFDIR)
+#define S_ISDIR(mode) ((mode & S_IFMT) == S_IFDIR)
+#endif
+
+#ifdef WIN_NT
+#define snprintf _snprintf
 #endif
