@@ -37,12 +37,16 @@ xsbpackages  -d packages   XSB/packages
 xsbdocs	     -d docs       XSB/docs
 xsbtests     -d tests      XSB/tests
 xsbexamples  -d examples   XSB/examples
+xsbadmin     -d admin      XSB/admin
 
 # Everything but admin, tests, examples, docs. Note: negated part comes first!
 xsbcore	     -a !XSB/tests !XSB/admin !XSB/examples !XSB/docs XSB
 
+# Extras
+xsbextras    -a xsbdocs xsbexamples xsbadmin
+
 # What developers need, sans XSB/tests, because of the size of XSB/tests
-xsbdevel     -a XSB/admin XSB/docs xsbcore
+xsbdevel     -a xsbextras xsbcore
 
 # This is how we'll be making releases
 xsbrelease   -a xsbexamples xsbcore
