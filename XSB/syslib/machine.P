@@ -20,7 +20,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: machine.P,v 1.1.1.1 1998/11/05 16:59:51 sbprolog Exp $
 ** 
 */
 
@@ -214,6 +214,7 @@ conpsc(Con, Psc) :-
 machine_file_exists(File) :- 
 	sys_syscall(33, Res, File, 0), Res =:= 0.
 
+%% Read line from current input stream (previously set by 'see')
 file_read_line(String, IsFullLine) :-
 	 stat_flag(10, File), file_read_line(File, String, IsFullLine).
 

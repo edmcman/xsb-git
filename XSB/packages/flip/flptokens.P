@@ -1,5 +1,5 @@
 /* File:      flptokens.P
-** Author(s): Richard O'Keefe, Bertram Ludaescher
+** Author(s): Bertram Ludaescher (heavily borrowed from Richard O'Keefe's code)
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) Bertram Ludaescher, 1998
@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: flptokens.P,v 1.1.1.1 1998-11-05 17:01:14 sbprolog Exp $
+** $Id: flptokens.P,v 1.2 1998-11-13 07:09:54 kifer Exp $
 ** 
 */
 
