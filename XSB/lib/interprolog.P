@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: interprolog.P,v 1.1.1.1 1998-11-05 17:00:31 sbprolog Exp $
+** $Id: interprolog.P,v 1.2 1998-11-15 00:39:57 kifer Exp $
 ** 
 */
 
@@ -29,7 +29,7 @@
 
 :- ( xsb_configuration(javac, '') -> true
 	;
-	 abort('Your system doesn't seem to have the Java compiler, javac, installed')
+	 abort('Your system doesn''t seem to have the Java compiler, javac, installed')
    ),
    ( getenv('JAVA_HOME', JH), getenv('SWING_HOME', SH) ->
 	abort('InterProlog requires that the environment variables JAVA_HOME and SWING_HOME must be set')

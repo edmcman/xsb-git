@@ -19,7 +19,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.1.1.1 1998-11-05 17:00:25 sbprolog Exp $
+## $Id: Makefile,v 1.2 1998-11-15 00:39:43 kifer Exp $
 ## 
 ##
 
@@ -29,9 +29,8 @@
 # For that reason, self-make is always suggested.
 #-----------------------------------------------------------------------#
 
-ALL = 	aggregs.O array.O array1.O copyterm.O \
-	db.O dbclause.O dbcmpl.O directry.O \
-	intern.O num_vars.O odbc_call.O ordsets.O ora_call.O record.O \
+ALL = 	aggregs.O array.O array1.O copyterm.O directry.O \
+	intern.O odbc_call.O ordsets.O ora_call.O record.O \
 	scrptutl.O socket.O interprolog.O
 
 Option = [sysmod,optimize]
