@@ -19,7 +19,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.6 1998-11-15 05:44:17 kifer Exp $
+## $Id: Makefile,v 1.7 1998-11-18 16:21:39 kifer Exp $
 ## 
 ##
 
@@ -31,7 +31,7 @@
 
 ALL = 	aggregs.O array.O array1.O copyterm.O directry.O foreign.O \
 	intern.O interprolog.O odbc_call.O ordsets.O ora_call.O \
-	record.O packaging.O unix.O scrptutl.O setof.O socket.O xcallxsb.O
+	record.O packaging.O unix.O scrptutl.O setof.O socket.O
 
 Option = [sysmod,optimize]
 
