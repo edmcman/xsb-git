@@ -1,19 +1,19 @@
 #-----------------------------------------------------------------------#
 #
 #	File		: Semantica/Makefile
-#	Authors		: Kostis F. Sagonas
-#	Last updated	: November 12, 1995
+#	Authors		: Kostis Sagonas
+#	Last updated	: December 14, 1998
 #
 #-----------------------------------------------------------------------#
 
 ALL =	sem_lex.O sem_parse.O sem_pe.O semantica.O sem_pretty.O sem_incl.O \
 	sem_eval.O sem_dnf.O
 
-Option = [optimize, no_check]
+Option = [optimize]
 
 #-----------------------------------------------------------------------#
 #
-Prolog = xsb -i
+Prolog = xsb
 #
 #-----------------------------------------------------------------------#
 
