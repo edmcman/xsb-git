@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: io_builtins.c,v 1.2 1998-11-17 00:29:37 kifer Exp $
+** $Id: io_builtins.c,v 1.3 1998-12-21 01:08:30 cbaoqiu Exp $
 ** 
 */
 
@@ -52,8 +52,6 @@
 #include "tries.h"
 #include "choice.h"
 #include "xmacro.h"
-#include "tr_utils.h"
-#include "switch.h"
 #include "configs/special.h"
 
 static FILE* fptr;			/* working variable */

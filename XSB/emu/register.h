@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: register.h,v 1.1.1.1 1998-11-05 16:55:20 sbprolog Exp $
+** $Id: register.h,v 1.2 1998-12-21 01:08:42 cbaoqiu Exp $
 ** 
 */
 
@@ -41,10 +41,12 @@ extern byte *pcreg;	/* program counter              */
 
 /*---- registers added for the SLG-WAM ---------------------------------*/
 
+#if (!defined(CHAT))
 extern CPtr efreg;
 extern CPtr bfreg;
 extern CPtr hfreg;
 extern CPtr *trfreg;
+#endif
 extern CPtr pdlreg;
 extern CPtr openreg;
 

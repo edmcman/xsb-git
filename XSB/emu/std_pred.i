@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: std_pred.i,v 1.3 1998-12-17 16:58:19 kostis Exp $
+** $Id: std_pred.i,v 1.4 1998-12-21 01:08:50 cbaoqiu Exp $
 ** 
 */
 

@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: asm.P,v 1.1.1.1 1998-11-05 17:00:00 sbprolog Exp $
+** $Id: asm.P,v 1.2 1998-12-21 01:06:04 cbaoqiu Exp $
 ** 
 */
 
@@ -76,7 +76,7 @@ asm_genheader(_OFile, _ModName, _SymTab, _IsModule).
 
 asm_genheader0(OFile, ModName, SymTab, IsModule) :-
 	tell(OFile),
-	asm_magic(4),	/* use magic number 17-18-19-4 */
+	asm_magic(5),	/* use magic number 17-18-19-5 */
 	( IsModule =:= 0 -> put(0)
 	; str_len(ModName, L), put(L), write(ModName)
 	),

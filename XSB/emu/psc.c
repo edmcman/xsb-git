@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: psc.c,v 1.2 1998-12-09 03:10:48 cbaoqiu Exp $
+** $Id: psc.c,v 1.3 1998-12-21 01:08:39 cbaoqiu Exp $
 ** 
 */
 
@@ -138,6 +138,12 @@ tab_inf_ptr get_tip(Psc temp)
 	    case tabletry:
 	    case tabletrysingle:
 	      return (tab_inf_ptr) (temp1[2]) ;
+	    case test_heap:
+	      if (*(pb)(temp1+2) == tabletry ||
+		  *(pb)(temp1+2) == tabletrysingle)
+		return (tab_inf_ptr) (temp1[4]) ;
+	      else return NULL;
+	      break;
 	    case switchon3bound:
 	    case switchonbound:
 	    case switchonterm:

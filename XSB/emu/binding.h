@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: binding.h,v 1.1.1.1 1998-11-05 16:55:12 sbprolog Exp $
+** $Id: binding.h,v 1.2 1998-12-21 01:07:52 cbaoqiu Exp $
 ** 
 */
 
@@ -38,6 +38,12 @@
  *  TRreg and TRFreg always point to the Dynamic Link field of a trail frame.
  */
 
+#ifdef WAM_TRAIL
+
+#define pushtrail0(addr,val)  *(trreg++) = addr
+
+#else
+
 #define TRAIL_FRAME_SIZE  3
 
 #define pushtrail0(addr,val)  \
@@ -53,11 +59,16 @@
      *(trreg-1) = (CPtr) val;\
      *(trreg-2) = addr;\
    }
+#endif
 
+#ifdef CHAT
+#define conditional(a)	( ((a) >= ebreg) || ((a) < hbreg) )
+#else
 #define conditional(a)	( ((a) >= ebreg || (a) >= efreg) || \
 			  ((a) < hbreg  || (a) < hfreg) )
+#endif
 
-#define pushtrail(a,v)	if (conditional(a)) {pushtrail0(a,v)}
+#define pushtrail(a,v)	if (conditional(a)) { pushtrail0(a,v); }
 #define dpushtrail(a,v) pushtrail0(a,v)
 
 /* --- binding -------------------------------------------------------- */

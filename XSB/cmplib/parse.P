@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: parse.P,v 1.3 1998-12-17 18:23:08 cbaoqiu Exp $
+** $Id: parse.P,v 1.4 1998-12-21 01:06:51 cbaoqiu Exp $
 ** 
 */
 
@@ -190,14 +190,14 @@ change_index(P/A-Arg, ModName, P_Mod/A-Arg) :-
 	).
 
 %-------------------------------------------------------------------------
-% get_p_mod(+P, +ModName, +P_Mod)
+% get_p_mode(+P, +ModName, +P_Mod)
 %	Given a predicate name P and a module/file name ModName, returns
 %	a new predicate name P_Mod.
 %-------------------------------------------------------------------------
 get_p_mod(P, ModName, P_Mod) :-
 	name(P,PChars), 
 	name(ModName, ModNameChars),
-	append(PChars, [0'_|ModNameChars], P_ModChars),  % ' for pp
+	append(PChars, [0'_|ModNameChars], P_ModChars),
 	name(P_Mod, P_ModChars).
 
 
@@ -362,8 +362,7 @@ parse_directive(ti_off_all, _SymTab) :-
 	conset(ti_off_all, 1).
 parse_directive(edb(X), SymTab) :-
 	parse_list(X, SymTab, [(edb)], (edb)).
-parse_directive(compiler_options(Options),_SymTab) :-
-	setoptions1(Options).
+
 
 /*======================================================================*/
 /* process regular clauses --- collect them in List			*/

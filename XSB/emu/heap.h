@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: heap.h,v 1.1.1.1 1998-11-05 16:55:17 sbprolog Exp $
+** $Id: heap.h,v 1.2 1998-12-21 01:08:21 cbaoqiu Exp $
 ** 
 */
 
@@ -46,3 +46,18 @@
 #define new_heap_node(sh_reg, x) bld_copy0(sh_reg++, x)
 /* make a new heap node with value x (one word type) */
 
+/*----- The following functions are used in other parts of the system --*/
+
+extern int  gc_heap(int);
+extern int  mark_heap(int);
+extern void glstack_realloc(int,int);
+
+extern void print_cp(int);
+extern void print_tr(int);
+extern void print_ls(int);
+extern void print_all(void);
+extern void print_regs(int,int);
+extern void print_heap(int,int,int);
+extern void print_gc_statistics(void);
+
+/*----------------------------------------------------------------------*/

@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: emudef.h,v 1.2 1998-12-09 03:08:21 cbaoqiu Exp $
+** $Id: emudef.h,v 1.3 1998-12-21 01:08:14 cbaoqiu Exp $
 ** 
 */
 
@@ -42,10 +42,12 @@ byte *cpreg;		/* return point register        */
 byte *pcreg;		/* program counter              */
 CPtr ebreg;		/* breg into environment stack	*/
 
+#if (!defined(CHAT))
 CPtr efreg;
 CPtr bfreg;
 CPtr hfreg;
 CPtr *trfreg;
+#endif
 CPtr pdlreg;
 CPtr openreg;
 CPtr root_address;

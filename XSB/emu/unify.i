@@ -19,13 +19,12 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: unify.i,v 1.1.1.1 1998-11-05 16:55:25 sbprolog Exp $
+** $Id: unify.i,v 1.2 1998-12-21 01:09:15 cbaoqiu Exp $
 ** 
 */
 
 
-
-     free_deref(op1);
+     deref(op1);
      switch (cell_tag(op1)) {
      case FREE:
      case REF1: 
@@ -34,7 +33,11 @@
 	    /* op2 is FREE 			free  ... free */
 		if ( (CPtr)(op1) != (CPtr)(op2) ) {
 		    if ( (CPtr)(op1) < (CPtr)(op2) ) {
+#ifdef CHAT
+			if ( (CPtr)(op1) < hreg )  
+#else
 			if ( (CPtr)(op1) < hreg ||  (CPtr)(op1) < hfreg )  
+#endif
 						/* op1 not in loc stack */
 			    {bind_ref((CPtr)(op2), (CPtr)(op1));}
 			else  /* op1 points to op2 */
@@ -42,7 +45,11 @@
              /* doc tls -- extra garbage because stacks point in diff dirs. */
 		    }
 		    else { /* op1 > op2 */
+#ifdef CHAT
+			if  ((CPtr)(op2) < hreg )
+#else
 			if  ((CPtr)(op2) < hreg || (CPtr)(op2) < hfreg )
+#endif
 			    {bind_ref((CPtr)(op1), (CPtr)(op2));}
 			else
 			    {bind_ref((CPtr)(op2), (CPtr)(op1));}

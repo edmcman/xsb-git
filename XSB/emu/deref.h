@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: deref.h,v 1.1.1.1 1998-11-05 16:55:14 sbprolog Exp $
+** $Id: deref.h,v 1.2 1998-12-21 01:08:13 cbaoqiu Exp $
 ** 
 */
 
@@ -40,14 +40,3 @@
 			 if (op==follow(op)) \
   			    break; \
 			 op=follow(op); }
-
-
-/* dereference, if cell_tag(op) is FREE or REF1 */
-#define free_deref(op) \
-  while ( (cell_tag(op) == FREE) || (cell_tag(op) == REF1) ) { \
-    if (op == follow(op)) \
-      break; \
-    op = follow(op); \
-  }
-
-

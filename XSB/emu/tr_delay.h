@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: tr_delay.h,v 1.2 1998-12-09 03:22:57 cbaoqiu Exp $
+** $Id: tr_delay.h,v 1.3 1998-12-21 01:09:00 cbaoqiu Exp $
 ** 
 */
 
@@ -43,7 +43,7 @@
  * the substitution factor of the answer in the delay element.
  */
 
-#ifdef DELAY_DEBUG
+#ifdef DEBUG_DELAY
 #define handle_conditional_answers {					\
     CPtr temp_hreg;							\
     if (is_conditional_answer(NodePtr)) {				\

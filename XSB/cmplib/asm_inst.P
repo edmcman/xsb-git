@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: asm_inst.P,v 1.1.1.1 1998-11-05 17:00:01 sbprolog Exp $
+** $Id: asm_inst.P,v 1.2 1998-12-21 01:06:08 cbaoqiu Exp $
 ** 
 */
 
@@ -81,6 +81,10 @@ asm_inst(gettbreg(R),		4,	167,	[pp, r(R)]	).
 asm_inst(putpbreg(V),		4,	168,	[pp, v(V)]	).
 asm_inst(puttbreg(R),		4,	169,	[pp, r(R)]	).
 asm_inst(jumpsavebreg(A,L),	8,	170,	[pp, a(A),l(L)]	).
+
+asm_inst(getVn(V),              4,      171,    [pp, v(V)]      ).
+asm_inst(test_heap(A,N),        8,      172,    [pp, a(A), n(N)]).
+
 asm_inst(switchonterm(R,L,L1),	12,	176,	[pp, r(R), l(L), l(L1)]	).
 /* the following two instructions have not been implemented by Jiyang or TLS */
 asm_inst(switchoncon(L),	8,	177,	[ppp, l(L)]	).
@@ -119,6 +123,7 @@ asm_inst(int_test_nz(R,I,L),   12,	221,	[pp, r(R), n(I), l(L)]).
 
 asm_inst(putdval(V,R),		4,	224,	[p, v(V), r(R)]	).
 asm_inst(putuval(V,R),		4,	225,	[p, v(V), r(R)]	).
+asm_inst(allocate_gc(R,R1),     4,      231,    [p, a(R),a(R1)] ).
 asm_inst(call(S,B),		8,	232,	[pp, a(B), s(S)]).
 	% Address has been preprocessed
 asm_inst(allocate,		4,	233,	[ppp]		).

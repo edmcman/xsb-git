@@ -19,15 +19,15 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: auxlry.H,v 1.2 1998-12-17 17:06:11 warren Exp $
+** $Id: auxlry.H,v 1.3 1998-12-21 01:06:14 cbaoqiu Exp $
 ** 
 */
 
 
 :- export member1/2, message/1, warning/1, error/1, time_message/2, 
-	  setoptions/1, setoptions1/1, subsumes/2, dict_lookup/3, option/1,
+	  setoptions/1, subsumes/2, dict_lookup/3, option/1,
 	  debug_writenl/1, verbo_time_message/2, subsumed_member/2,
-	  freeze/1, melt/2, writetop/2, set_global_compiler_options/1.
+	  freeze/1, melt/2, writetop/2.
 
 :- import numbervars/3 from num_vars.
 :- import 'error occurred'/0 from compile.
@@ -35,6 +35,5 @@
 :- import ttywritenl/1, cputime/1, arg/3, functor/3, atomic/1,
 	  tell/1, nl/0, write/1, '=..'/2, telling/1
      from standard.
-:- import assert/1, retractall/1, (dynamic)/1 from assert.
 
 /* ------------------------ end of file auxlry.H ---------------------- */
