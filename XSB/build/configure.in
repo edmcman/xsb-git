@@ -18,7 +18,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: configure.in,v 1.13 1998-11-17 00:36:48 kifer Exp $
+## $Id: configure.in,v 1.14 1998-11-19 17:59:55 kifer Exp $
 ## 
 ##
 
@@ -874,6 +874,7 @@ test -f "$cache_file" ||  \
 
 AC_OUTPUT([ ${arch_config_prefix}/topMakefile:topMakefile.in
 	    ${arch_config_prefix}/emuMakefile:emuMakefile.in
+	    ${arch_config_prefix}/modMakefile:modMakefile.in
 	    ${arch_config_file}:${configuration_templ}
 	    makexsb:makexsb.in
 	    ${scriptdir}/xsb${config_tag}:xsb.in
