@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: init.c,v 1.1.1.1 1998-11-05 16:55:17 sbprolog Exp $
+** $Id: init.c,v 1.2 1998-11-07 01:47:50 sbprolog Exp $
 ** 
 */
 
@@ -83,6 +83,7 @@ extern char executable[];
 Exec_Mode xsb_mode;     /* How XSB is run: interp, disassem, user spec, etc. */
 
 extern char* index(char *, int);
+extern char *strip_names_from_path(char* path, int how_many);
 
 /* real_alloc uses malloc only to keep pspacesize straight. */
 #define real_alloc(X) malloc(X) 
@@ -157,6 +158,7 @@ void static display_file(char *infile_name)
     fprintf(stderr,
 	    "\nCan't open `%s'; XSB installation might be corrupted\n\n",
 	    infile_name);
+    exit(1);
   }
 
   while (fgets(buffer, MAXBUFSIZE-1, infile) != NULL)
@@ -168,24 +170,25 @@ void static display_file(char *infile_name)
 
 void static version_message(void) {
 
-  char licensefile[MAXPATHLEN], configfile[MAXPATHLEN];
+  char licensemsg[MAXPATHLEN], configmsg[MAXPATHLEN];
 
 
-  sprintf(licensefile, "%s%cetc%ccopying.msg", install_dir, SLASH, SLASH);
-  sprintf(configfile, "%s%cetc%cconfig.msg", install_dir, SLASH, SLASH);
+  sprintf(licensemsg, "%s%cetc%ccopying.msg", install_dir, SLASH, SLASH);
+  sprintf(configmsg, "%s%cconfig.msg", 
+	  strip_names_from_path(xsb_config_file, 1), SLASH);
 
-  display_file(configfile);
+  display_file(configmsg);
   puts("");
-  display_file(licensefile);
+  display_file(licensemsg);
 
   exit(0);
 }
 
 void static help_message(void) {
-  char helpfile[MAXPATHLEN];
-  sprintf(helpfile, "%s%cetc%chelp.msg", install_dir, SLASH, SLASH);
+  char helpmsg[MAXPATHLEN];
+  sprintf(helpmsg, "%s%cetc%chelp.msg", install_dir, SLASH, SLASH);
   puts("");
-  display_file(helpfile);
+  display_file(helpmsg);
 
   exit(0);
 }
