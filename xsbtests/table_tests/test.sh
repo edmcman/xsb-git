@@ -10,6 +10,8 @@ $XEMU << EOF
 
 [set_reduce].
 
+[lists].
+
 [sets].
 
 [correct].
