@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: std_sbp.P,v 1.1.1.1 1998-11-05 16:59:52 sbprolog Exp $
+** $Id: std_sbp.P,v 1.2 1998-12-17 17:06:39 warren Exp $
 ** 
 */
 
@@ -209,6 +209,8 @@ standard_symbol(xsb_flag, 2, curr_sym).
 
 standard_symbol(('_$cutto'), 1, standard).
 standard_symbol(('_$savecp'), 1, standard).
+
+standard_symbol(set_global_compiler_options, 1, auxlry).
 
 standard_symbol((('\+')), 1, standard).
 standard_symbol('!', 0, inline).
