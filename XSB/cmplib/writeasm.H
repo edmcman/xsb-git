@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: writeasm.H,v 1.1.1.1 1998-11-05 17:00:24 sbprolog Exp $
+** $Id: writeasm.H,v 1.2 1998-12-20 22:48:08 cbaoqiu Exp $
 ** 
 */
 
