@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xsb_odbc.c,v 1.1.1.1 1998-11-05 16:55:26 sbprolog Exp $
+** $Id: xsb_odbc.c,v 1.2 1998-11-17 00:29:42 kifer Exp $
 ** 
 */
 
@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "basictypes.h"
 #include "cinterf.h"
 
 #define MAXCURSORNUM                    20

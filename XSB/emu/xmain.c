@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xmain.c,v 1.3 1998-11-13 23:08:19 kifer Exp $
+** $Id: xmain.c,v 1.4 1998-11-17 00:29:39 kifer Exp $
 ** 
 */
 
@@ -117,18 +117,18 @@ int main(int argc, char *argv[])
 
   /* The config file is always 1 directory below the executable. */
   xsb_config_file = strip_names_from_path(executable, 2);
-  strcat(xsb_config_file, "/configuration.P");
+  sprintf(xsb_config_file+strlen(xsb_config_file), "%cconfiguration.P", SLASH);
 
   /* Perform sanity checks: xsb_config_file must be in install_dir/config
      This is probably redundant */
   if ( strncmp(install_dir, xsb_config_file, strlen(install_dir)) != 0 
-       || (strstr(xsb_config_file, "/config/") == NULL) ) {
+       || (strstr(xsb_config_file, "config") == NULL) ) {
     fprintf(stderr,
 	    "*************************************************************\n");
     fprintf(stderr, "PANIC!! The file configuration.P\n");
     fprintf(stderr,
-	    "is not where it is expected: %s/config/%s\n",
-	    install_dir, FULL_CONFIG_NAME);
+	    "is not where it is expected: %s%cconfig%c%s\n",
+	    install_dir, SLASH, SLASH, FULL_CONFIG_NAME);
     fprintf(stderr, "Perhaps you moved the XSB executable %s\n", executable);
     fprintf(stderr, "away from its usual place?\n");
     fprintf(stderr,
