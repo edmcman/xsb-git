@@ -140,7 +140,9 @@ $GREP "illegal" $LOG_FILE >> $RES_FILE
 $GREP "missing" $LOG_FILE >> $RES_FILE
 # 
 $GREP "fatal" $LOG_FILE >> $RES_FILE
+# some other problems that should highlight bugs in the test suite
 $GREP "syntax error" $LOG_FILE >> $RES_FILE
+$GREP "cannot find" $LOG_FILE >> $RES_FILE
 echo "-----------------------------------------"
 
 
