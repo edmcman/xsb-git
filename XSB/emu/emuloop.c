@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: emuloop.c,v 1.1.1.1 1998-11-05 16:55:15 sbprolog Exp $
+** $Id: emuloop.c,v 1.2 1998-12-01 17:10:40 sbprolog Exp $
 ** 
 */
 
@@ -1161,8 +1161,8 @@ static int emuloop(byte *startaddr)
  case calld:   /* PPA-L */
     pppad;
     pad64;
-    check_glstack_overflow( MAX_ARITY, lpcreg, OVERFLOW_MARGIN ) ;
     cpreg = lpcreg+sizeof(Cell); 
+    check_glstack_overflow( MAX_ARITY, lpcreg, OVERFLOW_MARGIN ) ;
     lpcreg = *(pb *)lpcreg;
     goto contcase;
 

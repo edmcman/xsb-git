@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: builtin.c,v 1.4 1998-11-18 07:59:12 kifer Exp $
+** $Id: builtin.c,v 1.5 1998-12-01 17:10:42 sbprolog Exp $
 ** 
 */
 
@@ -1535,6 +1535,12 @@ int  builtin_call(byte number)
       if ( (Integer)(complstack.high - (byte *)openreg)
 	   < complstack.init_size * K - OVERFLOW_MARGIN )
 	complstack_realloc(complstack.init_size);
+
+	if (glstack.size != glstack.init_size)
+	  if ( (Integer)((glstack.high - (byte *)top_of_localstk) +
+			 ((byte *)hreg - glstack.low))
+	       < glstack.init_size * K - OVERFLOW_MARGIN )
+	glstack_realloc(glstack.init_size,0);
 
     break;
 

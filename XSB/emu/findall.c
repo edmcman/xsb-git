@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: findall.c,v 1.1.1.1 1998-11-05 16:55:16 sbprolog Exp $
+** $Id: findall.c,v 1.2 1998-12-01 17:10:38 sbprolog Exp $
 ** 
 */
 
@@ -602,6 +602,8 @@ int copy_term()
         size = term_size(arg1) ;
         check_glstack_overflow( 2, pcreg, size*sizeof(Cell) ) ;
 
+		/* again because stack might have been reallocated */
+		arg1 = (Cell)Areg(1) ; deref(arg1) ;
         arg2 = (Cell)Areg(2) ; deref(arg2) ;
 
         if( !isref(arg2) ) xsb_abort( "incorrect use of copy_term0" ) ;
