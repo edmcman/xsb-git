@@ -18,7 +18,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: configure.in,v 1.5 1998-11-13 03:04:51 kifer Exp $
+## $Id: configure.in,v 1.6 1998-11-13 04:05:48 kifer Exp $
 ## 
 ##
 
@@ -1027,6 +1027,11 @@ chmod 444 ${arch_config_file} \
 	  ${arch_config_prefix}/config.h \
 	  ${arch_config_prefix}/debug.h \
 	  ${arch_config_prefix}/*Makefile
+
+# Move the config file in case of DOS and Windoze to the right place
+if test -n "$with_os" ; then
+   cp -f ${arch_config_prefix}/config.h  ${emudir}/configs
+fi
 
 dnl Copying to the installation directory ($prefix) is done in the top
 dnl makefile now! 
