@@ -25,7 +25,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: emuMakefile.in,v 1.2 1998-11-18 07:54:42 kifer Exp $
+## $Id: emuMakefile.in,v 1.3 1998-11-18 16:13:48 kifer Exp $
 ## 
 
 
@@ -128,6 +128,15 @@ xsbora:: $(allORAOBJS)
 	  echo ""
 	cd $(emudir); \
 	$(CC) -o $(EXECUTABLE) $(LINKFLAGS) $(allORAOBJS) $(LDFLAGS)
+
+# Goal for making an XSB load module to be linked with external
+# C-drivers that pass queries to XSB
+xsbmod:: $(OBJS)
+	@echo ""; \
+	   echo "Making a C-callable XSB module $(bindir)/xsbmod.o"; \
+	   echo ""
+	ld -o xsbmodule.o -r $(OBJS)
+	@cp xsbmodule.o $(arch_config_objlibdir) 2> /dev/null || echo ""
 
 depend::
 	@$(DEPEND) $(DEPENDFLAGS) -- $(CFLAGS) -- $(SRCS)

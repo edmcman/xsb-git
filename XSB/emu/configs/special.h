@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: special.h,v 1.2 1998-11-13 23:08:22 kifer Exp $
+** $Id: special.h,v 1.3 1998-11-18 16:16:06 kifer Exp $
 ** 
 */
 
@@ -30,4 +30,11 @@
 
 #ifdef WIN_NT
 #define snprintf _snprintf
+#endif
+
+/* The separator used between pathnames in PATH environment */
+#ifdef WIN_NT
+#define PATH_SEPARATOR ';'
+#else
+#define PATH_SEPARATOR ':'
 #endif

@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: self_orientation.c,v 1.1 1998-11-18 07:59:16 kifer Exp $
+** $Id: self_orientation.c,v 1.2 1998-11-18 16:15:50 kifer Exp $
 ** 
 */
 
@@ -150,12 +150,12 @@ void xsb_executable_full_path(char *myname)
   pathcounter = path;
   while (*pathcounter != '\0' && found == 0) {
     len = 0;
-    while (*pathcounter != ':' && *pathcounter != '\0') {
+    while (*pathcounter != PATH_SEPARATOR && *pathcounter != '\0') {
       len++;
       pathcounter++;
     }
 
-    /* save the separator ":" and replace it with \0 */
+    /* save the separator ':' (or ';' on NT and replace it with \0 */
     save = *pathcounter;
     *pathcounter = '\0';
 
@@ -168,7 +168,11 @@ void xsb_executable_full_path(char *myname)
     *pathcounter = save;
     if (*pathcounter) pathcounter++;
 
+#ifdef WIN_NT
+    found = (0 == access(executable, 02));	/* readable */
+#else
     found = (0 == access(executable, 01));	/* executable */
+#endif
     if (found) return;
   }
 
