@@ -22,7 +22,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: xsb.in,v 1.4 1998-12-23 05:25:17 kifer Exp $
+## $Id: xsb.in,v 1.5 1998-12-23 21:09:13 kifer Exp $
 ## 
 ##
 
@@ -46,10 +46,8 @@ suffix=@config_tag@
 invocation_name=$0
 
 # If symbolic link: is there a more elegant way to extract the value of a link?
-# ls -L seems to be broken on Solaris
 if test -h $invocation_name ; then
-    # This won't work right if symlink has a space in its name.
-    invocation_name=`ls -l $invocation_name | sed 's,.* ,,'`
+    invocation_name=`ls -l $invocation_name | sed 's,.*-> ,,'`
 fi
 
 case $invocation_name in

@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: self_orientation.c,v 1.7 1998-12-23 05:25:26 kifer Exp $
+** $Id: self_orientation.c,v 1.8 1998-12-23 21:09:17 kifer Exp $
 ** 
 */
 
@@ -137,6 +137,8 @@ char *xsb_executable_full_path(char *myname)
   static char myname_augmented[MAXPATHLEN];
 
   
+#ifndef WIN_NT
+  /* Unix */
   /* if we can read symlink, then it is a symlink */
   if ( (link_len = readlink(myname, myname_augmented, MAXPATHLEN)) > 0 ) {
     /* we can't assume that the value of the link is null-terminated */
@@ -144,8 +146,9 @@ char *xsb_executable_full_path(char *myname)
       *(myname_augmented+link_len+1) = '\0';
   } else
     strcpy(myname_augmented, myname);
-
-#ifdef WIN_NT
+#else
+  /* Windows doesn't seem to have readlink() */
+  strcpy(myname_augmented, myname);
   /* if executable doesn't end with .exe, then add it */
   if (strcmp(myname + strlen(myname) - 4, ".exe") != 0)
     sprintf(myname_augmented, "%s.exe", myname);
