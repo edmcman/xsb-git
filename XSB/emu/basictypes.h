@@ -18,13 +18,13 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: basictypes.h,v 1.2 1998-11-13 23:08:16 kifer Exp $
+** $Id: basictypes.h,v 1.3 1998-11-14 05:00:44 kifer Exp $
 ** 
 */
 
 
 #ifndef WIN_NT
-typedef short bool;
+typedef short  bool;
 #endif
 
 #ifndef FALSE
