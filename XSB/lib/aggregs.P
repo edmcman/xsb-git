@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: aggregs.P,v 1.1.1.1 1998-11-05 17:00:25 sbprolog Exp $
+** $Id: aggregs.P,v 1.2 1998-12-08 21:58:40 cbaoqiu Exp $
 ** 
 */
 
@@ -48,6 +48,7 @@
 	bagAvg/2.
 
 :- import apply/2,apply/3,apply/4 from usermod.
+:- import sort/2 from setof.
 
 /* 
 bagReduce(+UnaryPred,?Result,+BinOp,+OpId) reduces all values that
@@ -95,7 +96,8 @@ bagPO1(Call,Var,PO) :-
 	 ;	(findall(p(Cs,Ovar,Leaf),
 			 (get_returns(Cs,Oskel,Leaf), PO(Ovar,Var)),
 			 Rets),
-		 member(p(Cs,Ovar,Leaf),Rets),
+		 sort(Rets, Rets1),
+		 member(p(Cs,Ovar,Leaf),Rets1),
 		 delete_return(Cs,Leaf),
 		 fail
 		;
