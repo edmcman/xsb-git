@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: emudef.h,v 1.1.1.1 1998-11-05 16:55:15 sbprolog Exp $
+** $Id: emudef.h,v 1.2 1998-12-09 03:08:21 cbaoqiu Exp $
 ** 
 */
 
@@ -65,6 +65,14 @@ Pair list_str;
 
 Psc list_psc, comma_psc;
 Psc tnot_psc, delay_psc;
+
+/*
+ * Ret PSC's are used to store substitution factors for subgoal calls or
+ * answers.  A psc with a new arity will be created when needed.  Array
+ * ret_psc_exists[] is used to record all existed ret Psc's.
+ */
+byte ret_psc_exists[255];
+Psc ret_psc[255];
 
 char *list_dot;
 
