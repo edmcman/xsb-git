@@ -5,7 +5,7 @@
 %%    YOU MIGHT NEED TO CHANGE SOME OF THE SETTINGS BELOW
 %%
 
-/* File:      xsb_configuration_nt.in  
+/* File:      xsb_configuration_wind.in  
 ** Author(s): kifer
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
@@ -25,7 +25,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xsb_configuration_wind.in,v 1.1 1998-11-14 23:43:49 kifer Exp $
+** $Id: xsb_configuration_wind.in,v 1.2 1998-11-16 00:46:38 kifer Exp $
 ** 
 */
 
