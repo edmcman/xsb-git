@@ -5,7 +5,19 @@
 
 %---------------- Transformed program ----------------------
 
-test :- abolish_all_tables, fail.
+qsort__1(_h452,[_h456,[]]) :- 
+        [list|_h129] = _h460, _h147 = [_h464,[]], 
+        partition(_h129,_h185,_h199,_h213),
+        qsort(_h199,_h251),
+        qsort(_h213,_h289),
+        append(_h251,[list|_h289],_h147),
+        ArgsOut = [_h452,[_h456,[]]],
+        set_reduce([_h460,[_h464,[]]], ArgsOut),
+        valid_types(ArgsOut).
+partition__1(_h367,[_h371,[_h375,[_h379,[]]]]) :- 
+        [list|_h129] = _h383, _h147 = [_h387,[_h391,[_h395,[]]]], partition__1(_h367,[_h371,[_h375,[_h379,[]]]]) :- 
+        [list|_h129] = _h383, _h147 = [_h387,[_h391,[_h395,[]]]], append__1(_h290,[_h294,[_h298,[]]]) :- 
+        [list|_h129] = _h302, _h147 = [_h306,[_h310,[]]], test :- abolish_all_tables, fail.
 test :- cputime(T0), tp, cputime(T1), T is T1-T0, nl,
    write('Iterate Tp without meta-interpretation took: '),
    write(T), writeln(' secs'), nl, fail.
@@ -22,10 +34,25 @@ valid_types([T|Ts]) :- T\==[], valid_types(Ts).
 
 %---------------- Definitions of tabled preds --------------
 
+:- table append__1/3.
+:- table partition__1/4.
+:- table qsort__1/2.
 
+append(_h112,_h114,_h116) :- 
+        append__1(_h118,_h120,_h122),
+        unify_sets([_h112,_h114,_h116], [_h118,_h120,_h122]).
+partition(_h112,_h114,_h116,_h118) :- 
+        partition__1(_h120,_h122,_h124,_h126),
+        unify_sets([_h112,_h114,_h116,_h118], [_h120,_h122,_h124,_h126]).
+qsort(_h112,_h114) :- 
+        qsort__1(_h116,_h118),
+        unify_sets([_h112,_h114], [_h116,_h118]).
 
 %---------------- Tp ---------------------------------------
 
+tp :- append__1(_h113,_h115,_h117), fail.
+tp :- partition__1(_h113,_h115,_h117,_h119), fail.
+tp :- qsort__1(_h113,_h115), fail.
 tp.
 
 
@@ -57,4 +84,13 @@ tp.
 
 %---------------- Show Result ------------------------------
 
+show_facts :- append__1(_h114,_h115,_h116),
+              numbervars(append__1(_h114,_h115,_h116)),
+              write(append__1(_h114,_h115,_h116)), nl, fail.
+show_facts :- partition__1(_h114,_h115,_h116,_h117),
+              numbervars(partition__1(_h114,_h115,_h116,_h117)),
+              write(partition__1(_h114,_h115,_h116,_h117)), nl, fail.
+show_facts :- qsort__1(_h114,_h115),
+              numbervars(qsort__1(_h114,_h115)),
+              write(qsort__1(_h114,_h115)), nl, fail.
 show_facts.

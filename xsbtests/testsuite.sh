@@ -33,16 +33,6 @@
 
 echo ==============================================================
 
-if test -f uniq_lock; then
-   echo "************************************************************"
-   echo uniq_lock exists
-   echo Probably somebody else is running the testsuite
-   echo If not then remove ./uniq_lock
-   echo and continue
-   echo "************************************************************"
-   exit
-fi
-
 
 if test $# -gt 1 -o $# = 0; then
 	echo "Usage: testsuite.csh <full path for emulator>"

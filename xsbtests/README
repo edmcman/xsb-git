@@ -1,6 +1,6 @@
 This is a set of tests for the XSB system.  To run all the tests:
 
-testsuite.sh EXECUTABLE
+testsuite.sh <xsb-executable>
 
 where EXECUTABLE is the full path for the XSB executable to be
 tested. It must be given by an absolute filename, since the testsuite
@@ -9,3 +9,9 @@ script changes directories.
 The testsuite script creates a file in the /tmp dir
 (/tmp/xsb_test_log.$USER) with the log of the run. In case any test
 fails, the script will automatically notify the user who started it.
+
+Another test script is supertest.sh. It configures XSB with several
+different parameters and then runs the test suite using each.
+This is done as follows:
+
+supertest.sh <xsb-executable> <xsb-root-directory>

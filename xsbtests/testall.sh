@@ -4,17 +4,26 @@ echo "-------------------------------------------------------"
 echo "--- Running testall.sh                              ---"
 echo "-------------------------------------------------------"
 
-if test -f uniq_lock; then
-   echo uniq_lock exists
-   echo Probably somebody else is running the testsuite
-   echo If not then remove uniq_lock
-   echo and continue
-   exit
-fi
-
-echo $$ > uniq_lock
 
 XEMU=$1
+
+lockfile=lock.test
+testdir=`pwd`
+
+trap 'rm -f $testdir/$lockfile; exit 1' 1 2 15
+
+if test -f $testdir/$lockfile; then
+   echo "************************************************************"
+   echo ./$lockfile exists
+   echo Probably testsuite is already running...
+   echo If not, remove ./$lockfile
+   echo and continue
+   echo "************************************************************"
+   exit
+else
+   echo $$ > $lockfile
+fi
+
 
 # float_tests  omitted??? - mk
 dirlist="basic_tests prolog_tests retract_tests \
@@ -30,4 +39,4 @@ for dir in $dirlist ; do
   cd ..
 done
    
-rm -f uniq_lock
+rm -f $lockfile
