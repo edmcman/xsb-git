@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xmain.c,v 1.8 1998-11-18 07:59:17 kifer Exp $
+** $Id: xmain.c,v 1.9 1998-11-19 05:24:23 kifer Exp $
 ** 
 */
 
@@ -52,11 +52,7 @@
 #endif
 #endif
 
-extern void xsb_executable_full_path(char *);
-extern void set_xsbinfo_dir (void);
-extern void set_install_dir(void);
-extern void set_config_file(void);
-extern void set_user_home(void);
+#include "self_orientation.h"
 
 int main(int argc, char *argv[])
 { 

@@ -19,14 +19,14 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: dynload.c,v 1.1.1.1 1998-11-05 16:55:15 sbprolog Exp $
+** $Id: dynload.c,v 1.2 1998-11-19 05:24:21 kifer Exp $
 ** 
 */
 
 
 #include "configs/config.h"	/* This should appear BEFORE the ifdef!	*/
 
-extern char executable[];        /* from xmain.c */
+extern char executable[];        /* from self_orientation.c */
 
 #ifdef FOREIGN
 

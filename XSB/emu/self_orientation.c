@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: self_orientation.c,v 1.3 1998-11-18 21:07:00 kifer Exp $
+** $Id: self_orientation.c,v 1.4 1998-11-19 05:24:21 kifer Exp $
 ** 
 */
 
@@ -128,7 +128,7 @@ static void check_create_dir(char *path) {
 }
 
 /* uses the global executable var */
-void xsb_executable_full_path(char *myname)
+char *xsb_executable_full_path(char *myname)
 {
   struct stat fileinfo;
   char *path = getenv("PATH");
@@ -144,10 +144,10 @@ void xsb_executable_full_path(char *myname)
 
 #ifdef WIN_NT
     strcat(executable, ".exe");
-#else
+#endif
 
   /* found executable by prepending cwd */
-  if (!stat(executable, &fileinfo)) return;
+  if (!stat(executable, &fileinfo)) return executable;
 
   /* Otherwise, search PATH environment var.
      This code is a modified "which" shell builtin */
@@ -178,7 +178,7 @@ void xsb_executable_full_path(char *myname)
 #else
     found = (0 == access(executable, 01));	/* executable */
 #endif
-    if (found) return;
+    if (found) return executable;
   }
 
   /* XSB executable isn't found after searching PATH */
