@@ -4,6 +4,9 @@ EMU=$1
 FILE=$2
 CMD=$3
 
+DIR=`pwd`
+BASEDIR=`basename $DIR`
+
 echo "--------------------------------------------------------------------"
 echo "Testing $FILE"
 $EMU -m 3000 -i << EOF
@@ -25,10 +28,10 @@ sort temp > ${FILE}_new
 #-----------------------
 d=`diff ${FILE}_new ${FILE}_old`
 if test -z "$d"; then 
-	echo "$FILE tested"
+	echo "$BASEDIR/$FILE tested"
 	rm -f ${FILE}_new
 else
-	echo "$FILE different\!\!\!"
+	echo "$BASEDIR/$FILE different\!\!\!"
 	diff ${FILE}_new ${FILE}_old
 fi
 

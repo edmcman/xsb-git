@@ -6,36 +6,36 @@
 %---------------- Transformed program ----------------------
 
 qsort__1([list],[list]).
-qsort__1(_h452,_h454) :- 
-        [list|_h129] = _h456, _h147 = _h458, 
-        partition(_h129,_h185,_h199,_h213),
-        qsort(_h199,_h251),
-        qsort(_h213,_h289),
-        append(_h251,[list|_h289],_h147),
-        ArgsOut = [_h452,_h454],
-        set_reduce([_h456,_h458], ArgsOut),
+qsort__1(_h463,_h465) :- 
+        [list|_h137] = _h467, _h155 = _h469, 
+        partition(_h137,_h193,_h207,_h221),
+        qsort(_h207,_h259),
+        qsort(_h221,_h297),
+        append(_h259,[list|_h297],_h155),
+        ArgsOut = [_h463,_h465],
+        set_reduce([_h467,_h469], ArgsOut),
         valid_types(ArgsOut).
-partition__1([list],[_h133],[list],[list]).
-partition__1(_h367,_h369,_h371,_h373) :- 
-        [list|_h129] = _h375, _h147 = _h377, [list|_h173] = _h379, _h191 = _h381, 
-        'my =<'(_h209,_h147),
-        partition(_h129,_h147,_h173,_h191),
-        ArgsOut = [_h367,_h369,_h371,_h373],
-        set_reduce([_h375,_h377,_h379,_h381], ArgsOut),
+partition__1([list],[_h141],[list],[list]).
+partition__1(_h375,_h377,_h379,_h381) :- 
+        [list|_h137] = _h383, _h155 = _h385, [list|_h181] = _h387, _h199 = _h389, 
+        'my =<'(_h217,_h155),
+        partition(_h137,_h155,_h181,_h199),
+        ArgsOut = [_h375,_h377,_h379,_h381],
+        set_reduce([_h383,_h385,_h387,_h389], ArgsOut),
         valid_types(ArgsOut).
-partition__1(_h367,_h369,_h371,_h373) :- 
-        [list|_h129] = _h375, _h147 = _h377, _h161 = _h379, [list|_h187] = _h381, 
-        'my >'(_h209,_h147),
-        partition(_h129,_h147,_h161,_h187),
-        ArgsOut = [_h367,_h369,_h371,_h373],
-        set_reduce([_h375,_h377,_h379,_h381], ArgsOut),
+partition__1(_h375,_h377,_h379,_h381) :- 
+        [list|_h137] = _h383, _h155 = _h385, _h169 = _h387, [list|_h195] = _h389, 
+        'my >'(_h217,_h155),
+        partition(_h137,_h155,_h169,_h195),
+        ArgsOut = [_h375,_h377,_h379,_h381],
+        set_reduce([_h383,_h385,_h387,_h389], ArgsOut),
         valid_types(ArgsOut).
-append__1([list],[_h133],[_h133]).
-append__1(_h290,_h292,_h294) :- 
-        [list|_h129] = _h296, _h147 = _h298, [list|_h173] = _h300, 
-        append(_h129,_h147,_h173),
-        ArgsOut = [_h290,_h292,_h294],
-        set_reduce([_h296,_h298,_h300], ArgsOut),
+append__1([list],[_h141],[_h141]).
+append__1(_h298,_h300,_h302) :- 
+        [list|_h137] = _h304, _h155 = _h306, [list|_h181] = _h308, 
+        append(_h137,_h155,_h181),
+        ArgsOut = [_h298,_h300,_h302],
+        set_reduce([_h304,_h306,_h308], ArgsOut),
         valid_types(ArgsOut).
 test :- abolish_all_tables, fail.
 test :- cputime(T0), tp, cputime(T1), T is T1-T0, nl,
@@ -58,21 +58,21 @@ valid_types([T|Ts]) :- T\==[], valid_types(Ts).
 :- table partition__1/4.
 :- table qsort__1/2.
 
-append(_h112,_h114,_h116) :- 
-        append__1(_h118,_h120,_h122),
-        unify_sets([_h112,_h114,_h116], [_h118,_h120,_h122]).
-partition(_h112,_h114,_h116,_h118) :- 
-        partition__1(_h120,_h122,_h124,_h126),
-        unify_sets([_h112,_h114,_h116,_h118], [_h120,_h122,_h124,_h126]).
-qsort(_h112,_h114) :- 
-        qsort__1(_h116,_h118),
-        unify_sets([_h112,_h114], [_h116,_h118]).
+append(_h120,_h122,_h124) :- 
+        append__1(_h126,_h128,_h130),
+        unify_sets([_h120,_h122,_h124], [_h126,_h128,_h130]).
+partition(_h120,_h122,_h124,_h126) :- 
+        partition__1(_h128,_h130,_h132,_h134),
+        unify_sets([_h120,_h122,_h124,_h126], [_h128,_h130,_h132,_h134]).
+qsort(_h120,_h122) :- 
+        qsort__1(_h124,_h126),
+        unify_sets([_h120,_h122], [_h124,_h126]).
 
 %---------------- Tp ---------------------------------------
 
-tp :- append__1(_h113,_h115,_h117), fail.
-tp :- partition__1(_h113,_h115,_h117,_h119), fail.
-tp :- qsort__1(_h113,_h115), fail.
+tp :- append__1(_h121,_h123,_h125), fail.
+tp :- partition__1(_h121,_h123,_h125,_h127), fail.
+tp :- qsort__1(_h121,_h123), fail.
 tp.
 
 
@@ -104,13 +104,13 @@ tp.
 
 %---------------- Show Result ------------------------------
 
-show_facts :- append__1(_h114,_h115,_h116),
-              numbervars(append__1(_h114,_h115,_h116)),
-              write(append__1(_h114,_h115,_h116)), nl, fail.
-show_facts :- partition__1(_h114,_h115,_h116,_h117),
-              numbervars(partition__1(_h114,_h115,_h116,_h117)),
-              write(partition__1(_h114,_h115,_h116,_h117)), nl, fail.
-show_facts :- qsort__1(_h114,_h115),
-              numbervars(qsort__1(_h114,_h115)),
-              write(qsort__1(_h114,_h115)), nl, fail.
+show_facts :- append__1(_h122,_h123,_h124),
+              numbervars(append__1(_h122,_h123,_h124)),
+              write(append__1(_h122,_h123,_h124)), nl, fail.
+show_facts :- partition__1(_h122,_h123,_h124,_h125),
+              numbervars(partition__1(_h122,_h123,_h124,_h125)),
+              write(partition__1(_h122,_h123,_h124,_h125)), nl, fail.
+show_facts :- qsort__1(_h122,_h123),
+              numbervars(qsort__1(_h122,_h123)),
+              write(qsort__1(_h122,_h123)), nl, fail.
 show_facts.

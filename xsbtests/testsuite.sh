@@ -99,7 +99,7 @@ echo "Testing $XEMU"
 echo "Results will be in  $LOG_FILE"
 
 echo "Log for  $XEMU" > $LOG_FILE
-echo "Date-Time: `date +"%y%m%d-%H%M"`" >> $LOG_FILE
+(echo "Date-Time: `date +"%y%m%d-%H%M"`" >> $LOG_FILE) || status=failed
 if test -n "$status"; then
 	echo "Date-Time: no date for NeXT..." >> $LOG_FILE
 	NEXT_DATE=1
@@ -149,17 +149,20 @@ else
 fi
 
 # -s tests if size > 0
-if test ! -s $RES_FILE; then
+if test -s $RES_FILE; then
 	HOSTNAME=`hostname`
-	echo "Failed testsuite on $HOSTNAME"
-        echo "Testsuite for $XEMU failed" > $MSG_FILE
+	cat $RES_FILE
+	echo "-----------------------------------------"
+	echo "***FAILED testsuite for $XEMU on $HOSTNAME"
+        echo "FAILED testsuite for $XEMU on $HOSTNAME" > $MSG_FILE
 	echo "Check the log file $NEW_LOG" >> $MSG_FILE
-	# Mail does not work on the HP
-	#	Mail -s "Testsuite failed" $USER@cs.sunysb.edu < $MSG_FILE
+	echo "" >> $MSG_FILE
+	echo "The following is a summary of the problems:" >> $MSG_FILE
+	cat $RES_FILE >> $MSG_FILE
 	mail $USER < $MSG_FILE
 	rm -f $MSG_FILE
 else
-	echo "Passed testsuite"
+	echo "PASSED testsuite for $XEMU on $HOSTNAME"
 fi
 
 rm -f $RES_FILE
