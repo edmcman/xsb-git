@@ -1,4 +1,4 @@
-/* File:      numbervars.P
+/* File:      num_vars.P
 ** Author(s): Kostis F. Sagonas, Jiyang Xu, David S. Warren
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: num_vars.P,v 1.1.1.1 1998/11/05 17:00:28 sbprolog Exp $
+** $Id: num_vars.P,v 1.1 1998/11/15 00:47:47 kifer Exp $
 ** 
 */
 
