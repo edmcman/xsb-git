@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: interface.h,v 1.1.1.1 1998-11-05 17:01:25 sbprolog Exp $
+** $Id: interface.h,v 1.2 1998-11-09 22:26:19 kifer Exp $
 ** 
 */
 
@@ -52,6 +52,13 @@ the following can be modified
 #define LOADED 1           /* the flag when Perl interpretor is loaded */
 #define UNLOADED 0         /* the flag when Perl interpretor is not loaded */
 
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 /*----------------------------------------------------------------------------
  *global variables
  *--------------------------------------------------------------------------*/
@@ -75,8 +82,8 @@ extern int unloadPerl( void );   /*unload perl interpreter*/
 extern SV* my_perl_eval_sv(SV *sv, I32 croak_on_error); /*call perl compiler*/
 extern int match(SV *string, char *pattern); /*perl match function*/
 extern int substitute(SV **string, char *pattern);/*perl substitute function*/
-extern int matches(SV *string, char *pattern, AV **match_list);
-                                 /*perl global match function*/
+extern int all_matches(SV *string, char *pattern, AV **match_list);
+                                 /*perl global match function: all matches*/
 extern void buildSubMatchSpec(void); 
                                  /*build the submatch arguments list string*/
                            
