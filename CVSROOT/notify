@@ -10,4 +10,4 @@
 #
 # For example:
 
-DEFAULT mail %s -s "CVS notification"
+DEFAULT mail -s "CVS notification" %s 
