@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: parse.H,v 1.3 1998-12-21 01:06:47 cbaoqiu Exp $
+** $Id: parse.H,v 1.4 1998-12-21 23:54:51 kifer Exp $
 ** 
 */
 
@@ -37,7 +37,7 @@
 :- import file_read/3, vv/2 from xsb_read.
 :- import add_hilog_symbol/1 from hilogsym.
 :- import otherwise/0, conset/2, append/3 from prof_sbp.
-:- import member1/2, error/1, warning/1, message/1 from auxlry.
+:- import member1/2, error/1, warning/1, message/1, setoptions1/1 from auxlry.
 :- import sym_insert/5, sym_propin/2, sym_complete/1,
 	  add_new_clause/2, clause_listify/2
      from symtab.
