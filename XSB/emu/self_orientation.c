@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: self_orientation.c,v 1.2 1998-11-18 16:15:50 kifer Exp $
+** $Id: self_orientation.c,v 1.3 1998-11-18 21:07:00 kifer Exp $
 ** 
 */
 
@@ -142,6 +142,10 @@ void xsb_executable_full_path(char *myname)
     sprintf(executable, "%s%c%s", current_dir, SLASH, myname);
   }
 
+#ifdef WIN_NT
+    strcat(executable, ".exe");
+#else
+
   /* found executable by prepending cwd */
   if (!stat(executable, &fileinfo)) return;
 
@@ -155,7 +159,7 @@ void xsb_executable_full_path(char *myname)
       pathcounter++;
     }
 
-    /* save the separator ':' (or ';' on NT and replace it with \0 */
+    /* save the separator ':' (or ';' on NT and replace it with \0) */
     save = *pathcounter;
     *pathcounter = '\0';
 
@@ -169,6 +173,7 @@ void xsb_executable_full_path(char *myname)
     if (*pathcounter) pathcounter++;
 
 #ifdef WIN_NT
+    strcat(executable, ".exe");
     found = (0 == access(executable, 02));	/* readable */
 #else
     found = (0 == access(executable, 01));	/* executable */
