@@ -46,4 +46,4 @@ xsbcore	     -a !XSB/tests !XSB/admin !XSB/examples !XSB/docs XSB
 xsbdevel     -a !XSB/tests XSB
 
 # This is how we'll be making releases
-xsbrelease   -a xsbexamples xsbcore
+xsbrelease   -a !XSB/tests !XSB/admin !XSB/docs XSB
