@@ -9,7 +9,7 @@ XEMU=$1
 #---------------------------------------
 # Assert and retract tests.
 #---------------------------------------
-../gentest $XEMU testretract "test."
+../gentest.sh $XEMU testretract "test."
 #---------------------------------------
-../gentest $XEMU boyer_assert "boyer."
+../gentest.sh $XEMU boyer_assert "boyer."
 #---------------------------------------

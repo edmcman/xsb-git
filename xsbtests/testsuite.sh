@@ -122,19 +122,21 @@ $GREP "match" $LOG_FILE >> $RES_FILE
 # for bus error
 $GREP "bus" $LOG_FILE >> $RES_FILE
 # for really bad outcomes
-$GREP "Missing" $LOG_FILE >> $RES_FILE
+$GREP "missing" $LOG_FILE >> $RES_FILE
 # for wrong results
 $GREP "differ!" $LOG_FILE >> $RES_FILE
 # when xsb aborts... it writes something like ! Aborting...
-$GREP "bort" $LOG_FILE >> $RES_FILE
+$GREP "abort" $LOG_FILE >> $RES_FILE
 # for overflows (check for Overflow & overflow)
-$GREP "verflow" $LOG_FILE >> $RES_FILE
+$GREP "overflow" $LOG_FILE >> $RES_FILE
 # for ... missing command...
 $GREP "not found" $LOG_FILE >> $RES_FILE
 $GREP "abnorm" $LOG_FILE >> $RES_FILE
+$GREP "denied" $LOG_FILE >> $RES_FILE
+$GREP "no such file" $LOG_FILE >> $RES_FILE
 # sometimes after overflow the diff fails and a message with Missing
 # is displayed
-$GREP "Missing" $LOG_FILE >> $RES_FILE
+$GREP "missing" $LOG_FILE >> $RES_FILE
 # 
 $GREP "fatal" $LOG_FILE >> $RES_FILE
 echo "-----------------------------------------"
