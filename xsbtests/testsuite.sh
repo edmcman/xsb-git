@@ -140,6 +140,7 @@ $GREP "illegal" $LOG_FILE >> $RES_FILE
 $GREP "missing" $LOG_FILE >> $RES_FILE
 # 
 $GREP "fatal" $LOG_FILE >> $RES_FILE
+$GREP "syntax error" $LOG_FILE >> $RES_FILE
 echo "-----------------------------------------"
 
 

@@ -1,4 +1,4 @@
-:- compiler_options(testh,[spec_off]).
+:- compiler_options([spec_off]).
 
 :- [cycle].
 
