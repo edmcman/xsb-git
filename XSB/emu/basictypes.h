@@ -18,12 +18,25 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: basictypes.h,v 1.4 1998-11-17 00:29:35 kifer Exp $
+** $Id: basictypes.h,v 1.5 1998-11-17 01:56:41 kifer Exp $
 ** 
 */
 
 
+#ifndef BASICTYPES_INCLUDED
+
 typedef short  bool;
+
+#ifdef BITS64
+typedef long prolog_int ;
+#else
+typedef int prolog_int ;
+#endif
+
+typedef double prolog_float ;
+typedef int reg_num;
+typedef unsigned long prolog_term;	/* opaque type definition */
+
 
 #ifndef FALSE
 #define FALSE  0
@@ -52,3 +65,8 @@ typedef short  bool;
 #endif
 
 #define K   1024
+
+#define BASICTYPES_INCLUDED
+
+#endif
+

@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: cinterf.h,v 1.2 1998-11-14 05:05:23 kifer Exp $
+** $Id: cinterf.h,v 1.3 1998-11-17 01:56:44 kifer Exp $
 ** 
 */
 
@@ -140,6 +140,8 @@
 **  		both file and obj are opaque pointers of type char*
 */
 
+#include "basictypes.h"
+
 
 /*======================================================================*/
 /* High level C interface						*/
@@ -156,15 +158,6 @@
 #define call_conv
 #endif
 
-
-#ifdef BITS64
-typedef long prolog_int ;
-#else
-typedef int prolog_int ;
-#endif
-typedef double prolog_float ;
-
-typedef int reg_num;
 
 DllExport extern prolog_int call_conv ptoc_int(reg_num);	/* defined in builtin.c */
 DllExport extern prolog_float call_conv ptoc_float(reg_num);	/* defined in builtin.c */
@@ -185,8 +178,6 @@ extern int   ptoc_term(char*, char*, reg_num);
 /* Low level C interface						*/
 /*======================================================================*/
 
-typedef unsigned long prolog_term;	/* opaque type definition */
-/* typedef int reg_num; */	/* already defined in high level interface */
 
 DllExport extern prolog_term call_conv reg_term(reg_num);
 
