@@ -134,6 +134,7 @@ $GREP "not found" $LOG_FILE >> $RES_FILE
 $GREP "abnorm" $LOG_FILE >> $RES_FILE
 $GREP "denied" $LOG_FILE >> $RES_FILE
 $GREP "no such file" $LOG_FILE >> $RES_FILE
+$GREP "illegal" $LOG_FILE >> $RES_FILE
 # sometimes after overflow the diff fails and a message with Missing
 # is displayed
 $GREP "missing" $LOG_FILE >> $RES_FILE
