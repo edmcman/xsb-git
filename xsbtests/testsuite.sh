@@ -154,7 +154,7 @@ if test -s $RES_FILE; then
 	cat $RES_FILE
 	echo "-----------------------------------------"
 	echo "***FAILED testsuite for $XEMU on $HOSTNAME"
-        echo "FAILED testsuite for $XEMU on $HOSTNAME" > $MSG_FILE
+        echo "***FAILED testsuite for $XEMU on $HOSTNAME" > $MSG_FILE
 	echo "Check the log file $NEW_LOG" >> $MSG_FILE
 	echo "" >> $MSG_FILE
 	echo "The following is a summary of the problems:" >> $MSG_FILE

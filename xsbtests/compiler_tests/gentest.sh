@@ -20,7 +20,7 @@ if test -z "$d"; then
 	echo "$BASEDIR/$FILE.O tested"
 	rm -f ${FILE}.O
 else
-	echo "$BASEDIR/$FILE different\!\!\!"
+	echo "$BASEDIR/$FILE different!!!"
 	diff ${FILE}.O ${FILE}.O.old
 fi
 
@@ -29,7 +29,7 @@ if test -z "$d"; then
 	echo "$BASEDIR/$FILE.spec tested"
 	rm -f ${FILE}.spec
 else
-	echo "$BASEDIR/$FILE different\!\!\!"
+	echo "$BASEDIR/$FILE different!!!"
 	diff ${FILE}.spec ${FILE}.spec.old
 fi
 
@@ -38,7 +38,7 @@ if test -z "$d"; then
 	echo "$BASEDIR/$FILE.table tested"
 	rm -f ${FILE}.table
 else
-	echo "$BASEDIR/$FILE different\!\!\!"
+	echo "$BASEDIR/$FILE different!!!"
 	diff ${FILE}.table ${FILE}.table.old
 fi
 
@@ -47,6 +47,6 @@ if test -z "$d"; then
 	echo "$BASEDIR/$FILE.ti tested"
 	rm -f ${FILE}.ti
 else
-	echo "$BASEDIR/$FILE different\!\!\!"
+	echo "$BASEDIR/$FILE different!!!"
 	diff ${FILE}.ti ${FILE}.ti.old
 fi

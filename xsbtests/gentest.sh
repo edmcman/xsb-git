@@ -31,7 +31,7 @@ if test -z "$d"; then
 	echo "$BASEDIR/$FILE tested"
 	rm -f ${FILE}_new
 else
-	echo "$BASEDIR/$FILE different\!\!\!"
+	echo "$BASEDIR/$FILE different!!!"
 	diff ${FILE}_new ${FILE}_old
 fi
 
