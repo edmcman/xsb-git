@@ -9,6 +9,7 @@
 :- import abolish_table_pred/1 from tables.
 :- import member/2 from basics.
 at :- abolish_table_info.
+:- [edge_dag].	% data for testing shortest path
 
 /* test data and query: test. */
 test :- at,fail.
@@ -50,7 +51,6 @@ test :-
 % bigger tests.
 /****/
 test :- 
-	[edge_dag],	% data for testing shortest-path
 	bagMin(sp(0,T),Dist), writeln([T,Dist]),fail.
 test :- 
 	bagCount(targsof(X),Count),
