@@ -1,0 +1,84 @@
+:- import get_calls_for_table/3, set_pil_on/0,
+        table_state/2, get_returns_for_call/2
+        from tables.
+:- import abolish_table_info/0 from machine.
+:- import variant/2 from subsumes. 
+ 
+test :- abolish_table_info, int(p(X,Y)),writeln([X,Y]),fail. 
+ 
+ 
+% interpreter 
+ 
+:- table(int/1). 
+ 
+int(G) :- rule(G,B),int_c(B).
+
+ 
+int_c(G) :- 
+        G == true   
+         ->     true 
+         ; G = (A,B) 
+         ->     int_c(A),int_c(B)
+         ; in_table(G,Call)     % if completed table for this call 
+         ->     get_returns_for_call(Call,Ret), 
+                Ret=int(G)
+         ;      int(G)
+        .
+
+
+in_table(G,Call) :-     % find completed table for call.
+        get_calls_for_table(int(_),Call,_),
+        table_state(Call,complete),
+        Call = int(G1),
+        variant(G1,G),
+        !.
+
+
+rule(p(X,Y),a(X,Y)).
+rule(p(X,Y),(p(X,Z),p(Z,Y))).
+rule(a(1,2),true).
+rule(a(2,3),true).
+rule(a(3,1),true).
+
+end_of_file.
+
+/*
+int_c(true):-!.
+int_c((A,B)):-!,int_c(A),int_c(B),
+		(arg(1,A,Arg),var(Arg) -> set_pil_on ; true).
+int_c(G):- (in_table(G,Call)
+	    ->
+	    get_returns_for_call(Call,Ret), 
+            Ret=int(G)
+	    ; int(G)).
+*/
+/*
+int_c(true):-!.
+int_c((A,B)):-!,int_c(A),int_c(B),write('%1'),write(A),writeln(B).
+int_c(G):- (in_table(G,Call)
+	    ->
+	    get_returns_for_call(Call,Ret), 
+            Ret=int(G),write('%2'),writeln(G)
+	    ; int(G),write('%3'),writeln(G)).
+*/
+/*
+int_c(true):-!.
+int_c((A,B)):-!,int_c(A),int_c(B).
+int_c(G):- in_table(G,Call),!,
+	    get_returns_for_call(Call,Ret), 
+            Ret=int(G).
+int_c(G):-  int(G).
+*/
+
+/*
+int_c(G) :- 
+        G == true   
+         ->     true 
+         ; G = (A,B) 
+         ->     int_c(A),int_c(B),write('%3'),writeln(G)
+         ; in_table(G,Call)     % if completed table for this call 
+         ->     call(G),
+	        write('%1'),writeln(G)
+         ;      int(G),	write('%2'),writeln(G)
+        .
+*/

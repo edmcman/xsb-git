@@ -1,0 +1,173 @@
+%==================================================================
+% To see the difference in behaviour try one of the following two
+%==================================================================
+
+:- trie_dynamic(pred/3).
+:- import trie_assert/1, trie_dynamic/1 from tables.
+
+%my_assert(X) :- trie_assert(X).
+
+%==================================================================
+%
+:- dynamic pred/3.
+%
+my_assert(X) :-	% simulates behaviour of trie_assert/1
+	( call(X) -> true ; assert(X) ).
+%
+%==================================================================
+
+:- export trans/1.
+
+:- import pred/3 from usermod.
+:- import str_cat/3 from machine.
+:- import same_length/2 from lists.
+:- import set_reduce/2 from set_reduce.
+:- import length/2, memberchk/2 from basics.
+
+trans(InFile) :-
+	seeing(OldInFile), telling(OldOutFile),
+	see(InFile), str_cat(InFile,'.trans',OutFile), tell(OutFile),
+	gen_imports, trans_program, gen_utils,
+	gen_tabled_preds, gen_tp, write_builtins, show_result,
+	told, tell(OldOutFile), seen, see(OldInFile).
+
+gen_imports :-
+	writeln(':- import set_unify/2 from set_unify.'),
+	writeln(':- import set_reduce/2 from set_reduce.'),
+	writeln(':- import numbervars/1 from numbervars.'),
+	nl.
+
+gen_utils :-
+	writeln('test :- abolish_all_tables, fail.'),
+	writeln('test :- cputime(T0), tp, cputime(T1), T is T1-T0, nl,'),
+        writeln('   write(''Iterate Tp without meta-interpretation took: ''),'),
+        writeln('   write(T), writeln('' secs''), nl, fail.'),
+	writeln('test :- writeln(''=========== Result is ================''),'),
+	writeln('        nl, show_facts.'),
+	nl,
+	writeln('unify_sets([],[]).'),
+	writeln('unify_sets([A|As],[B|Bs]) :- '),
+	writeln('       set_unify(A,B), unify_sets(As,Bs).'),
+	nl,
+	writeln('valid_types([]).'),
+	writeln('valid_types([T|Ts]) :- T\==[], valid_types(Ts).'),
+	nl.
+
+trans_program :-
+	nl,
+	writeln('%---------------- Transformed program ----------------------'),
+	nl,
+	repeat,
+		read(Term),
+		( Term == end_of_file -> !
+		; Term = (H :- B) -> trans_clause(H, B), fail
+		; /* Term = (H :- true) */ trans_fact(Term), fail
+		).
+
+trans_clause(H, B) :-
+	H =.. [F|HeadArgs], str_cat(F,'__1',NF),
+	same_length(HeadArgs,NHeadArgs),
+	same_length(HeadArgs,InArgs),
+	NH =.. [NF|NHeadArgs], write(NH), writeln(' :- '),
+	length(HeadArgs, Arity), my_assert(pred(F,Arity,NF)),
+	( HeadArgs == [] -> true ; tab(8), write_args(HeadArgs,InArgs) ),
+	write_body(B),
+	tab(8), write('ArgsOut = '), write(NHeadArgs), writeln(','),
+	tab(8), write('set_reduce('),write(InArgs), writeln(', ArgsOut),'),
+	tab(8), writeln('valid_types(ArgsOut).').
+
+trans_fact(H) :-
+	H =.. [F|Args], str_cat(F,'__1',NF),
+	set_reduce(Args, RArgs), NH =.. [NF|RArgs],
+	length(Args, Arity), my_assert(pred(F,Arity,NF)),
+	write(NH), writeln('.').
+
+write_body((One,Rest)) :-
+	!, write_body(One), write_body(Rest).
+write_body(One) :-
+	tab(8), functor(One,F,_), builtin_preds(BasePred),
+	( memberchk(F, BasePred) ->
+		str_cat('my ',F,NF), One =.. [F|Args],
+		NewOne =.. [NF|Args], writeq(NewOne)
+	; write(One)
+	), writeln(',').
+
+write_args([], []).
+write_args([A|As], [B|Bs]) :-
+	write(A), write(' = '), write(B), write(', '),
+	( As == [] -> nl ; write_args(As, Bs) ).
+
+gen_tabled_preds :- 
+	nl,
+	writeln('%---------------- Definitions of tabled preds --------------'),
+	nl,
+	gen_tabled_decls, nl, gen_pred_defs.
+
+gen_tabled_decls :-
+	pred(_,A,NF),
+	write(':- table '), write(NF), put(0'/), write(A), writeln('.'),
+	fail.
+gen_tabled_decls.
+
+gen_pred_defs :-
+	pred(F,A,NF), length(HArgs,A), length(BArgs,A),
+	NB =.. [NF|BArgs], NH =.. [F|HArgs],
+	write(NH), writeln(' :- '),
+	tab(8), write(NB), writeln(','),
+	tab(8), write('unify_sets('), write(HArgs),
+		write(', '), write(BArgs), writeln(').'),
+	fail.
+gen_pred_defs.
+
+gen_tp :-
+	nl,
+        writeln('%---------------- Tp ---------------------------------------'),
+	nl,
+	pred(_,A,NF), length(HArgs,A), NH =.. [NF|HArgs],
+	write('tp :- '), write(NH), writeln(', fail.'),
+	fail.
+gen_tp :- writeln('tp.'), nl.
+
+show_result :-
+	nl,
+        writeln('%---------------- Show Result ------------------------------'),
+	nl,
+	pred(_,A,NF), functor(Term,NF,A),
+	write('show_facts :- '), write(Term), writeln(','),
+	write('              numbervars('), write(Term), writeln('),'),
+	write('              write('), write(Term), writeln('), nl, fail.'),
+	fail.
+show_result :- writeln('show_facts.').
+	
+%==================================================================
+
+builtin_preds(['=','\==',is,'<','>','>=','=<','=:=','=\=']).
+
+write_builtins :-
+	nl,
+	writeln('%---------------- Builtin Preds ----------------------------'),
+	nl,
+	writeln('''my =''(X1,X2) :- ''my =_1''(Y1,Y2), unify_sets([X1,X2],[Y1,Y2]).'),
+	writeln('''my \==''(X1,X2) :- ''my \==__1''(Y1,Y2), unify_sets([X1,X2],[Y1,Y2]).'),
+	writeln('''my is''(X1,X2) :- ''my is__1''(Y1,Y2), unify_sets([X1,X2],[Y1,Y2]).'),
+	writeln('''my <''(X1,X2) :- ''my <__1''(Y1,Y2), unify_sets([X1,X2],[Y1,Y2]).'),
+	writeln('''my >''(X1,X2) :- ''my >__1''(Y1,Y2), unify_sets([X1,X2],[Y1,Y2]).'),
+	writeln('''my >=''(X1,X2) :- ''my >=__1''(Y1,Y2), unify_sets([X1,X2],[Y1,Y2]).'),
+	writeln('''my =<''(X1,X2) :- ''my =<__1''(Y1,Y2), unify_sets([X1,X2],[Y1,Y2]).'),
+	writeln('''my =:=''(X1,X2) :- ''my =:=__1''(Y1,Y2), unify_sets([X1,X2],[Y1,Y2]).'),
+	writeln('''my =\=''(X1,X2) :- ''my =\=__1''(Y1,Y2), unify_sets([X1,X2],[Y1,Y2]).'),
+	nl,
+	writeln(':- table ''my =_1''/2, ''my \==__1''/2, ''my is__1''/2.'),
+	writeln(':- table ''my <__1''/2, ''my >__1''/2, ''my >__1''/2.'),
+	writeln(':- table ''my =<__1''/2, ''my =:=__1''/2, ''my =\=__1''/2.'),
+	writeln('''my =_1''(X,X).'),
+	writeln('''my \==__1''(_,_).'),
+	writeln('''my is__1''(num,num).'),
+	writeln('''my <__1''(num,num).'),
+	writeln('''my >__1''(num,num).'),
+	writeln('''my >=__1''(num,num).'),
+	writeln('''my =<__1''(num,num).'),
+	writeln('''my =:=__1''(num,num).'),
+	writeln('''my =\=__1''(num,num).'),
+	nl.
+

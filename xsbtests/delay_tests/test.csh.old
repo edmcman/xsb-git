@@ -1,0 +1,46 @@
+echo "-------------------------------------------------------"
+echo "--- Running delay_tests/test.csh                    ---"
+echo "-------------------------------------------------------"
+#============================================================================
+set XEMU = $argv[1]
+#============================================================================
+#--------------------------------------------------------------------
+# Tests of dynamically stratified negation.
+#--------------------------------------------------------------------
+gentest.csh $XEMU dynstrat1 "test."	# Needs simplification
+gentest.csh $XEMU dynstrat2 "test."	# No simplification (OK)
+gentest.csh $XEMU ross1 "test."		# No simplification (OK)
+#--------------------------------------------------------------------
+# Genome tests involving unclassified negation.
+#--------------------------------------------------------------------
+gentest.csh $XEMU q6 "test."
+#--------------------------------------------------------------------
+# Tests of non-stratified negation.
+#--------------------------------------------------------------------
+gentest.csh $XEMU two_ary "test."
+gentest.csh $XEMU przy1 "test."
+gentest.csh $XEMU nonstrat1 "test."
+gentest.csh $XEMU nonstrat2 "test."
+gentest.csh $XEMU nonstrat3 "test."
+#--------------------------------------------------------------------
+# Tests of well-founded negation.
+#--------------------------------------------------------------------
+gentest.csh $XEMU p1 "test."
+gentest.csh $XEMU p2 "test."
+gentest.csh $XEMU p3 "test."
+gentest.csh $XEMU p4 "test."
+gentest.csh $XEMU p5 "test."	# OK
+gentest.csh $XEMU win "test."
+gentest.csh $XEMU ullman3 "test."
+#--------------------------------------------------------------------
+# A mixture of negation tests.
+#--------------------------------------------------------------------
+gentest.csh $XEMU pot_pouri "test."
+#--------------------------------------------------------------------
+# Tests that may require answer completion.
+#--------------------------------------------------------------------
+#gentest.csh $XEMU weidong1 "test."
+gentest.csh $XEMU weidong2 "test."	# OK
+gentest.csh $XEMU weidong3 "test."	# OK
+gentest.csh $XEMU weidong4 "test."	# OK
+gentest.csh $XEMU weidong5 "test."	# OK

@@ -1,0 +1,2 @@
+iv(rise,s,'.'(sub(\(A,exists(B,/\(@(price,B),@(*(A),B)))),C,n),[]),[],2,3)
+iv(rise,s,[],[],2,3)

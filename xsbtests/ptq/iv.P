@@ -1,0 +1,38 @@
+iv(Iv,T,_,[]) --> biv(Iv,T).            % s1
+iv(Iv,T,Sa,Sb) -->              % s5
+        tv(Tv,T), te(Te,obj,_G,Sa,Sb),
+                {st(r5,Iv,(Tv,Te))}.
+iv(Iv,T,Sa,Sb) -->      % s12
+        iv(Iv1,T,Sa,Sb1), word(and), 
+                {append(Sa,Sb1,Sa1)},
+        iv(Iv2,T,Sa1,Sb2),
+                {append(Sb1,Sb2,Sb),
+                st(r12a,Iv,(Iv1,Iv2))}.
+iv(Iv,T,Sa,Sb) -->      % s12
+        iv(Iv1,T,Sa,Sb1), word(or), 
+                {append(Sa,Sb1,Sa1)},
+        iv(Iv2,T,Sa1,Sb2),
+                {append(Sb1,Sb2,Sb),
+                st(r12b,Iv,(Iv1,Iv2))}.
+iv(Iv,T,Sa,Sb) -->              % s10
+        iv(Iv1,T,Sa,Sb1), 
+                {append(Sa,Sb1,Sa1)},
+        iav(Adv,Sa1,Sb2),
+                {append(Sb1,Sb2,Sb),
+                st(r10,Iv,(Adv,Iv1))}.
+iv(Iv,Tn,Sa,Sb) -->             % s7
+        bivt(Vb,Tn), s(T,Sa,Sb),
+                {st(r7,Iv,(Vb,T))}.
+iv(Iv,T,Sa,Sb) -->                      % s8
+        biviv(Vb,T), iv(Iv1,i,Sa,Sb),
+                {st(r8,Iv,(Vb,Iv1))}.
+iv(Iv,T,Sa,Sb) --> % s16
+        iv(Iv1,T,Sa,Sb1),
+                {delete(sub(Te,X,_),Sb1,Sb), not_occurs_in(X,Sb),
+                st(r16,Iv,(X,Te,Iv1))}.
+
+iav(Adv,_,[]) --> biav(Adv).            % s1
+iav(Adv,Sa,Sb) -->                      % s6
+        pr(Pp), te(Te,obj,_G,Sa,Sb),
+                {st(r6,Adv,(Pp,Te))}.
+

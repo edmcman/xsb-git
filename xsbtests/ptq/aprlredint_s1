@@ -1,0 +1,2 @@
+s(@(rise,A),[],'.'(sub(\(B,exists(C,/\(@(price,C),@(*(B),C)))),A,n),[]),0,3)
+s(exists(A,/\(@(price,A),@(rise,A))),[],[],0,3)

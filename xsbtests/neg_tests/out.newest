@@ -1,0 +1,576 @@
+-------------------------------------------------------
+--- Running neg_tests/test.csh                      ---
+-------------------------------------------------------
+--------------------------------------------------------------------
+Testing neg1
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [neg1 loaded]
+
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.48 secs, elapsetime 0.74 secs)
+neg1 tested
+--------------------------------------------------------------------
+Testing neg2
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [neg2 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(1 subgoals in ASCC)...
+	===> SCC detection is needed...(1 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.45 secs, elapsetime 0.73 secs)
+neg2 tested
+--------------------------------------------------------------------
+Testing neg3
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [neg3 loaded]
+
+yes
+| ?- 
+yes
+| ?- Removing open tables.
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.45 secs, elapsetime 0.75 secs)
+neg3 tested
+--------------------------------------------------------------------
+Testing ullman2
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [ullman2 loaded]
+
+yes
+| ?- 
+yes
+| ?- Removing open tables.
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.44 secs, elapsetime 0.74 secs)
+ullman2 tested
+--------------------------------------------------------------------
+Testing lmod1
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod1 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(2 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.44 secs, elapsetime 0.85 secs)
+lmod1 tested
+--------------------------------------------------------------------
+Testing lmod2
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod2 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(2 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.43 secs, elapsetime 0.70 secs)
+lmod2 tested
+--------------------------------------------------------------------
+Testing lmod3
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod3 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(4 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.48 secs, elapsetime 0.72 secs)
+lmod3 tested
+--------------------------------------------------------------------
+Testing lmod4
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod4 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(2 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.44 secs, elapsetime 0.65 secs)
+lmod4 tested
+--------------------------------------------------------------------
+Testing lmod5
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod5 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(2 subgoals in ASCC)...
+	===> SCC detection is needed...(1 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.52 secs, elapsetime 0.75 secs)
+lmod5 tested
+--------------------------------------------------------------------
+Testing lmod6
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod6 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(3 subgoals in ASCC)...
+	===> SCC detection is needed...(1 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.45 secs, elapsetime 0.72 secs)
+lmod6 tested
+--------------------------------------------------------------------
+Testing lmod7
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod7 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(3 subgoals in ASCC)...
+	===> SCC detection is needed...(1 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.43 secs, elapsetime 0.69 secs)
+lmod7 tested
+--------------------------------------------------------------------
+Testing lmod8
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod8 loaded]
+
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.47 secs, elapsetime 0.68 secs)
+lmod8 tested
+--------------------------------------------------------------------
+Testing lmod9
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod9 loaded]
+
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.43 secs, elapsetime 0.87 secs)
+lmod9 tested
+--------------------------------------------------------------------
+Testing lmod10
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod10 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(4 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.46 secs, elapsetime 0.70 secs)
+lmod10 tested
+--------------------------------------------------------------------
+Testing lmod11
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [lmod11 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(6 subgoals in ASCC)...
+	===> SCC detection is needed...(5 subgoals in ASCC)...
+	===> SCC detection is needed...(4 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.48 secs, elapsetime 0.71 secs)
+lmod11 tested
+--------------------------------------------------------------------
+Testing ullman1
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [ullman1 loaded]
+
+yes
+| ?- 
+yes
+| ?- Removing open tables.
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.46 secs, elapsetime 0.75 secs)
+ullman1 tested
+--------------------------------------------------------------------
+Testing przy2
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [przy2 loaded]
+
+yes
+| ?- 
+yes
+| ?- Removing open tables.
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.42 secs, elapsetime 0.89 secs)
+przy2 tested
+--------------------------------------------------------------------
+Testing ldynstrat0
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [ldynstrat0 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(1 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.45 secs, elapsetime 0.91 secs)
+ldynstrat0 tested
+--------------------------------------------------------------------
+Testing ldynstrat1
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [ldynstrat1 loaded]
+
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.43 secs, elapsetime 0.69 secs)
+ldynstrat1 tested
+--------------------------------------------------------------------
+Testing ldynstrat2
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [ldynstrat2 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(3 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.43 secs, elapsetime 0.73 secs)
+ldynstrat2 tested
+--------------------------------------------------------------------
+Testing ldynstrat3
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [ldynstrat3 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(3 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.56 secs, elapsetime 0.88 secs)
+ldynstrat3 tested
+--------------------------------------------------------------------
+Testing ldynstrat4
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [ldynstrat4 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(3 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.49 secs, elapsetime 0.75 secs)
+ldynstrat4 tested
+--------------------------------------------------------------------
+Testing ross1
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [ross1 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(1 subgoals in ASCC)...
+++Warning: The program is not left-to-right dynamically stratified!
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.44 secs, elapsetime 0.73 secs)
+ross1 tested
+--------------------------------------------------------------------
+Testing mod1
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [mod1 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(1 subgoals in ASCC)...
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.47 secs, elapsetime 0.65 secs)
+mod1 tested
+--------------------------------------------------------------------
+Testing q6
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [q6 loaded]
+[q6.data dynamically loaded, cpu time used: 0.039999 seconds]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(9 subgoals in ASCC)...
+	===> SCC detection is needed...(8 subgoals in ASCC)...
+	===> SCC detection is needed...(7 subgoals in ASCC)...
+	===> SCC detection is needed...(6 subgoals in ASCC)...
+	===> SCC detection is needed...(5 subgoals in ASCC)...
+	===> SCC detection is needed...(4 subgoals in ASCC)...
+++Warning: The program is not left-to-right dynamically stratified!
+++Warning: The program is not left-to-right dynamically stratified!
+++Warning: The program is not left-to-right dynamically stratified!
+++Warning: The program is not left-to-right dynamically stratified!
+++Warning: The program is not left-to-right dynamically stratified!
+++Warning: The program is not left-to-right dynamically stratified!
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.62 secs, elapsetime 0.96 secs)
+q6 tested
+--------------------------------------------------------------------
+Testing q7
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [q7 loaded]
+[genome.P dynamically loaded, cpu time used: 9.8 seconds]
+
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 12.71 secs, elapsetime 14.46 secs)
+q7 tested
+--------------------------------------------------------------------
+Testing przy1
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [przy1 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(2 subgoals in ASCC)...
+++Warning: The program is not left-to-right dynamically stratified!
+++Warning: The program is not left-to-right dynamically stratified!
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.46 secs, elapsetime 0.69 secs)
+przy1 tested
+--------------------------------------------------------------------
+Testing nonstrat1
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [nonstrat1 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(3 subgoals in ASCC)...
+++Warning: The program is not left-to-right dynamically stratified!
+++Warning: The program is not left-to-right dynamically stratified!
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.46 secs, elapsetime 0.74 secs)
+nonstrat1 tested
+--------------------------------------------------------------------
+Testing nonstrat2
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [nonstrat2 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(2 subgoals in ASCC)...
+++Warning: The program is not left-to-right dynamically stratified!
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.45 secs, elapsetime 0.66 secs)
+nonstrat2 tested
+--------------------------------------------------------------------
+Testing nonstrat3
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [nonstrat3 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(3 subgoals in ASCC)...
+++Warning: The program is not left-to-right dynamically stratified!
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.51 secs, elapsetime 0.85 secs)
+nonstrat3 tested
+--------------------------------------------------------------------
+Testing ullman3
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [ullman3 loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(2 subgoals in ASCC)...
+++Warning: The program is not left-to-right dynamically stratified!
+++Warning: The program is not left-to-right dynamically stratified!
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.44 secs, elapsetime 0.73 secs)
+ullman3 tested
+--------------------------------------------------------------------
+Testing pot_pouri
+XSB Version 1.4.3 (95/7/6)
+[sequential, single word, optimal mode]
+| ?- [pot_pouri loaded]
+
+yes
+| ?- 
+yes
+| ?- 	===> SCC detection is needed...(2 subgoals in ASCC)...
+++Warning: The program is not left-to-right dynamically stratified!
+	===> SCC detection is needed...(1 subgoals in ASCC)...
+	===> SCC detection is needed...(4 subgoals in ASCC)...
+	===> SCC detection is needed...(3 subgoals in ASCC)...
+	===> SCC detection is needed...(2 subgoals in ASCC)...
+++Warning: The program is not left-to-right dynamically stratified!
+
+yes
+| ?- 
+yes
+| ?- 
+End XSB (cputime 0.47 secs, elapsetime 0.75 secs)
+pot_pouri tested

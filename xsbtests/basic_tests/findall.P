@@ -1,0 +1,15 @@
+:- import length/2 from basics.
+
+perms([], []).
+perms(S, [X|Temp]) :- delete(S, X, T), perms(T, Temp).
+
+delete([X|Ts], X, Ts).
+delete([X|Ts], Y, [X|Ss]) :- delete(Ts, Y, Ss).
+
+test :- findall(Elem, perms([1,2,3,4,5,6,7,8], Elem),_),fail.
+test :- writeln(ok).
+
+
+
+
+

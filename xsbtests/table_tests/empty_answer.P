@@ -1,0 +1,37 @@
+/* Juliana Freire - March 25th, 96
+ * tests whether the checking for deleted answers works correctly
+ */
+
+:- import member/2, copy_term/2  from basics.
+:- import findall/3, bagof/3 from setof.
+:- import get_calls/3, get_returns/3, delete_return/2, breg_retskel/4 from tables.
+
+arc(1,2). arc(2,3). arc(2,4). arc(4,1).
+
+:- table path/2.
+
+path(X,Y) :- arc(X,Y).
+path(X,Y) :- path(X,Z), arc(Z,Y).
+
+test :- 
+	path(X1,Y1),
+	path(X,Y), % writeln(path(X,Y)), 
+	(((X=1, Y=2); (X=2, Y=2)) ->
+	    get_calls(path(_,_),Cs,Oskel),
+	    get_returns(Cs,Oskel,Leaf),
+	    delete_return(Cs,Leaf),  % delete first answer
+	    % writeln(deleted(X,Y)),
+	    fail
+	;
+	    fail
+        ).
+test.
+
+/* Results: (if EMPTY_ANSWER is not defined, this goes into an
+ * infinite loop 
+ */
+/*
+path(1,2)deleted(1,2)
+path(2,3)path(2,3)path(2,4)path(2,3)path(2,4)path(4,1)path(2,3)path(2,4)path(4,1)path(2,1)path(2,3)path(2,4)path(4,1)path(2,1)path(4,2)path(2,3)path(2,4)path(4,1)path(2,1)path(4,2)path(2,2)deleted(2,2)
+deleted(2,2) deleted(2,2) deleted(2,2) deleted(2,2) deleted(2,2)
+*/

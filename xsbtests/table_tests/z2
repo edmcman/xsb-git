@@ -1,0 +1,502 @@
+comppeepopt(A,B,C) :- 
+         comppopt1(A,D),
+         comppopt4(D,[list],E,C,B).
+ 
+comppopt1([list],[list]).
+
+comppopt1([list|A],B) :- 
+         comppopt11(C,A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1a(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1a(A,B).
+ 
+comppopt11([other],[list|A],B) :- 
+         C=:=D,
+         comppopt11(E,A,B).
+ 
+comppopt11([other],[list|A],B) :- 
+         C=\=D,
+         poptmovreg(E,D,C,A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1a(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list,list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list,list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list,list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],A,B) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         peepchk(A,C),
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list,list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11([other],[list|A],[list|B]) :- 
+         comppopt1(A,B).
+ 
+comppopt11(A,B,[list|C]) :- 
+         comppopt1(B,C).
+ 
+comppopt1av([list],[list]).
+
+comppopt1a([list|A],[list|B]) :- 
+         poptuni2bld(C,D),
+         comppopt1a(A,B).
+ 
+comppopt1a([list|A],B) :- 
+         comppopt11(C,A,B).
+ 
+poptuni2bld([other],[other]).
+
+poptuni2bld([other],[other]).
+
+poptuni2bld([other],[other]).
+
+poptuni2bld([other],[other]).
+
+poptuni2bld([other],[other]).
+
+poptuni2bld([atom],[atom]).
+
+poptuni2bld([other],[other]).
+
+poptuni2bld([other],[other]).
+
+comppopt4([list],A,B,C,[list]).
+
+comppopt4([list|A],B,C,D,E) :- 
+         poptbuiltin(F,D,E,G),
+         H=B,
+         comppopt4(A,H,C,D,G).
+ 
+comppopt4([list|A],B,C,D,E) :- 
+         peepredundant(F,A,B,G,C,H),
+         H=:=[num],
+         E=I,
+         comppopt4(A,G,C,D,I).
+ 
+comppopt4([list|A],B,C,D,E) :- 
+         peepredundant(F,A,B,G,C,H),
+         H=\=[num],
+         E=[list|I],
+         comppopt4(A,G,C,D,I).
+ 
+poptbuiltin([other],A,[list|B],B) :- 
+         compbuiltin(C,D,E),
+         notmember1([other],A).
+ 
+poptbuiltin([other],A,[list|B],B) :- 
+         compbuiltin(C,D,E),
+         notmember1([other],A).
+ 
+poptbuiltin([other],A,[list,list|B],B) :- 
+         compbuiltin(C,D,E),
+         notmember1([other],A).
+ 
+compbuiltin([atom],[num],[num]).
+
+compbuiltin([atom],[num],[num]).
+
+notmember1(A,[list]).
+
+notmember1(A,[list|B]) :- 
+         A=\=C,
+         notmember1(A,B).
+ 
+poptmovreg(A,B,C,D,E) :- 
+         poptmovreg0(A,B,C,F),
+         peepchk(D,B),
+         E=[list|G],
+         comppopt1(D,G).
+ 
+poptmovreg(A,B,C,D,E) :- 
+         E=[list,list|F],
+         comppopt1(D,F).
+ 
+poptmovreg0([other],A,B,[other]).
+
+poptmovreg0([other],A,B,[other]).
+
+poptmovreg0([other],A,B,[other]).
+
+poptmovreg0([other],A,B,[other]).
+
+poptchkmember(A,[list|B],[num]).
+
+poptchkmember(A,[list|B],[num]).
+
+poptchkmember(A,[list|B],[num]) :- 
+         poptchkmember(A,B,C).
+ 
+peepuse([other],A).
+
+peepuse([other],A).
+
+peepuse([other],A).
+
+peepuse([other],A).
+
+peepuse([other],A) :- 
+         B=\=[num].
+ 
+peepuse([other],A) :- 
+         B=\=[num].
+ 
+peepuse([other],A) :- 
+         B=\=[num].
+ 
+peepuse([other],A) :- 
+         B=\=[num].
+ 
+peepuse([other],A) :- 
+         B=\=[num].
+ 
+peepuse([other],A) :- 
+         B=\=[num].
+ 
+peepchk([list],A).
+
+peepchk([list|A],B) :- 
+         peepterm(C,B).
+ 
+peepchk([list|A],B) :- 
+         peepchk(A,B).
+ 
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([atom],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepterm([other],A).
+
+peepredundant([atom],A,B,B,C,[num]).
+
+peepredundant(A,B,C,D,E,F) :- 
+         peepelim(A,B,C,D,E,F).
+ 
+peepredundant(A,B,C,D,E,F) :- 
+         D=C,
+         F=[num].
+ 
+peepelim([other],A,B,[list|B],C,[num]).
+
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         C=[list|B].
+ 
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         C=[list|B].
+ 
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         C=[list|B].
+ 
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         C=[list|B].
+ 
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         C=[list|B].
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepelimupd(B,E,[other],C).
+ 
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         peepelimupd(B,F,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],E),
+         peepdel(E,[other],C).
+ 
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         peepelimupd(B,F,[other],C).
+ 
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         peepelimupd(B,F,[other],C).
+ 
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         peepelimupd(B,F,[other],C).
+ 
+peepelim([other],A,B,C,D,E) :- 
+         member1([other],B),
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,E) :- 
+         E=[num],
+         peepelimupd(B,F,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepelimupd(B,E,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         peepdel(B,[other],C).
+ 
+peepelim([other],A,B,[list],C,[num]) :- 
+         D>=[num],
+         member1([other],C).
+ 
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([atom],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,D) :- 
+         A=[list|E],
+         F>=[num],
+         poptchkmember([other],C,D).
+ 
+peepelim([other],A,B,[list],C,D) :- 
+         D=[num].
+ 
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,C,D,[num]) :- 
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         C=[list].
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         C=[list].
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         C=[list].
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         C=[list].
+ 
+apeepelim([other],A,B,C,D,[num]) :- 
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         C=[list].
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         E=[num],
+         C=B.
+ 
+peepelim([other],A,B,C,D,[num]) :- 
+         C=[list].
+ 
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepelim([other],A,B,[list],C,[num]).
+
+peepdel([list],A,[list]).
+
+peepdel([list|A],B,C) :- 
+         D=B,
+         C=E,
+         peepdel(A,B,E).
+ 
+peepdel([list|A],B,C) :- 
+         C=[list|D],
+         peepdel(A,B,D).
+ 
+peepelimupd(A,B,C,[list|D]) :- 
+         peepdel(A,[other],D).
+ 
+member1(A,[list|B]).
+
+member1(A,[list|B]) :- 
+         member1(A,B).
+ 

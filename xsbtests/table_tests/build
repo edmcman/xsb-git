@@ -1,0 +1,413 @@
+#!/bin/csh
+
+echo -n "--- "
+
+# Valid command-line options defined here.  Be sure to update
+# the make options (MACHTYPE, EXT1, etc.) when adding build options
+# smallsol, smallsun: sun and solaris without bigmem option
+set MACHOPTS = (solaris smallsol sun smallsun linux_aout linux_pre20_elf linux_elf sgi hp300 next decstation ibm sony_news hp700 solaris_x86 mklinux_ppc)
+set EMUOPTS = (opt debug profile oracle oracledebug  custom)
+set COMPOPTS = (gcc cc acc)
+
+# xsb=batched answers+reclaim ans list, xsbnorec=batched, local=local sched
+set SCHEDOPTS = (xsb xsbnorec local)
+
+# Determined by machine option
+set MACHTYPE = \
+	("SOLARIS" \
+	"SOLARIS" \
+	"SUN" \
+	"SUN" \
+	"LINUX_AOUT" \
+	"LINUX_PRE20_ELF" \
+	"LINUX_ELF" \
+        "SGI" \
+	"HP300" \
+	"NeXT" \
+	"DECstation" \
+	"IBM" \
+	"SONY_NEWS" \
+	"HP700" \
+	"SOLARIS_x86" \
+	"MKLINUX_PPC")
+set EXT1 = \
+	(".sol" \
+	 ".smallsol" \
+	 ".sun" \
+	 ".smallsun" \
+	 "" \
+	 "" \
+	 "" \
+         ".sgi" \
+	 ".hp300" \
+	 ".next" \
+	 ".dec" \
+	 ".ibm" \
+	 ".sony" \
+	 ".hp700" \
+	 "" \
+	 "")
+set MACHFLAGS = \
+	("-DBIG_MEM -DSOCKET_IO " \
+	"-DSOCKET_IO" \
+	"-DBIG_MEM " \
+	"" \
+	"" \
+	"" \
+	"" \
+        "-32" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"")
+
+set LINKFLAGS = \
+	("" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"" \
+        "-32" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"" \
+	"")
+
+set LINKOPTS = \
+	("-lsocket -lm -lnsl -ldl" \
+	 "-lsocket -lm -lnsl -ldl" \
+	 "-lm -N" \
+	 "-lm -N" \
+	 "-lm" \
+	 "-lm -ldl -Wl,-export-dynamic" \
+	 "-lm -ldl -Wl,-export-dynamic" \
+         "-lm" \
+	 "-lm" \
+	 "-lm" \
+	 "-lm" \
+	 "-lm" \
+	 "-lm" \
+	 "-lm" \
+	 "-lm -lnsl -ldl" \
+	 "-lm")
+
+# Determined by emulator option
+set OPTFLAGS = \
+	("-O4" \
+	 "" \
+	 "" \
+	 "-O4" \
+	 "" \
+	 "-O4")
+
+set DBGFLAGS = \
+	("" \
+	 "-g" \
+	 "-g" \
+	 "" \
+	 "-g" \
+	 "")
+
+# to print out debug info, define:
+# -DDEBUG_RECLAIM -DHEAP_DEBUG -DDELAY_DEBUG -DJF_DELAY_DEBUG 
+# -DCP_PVR_DEBUG -DDEBUG_REV -DDEBUG_SET -DDEBUG_SCHED
+
+set EMUFLAGS = \
+	("" \
+	 "-DDEBUG" \
+	 "-DPROFILE -DDEBUG "\
+	 "-DORACLE" \
+	 "-DORACLE" \
+         "")
+
+set EXT2 = \
+	("" \
+	 ".dbg" \
+	 ".prof" \
+	 ".ora" \
+	 ".oradbg" \
+         ".cst")
+
+set EMUMAKE = \
+	("" \
+	 "" \
+	 "" \
+	 "xsbora" \
+	 "xsbora" \
+         "")
+
+# Determined by compiler option
+set CCOMMAND = \
+	("gcc" \
+	 "cc" \
+         "acc")
+set COPTS = \
+	("-ansi -pedantic -Wall" \
+	 "" \
+         "-Xa")
+set LOWOPT = \
+	("-O4" \
+	 "-O4" \
+	 "-O2")
+
+# Determined by scheduling option
+set DSCHED = \
+	("" \
+	 "" \
+	 "" \
+	 "")
+
+set MSCHEDOPTS = \
+	("-DRECLAIM_ANS_LIST" \
+	 "" \
+	 "-DLOCAL_EVAL")
+
+set EXT3 = \
+	("" \
+	 ".rec" \
+	 ".local")
+
+set BCOMMAND = $0
+if ("$BCOMMAND:h" != "$BCOMMAND:t") then
+   cd $BCOMMAND:h
+endif
+
+# If testing after build, force clean build
+if ("$BCOMMAND:t" == "buildtest") then
+   'rm' -f .buildrc
+endif
+
+echo "---"
+
+# Get command-line options, using defaults when not supplied
+if (($#argv < 4) && (-r .buildrc)) then
+   set OPTS = (`cat .buildrc`)
+else if ($#argv == 4) then
+   if ($argv[4] == "noext") then
+	set OPTS = ($argv[1] $argv[2] $argv[3] xsb)
+   else
+	set OPTS = ($argv[1] $argv[2] $argv[3] $argv[4])
+   endif
+else if ($#argv == 3) then   #make reversed answers default
+   set OPTS = ($argv[1] $argv[2] $argv[3] xsb)	
+else
+   goto usage
+endif
+
+set OPT1 = $OPTS[1]
+set OPT2 = $OPTS[2]
+set OPT3 = $OPTS[3]
+set OPT4 = $OPTS[4]
+if ($#argv < 4) then
+   if ($#argv > 2) then
+      set OPT3 = $argv[3]
+   endif
+   if ($#argv > 1) then
+      set OPT2 = $argv[2]
+   endif
+   if ($#argv > 0) then
+      set OPT1 = $argv[1]
+   endif
+endif
+
+# Validate options
+
+option1:
+set i1 = 1
+foreach machopt ($MACHOPTS)
+   if ("$OPT1" == "$machopt") then
+      goto option2tmp
+   endif
+   @ i1++
+end
+echo "build: unrecognized machine type: $OPT1"
+goto usage
+
+# for SGI the max opt. level is 2
+option2tmp:
+if ("$machopt" == "sgi") then
+
+set OPTFLAGS = \
+	("-O2" \
+	 "" \
+	 "" \
+	 "-O2" \
+	 "" \
+	 "-O2")
+
+set LOWOPT = \
+	("-O2" \
+	 "-O2" \
+	 "-O2")
+
+endif
+
+option2:
+set i2 = 1
+foreach emuopt ($EMUOPTS)
+   if ("$OPT2" == "$emuopt") then
+      goto option3
+   endif
+   @ i2++
+end
+echo "build: unrecognized emulator type: $OPT2"
+goto usage
+
+option3:
+set i3 = 1
+foreach compopt ($COMPOPTS)
+   if ("$OPT3" == "$compopt") then
+      goto option4tmp
+   endif
+   @ i3++
+end
+echo "build: unrecognized compiler type: $OPT3"
+goto usage
+
+option4tmp:
+# use -msupersparc for solaris with gcc
+if (("$machopt" == "solaris") && ("gcc" == "$compopt")) then
+    set COPTS[1] = "-msupersparc $COPTS[1]"
+endif
+
+
+option4:
+set i4 = 1
+foreach schedopt ($SCHEDOPTS)
+   if ("$OPT4" == "$schedopt") then
+      goto startmake
+   endif
+   @ i4++
+end
+echo "build: unrecognized scheduling type: $OPT4"
+goto usage
+
+startmake:
+
+# Compare current options against defaults.  If different,
+# save as defaults and remove old object files
+set OPTS = "$OPT1 $OPT2 $OPT3 $OPT4"
+if (-r .buildrc) then
+   if ("$OPTS" != "`cat .buildrc`") then
+      'rm' -f .buildrc
+      echo "$OPTS" >.buildrc
+      'rm' -f *.o
+   endif
+else
+   echo "$OPTS" >.buildrc
+   'rm' -f *.o
+endif
+
+
+set EMU = "xsb$EXT1[$i1]$EXT2[$i2]$EXT3[$i4]"
+
+if ($#argv >= 4) then
+#   echo "NOEXT $#argv"
+#   echo ""
+   if ($argv[4] == "noext") then
+      set EMU = "xsb"
+   endif
+endif
+#echo "EMU=$EMU"
+#echo ""
+set EMUDIR = "/home/u17/sbprolog/Prologs/XSB/emu"
+set XSBDIR = "$EMUDIR:h"
+
+if (-r $EMU) then
+   'mv' -f $EMU $EMU.old
+endif
+
+if ("$OPT4" == "xsborig") then
+   echo "*******REMEMBER TO UPDATE trie_tables.P******"
+endif
+
+if ("$OPTFLAGS[$i2]" == "") then
+   set LOPT = ""
+else
+   set LOPT = "$LOWOPT[$i3]"
+endif
+
+set XFLAGS = ""
+if ("$OPT2" == "custom") then
+   if (-r .xflags) then
+      set XFLAGS = " `cat .xflags`"
+   else
+      echo "build: custom specified but .xflags not found"
+      exit(1)
+   endif
+endif
+
+#gnumake -j \
+make \
+   DIR="$XSBDIR" \
+   EXECUTABLE="$EMU" \
+   MACHINE="$MACHTYPE[$i1]" \
+   CC="$CCOMMAND[$i3]" \
+   COPTS="$COPTS[$i3]" \
+   DBGFLAGS="$DBGFLAGS[$i2]" \
+   OPTFLAGS="$OPTFLAGS[$i2]" \
+   LOWOPTFLAGS="$LOPT" \
+   EMUFLAGS="$EMUFLAGS[$i2] $MACHFLAGS[$i1] $XFLAGS" \
+   SCHEDTYPE="$DSCHED[$i4]" \
+   SCHEDOPTS="$MSCHEDOPTS[$i4]" \
+   LINKOPTION="$LINKOPTS[$i1]" \
+   LINKFLAGS="$LINKFLAGS[$i1]" \
+   $EMUMAKE[$i2]
+
+#set EMPTY_FILE = /tmp/xsb_empty_file
+#set RES_FILE = /tmp/res.{$USER}.{$EMU}.`date +%y%m%d`
+#echo $LOG_FILE
+
+if ("$BCOMMAND:t" == "buildtest") then
+   cd ../tests
+   if (!($?USER)) then
+      setenv USER `whoami`
+   endif
+   set LOG_FILE = testall.out.{$USER}.{$EMU}.`date +%y%m%d-%H%M`
+# next does not accept date...
+   if ($status == 1) then
+      set LOG_FILE = testall.out.{$USER}.{$EMU}.no_date
+   endif
+   if (-r $LOG_FILE) then
+     echo "There was an old $LOG_FILE"
+     echo "removing..."
+     \rm $LOG_FILE
+   endif
+#   csh testall.csh $EMUDIR/$EMU >& testall.out.{$USER}.{$EMU}.`date +%y%m%d`
+   csh testsuite.csh $EMUDIR/$EMU >& $LOG_FILE
+#   find_errors.csh $LOG_FILE $RES_FILE
+#   cat << EOF > $EMPTY_FILE
+#   EOF
+#   diff $EMPTY_FILE  $RES_FILE
+#   if ($status == 1) then
+#	echo "Failed $LOG_FILE" > results.`date +%y%m%d`
+#   else
+#	echo "Passed $LOG_FILE" > results.`date +%y%m%d`
+#   endif
+#   \rm $EMPTY_FILE
+endif
+
+exit(0)
+
+usage:
+echo "usage: build [machine-type [emu-type [compiler [sched]]]]"
+echo "where machine-type is one of:  $MACHOPTS"
+echo "      emu-type is one of:  $EMUOPTS"
+echo "      compiler is one of:  $COMPOPTS"
+echo "      sched is one of:  $SCHEDOPTS"
+if (-r .buildrc) then
+   echo "current defaults: `cat .buildrc`"
+else
+   echo "no current defaults"
+endif
+exit(1)

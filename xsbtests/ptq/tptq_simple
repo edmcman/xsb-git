@@ -1,0 +1,7 @@
+top level solution\A.*A(^j)(^\B.\C.*B(^\D.date*(*D)(*C))(^\E.*E(^m)))
+top level solution\A.*A(^j)(^\B.\C.*C(^m)(^\D.\E.\F.*E(^\G.date*(*G)(*F))(^\H.*H(D))(B)))
+top level solution\G.*G(^j)(^\H.A(^\B.\C.*C(H)(^\B.\C.*B(^\D.date*(*D)(*C))(^\E.*E(F)))))
+top level solution\I.*I(^m)(^\F.\G.*G(^j)(^\H.\A.*A(H)(^\B.\C.*B(^\D.date*(*D)(*C))(^\E.*E(F)))))
+top level solution\I.*I(^j)(^\J.\A.*A(J)(^\B.\C.*C(^m)(^\D.\E.\F.*E(^\G.date*(*G)(*F))(^\H.*H(D))(B))))
+top level solution\F.*F(^j)(^\G.\A.*A(G)(^\B.\C.*B(^\D.date*(*D)(*C))(^\E.*E(^m))))
+top level solution\G.*G(^m)(^\F.\A.*A(^j)(^\B.\C.*B(^\D.date*(*D)(*C))(^\E.*E(F))))

@@ -1,0 +1,10 @@
+trail(     0,undef,_).
+trail(     1,ref_ls,19).
+trail(     2,strin,'| ?- ').
+trail(     3,ref_tr,0).
+trail(     4,ref_ls,20).
+trail(     5,strin,'test').
+trail(     6,ref_tr,3).
+trail(     7,ref_ls,21).
+trail(     8,ref_heap,27).
+trail(     9,ref_tr,6).

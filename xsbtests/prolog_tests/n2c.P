@@ -1,0 +1,25 @@
+/*
+ * Checks whether the number_chars/2 implemented in C works.
+ *	 - Kostis.
+ */
+
+test :- num(Num), number_chars(Num, List), writeln(List), fail.
+test :- num(N), number_chars(N, L), number_chars(Num, L),
+	integer(Num), writeln(created_integer(Num)), fail.
+test :- num(N), number_chars(N, L), number_chars(Num, L),
+	float(Num), writeln(created_float(Num)), fail.
+test :- failing(List), number_chars(_, List), writeln(bug(List)), fail.
+test.
+
+num(0).
+num(23).
+num(-23).
+num(0.0).
+num(23.233456).
+num(23.234567).
+num(-23.234567).
+
+failing([]).
+failing([69]).
+% failing([53,69]).
+failing([53,46,48,48,48,70]).

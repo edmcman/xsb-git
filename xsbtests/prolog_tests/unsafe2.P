@@ -1,0 +1,20 @@
+:- import unix/1 from unix.
+:- import numbervars/1 from num_vars.
+
+test :-
+	p(X,Y), numbervars([X,Y]), writeln(incomplete_p(X,Y)), fail.
+test :-
+	p(X,Y), numbervars([X,Y]), writeln(completed_p(X,Y)), fail.
+test :- unix('rm unsafe2.O'), writeln('unsafe2.O removed').
+
+p(X1, X2) :-
+        p1(Y1, Y2), s(X1, X2, Y1, Y2).
+
+:- table p1/2.
+
+p1(X, X).
+
+s(X, X, [], X).
+s([X], X, [], X).
+s([X], X, [_], X).
+

@@ -1,0 +1,8 @@
+'((saw(ajay, rita) & ran(rita)) \/ (saw(ajay, rita) & saw(ajay, rita)))'
+'((saw(ajay, rita) & ran(rita)) \/ saw(ajay, rita))'
+'(-(saw(ajay, rita)) & ran(rita))'
+'(ran(rita) & saw(ajay, rita))'
+'(ran(rita) \/ saw(ajay, rita))'
+'-((saw(ajay, rita) & ran(rita)))'
+'ran(rita)'
+'saw(ajay, rita)'

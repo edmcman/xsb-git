@@ -1,0 +1,3 @@
+[(p(a,f(b,3.5000,14,A),B,A) :- r(A)  ','  s(C)),[vv(X,A),vv(Y,B),vv(T,C)]]
+[p(a,f(b,3.5000,14,A),B,A),[vv(X,A),vv(Y,B)]]
+[qq(a,d(e),f(b,14,A),B,A),[vv(X,A),vv(Y,B)]]
