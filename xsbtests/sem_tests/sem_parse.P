@@ -45,7 +45,7 @@ val(VarDict, VAL, Goal) -->
 	first_arg(VarDict, Arg1), [','],
 	second_arg(VarDict, Arg2, Goal),
 	( [')'] -> {VAL = val(Arg1,Arg2)}
-	; [','], sequence(VarDict, Sequence), [')'],
+	; [','], just_sequence(VarDict, Sequence), [')'],
 	  {VAL = val(Arg1,Arg2,Sequence)}
 	).
 
@@ -161,8 +161,7 @@ term(VarDict, Term) -->
 	).
 
 simple_term(VarDict, T) --> simple_variable(VarDict, T), !
-			 |  sequence(VarDict, T), !
-			 |  function(VarDict, T).
+			 |  sequence_or_function(VarDict, T).
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
@@ -217,8 +216,10 @@ predicate(VarDict, Pred) -->
 	atom(F), possible_arguments(VarDict, Args),
 	{Pred =.. [F|Args], fail_if(is_a_set_variable(Pred))}.
 
-possible_arguments(VarDict, Args) --> ['('], arguments(VarDict, Args), [')'], !
-				   |  {Args = []}.
+possible_arguments(VarDict, Args) -->
+	( ['('] -> arguments(VarDict, Args), [')']
+	        |  {Args = []}
+	).
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
@@ -230,10 +231,16 @@ arguments(VarDict, [Arg|Args]) -->
 
 argument(VarDict, Arg) --> variable(VarDict, Arg), !
 			|  tuple_of_variables(VarDict, Arg), !
-			|  set(VarDict, Arg), !
-			|  sequence(VarDict, Arg), !
-			|  function(VarDict, Arg).
+			|  set(VarDict, Arg)
+			|  sequence_or_function(VarDict, Arg).
 
+sequence_or_function(VarDict, Arg) -->
+	( sequence_elem(VarDict, SeqVar) -> % imitates just_sequence/4
+	    possible_index(IL),
+	    {( var(IL) -> Arg = SeqVar ; Arg = ith(IL,SeqVar,_Elem) )}
+	| function(VarDict, Arg)
+	).
+			       
 function(VarDict, Function) --> predicate(VarDict, Function).
 
 /*----------------------------------------------------------------------*/
@@ -242,13 +249,13 @@ function(VarDict, Function) --> predicate(VarDict, Function).
 
 seqV(VarDict, Pred) -->
 	['SeqV','('],
-	sequence(VarDict, Seq1),
+	just_sequence(VarDict, Seq1),
 	[','], indx(Index), [','],
-	sequence(VarDict, Seq2),
+	just_sequence(VarDict, Seq2),
 	[')'],
 	{Pred = 'SeqV'(Seq1,Index,Seq2)}.
 
-sequence(VarDict, Sequence) -->
+just_sequence(VarDict, Sequence) -->
 	sequence_elem(VarDict, SeqVar),
 	possible_index(IL),
 	{( var(IL) -> Sequence = SeqVar ; Sequence = ith(IL,SeqVar,_Elem) )}.
