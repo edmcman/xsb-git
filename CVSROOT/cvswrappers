@@ -20,3 +20,23 @@
 #  and value is a single-quote delimited value.
 #
 # For example:
+
+*.gif   -m 'COPY' -k 'b'
+*.tif   -m 'COPY' -k 'b'
+*.tiff  -m 'COPY' -k 'b'
+*.jpg   -m 'COPY' -k 'b'
+*.jpeg  -m 'COPY' -k 'b'
+*.png   -m 'COPY' -k 'b'
+*.gz    -m 'COPY' -k 'b'
+*.bz2   -m 'COPY' -k 'b'
+*.Z     -m 'COPY' -k 'b'
+*.tar   -m 'COPY' -k 'b'
+*.tgz   -m 'COPY' -k 'b'
+*.class -m 'COPY' -k 'b'
+*.wav   -m 'COPY' -k 'b'
+*.au    -m 'COPY' -k 'b'
+*.O     -m 'COPY' -k 'b'
+*.o     -m 'COPY' -k 'b'
+*.exe   -m 'COPY' -k 'b'
+*.so    -m 'COPY' -k 'b'
+
