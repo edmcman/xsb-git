@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: flpshell.P,v 1.1.1.1 1998-11-05 17:01:13 sbprolog Exp $
+** $Id: flpshell.P,v 1.2 1998-11-11 09:57:45 kifer Exp $
 ** 
 */
 
@@ -382,7 +382,11 @@ rundemo_(X) :-
 	run(X),
 	retract(library_directory(DemoDir)).
 
-%%rundemo_(X) :- rundemo(X).
+run_all_demos_ :- rundemo_(default),
+		     rundemo_(family_obj),
+		     rundemo_(family_rel),
+		     rundemo_(flogic_basics),
+		     rundemo_(rel_ops).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find module in XSB library.
