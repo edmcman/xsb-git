@@ -1,8 +1,8 @@
-## File:      packages/flipdir/Makefile
+## File:      packages/flip/Makefile
 ## Author(s): kifer (adapted from lib/Makefile)
 ## Contact:   xsb-contact@cs.sunysb.edu
 ## 
-## Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
+## Copyright (C) The Research Foundation of SUNY, 1998
 ## 
 ## XSB is free software; you can redistribute it and/or modify it under the
 ## terms of the GNU Library General Public License as published by the Free
@@ -18,7 +18,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.2 1998-11-15 02:56:40 kifer Exp $
+## $Id: Makefile,v 1.3 1998-11-15 04:00:25 kifer Exp $
 ## 
 ##
 
