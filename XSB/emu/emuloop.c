@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: emuloop.c,v 1.2 1998-12-01 17:10:40 sbprolog Exp $
+** $Id: emuloop.c,v 1.3 1998-12-09 03:09:31 cbaoqiu Exp $
 ** 
 */
 
@@ -63,8 +63,20 @@ Cell	CallNumVar;
 NODEptr TrieRetPtr;
 ALPtr   OldRetPtr;
 CPtr	VarPosReg;
+/*
+ * Variables ans_var_pos_reg is a pointer to substitution factor of an
+ * answer in the heap.  It is used and set in function
+ * variant_trie_search().  The name of this variable is from VarPosReg, a
+ * variable used in variant_call_search() to save the substitution factor
+ * of the call.
+ */
+CPtr	ans_var_pos_reg;
 
 extern tab_inf_ptr UglyHackForTip;
+
+#ifdef DEBUG
+extern void printterm(Cell, byte, int);
+#endif
 
 /*----------------------------------------------------------------------*/
 
