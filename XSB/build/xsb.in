@@ -22,7 +22,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: xsb.in,v 1.2 1998-11-06 07:44:36 sbprolog Exp $
+## $Id: xsb.in,v 1.3 1998-11-11 19:28:59 kifer Exp $
 ## 
 ##
 
@@ -36,7 +36,7 @@
 # This script assumes that it resides one level above the root
 # of the XSB source tree. 
 # If you need to invoke this (bin/xsb) script from some other location,
-# put a simple shell script in that other location, which would simly
+# put a simple shell script in that other location, which would simply
 # call the bin/xsb script.
 
 
@@ -50,12 +50,15 @@ case $0 in
     ;;
 esac
 
-# rectify .. in path names - 4 times should suffice for the most weird 
+# rectify .. in path names - 7 times should suffice for the most weird 
 # invocations with multiple ..'s
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,g'`
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,g'`
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,g'`
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,g'`
+thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
 #rectify . in path names
 thisfile=`echo $thisfile | sed 's,//*\.//*,/,g'`
 
