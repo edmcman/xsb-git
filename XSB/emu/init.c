@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: init.c,v 1.5 1998-11-14 05:05:25 kifer Exp $
+** $Id: init.c,v 1.6 1998-11-18 07:59:15 kifer Exp $
 ** 
 */
 
@@ -110,8 +110,9 @@ extern pw reloc_table[];
 /* jf: to init stat. structs */
 extern void perproc_reset_stat(), reset_stat_total(); 
 
-extern char *install_dir; /* from xmain.c */
-extern char *xsb_config_file; /* from xmain.c */
+/* these three are from self_orientation.c */
+extern char *install_dir; 
+extern char *xsb_config_file; /* configuration.P */
 extern char *user_home; /* the user HOME dir or install dir, if HOME is null */
 
 Cell *term_stack;

@@ -18,13 +18,16 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: basictypes.h,v 1.5 1998-11-17 01:56:41 kifer Exp $
+** $Id: basictypes.h,v 1.6 1998-11-18 07:59:10 kifer Exp $
 ** 
 */
 
 
 #ifndef BASICTYPES_INCLUDED
 
+/* seems that some systems (Perl?) define bool as empty symbol; 
+   need to neutralize that */
+#undef bool
 typedef short  bool;
 
 #ifdef BITS64

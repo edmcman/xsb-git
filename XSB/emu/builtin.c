@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: builtin.c,v 1.3 1998-11-18 03:20:19 kifer Exp $
+** $Id: builtin.c,v 1.4 1998-11-18 07:59:12 kifer Exp $
 ** 
 */
 
@@ -187,8 +187,8 @@ static void write_out_profile(void);
 
 Cell  flags[64];			/* System flags + user flags */
 FILE *open_files[MAX_OPEN_FILES]; /* open file table */
-extern char *install_dir;    	  /* from xmain.c */
-extern char *user_home;    	  /* from xmain.c */
+extern char *install_dir;    	  /* from self_orientation.c */
+extern char *user_home;    	  /* from self_orientation.c */
 
 /* ------- working variables for the procedure "builtin_call" ---------	*/
 

@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xsbpattern.c,v 1.2 1998-11-09 22:26:23 kifer Exp $
+** $Id: xsbpattern.c,v 1.3 1998-11-18 08:00:19 kifer Exp $
 ** 
 */
 
@@ -35,8 +35,8 @@
        
 ----------------------------------------------------------------------------*/
 
-/**------------------------------------------------------------------------**/
 
+#include "interface.h"
 #include "perlpattern.c"          /*pattern match basic functions */   
 
 void build_sub_match_spec( void );
