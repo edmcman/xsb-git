@@ -19,7 +19,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.5 1998-11-15 02:56:22 kifer Exp $
+## $Id: Makefile,v 1.6 1998-11-15 05:44:17 kifer Exp $
 ## 
 ##
 
@@ -29,9 +29,9 @@
 # For that reason, self-make is always suggested.
 #-----------------------------------------------------------------------#
 
-ALL = 	aggregs.O array.O array1.O copyterm.O directry.O \
+ALL = 	aggregs.O array.O array1.O copyterm.O directry.O foreign.O \
 	intern.O interprolog.O odbc_call.O ordsets.O ora_call.O \
-	record.O packaging.O scrptutl.O socket.O
+	record.O packaging.O unix.O scrptutl.O setof.O socket.O xcallxsb.O
 
 Option = [sysmod,optimize]
 

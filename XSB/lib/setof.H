@@ -1,5 +1,5 @@
-/* File:      foreign.H
-** Author(s): Kostis Sagonas, Jiyang Xu
+/* File:      setof.H
+** Author(s): Kostis Sagonas, David S. Warren, Bart Demoen
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -19,21 +19,19 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: foreign.H,v 1.1.1.1 1998-11-05 16:59:57 sbprolog Exp $
+** $Id: setof.H,v 1.1 1998-11-15 05:44:22 kifer Exp $
 ** 
 */
 
 
-:- export compile_cH/5.
 
-:- import unix/1 from unix.
-:- import memberchk/2 from basics.
-:- import write_int/1 from prof_sbp.
-:- import attach/2, length/2 from listutil.
-:- import hdr_ext/1, obj_ext/1 from curr_sym.
-:- import message/1, time_message/2 from auxlry.
-:- import str_len/2, str_cat/3, str_sub/2 from machine.
-:- import read/1, see/1, seen/0, write/1, put/1, tell/1, told/0,
-	  atom/1, file_exists/1, cputime/1, abort/1
-     from standard.
-:- import xsb_configuration/2 from configuration.
+:- export setof/3, bagof/3, findall/3,
+	  tsetof/3, tbagof/3,
+	  sort/2, keysort/2, '^'/2, pick/3,
+	  excess_vars/4.
+
+:- import tfindall/3 from tables.
+:- import functor/3, (=..)/2, arg/3, call/1 from standard.
+:- import '$$findall_init'/2, '$$findall_add'/3, '$$findall_get_solutions'/4
+     from machine.
+

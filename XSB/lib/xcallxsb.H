@@ -1,5 +1,5 @@
-/* File:      unix.H
-** Author(s): Kostis F. Sagonas, Jiyang Xu
+/* File:      c_to_xsb.H
+** Author(s): Ernie Johnson
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -19,17 +19,20 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: unix.H,v 1.1.1.1 1998-11-05 16:59:59 sbprolog Exp $
+** $Id: xcallxsb.H,v 1.1 1998-11-15 05:44:26 kifer Exp $
 ** 
 */
 
 
-:- export unix/2, cd/1, unix/1, ls/0, rename/2, rm/1, edit/1.
-:- export sys_chdir/2, sys_access/3, sys_stat/3, sys_link/3.
 
-:- import str_cat/3 from string.
-:- import atom/1, abort/1 from standard.
-:- import psc_name/2, sys_system/2, term_psc/2, term_type/2,
-	  expand_filename/2
-    from machine.
-
+:- import
+       integer/1, file_open/3, file_close/1, close_open_tables/0
+   from machine.
+:- import
+       call_c/1, call_expose/1, goal_cut_trans/3, repeat/0, (=..)/2
+   from standard.
+:- import file_write/2, file_nl/1 from xsb_writ.
+:- import file_read_foe/3, file_read/3 from xsb_read.
+:- import excess_vars/4 from setof.
+:- import conset/2 from prof_sbp.
+:- import [] / 0 from usermod.	       % just to make usermod typed "module"

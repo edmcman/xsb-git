@@ -1,5 +1,5 @@
-/* File:      c_to_xsb.H
-** Author(s): Ernie Johnson
+/* File:      foreign.H
+** Author(s): Kostis Sagonas, Jiyang Xu
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -19,20 +19,21 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: foreign.H,v 1.1 1998-11-15 05:44:20 kifer Exp $
 ** 
 */
 
 
+:- export compile_cH/5.
 
-:- import
-       integer/1, file_open/3, file_close/1, close_open_tables/0
-   from machine.
-:- import
-       call_c/1, call_expose/1, goal_cut_trans/3, repeat/0, (=..)/2
-   from standard.
-:- import file_write/2, file_nl/1 from xsb_writ.
-:- import file_read_foe/3, file_read/3 from xsb_read.
-:- import excess_vars/4 from setof.
-:- import conset/2 from prof_sbp.
-:- import [] / 0 from usermod.	       % just to make usermod typed "module"
+:- import unix/1 from unix.
+:- import memberchk/2 from basics.
+:- import write_int/1 from prof_sbp.
+:- import attach/2, length/2 from listutil.
+:- import hdr_ext/1, obj_ext/1 from curr_sym.
+:- import message/1, time_message/2 from auxlry.
+:- import str_len/2, str_cat/3, str_sub/2 from machine.
+:- import read/1, see/1, seen/0, write/1, put/1, tell/1, told/0,
+	  atom/1, file_exists/1, cputime/1, abort/1
+     from standard.
+:- import xsb_configuration/2 from configuration.
