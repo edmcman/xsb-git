@@ -42,7 +42,7 @@ xsbexamples  -d examples   XSB/examples
 xsbcore	     -a !XSB/tests !XSB/admin !XSB/examples !XSB/docs XSB
 
 # What developers need, sans XSB/tests, because of the size of XSB/tests
-xsbdevel     -a xsbcore XSB/admin XSB/docs
+xsbdevel     -a XSB/admin XSB/docs xsbcore
 
 # This is how we'll be making releases
-xsbrelease   -a xsbcore xsbexamples
+xsbrelease   -a xsbexamples xsbcore
