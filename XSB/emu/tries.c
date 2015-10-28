@@ -1915,7 +1915,7 @@ int vcs_tnot_call = 0;
 	else {								\
 	  sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
 	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,"Exceeded max table subgoal depth of %d in arg %i in tnot(%s)\n", \
-		    (int) flags[MAX_TABLE_SUBGOAL_DEPTH],i+1,forest_log_buffer_1->fl_buffer);	\
+		    (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer);	\
 	}								\
       }									\
       else {								\
@@ -1926,7 +1926,7 @@ int vcs_tnot_call = 0;
 	else {								\
 	  sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
 	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,"Exceeded max table subgoal depth of %d in arg %i in %s\n", \
-		  (int) flags[MAX_TABLE_SUBGOAL_DEPTH],i+1,forest_log_buffer_1->fl_buffer);	\
+		  (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer);	\
 	}								\
       }									\
     }									\
@@ -2116,7 +2116,7 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
   if (TIF_SubgoalDepth(CallInfo_TableInfo(*call_info))) {
     pred_depth = (Cell) TIF_SubgoalDepth(CallInfo_TableInfo(*call_info));
   }
-  else pred_depth = flags[MAX_TABLE_SUBGOAL_DEPTH];  
+  else pred_depth = flags[MAX_TABLE_SUBGOAL_SIZE];  
 
   if (interning_terms && pred_depth < MY_MAXINT) 
     xsb_abort("Cannot use explicit depth bound when interning terms for table: %s/%d\n",

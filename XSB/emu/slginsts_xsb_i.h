@@ -1068,7 +1068,7 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
     memset(forest_log_buffer_1->fl_buffer,0,MAXTERMBUFSIZE);
     memset(forest_log_buffer_2->fl_buffer,0,MAXTERMBUFSIZE);
     memset(forest_log_buffer_3->fl_buffer,0,MAXTERMBUFSIZE);
-    //    sprint_registers(CTXTc  buffera,TIF_PSC(subg_tif_ptr(producer_sf)),flags[MAX_TABLE_SUBGOAL_DEPTH]);
+    //    sprint_registers(CTXTc  buffera,TIF_PSC(subg_tif_ptr(producer_sf)),flags[MAX_TABLE_SUBGOAL_SIZE]);
     //    printAnswerTemplate(stddbg,answer_template ,(int) template_size);
     sprintAnswerTemplate(CTXTc forest_log_buffer_1, 
 			 answer_template, template_size);
@@ -1089,7 +1089,7 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
   printf("AT (na) %p size %d\n",answer_template,template_size);
   print_heap_abstraction(answer_template-2*(abstr_size)-(template_size-1),abstr_size);
   printAnswerTemplate(stddbg,answer_template,template_size);
-  print_registers(stddbg, TIF_PSC(subg_tif_ptr(producer_sf)),flags[MAX_TABLE_SUBGOAL_DEPTH]);
+  print_registers(stddbg, TIF_PSC(subg_tif_ptr(producer_sf)),flags[MAX_TABLE_SUBGOAL_SIZE]);
 #endif
 
     SUBG_INCREMENT_ANSWER_CTR(producer_sf);

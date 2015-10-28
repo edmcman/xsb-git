@@ -256,15 +256,17 @@ static void init_flags(CTXTdecl)
   flags[THREAD_TCPSIZE] = TCPSTACK_DEFAULT_SIZE;
   flags[THREAD_COMPLSIZE] = COMPLSTACK_DEFAULT_SIZE;
 
-  flags[MAX_TABLE_SUBGOAL_DEPTH] = MY_MAXINT;
+  /* Tripwires */
+  flags[MAX_TABLE_SUBGOAL_SIZE] = MY_MAXINT;
   flags[MAX_TABLE_SUBGOAL_ACTION] = XSB_ERROR;
-  //  flags[MAX_TABLE_SUBGOAL_ACTION] = XSB_ABSTRACT;
-  //  flags[MAX_TABLE_SUBGOAL_DEPTH] = 4;
-
+  flags[MAX_INCOMPLETE_SUBGOALS] = MY_MAXINT;
+  flags[MAX_INCOMPLETE_SUBGOALS_ACTION] = XSB_ERROR;
   flags[MAX_TABLE_ANSWER_DEPTH] = MY_MAXINT;
   flags[MAX_TABLE_ANSWER_ACTION] = XSB_ERROR;
   flags[MAX_TABLE_ANSWER_LIST_DEPTH] = MY_MAXINT;
   flags[MAX_TABLE_ANSWER_LIST_ACTION] = XSB_ERROR;
+
+
   flags[MAXTOINDEX_FLAG] = 5;
 #ifdef MULTI_THREAD
   flags[MAX_QUEUE_TERMS] = DEFAULT_MQ_SIZE; 
@@ -432,13 +434,13 @@ static int process_long_option(CTXTdeclc char *option,int *ctr,char *argv[],int 
 #endif
     }
     else xsb_warn(CTXTc "Missing size value for --max_mqueues");
-  } else if (!strcmp(option,"max_subgoal_depth")) {
+  } else if (!strcmp(option,"max_subgoal_size")) {
     if ((int) (*ctr) < argc) {
       (*ctr)++;
-      if (sscanf(argv[*ctr], "%d", (int*) &flags[MAX_TABLE_SUBGOAL_DEPTH]) < 1)
-	xsb_warn(CTXTc "Invalid depth value for --max_subgoal_depth");
+      if (sscanf(argv[*ctr], "%d", (int*) &flags[MAX_TABLE_SUBGOAL_SIZE]) < 1)
+	xsb_warn(CTXTc "Invalid size value for --max_subgoal_size");
     }
-    else xsb_warn(CTXTc "Missing depth value for --max_subgoal_depth");
+    else xsb_warn(CTXTc "Missing size value for --max_subgoal_size");
   }
   else if (!strcmp(option,"max_subgoal_action")) {
     char action;
