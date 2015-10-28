@@ -105,8 +105,9 @@ ISO and Prolog-commons flags are as follows:
 \item {\tt bounded} Indicates whether integers in XSB are bounded.
   This flag always has the value {\tt true}
 %
-\item {\tt min\_integer, max\_integer} The minimum integer available in the current
-  XSB configuration (differs between 32- and 64-bits).
+\item {\tt min\_integer, max\_integer} The minimum and maximum
+  integers available in the current XSB configuration (differs between
+  32- and 64-bits).
 %
 \item {\tt max\_arity} Indicates the maximum arity of terms in XSB.
   This flag always has the value {\tt 255}
@@ -119,9 +120,10 @@ ISO and Prolog-commons flags are as follows:
 %
 \item {\tt unknown} Indicates the behavior taken when calling an
   unknown predicate.  Values can be set to {\tt fail}, {\tt warning},
-  or {\tt error}, indincating that calls to unknown predicates fail,
-  produce a warning message to {\tt user\_warning} or throw an
-  existence error.  The default setting is {\tt error}.
+  or {\tt error}, indicating that calls to unknown predicates should
+  fail, produce a warning message to the {\tt user\_warning}
+  stream. or throw an existence error.  The default setting is {\tt
+    error}.
 %
 \item {\tt double\_quotes} Indicates that double-quoted terms in XSB
   represent lists of character codes.  Value is {\tt codes}
@@ -134,7 +136,9 @@ ISO and Prolog-commons flags are as follows:
 \item {\tt version\_data} indicates the version of XSB that is
   running.  Using this flag, applications intended to run on more than
   one Prolog can take actions that conditional on the executing
-  Prolog.  The value is {\tt xsb}.
+  Prolog.  The value is 
+
+{\tt xsb($\langle Major\_version\#\rangle,\langle Minor\_version\#\rangle,\langle Patch\_version\#\rangle,\_$)}.
 \end{itemize}
 
 \compatibility The ISO flags {\tt char\_conversion} is not available
@@ -156,12 +160,12 @@ and certain other Prolog.  These flag names are:
 \begin{itemize}
 \index{streams!STDERR}
 %
-\item {\tt backtrace\_on\_error} {\tt on} iff system-handled errors
-automatically print out the trace of the execution stack where the
-error arose, {\tt off} otherwise. Default is {\tt on}.  In the
-multi-threaded engine, this flag is thread-specific and controls
-whether the backtrace for a current execution will be printed to {\tt
-  STDERR}.
+\item {\tt backtrace\_on\_error} The flag is {\tt on} iff
+  system-handled errors automatically print out the trace of the
+  execution stack where the error arose, {\tt off} otherwise. Default
+  is {\tt on}.  In the multi-threaded engine, this flag is
+  thread-specific and controls whether the backtrace for a current
+  execution will be printed to {\tt STDERR}.
 %\
 \item {\tt dcg\_style}  the DCG style currently used; {\tt xsb} or {\tt
   standard} (standard is used in Quintus, SICSTUS, etc.).  See
@@ -169,11 +173,15 @@ Section~\ref{sec-dcg-differences} for more details. Default is {\tt
   xsb}. This flag affects all threads in the process.
 %
 \index{garbage collection}
-\item {\tt heap\_garbage\_collection}  {\tt indirection}, {\tt none}, {\tt
-  sliding}, or {\tt copying} depending on the heap garbage collection
-strategy that is currently being employed (see also
-Section~\ref{sec:EmuOptions}).  Default is {\tt indirection}.  This
-flag is private to each thread.  
+\item {\tt heap\_garbage\_collection} Values: {\tt indirection} or
+  {\tt none}.  Indicates the heap garbage collection strategy that is
+  currently being employed (see also Section~\ref{sec:EmuOptions}).
+  Default is {\tt indirection}.  This flag is private to each thread.
+%\item {\tt heap\_garbage\_collection}  {\tt indirection}, {\tt none}, {\tt
+%  sliding}, or {\tt copying} depending on the heap garbage collection
+%strategy that is currently being employed (see also
+%Section~\ref{sec:EmuOptions}).  Default is {\tt indirection}.  This
+%flag is private to each thread.  
 %
 \item {\tt heap\_margin} Specifies the size {\em in bytes} of the
   margin used to determine whether to perform heap garbage collection
@@ -182,19 +190,21 @@ flag is private to each thread.
   Setting this field to a large value (e.g. in the megabyte range) can
   cause XSB to be more aggressive in terms of expanding heap and local
   stack and to do fewer heap garbage collections than with the default
-  value.  However {\tt heap\_margin} should not be set {\em lower}
+  value.  However {\tt heap\_margin} should never be set {\em lower}
   than its default, as this may prevent XSB from properly creating
   large terms on the heap.
 
 %
-\item {\tt clause\_garbage\_collection}  {\tt on} if garbage collection for
-retracted clauses is allowed, and off otherwise. Default is {\tt
-  on}.  This flag is private to each thread.  
+\item {\tt clause\_garbage\_collection} Values: {\tt on} if garbage
+  collection for retracted clauses is allowed, and off
+  otherwise. Default is {\tt on}.  This flag is private to each
+  thread.
 %
-\item {\tt atom\_garbage\_collection}  {\tt on} if garbage collection for
-atomic constants is allowed, and off otherwise. Default is {\tt on}.
-This flag is global for all threads (currently, string garbage
-collection will only be invoked if there is a single active thread.)
+\item {\tt atom\_garbage\_collection} Values: {\tt on} if garbage
+  collection for atomic constants is allowed, and off
+  otherwise. Default is {\tt on}.  This flag is global for all threads
+  (currently, string garbage collection will only be invoked if there
+  is a single active thread.)
 
 %
 \item {\tt table\_gc\_action} The setting {\tt
@@ -208,15 +218,15 @@ collection will only be invoked if there is a single active thread.)
   {\tt abolish\_tables\_transitively}.  This flag affects all threads
   in the process.
 %
-\item {\tt goal}  the goal passed to XSB on command line with the `-e'
-switch; `{\tt true.}' if nothing is passed.  This flag may be
+\item {\tt goal}  The goal passed to XSB on command line with the `-e'
+switch; or `{\tt true.}' if nothing is passed.  This flag may be
 examined, but not set. 
 %
 \index{Prolog flags!{\tt tracing}}
 \index{Prolog flags!{\tt warning\_action}}
 \index{Prolog flags!{\tt write\_depth}}
 \index{Prolog flags!{\tt write\_attributes}}
-\item {\tt tracing}  {\tt on} iff trace mode is on; {\tt off}
+\item {\tt tracing}  Values: {\tt on} iff trace mode is on; {\tt off}
 otherwise. This flag affects all threads in the process. 
 %
 \item {\tt write\_depth}  The depth to which a term is written by {\tt
@@ -225,7 +235,7 @@ threads in the process.
 
 \item {\tt warning\_action} The action to take on warnings: the
   default value {\tt print\_warning} prints a warning message to the
-  XSB {\tt STDWARN} stream when {\tt warning/1} is called; {\tt
+  {\tt user\_warning} stream when {\tt warning/1} is called; {\tt
     silent\_warning} silently succeeds when {\tt warning/1} is called;
   and {\tt error\_warning/1} throws a miscellaneous exception.
 
@@ -254,86 +264,92 @@ threads in the process.
 \index{termination!subgoal abstraction}
 \index{termination!radial restraint}
 %
-\item {\tt max\_table\_subgoal\_action} The action to take when a tabled
-  subgoal of maximum depth is encountered.  To understand the use of
-  this flag, consider that if a predicate such as
+\item {\tt max\_table\_subgoal\_action} The action to take when a
+  tabled subgoal of maximum size is encountered.  To understand the
+  use of this flag, consider that if a predicate such as
 \begin{verbatim}
 p(X):- p(f(X)).
 \end{verbatim}
-  is tabled, it can (semantically) create subgoals of infinite depth.
-  When the maximum subgoal depth is reached, XSB can either throw a
-  miscellaneous error (the default action); or XSB can fail -- an
-  action that may be valid for certain programs.  The action is set to
-  fail by the value {\tt failure} while the action of throwing an
-  error can be (re-)set using the value {\tt error}.
+  is tabled, it can create subgoals of unbounded size.  When the
+  maximum subgoal depth is reached, XSB can
+\begin{enumerate}
+\item Throw a miscellaneous error, set using the value {\tt error}.
+  This is the default action.
+%
+\item Apply subgoal abstraction, using the value {\tt abstract}.
+%
+\item Suspend the computation and throw it into a break-level CLI,
+  using the value {\tt suspend}
+%
+\item Fail the subgoal, an action that may be valid for
+  certian programs, settable using the value {\tt fail}.
+%
+\end{enumerate}
 
-\item {\tt max\_table\_subgoal\_depth} The maximum depth of a subgoal
-  argument that can be added to a table: when the depth is reached, an
+\item {\tt max\_table\_subgoal\_size} The maximum size of a subgoal
+  argument that can be added to a table: when the size is reached, an
   action is taken as indicated for the previous flag.  The default
-  value is {\tt maximum\_integer}.
+  value is the value of {\tt maximum\_integer}.
 
 \item {\tt max\_table\_answer\_action} The action to take when a tabled
-  answer of maximum depth is encountered.  To understand the use of
+  answer of maximum size is encountered.  To understand the use of
   this flag, consider the program fragment:
 \begin{verbatim}
 :- table p/1.
 p(f(X)):- p(X).          p(a).
 \end{verbatim}
   is tabled, the model for the goal {\tt ?- p(X)} is infinite, so that
-  this program will not terminate.  When the maximum answer depth is
+  this program will not terminate.  When the maximum answer size is
   reached, XSB can either 
 \begin{enumerate}
 \item Throw a miscellaneous error, set using the value {\tt error}.
   This is the default action.
 %
-\item Apply bounded rationality by abstracting the answer with a truth
-  value of {\em undefined}; settable using the value {\tt
-    bounded\_rationality}.
+\item Apply answer abstraction through radial restraint, using the
+  value {\tt abstract}.
 %
-\item Issue a warning, settable using the value {\tt warning}.
-%
-\item Fail the answer addition, an action that may be valid for
-  certian programs, settable using the value {\tt fail}.
+\item Suspend the computation and throw it into a break-level CLI,
+  using the value {\tt suspend}
 %
 \end{enumerate}
 %
-{\bf {\em Note that this flag affects only structures that are not lists (since
-large lists are more common than other large structures).}}
+%{\bf {\em Note that this flag affects only structures that are not lists (since
+%large lists are more common than other large structures).}}
 
-\item {\tt max\_table\_answer\_depth} The maximum depth of an answer
+\item {\tt max\_table\_answer\_size} The maximum depth of an answer
   argument that can be added to a table: when the depth is reached, an
   action is taken as indicated for the previous flag.  The default
-  value is {\tt maximum\_integer}.
+  value is the value of {\tt maximum\_integer}.
 
-{\bf  {\em Note that this flag affects only structures that are not lists
-    (since large lists are more common than other large structures).
-  }}
+%{\bf  {\em Note that this flag affects only structures that are not lists
+%    (since large lists are more common than other large structures).
+%  }}
 
-\item {\tt max\_table\_answer\_list\_action} The action to take when a
-  tabled answer of maximum list depth is encountered.  To understand
-  the use of this flag, consider the program fragment:
-\begin{verbatim}
-:- table l/1.
-l([a|X]):- l(X).          l([a]).
-\end{verbatim}
-  is tabled, the model for the goal {\tt ?- l(X)} is infinite, so that
-  this program will not terminate.  When the maximum answer list depth
-  is reached, XSB can either throw a miscellaneous error (the default
-  action); emit a warning; or XSB can fail -- an action that may be
-  valid for certain programs~\footnote{Failure in this case can be
-    seen as an implicit form of answer abstraction.}.  The action is
-  set to fail by the value {\tt failure} while the action of throwing
-  an error can be (re-)set using the value {\tt error}, and the action
-  of warning is set by the value {\tt warning}.
-
-\item {\tt max\_table\_answer\_list\_depth} The maximum list depth of
-  an answer argument that can be added to a table: when the depth is
-  reached, an action is taken as indicated for the previous flag.  The
-  default value is {\tt maximum\_integer}.
-
-  {\em Note that this flag affects only structures that are lists
-    (since large lists are more common than other large structures).
-  }
+%\item {\tt max\_table\_answer\_list\_action} The action to take when a
+%  tabled answer of maximum list depth is encountered.  To understand
+%  the use of this flag, consider the program fragment:
+%\begin{verbatim}
+%:- table l/1.
+%l([a|X]):- l(X).          l([a]).
+%\end{verbatim}
+%  is tabled, the model for the goal {\tt ?- l(X)} is infinite, so that
+%  this program will not terminate.  When the maximum answer list depth
+%  is reached, XSB can either throw a miscellaneous error (the default
+%  action); emit a warning; or XSB can fail -- an action that may be
+%  valid for certain programs~\footnote{Failure in this case can be
+%    seen as an implicit form of answer abstraction.}.  The action is
+%  set to fail by the value {\tt failure} while the action of throwing
+%  an error can be (re-)set using the value {\tt error}, and the action
+%  of warning is set by the value {\tt warning}.
+%
+%\item {\tt max\_table\_answer\_list\_depth} The maximum list depth of
+%  an answer argument that can be added to a table: when the depth is
+%  reached, an action is taken as indicated for the previous flag.  The
+%  default value is {\tt maximum\_integer}.
+%
+%  {\em Note that this flag affects only structures that are lists
+%    (since large lists are more common than other large structures).
+%  }
 
 \index{Prolog flags!{\tt max\_memory}}
 \item {\tt max\_memory} The maximum amount of memory that an XSB
@@ -345,20 +361,20 @@ l([a|X]):- l(X).          l([a]).
   this flag can be set during an XSB session.
 
   The maximum amount can be set in two ways.  If given a floating
-  point number $F$, the maximum will be set to $F$ times the total
-  amount of RAM for the machine on which XSB is executing.  If given
-  an integer $I$, the maximum will be set to $I$ kilobytes.  The value
-  of 0 effectively disables the flag, allowing XSB to allocate as much
-  memory as the underlying OS will grant.  The default value is 0, so
-  that the flag is disabled by default.
+  point number $F, 0 \le F \leq 1$, the maximum will be set to $F$
+  times the total amount of RAM for the machine on which XSB is
+  executing.  If given an integer $I$, the maximum will be set to $I$
+  kilobytes.  The value of 0 effectively disables the flag, allowing
+  XSB to allocate as much memory as the underlying OS will grant.  The
+  default value is 0, so that the flag is disabled by default.
 
 \index{Prolog flags!{\tt unify\_with\_occurs\_check}}
 \index{occurs check}
 \index{terms!cyclic}
 \item {\tt unify\_with\_occurs\_check} If set to {\tt on}, perform all
   unification using an occurs check, which makes unification
-  mathematically correct, but computationally complex.  Without the occurs
-  check, the unification 
+  mathematically correct, at the cost of increasing its computational
+  complexity.  Without the occurs check, the unification
 \[
    X = f(X)
 \]
@@ -405,7 +421,7 @@ the syntax error message.
     undefined\_truth\_value} then certain goals will succeed with an
   undefined truth value rather than throwing an error.  When this
   occurs, a literal is added to the delay list of the current
-  evaluation.  Later, it can be determined if an undefined answer
+  evaluation.  Later, it can be determined whether an undefined answer
   depends on an exceptional condition through {\tt
     explain\_u\_val/[3.6]}, {\tt get\_residual\_sccs/[3,5]} or via a
   justification system that depends on these predicates.  The default
@@ -419,10 +435,16 @@ the syntax error message.
   exception.  The execution of {\tt print\_incomplete\_tables/0}
   causes the stack of incomplete tables to be printed to a temporary
   file in {\tt \$XSBDIR/etc}.  The file can be obtained via the
-  predicate {\tt get\_scc\_dumpfile/1}; information in the file can be
-  used to help understand the context in which the exception arose.
-  The file will be created only if an exception is thrown over at
-  least one incomplete table.  The default for this flag is {\tt off}.
+  predicate {\tt get\_scc\_dumpfile/1}; later, information in the file
+  can be used to help understand the context in which the exception
+  arose.  The file will be created only if an exception is thrown over
+  at least one incomplete table.  The default for this flag is {\tt
+    off}.
+
+  Use of this flag may be seen as an aid to analyzing tabling behavior
+  when XSB is part of a running system; for interactive analysis
+  inspection predicates may be more useful
+  (cf. Section~\ref{sec:suspend-analyze}).
 %
 \index{Prolog flags!{\tt max\_tab\_usage}}
 \index{\texttt{statistics/1}}
@@ -1315,15 +1337,15 @@ garbage collection should rarely need to be turned off, and should
 rarely need to be invoked manually.
 
 \comment{
-\standarditem{garbage\_collection(+Option)}{garbage\_collection/1}
-Sets the system so that subsequent heap garbage collecting will be
-done according to the specified {\tt Option}.  {\tt Option} may be the
-atom \verb|none| indicating that heap garbage collection is turned
-off; it may be the atom \verb|sliding| indicating that sliding garbage
-collection will be done; the atom \verb|copying| indicating that the
-copying garbage collector will be used; or it may be the atom
-\verb|indirection| indicating that the indirect-sliding garbage
-collector will be used.
+%\standarditem{garbage\_collection(+Option)}{garbage\_collection/1}
+%Sets the system so that subsequent heap garbage collecting will be
+%done according to the specified {\tt Option}.  {\tt Option} may be the
+%atom \verb|none| indicating that heap garbage collection is turned
+%off; it may be the atom \verb|sliding| indicating that sliding garbage
+%collection will be done; the atom \verb|copying| indicating that the
+%copying garbage collector will be used; or it may be the atom
+%\verb|indirection| indicating that the indirect-sliding garbage
+%collector will be used.
 }
 
 \index{tabling!call subsumption}

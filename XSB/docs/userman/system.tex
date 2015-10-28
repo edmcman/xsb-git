@@ -843,7 +843,7 @@ Flags:
            --quietload : don't show the `module loaded' messages
             --noprompt : don't show prompt (for non-interactive use)
                     -S : set default tabling method to call-subsumption
- --max_subgoal_depth N : set maximum tabled subgoal depth to N (default is maximum integer)
+ --max_subgoal_size  N : set maximum tabled subgoal size to N (default is maximum integer)
 --max_subgoal_action A : set action on maximum subgoal depth: e(rror)/a(bstract)/w(arn)
          --max_tries N : allow up to N tries for interning terms
        --max_threads N : maintain information for up to N threads (MT engine only)
@@ -991,9 +991,9 @@ So that XSB can be used to write reasonable scripts.
     Note: This option is not available when the system is being used
     at the non-tracing mode (see Section~\ref{debugging}).
 %
-\item[{\tt --max\_subgoal\_depth} {\em N}] : set maximum tabled subgoal
-  depth to {\em N} (default is maximum integer).  This flag sets the
-  depth of a subgoal upon which an action may be taken (such as
+\item[{\tt --max\_subgoal\_size} {\em N}] : set maximum tabled subgoal
+  size to {\em N} (default is maximum integer).  This flag sets the
+  size of a tabled subgoal upon which an action may be taken (such as
   throwing an error, abstracting, or issuing a warning.
 %
 \item[{\tt --max\_subgoal\_action} {\em A}] : set action on maximum

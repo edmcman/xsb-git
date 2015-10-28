@@ -529,14 +529,14 @@ queue (there are no public signal queues).  In XSB, threads handle
 Prolog signal interrupts (including cancellation messages) at the same
 time as attributed variable interruptions.  This means that Prolog
 signal interrupts will be handled very quickly if SLG-WAM code is
-being executed.  On the other hand, if a thread executing a builtin
+being executed.  On the other hand, if a thread executing a built-in
 to, e.g. waiting on a mutex, the thread may be immediately awakened to
 process the signal, but not always: if a thread is waiting for input
 on a stream or socket, the thread may not handle the signal interrupt
 until the input is received.  Furthermore, in a very few critical
 sections of code, thread signal handling may be distabled.  However,
 the thread is guarenteed to handle the signal interrupt or
-cancellation message very shortly after it finishes the builtin.
+cancellation message very shortly after it finishes the built-in.
 
 So, while thread cancellation and signalling is useful, it must be
 used with a certain amount of care.  Any thread can signal any other

@@ -1985,15 +1985,15 @@ As noted throughout this manual, tabling adds important termination
 properties to programs and queries.  In this section we state more
 precisely what these termination properties are, and how the
 properties can be strengthened through declarations and settings for
-{\em subgoal abstraction} and for bounded rationality through {\em
-  answer abstraction}.
+{\em subgoal abstraction} and for bounded rationality through a type
+of answer abstraction called {\em radial restraint}.
 
 Before doing so, it is important to set the context for where issues
 of termination may arise.  Consider first a pure normal program in
 which every predicate is tabled.  This means a program where rules may
 only call other rules, possibly through negation ({\tt tnot/1}, {\tt
   not\_exists/1} or {\tt u\_not/1} in XSB); but where there are no
-calls to builtins for arithmetic, all-solutions predicates, or other
+calls to built-in all-solutions predicates, or other
 built-ins.  If such a fully-tabled pure normal program does {\em not}
 have function symbols, XSB will always terminate for any query.  For
 instance, XSB will terminate for fully tabled pure datalog programs --
@@ -2008,16 +2008,17 @@ representation, they are not powerful enough for general programming
 as they do not allow recursive structures such as lists.  Thus, for
 the rest of this section we consider pure programs that may contain
 function symbols.  Consider a pure definite program in which every
-predicate is tabled.  Such a program would call each tabled subgoal
-(up to variance) exactly once if call variance were used, and at most
-once if call subsumption were used.  In addition, tabling guarantees
-that each answer will be returned to each call to a tabled subgoal at
-most once.  This means that there are two sources of non-termination.
-Either there can be an infinite number of subgoals, or there can be an
-infinite number of answers~\footnote{Using the forest of trees model
-  of tabling (cf. Section~\ref{sec:forest-trace}) non-termination
-  requires that there are an infinite number of trees or that at least
-  one tree have infinite size.}.
+predicate is tabled.  Such a program would create a table for each
+tabled subgoal (up to variance) exactly once if call variance were
+used, and at most once if call subsumption were used.  In addition,
+tabling guarantees that each answer will be returned to each call to a
+tabled subgoal at most once.  This means that there are two sources of
+non-termination.  Either there can be an infinite number of subgoals,
+or there can be an infinite number of answers~\footnote{Using the
+  forest of trees model of tabling
+  (cf. Section~\ref{sec:forest-trace}) non-termination requires that
+  there are an infinite number of trees or that at least one tree has
+  infinite size.}.
 
 \paragraph{An Infinite Number of Subgoals}
 %
@@ -2034,7 +2035,7 @@ p(X) :- p(f(X)).
 The goal {\tt ?- p(1)} can create an infinite number of tabled
 subgoals: {\tt p(f(1))}, {\tt p(f(f(1)))}, {\tt p(f(f(f(1))))} and so
 on.  Note that since all of the subgoals are ground, none subsume one
-another, so that call subsumption will not help here, (although call
+another, so that call subsumption will not help here. (Although call
 subsumption would help if the goal were {\tt ?- p(X)}).
 
 \paragraph*{Infinite Answers}
@@ -2058,12 +2059,12 @@ In a nutshell, subgoal abstraction allows a goal like {\tt
 {\tt p(f(f(X))),X = f(1)}.  
 
 \noindent
-If all subgoals that have a term depth (or term size) over a given
+If all subgoals that have a term depth -- or term size -- over a given
 finite threshold are abstracted, any query can produce only a finite
 number of subgoals (since there are a finite number of predicate,
-function and constant symbols in any program). If a program is
-definite, it can be shown that any query to a program will terminate
-if that program uses subgoal abstraction~\cite{TaSa86}.
+function and constant symbols in any program). If a program has a
+finite well-founded model, it can be shown that any query to a program
+will terminate if that program uses subgoal abstraction~\cite{RigS14}.
 %
 For normal programs, the situation is not much different at a
 conceptual level.  A goal such as {\tt tnot(p(f(f(f(1))))} would
@@ -2075,8 +2076,8 @@ answers it will terminate using tabling with subgoal
 abstraction~\cite{RigS13,RigS14}.
 
 Despite its theoretical power, subgoal abstraction can also cause
-problems if used indiscriminately.  if the second argument of the
-subgoal
+problems if used indiscriminately.  For instance, if the second
+argument of the subgoal
 %
 \begin{verbatim}
 ?- member(e,[a,b,c,d,e])
@@ -2095,58 +2096,105 @@ not have a finite model.  While an experienced programmer would never
 want to table {\tt member/2}, he well may want to table a grammar or
 other program that performs recursion through a finite structure.
 
+\paragraph{Term Size Abstraction in XSB}
+%
+Both subgoal and answer abstraction in XSB are based on limiting the
+size of a term.  The specific definition of size used is slightly
+complicated, but offeres advantages discussed below.  A term $T$ is
+traversed from left to right.  Each time a non-constant functor symbol
+is encountered, the size is incremented by 1 -- regardless of the type
+of symbol that is encountered.  Once the size limit has been reached,
+all further non-constant functor symbols encountered will be
+abstracted, with one important exception.  The functor symbols will be
+abstracted {\em only} if they also occur at depth greater than 0.
+
+\begin{example}
+Applying the above definition of size abstraction with limit 2 to the
+term 
+
+{\tt p(d(e(1),a,f(c$_1$)),b,g(c$_2$),[c$_3$,[c$_4$,c$_5$]))}
+
+\noindent
+  produces the term 
+
+{\tt p(d(e(X$_1$),a,X$_2$),b,g($c_2$),[$c_4$|X$_3$])}.  
+
+\noindent
+In the traversal, the size limit is reached once the {\tt e/1} functor
+is encountered.  Afterwards all non-constant functor symbols of depth
+greater than 0 are abstracted.  This causes {\tt f/1} to be
+abstracted, as it occurs at depth 1; however {\tt g/1} in the third
+occurs at depth 0, and so is retained.  Similarly in the fourth
+argument, the outer list symbol and head is preserved, while the tail
+of the list is abstracted.
+\end{example}
+
+Size-based abstraction as described has been implemented in a manner
+that has minimal if any impact on the speed of XSB's tabling engine.
+Note that by not abstracting functor symbols at depth 0,
+multi-argument indexing of subgoals will be usually be preserved.
+However, XSB's star indexing will not always be preserved if it is
+declared on an argument that is incuntered after a size limit has been
+hit.\footnote{Other metrics could be used, such as term depth.
+  Depth-based abstraction offers conceptual clarity and makes it
+  easier to preserve star indexing; however size-based abstraction
+  allows finer-grained optimization and incurs slightly less cost for
+  XSB's tabling engine.}
+
 \subsubsection{Declaring Subgoal Abstraction}
 %
 % The implementation of subgoal abstraction in XSB is still in progress.
 % and may be changed in future versions as we gain experience in how
 % subgoal abstraction is best used in practice.  
 
-Subgoal abstraction in XSB is performed for goals called positively;
-but not for goals called negatively including {\tt tnot/1} and {\tt
-  not\_exists/1}; rather, such goals will throw an exception if they
-surpass the specified depth.  In addition, subgoal abstraction is only
-implemented for call variance, {\em and applies equally all terms,
-  whether they are lists or non-lists}.  However, despite these
-restrictions, a tabled evaluation can be guaranteed to terminate for queries to safe programs (cf.~\cite{RigS13}).
+XSB performs subgoal abstraction based on the size limit described
+above goals called positively; but not for goals called negatively as
+this would create unsound negation.  Thus goals such as those those
+inside {\tt tnot/1} and {\tt not\_exists/1} will throw an exception if
+they surpass the specified term size. In addition, subgoal abstraction
+is only implemented for call variance, {\em and applies equally all
+  terms, whether they are lists or non-lists}.  However, despite these
+restrictions, a tabled evaluation can be guaranteed to terminate for
+queries to safe programs (cf.~\cite{RigS13}).
 
 \index{Prolog flags!{\tt max\_table\_subgoal\_action}} 
-\index{Prolog  flags!{\tt max\_table\_subgoal\_depth}} 
+\index{Prolog  flags!{\tt max\_table\_subgoal\_size}} 
 
 Subgoal abstraction can be declared by setting a value for the maximum
-depth of a subgoal and for the action to take when a subgoal is
-encountered that reaches that depth.
+size of a subgoal and for the action to take when a subgoal is
+encountered that reaches that size.
 %
 \bi
-\item {\bf depth} The maximum depth can be set to $n$ for a set of
+\item {\bf size} The maximum size can be set to $n$ for a set of
   predicates $\langle PredSpec \rangle$ via including the specifier
   {\tt subgoal\_abstract(n)} as part of the tabling declaration
 
 {\tt :- table $\langle PredSpec\rangle$  as ...,subgoal\_abstract(n),...}
 
   Specifying {\tt subgoal\_abstract(0)} turns abstraction off for
-  predicates in $\langle PredSpec \rangle$.  The depth can also be set
-  globally by seting the flag {\tt max\_table\_subgoal\_depth} to the
-  desired maximal depth.  If the subgoal depth has been set of a given
-  predicate via a tabling declaration the declared depth will override
-  the global depth.
+  predicates in $\langle PredSpec \rangle$.  The size can also be set
+  globally by seting the flag {\tt max\_table\_subgoal\_size} to the
+  desired maximal size.  If the subgoal size has been set of a given
+  predicate via a tabling declaration the declared size will override
+  the global size.
 
-\item {\bf action} When a subgoal is encountered of maximum depth,
+\item {\bf action} When a subgoal is encountered of maximum size,
   abstraction is enabled if the Prolog flag {\tt
     max\_table\_subgoal\_action} to {\tt abstract}.  Other possible
-  values for the action are {\tt error} and {\tt fail} (cf. pg. \pageref{prolog-flags}).
-\ei
+  values for the action are {\tt error}. {\tt fail} and {\tt suspend}
+  (cf. pg. \pageref{prolog-flags}).  \ei
 
 \noindent
 Unless otherwise specified, XSB starts up with {\tt
   max\_table\_subgoal\_action} set to {\tt error} and {\tt
-  max\_table\_subgoal\_depth} set to the maximum integer possible
-under the compilation method for which XSB has been configured.  Under
-this default behavior, XSB will throw an error if a subgoal has depth
-greater than {\tt max\_table\_subgoal\_depth}.  As an alternative to
+  max\_table\_subgoal\_size} set to the maximum integer possible under
+the compilation method for which XSB has been configured.  Under this
+default behavior, XSB will throw an error if a subgoal has size
+greater than {\tt max\_table\_subgoal\_size}.  As an alternative to
 setting flags, subgoal abstraction can be set by calling XSB with the
 command-line arguments {\tt --max\_subgoal\_action a} and {\tt
-  --max\_subgoal\_depth n} where {\tt n} is the size of the desired
-depth.
+  --max\_subgoal\_size n} with {\tt a} the desired action and {\tt n}
+the desired size limit.
 
 \subsection{Bounded Rationality through Radial Restraint} \label{sec:restraint}
 %
@@ -2160,7 +2208,7 @@ p(f(X)) :- p(X).
 p(0).
 \end{verbatim}
 %
-were evaluated using this approach with a depth limit of 3, the
+were evaluated using this approach with a size limit of 3, the
 answers, {\tt p(0)}, {\tt p(f(0))}, {\tt p(f(f(0)))} and {\tt
   p(f(f(f(X))))} would be generated; {\em however}, {\tt
   p(f(f(f(X))))} would have the truth value of {\em undefined}.  Note
@@ -2172,37 +2220,36 @@ that by doing things in this way, both of the goals {\tt
   undefined} (perhaps better called {\em unknown} in this context).
 %
 Since all predicates and function symbols have a maximum arity (256 in
-XSB) bounding the depth of an answer ensures that only a finite number
+XSB) bounding the size of an answer ensures that only a finite number
 of answers are returned
 \footnote{If a program has a infinite number of true answers and a
-  finite numebr of false answers, one possible approach might be to
+  finite number of false answers, one possible approach might be to
   ``dualize'' the program so that only false answers are computed.
   However, since most programs with function symbols have an infinite
   number of both true and false answers, this approach won't work in
   general.}.
 
-
 Semantically when radial restraint is used, XSB is computing an
 approximation to the three-valued well-founded model of a program,
 called a {\em restrained model}.  To see this, suppose the proof of a
 query $Q$ does not depend on negation.  If $Q$ has a derivation that
-does not require any answers whose depth is greater than $n$, it is
+does not require any answers whose size is greater than $n$, it is
 proven as usual.  Similarly, if $Q$ is false in the well-founded model
 of a program, and none of the subgoals explored in the derivation of
-$Q$ derive answers whose depth is greater than $n$, XSB will derive
+$Q$ derive answers whose size is greater than $n$, XSB will derive
 that $Q$ is false.  Thus, the approximation that XSB computes is {\em
   informationally sound} in the sense that no incorrect answer will be
 derived, although the truth value of some atoms won't be known that
-might have been if the depth bound had been set higher.  Due to the
-halting problem, there is no way to know in general what depth to set
+might have been if the size bound had been set higher.  Due to the
+halting problem, there is no way to know in general what size to set
 for answer abstraction, or whether any bound needs to be set at all.
 
-If a restrained model is derived, that are undefined through radial
-restraint can be desinguished from answers that are undefined in the
-well-founded model of a program, or for other reasons such as unsafe
-negation.  If an answer $A$ was abstracted due to a depth check, the
-query {\tt get\_residual(A,Delay)} would bind {\tt Delay} to a list
-containing the atom {\tt brat\_undefined}, where {\tt
+If a restrained model is derived, answers that are undefined through
+radial restraint can be desinguished from answers that are undefined
+in the well-founded model of a program, or for other reasons such as
+unsafe negation.  If an answer $A$ was abstracted due to a size
+check, the query {\tt get\_residual(A,Delay)} would bind {\tt Delay}
+to a list containing the atom {\tt brat\_undefined}, where {\tt
   brat\_undefined/0} is simply a predicate defined as
 
 {\tt brat\_undefined:- tnot(brat\_undefined)}
@@ -2226,47 +2273,56 @@ information about why a literal is undefined.
 \subsubsection{Using Radial Restraint}
 %
 Radial restraint is currently implemented only for tabling with call
-variance, and lists are not currently included in the depth check.
+variance, and lists are not currently included in the size check.
 %
 Similarly to the use of subgal abstraction, answer abstraction is the
-implementational basis of radial restraint.  It can be declared by
-setting a value for the maximum depth of an answer and for the action
-to take when an answer is encountered that reaches that depth.
+implementational basis of radial restraint.  {\em It is important to note
+that the size limit applies to the answer substitution, not to the 
+of the answer itself.}
+
+\begin{example}
+Suppose an answer size limit is set to 1, and consider the goal {\tt
+  p(X)}.  The answer {\tt p(s(s(0)))} has size 2 and so would be
+abstracted to {\tt p(s(X$_1$))} as expected, as the corresponding
+abswer substitution is $X = s(s(0))$.  However for the goal {\tt
+  p(s(X))} the answer substitution for the answer {\tt p(s(s(0)))} is
+$X = s(0)$ which has a size of only 1 and so this answer would
+not be abstracted in the context of this subgoal.
+\end{example}
+
+Radial restraint can be declared by setting a value for the maximum
+size of an answer and for the action to take when an answer is
+encountered that reaches that size.
 %
 \bi
-\item {\bf depth} The maximum depth can be set to {\tt n} for a set of
+\item {\bf size} The maximum size can be set to {\tt n} for a set of
   predicates via including the specifier {\tt answer\_abstract(n)} as
   part of their tabling declaration
 
 {\tt :- table $<PredSpec>$ as ...,answer\_abstract(n),...}
 
   Specifying {\tt answer\_abstract(0)} turns answer abstraction off
-  for predicates in $<PredSpec>$.  The depth can also be set globally
-  by seting the flag {\tt max\_table\_answer\_depth} to the desired
-  maximal depth.  If the answer depth of a given predicate has been
-  set via a tabling declaration, the predicate-specific declared depth
-  will override the global depth.
+  for predicates in $\langle PredSpec \rangle$.  The size can also be
+  set globally by seting the flag {\tt max\_table\_answer\_size} to
+  the desired maximal size.  If the answer size of a given predicate
+  has been set via a tabling declaration, the predicate-specific
+  declared size will override the global size.
 
-\item {\bf action} When an answer is encountered of maximum depth,
+\item {\bf action} When an answer is encountered of maximum size,
   abstraction is enabled if the Prolog flag {\tt
     max\_table\_answer\_action} to {\tt bounded\_rationality}.  Other
-  possible values for the action are {\tt error} and {\tt fail}
+  possible values for the action are {\tt error}, {\tt suspend}  and {\tt fail}
   (cf. pg. \pageref{prolog-flags}).  \ei
 
-Unless otherwise specified, XSB starts up with 
-\index{Prolog flags!{\tt max\_table\_answer\_action}}
-\index{Prolog flags!{\tt max\_table\_answer\_depth}}
+\index{Prolog flags!{\tt max\_table\_answer\_action}} 
+\index{Prolog flags!{\tt max\_table\_answer\_size}}
 %
-\begin{itemize}
-\item {\tt   max\_table\_answer\_action} and 
-\item {\tt max\_table\_answer\_list\_action}
-\end{itemize}
-%
-set to {\tt error} and {\tt max\_table\_answer\_depth} and {\tt
-  max\_table\_answer\_depth} set to the maximum integer possible under
+Unless otherwise specified, XSB starts up with {\tt
+  max\_table\_answer\_action} set to {\tt error} and {\tt
+  max\_table\_answer\_size} set to the maximum integer possible under
 the compilation method for which XSB has been configured.  Under this
-default behavior, XSB will throw an error if a subgoal has depth
-greater than {\tt max\_table\_subgoal\_depth}.  %
+default behavior, XSB will throw an error if a an answer has size
+greater than {\tt max\_table\_answer\_size}.  %
 
 %--------------------------------------------------------------------
 \input{incr_tabling}

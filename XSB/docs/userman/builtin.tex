@@ -3979,11 +3979,11 @@ unification.
     high-level knowledge representation language such as Flora-2 or
     Silk.  It is important that XSB's behavior be {\em cycle-safe} in
     the sense that the creation of cyclic terms per se will not create
-    infinite loops in XSB's tabling or XSB's builtins.  Like some
+    infinite loops in XSB's tabling or XSB's built-ins.  Like some
     other Prologs, XSB supports unification of cyclic terms.  In
     addition, most predicates like {\tt functor/3}, or {\tt =../2}
     that either take non-compound terms or that do not require term
-    traversal are cycle-safe.  A few builtins that require
+    traversal are cycle-safe.  A few built-ins that require
     term-traversal are ``safe'' for cyclic terms.  For instance
     writing in XSB is subject to a depth check, which terminates for
     cyclic terms.  Most importantly, the XSB heap garbage collector is
@@ -4010,13 +4010,13 @@ unification.
       future.}.
 
     While the above operations cycle-safe, cyclic terms can cause
-    problems in XSB for builtins or predicates that require term
+    problems in XSB for built-ins or predicates that require term
     traversal.  For instance the library predicates {\tt length/2} and
     {\tt append/2} currently go into infinite loops with cyclic terms;
     unless otherwise specified it is the user's responsibility to
-    check library predicates (as opposed to standard builtins) for
+    check library predicates (as opposed to standard built-ins) for
     acyclicity using {\tt is\_acyclic/1} or {\tt is\_cyclic/1}.  In
-    addition the following XSB builtins are {\tt not} cycle-safe:
+    addition the following XSB built-ins are {\tt not} cycle-safe:
 
 \bi
 \item {\tt bagof/3}, {\tt copy\_term/2}, {\tt ground/1} {\tt
@@ -4027,7 +4027,7 @@ unification.
     variant/2}~\footnote{The predicate {\tt ground\_or\_cyclic/1} is
       safe for cyclic terms.}.
 %
-\item Various table inspection builtins based on {\tt
+\item Various table inspection built-ins based on {\tt
         get\_call/2} or similar routines (including {\tt
         get\_residual/2}).
 \ei
@@ -5219,14 +5219,14 @@ signalling.  As such, the ability to execute complex actions upon
 interrupt and to resume is very robust.  However, checks for
 interrupts are only made whenever XSB's SLG-WAM engine is executing.
 Because of this, if XSB is suspended on I/O, calling a C or java
-function, in a C-implemented builtin, or otherwise outside of its
+function, in a C-implemented built-in, or otherwise outside of its
 virtual machine, the interrupt will not be executed until computation
 is back within XSB's virtual machine.
 
 {\tt timed\_call/2} is integrated with XSB's break levels with a
 different timed call possible at each break level.  In this way, an
 executing program can be interrupted via a Ctrl-C and inspected using
-one of XSB's introspection builtins.  The time that is spent in a
+one of XSB's introspection built-ins.  The time that is spent in a
 break level is not counted as part of the goals maximum allowable time.
 
 {\tt timed\_call/3} is not yet implemented for the multi-threaded
@@ -5321,7 +5321,7 @@ advantage, the ability to execute complex actions upon interrupt and
 to resume is very robust.  However, checks for interrupts are only
 made whenever XSB's SLG-WAM engine is executing.  Because of this, if
 XSB is suspended on I/O, calling a C or java function, in a
-C-implemented builtin, or otherwise outside of its virtual machine,
+C-implemented built-in, or otherwise outside of its virtual machine,
 the interrupt will not be executed until computation is back within
 XSB's virtual machine.
 
