@@ -655,11 +655,12 @@ module_properties(PSC, Property) :-
 
 
 /* ===== current_prolog_flag/2 ================================== */
+:- import tripwire/1 from usermod.
 
 current_prolog_flag(Flag, Value) :- 
 	(	var(Flag) ->
 		true
-	;	\+ atom(Flag) ->
+	;	\+ atom(Flag),\+ (Flag = tripwire(_)) ->
 		type_error(atom,Flag,current_prolog_flag/2,1)
 	;	\+ iso_flag(Flag),
 		\+ xsb_flag(Flag),
@@ -769,63 +770,8 @@ prolog_commons_flag(version_data, xsb(Major, Minor, Patch, _)):-
           xsb_configuration(patch_version, PatchAtom),
           atom_codes(PatchAtom, PatchCodes),
 	  (PatchCodes = [] -> Patch = '' ; number_codes(Patch, PatchCodes)).
-/*										  prolog_commons_flag(version_data,xsb(Maj, Min, 0, _)):-
-        xsb_configuration(major_version,MajAtom),
-        atom_codes(MajAtom, MajCodes),
-        number_codes(Maj, MajCodes),
-        xsb_configuration(minor_version,MinAtom),
-        atom_codes(MinAtom, MinCodes),
-        number_codes(Min, MinCodes).
-*/
-/*
-prolog_commons_flag(version_data,xsb(Maj, Min, 0, _)):- 
-	xsb_configuration(major_version,Maj),
-	xsb_configuration(minor_version,Min).
-*/
 
-% PM: list of XSB specific flags for error checking
-xsb_flag(write_attributes). 
-xsb_flag(write_depth).
-xsb_flag(backtrace_on_error).
-xsb_flag(debugging).
-xsb_flag(tracing).
-xsb_flag(verboseness).
-xsb_flag(verboseness).
-xsb_flag(goal).
-xsb_flag(dcg_style).
-xsb_flag(garbage_collection).
-xsb_flag(heap_garbage_collection).
-xsb_flag(clause_garbage_collection).
-xsb_flag(atom_garbage_collection).
-xsb_flag(heap_margin).
-xsb_flag(gc_verbose_level).
-xsb_flag(verbose_gc).
-xsb_flag(count_chains).
-xsb_flag(examine_data).
-xsb_flag(table_gc_action).
-xsb_flag(thread_pdlsize).
-xsb_flag(thread_glsize).
-xsb_flag(thread_tcpsize).
-xsb_flag(thread_complsize).
-xsb_flag(thread_detached).
-xsb_flag(max_threads).
-xsb_flag(max_queue_terms).
-xsb_flag(shared_predicates).
-xsb_flag(warning_action).
-xsb_flag(max_table_subgoal_depth).
-xsb_flag(max_table_subgoal_action).
-xsb_flag(max_table_answer_depth).
-xsb_flag(max_table_answer_action).
-xsb_flag(max_table_answer_list_depth).
-xsb_flag(max_table_answer_list_action).
-xsb_flag(unify_with_occurs_check).
-xsb_flag(max_tab_usage).
-xsb_flag(max_memory).
-xsb_flag(exception_pre_action).
-xsb_flag(exception_action).
-xsb_flag(ctrace).
-xsb_flag(character_set).
-xsb_flag(errors_with_position).
+xsb_flag(Flag):- xsb_flag(Flag,_),!.
 
 /* ===== xsb_flag/2 ========================================== */
 
@@ -836,6 +782,16 @@ xsb_flag(errors_with_position).
 %%   i.e., those that can change between sessions or within a session.
 %%   In contrast, xsb_configuration is to be used for settings that are the
 %%   same for different sessions and are fixed at XSB build time.
+tripwire_1(max_table_subgoal_size).
+tripwire_1(max_table_answer_depth).
+tripwire_1(max_table_answer_list_depth).
+tripwire_1(max_answers_for_subgoal).
+tripwire_1(max_incomplete_subgoals).
+tripwire_1(max_scc_subgoals).
+
+xsb_flag(tripwire(F),V):- 
+	tripwire_1(F),
+	xsb_flag(F,V).
 
 xsb_flag(write_attributes,Value):- 
 	stat_flag(WRITE_ATTRIBUTES, V), 
@@ -966,8 +922,8 @@ xsb_flag(warning_action,Action):-
 	  ; (A == SILENT_WARNING -> 
 	      Action = silent_warning
 	     ; A == ERROR_WARNING,Action = error_warning) ).
-xsb_flag(max_table_subgoal_depth,Action):- 
-	stat_flag(MAX_TABLE_SUBGOAL_DEPTH,Action).
+xsb_flag(max_table_subgoal_size,Action):- 
+	stat_flag(MAX_TABLE_SUBGOAL_SIZE,Action).
 xsb_flag(max_table_subgoal_action, Action) :-
 	stat_flag(MAX_TABLE_SUBGOAL_ACTION, A),
 	(A == XSB_ERROR -> Action = error 
@@ -1150,8 +1106,8 @@ set_xsb_flag_1(warning_action,Action):- !,
 	        ; domain_error([print_warning,', ',silent_warning,', ',error_warning],
 	                        Action,set_xsb_flag/2,2,'warning_action clause') ) ) ),
 	 stat_set_flag(WARNING_ACTION,A).
-set_xsb_flag_1(max_table_subgoal_depth, Size) :-!,
-	stat_set_flag(MAX_TABLE_SUBGOAL_DEPTH, Size).
+set_xsb_flag_1(max_table_subgoal_size, Size) :-!,
+	stat_set_flag(MAX_TABLE_SUBGOAL_SIZE, Size).
 set_xsb_flag_1(max_table_subgoal_action, Action) :-!,
 	(Action == error -> 
 	    stat_set_flag(MAX_TABLE_SUBGOAL_ACTION, XSB_ERROR)
