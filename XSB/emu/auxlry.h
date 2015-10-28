@@ -2,7 +2,7 @@
 ** Author(s): Warren, Xu, Swift, Sagonas, Johnson
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
-** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
+** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1999
 ** 
 ** XSB is free software; you can redistribute it and/or modify it under the
 ** terms of the GNU Library General Public License as published by the Free
@@ -18,58 +18,29 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: auxlry.h,v 1.1.1.1 1998-11-05 16:55:11 sbprolog Exp $
+** $Id: auxlry.h,v 1.41 2013-05-06 21:10:23 dwarren Exp $
 ** 
 */
 
+#ifndef __AUXLRY_H__
+#define __AUXLRY_H__
 
+#include "basicdefs.h"
 #include "basictypes.h"
-
-#define MOD %
-
-typedef unsigned char byte;
-typedef unsigned long word;
-typedef byte *pb;
-typedef word *pw;
-typedef int (*PFI)();
-typedef int *int_ptr;
-
-#define ihash(val, size) (word)(val) % (size)
 
 extern double cpu_time(void);
 extern double real_time(void);
+extern void get_date(int local, int *year, int *month, int *day,
+		     int *hour, int *minute, int *second);
 
-struct trace_str {		/* for tracing purpose below */
-    unsigned long maxlstack_count, maxgstack_count, maxtrail_count, maxcpstack_count;
-    unsigned long maxopenstack_count, maxlevel_num;
-    double time_count;
-};
+#define ihash(val, size) ((UInteger)(val) % (size))
 
-extern struct trace_str tds;
+#ifndef MULTI_THREAD
+extern int asynint_val;
+#endif
 
-extern byte call_intercept;	/* hitrace or trace_sta for efficiency */
-
-#define arithmetic_exception(t_pcreg) \
- t_pcreg = exception_handler("! Arithmetic Exception\n")
-
-#define local_global_exception(t_pcreg) \
- t_pcreg = exception_handler("! Local/Global Stack Overflow Exception\n")
-
-#define float_unification_exception(t_pcreg) \
- t_pcreg = exception_handler("! Float Unification Exception\n")
-
-#define unify_float_unification_exception \
-  exception_handler("! Float Unification Exception\n")
-
-#define bitop_exception(t_pcreg) \
- t_pcreg = exception_handler("! Bitop Exception\n")
-
-#define complstack_exception(t_pcreg) \
- t_pcreg = exception_handler("! Opentable Stack Overflow Exception\n")
-
-#define trail_cp_exception(t_pcreg) \
- t_pcreg = exception_handler("! Trail/CP Stack Overflow Exception\n")
-
+extern char *xsb_segfault_message;
+extern char *xsb_default_segfault_msg;
 
 /*
  *  Mode in which XSB is run.
@@ -78,7 +49,7 @@ extern byte call_intercept;	/* hitrace or trace_sta for efficiency */
 typedef enum XSB_Execution_Mode {
   DEFAULT,           /* mode has not been set by user */
   INTERPRETER,       /* currently the mode to be used in default condition */
-  DISASSEMBLE,       /* dissassemble .O file */
+  DISASSEMBLE,       /* dissassemble object file file */
   C_CALLING_XSB,
   CUSTOM_BOOT_MODULE,     /* user specifies boot module on the command line */
   CUSTOM_CMD_LOOP_DRIVER  /* user specifies command loop driver 
@@ -86,5 +57,62 @@ typedef enum XSB_Execution_Mode {
 } Exec_Mode;
 
 extern Exec_Mode xsb_mode;
+//extern int max_threads_glc;
 
-#define fileptr(fileno) open_files[fileno]
+#define fileptr(xsb_filedes)  open_files[xsb_filedes].file_ptr
+#define charset(xsb_filedes)  open_files[xsb_filedes].charset
+
+/* This would yield a meaningful message in case of segfault */
+#define SET_FILEPTR(stream, xsb_filedes) \
+    if (xsb_filedes < 0 || xsb_filedes >= MAX_OPEN_FILES) \
+	xsb_abort("Invalid file descriptor %d in an I/O predicate",\
+			xsb_filedes);\
+    stream = fileptr(xsb_filedes); \
+    if ((stream==NULL) && (xsb_filedes != 0)) \
+	xsb_abort("No stream associated with file descriptor %d in an I/O predicate", xsb_filedes);
+
+#define SET_FILEPTR_CHARSET(stream, charset, xsb_filedes)	\
+  if (xsb_filedes < 0 || xsb_filedes >= MAX_OPEN_FILES)			\
+    xsb_abort("Invalid file descriptor %d in an I/O predicate",		\
+	      xsb_filedes);						\
+  stream = fileptr(xsb_filedes);					\
+  if ((stream==NULL) && (xsb_filedes != 0))				\
+    xsb_abort("No stream associated with file descriptor %d in an I/O predicate", xsb_filedes);	\
+  charset = charset(xsb_filedes);
+
+
+extern void gdb_dummy(void);
+
+/* round N to the next multiple of P2, P2 must be a power of 2 */
+
+#ifdef DARWIN 
+#define SQUASH_LINUX_COMPILER_WARN(VAR) 
+#else
+#define SQUASH_LINUX_COMPILER_WARN(VAR) VAR = VAR;
+#endif
+
+#define ROUND(N,P2)	((N + (P2-1)) & ~(P2-1))
+
+#endif /* __AUXLRY_H__ */
+
+#if defined(WIN_NT) && defined(BITS64)
+#define Intfmt "lld"
+#define UIntfmt "lld"
+#define Intxfmt "llx"
+#define Cellfmt "llu"
+#elif defined(BITS64)
+#define Intfmt "ld"
+#define UIntfmt "lu"
+#define Intxfmt "lx"
+#define Cellfmt "lu"
+#else 
+#define Intfmt "d"
+#define UIntfmt "u"
+#define Intxfmt "x"
+#define Cellfmt "lu"
+#endif
+
+#define CALL_ABSTRACTION 1
+//#define DEBUG_ABSTRACTION 
+
+//#define GC_TEST 1

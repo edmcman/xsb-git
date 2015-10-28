@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: shortest_path.P,v 1.1.1.1 1998-11-05 17:01:04 sbprolog Exp $
+** $Id: shortest_path.P,v 1.4 2010-08-19 15:03:37 spyrosh Exp $
 ** 
 */
 
@@ -26,7 +26,7 @@
 /* Experimentation with shortest path, using table builtins. */
 
 :- import subsumes_chk/2 from subsumes.
-:- import get_calls_for_table/3, get_returns_for_call/2 from tables.
+:- import get_calls_for_table/2, get_returns_for_call/2 from tables.
 
 :- table(sp/3).
 
@@ -47,7 +47,7 @@ sp(X,Y,C) :-
 
 
 none_better(X,Y,C) :-
-	get_calls_for_table(sp(X,_,_),Call,_Empty),
+	get_calls_for_table(sp(X,_,_),Call),
 	subsumes_chk(Call,sp(X,Y,_)),
 	!,
 	\+ (	get_returns_for_call(Call,Ret),

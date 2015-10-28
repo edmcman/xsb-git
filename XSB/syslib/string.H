@@ -19,18 +19,24 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: string.H,v 1.19 2005/01/14 18:32:04 ruim Exp $
 ** 
 */
 
 
-:- export concat_atom/2, concat_atom/3, str_cat/3, str_sub/2, str_sub/3,
-   str_fromlist/2, str_length/2, str_substring/4, str_substring/2, 
-   str_tolist/2, sublist/2.
+:- export concat_atom/2, concat_atom/3.
+:- export str_cat/3, str_sub/2, str_sub/3, str_length/2, substring/4,
+	str_match/5, string_substitute/4.
+:- export term_to_codes/2, term_to_atom/2, codes_to_term/2, atom_to_term/2.
+:- export term_to_codes/3, term_to_atom/3.
+:- export read_atom_to_term/3, read_atom_to_term/2.
 
-:- import atom/1 from standard.
-:- import buff_set_byte/3, buff_alloc/3, buff_byte/3, buff_dealloc/4,
-	  str_insert/2, str_len/2 from machine.
-%:- import c_min_ed_dis/3,c_substring/3 from xeddis.
+:- import append/3, memberchk/2, copy_term/2, length/2 from basics.
+:- import str_len/2 from machine.
+:- import atom/1, atom_codes/2, number/1, integer/1, structure/1, '=..'/2,
+   is_list/1, number_codes/2, float/1, warning/1 from standard.
+:- import file_open/3, file_close/1 from file_io.
+:- import file_read_foe/3 from xsb_read.
+:- import domain_error/4, check_nonvar_list/3 from error_handler.
 
 /* ---------------------- end of file string.H ------------------------ */

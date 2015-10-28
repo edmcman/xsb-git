@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: asm.P,v 1.2 1998-12-21 01:06:04 cbaoqiu Exp $
+** $Id: asm.P,v 1.11 2010-08-19 15:03:35 spyrosh Exp $
 ** 
 */
 
@@ -61,57 +61,54 @@
 /*======================================================================*/
 
 /*======================================================================*/
-/*  asm_genheader(+OFile, +ModName, +SymTab, +IsModule).		*/
+/*  asm_genheader(+OStr, +ModName, +SymTab, +IsModule).			*/
 /*	Generates the header and data segment of the byte code file	*/
 /*	(OFile).  When IsModule is 0, the module is assumed to be	*/
 /*	global (No distiction again!).					*/
 /*======================================================================*/
 
-asm_genheader(OFile, ModName, SymTab, IsModule) :-
-	asm_genheader0(OFile, ModName, SymTab, IsModule), 
+asm_genheader(OStr, ModName, SymTab, IsModule) :-
+	asm_genheader0(OStr, ModName, SymTab, IsModule), 
 	fail.	% reclaim space (remove all choice points left) and undo
 		% the binding of the tail of the hash table part of the
 		% symbol table (caused by the sorting of the symbols).
-asm_genheader(_OFile, _ModName, _SymTab, _IsModule).
+asm_genheader(_OStr, _ModName, _SymTab, _IsModule).
 
-asm_genheader0(OFile, ModName, SymTab, IsModule) :-
-	tell(OFile),
-	asm_magic(5),	/* use magic number 17-18-19-5 */
-	( IsModule =:= 0 -> put(0)
-	; str_len(ModName, L), put(L), write(ModName)
+asm_genheader0(OStr, ModName, SymTab, IsModule) :-
+	asm_magic(OStr,7),	/* use magic number 17-18-19-7 */
+	( IsModule =:= 0 -> file_put(OStr,0)
+	; str_len(ModName, L), file_put(OStr,L), write(OStr,ModName)
 	),
 	sym_count(SymTab, Count),
-	write_int(Count),
+	write_int(OStr,Count),
         sort_by_index(SymTab, Sorted_SymList),
-	asm_gendata(Sorted_SymList),
+	asm_gendata(OStr,Sorted_SymList),
 	!.
 
 
 /*======================================================================*/
-/* asm_PIL(+Sym, +PilCode, +NumberOfClauses, +IsModule).		*/
+/* asm_PIL(+OStr, +Sym, +PilCode, +NumberOfClauses, +IsModule).		*/
 /*	Generates byte code from the PIL code of a predicate block.	*/
 /*	The magic number for the block of byte code is 17-18-19-6.	*/
-/*	The predicate assumes that we are already telling the output	*/
-/*	byte-code file.							*/
 /*======================================================================*/
 
-asm_PIL(Sym, PilCode, NC, IsModule) :-
-	asm_magic(6),				% use magic number 17-18-19-6
+asm_PIL(OStr, Sym, PilCode, NC, IsModule) :-
+	asm_magic(OStr,6),				% use magic number 17-18-19-6
 	sym_name(Sym, PredName, Arity), 
-	put(Arity), str_len(PredName, L), put(L), write(PredName),
+	file_put(OStr,Arity), str_len(PredName, L), asm_putlength(OStr,L), write(OStr,PredName),
 	asm_get_index(PilCode, ProgramCode, Index, IndSize, 0),
 	!,
 	compute_hash_table_size(NC, HashSize),
 	LabelTab = label_tab(HashSize,_LabelTabList,HashLabelTab),
-	functor(HashLabelTab, hash_tab, HashSize),
+%%	functor(HashLabelTab, hash_tab, HashSize),
 	asm_text_size(ProgramCode, 0, TxtSize, HashSize, HashLabelTab),
 	make_label_list(LabelTab),
 	number_index_block(Index, 1),		% first block has number 1. 
 	!,
-	write_int(TxtSize), write_int(IndSize),	% Generate code segment header
+	write_int(OStr,TxtSize), write_int(OStr,IndSize),	% Generate code segment header
 	asm_opt(ProgramCode, Index, Sym, IsModule, OptProgramCode),
-	asm_gentext(OptProgramCode, LabelTab),	% Generate text  segment
-	asm_genindex(Index, LabelTab),		% Generate index segment
+	asm_gentext(OStr, OptProgramCode, LabelTab),	% Generate text  segment
+	asm_genindex(OStr, Index, LabelTab),		% Generate index segment
 	!.
 
 /*======================================================================*/
@@ -133,10 +130,15 @@ asm_get_index([Inst|Rest], ProgramCode, Index, IndexSize, Ni) :-
 
 
 /*======================================================================*/
-/* --- local utilities ------------------------------------------------	*/
+/*	This is exported because it is used in compiling foreign	*/
+/*	language files.							*/
 /*======================================================================*/
 
-asm_magic(N) :- put(17), put(18), put(19), put(N).
+asm_magic(OStr,N) :- file_put(OStr,17), file_put(OStr,18), file_put(OStr,19), file_put(OStr,N).
+
+/*======================================================================*/
+/* --- local utilities ------------------------------------------------	*/
+/*======================================================================*/
 
 asm_index_inst(cases(_,_,_,_), 10).
 asm_index_inst(arglabel(T,_,_), Size) :-
@@ -153,6 +155,10 @@ asm_index_inst1(s, 9).
 /*	clauses to be compiled.						*/
 /*----------------------------------------------------------------------*/
 
+%% with log_ith hashtable, take number of clauses as size
+compute_hash_table_size(NumberOfClauses, NumberOfClauses).
+
+/**
 compute_hash_table_size(NumberOfClauses, HashSize) :-
 	Allow_up_to_7_Scans is NumberOfClauses // 7, 
 	nearest_prime(Allow_up_to_7_Scans, HashSize).
@@ -161,7 +167,8 @@ nearest_prime(Number, Prime) :-
 	prime(High, Prime), 
 	Number =< High,
 	!.
-
+nearest_prime(_, 251). % Bart - 4-3-1999 see last fact of prime/2
+***/
 
 /*----------------------------------------------------------------------*/
 /*  asm_text_size(+PilCode, +InitialSize, -TextSize,			*/
@@ -174,8 +181,9 @@ nearest_prime(Number, Prime) :-
 
 asm_text_size([], N, N, _, _).
 asm_text_size([label(T,X)|Rest], Lc, NewLc, HashSize, HashLabelTab) :-
+	!,
 	hash_insert((X,Lc), HashSize, HashLabelTab),
-	( T == pred -> X = (Sym,_), sym_propin(ep(Lc), Sym) ; true ),
+	( T == (pred) -> X = (Sym,_), sym_propin(ep(Lc), Sym) ; true ),
 	asm_text_size(Rest, Lc, NewLc, HashSize, HashLabelTab).
 asm_text_size([Inst|Rest], Lc, NLc, HashSize, HashLabelTab):-
 	asm_inst(Inst, Nbytes, _, _),	% get the size of the instruction
@@ -188,7 +196,7 @@ hash_insert((X, Lc), HashSize, HashLabelTab) :-
 	; term_hash(X, HashSize, Hash)
 	),
 	HashArg is Hash+1,
-	ll_arg(HashArg, HashLabelTab, BucketList),
+	log_ith(HashArg, HashLabelTab, BucketList),
 	insert((X, Lc),  BucketList).
 
 
@@ -205,7 +213,7 @@ make_label_list(label_tab(HashSize,LabelTabList,HashLabelTab)) :-
 
 make_label_list1(I, HashSize, LabelTabList, HashLabelTab) :-
 	( I =< HashSize ->
-		ll_arg(I, HashLabelTab, LabelTabList),
+		log_ith(I, HashLabelTab, LabelTabList),
 		scan_till_end_of_bucket(LabelTabList, NewLabelTabList),
 		NewI is I+1,
 		make_label_list1(NewI, HashSize, NewLabelTabList, HashLabelTab)
@@ -242,7 +250,7 @@ number_index_block([arglabel(_T,_Val,_Label)|Rest], I) :-
 /*	time when this is written) are used, but only an appropriate	*/
 /*	subset of them.							*/
 /*----------------------------------------------------------------------*/
-
+/***
 prime(1, 1).		% prime(2, 2).
 prime(3, 3).
 prime(6, 5).
@@ -271,5 +279,7 @@ prime(217, 211).
 prime(215, 223).	% prime(228, 227).
 prime(231, 229).	% prime(236, 233).
 prime(240, 239).	% prime(246, 241).
-prime(100000000, 251).
+% prime(100000000, 251).
+***/
 
+force_asm_loaded.

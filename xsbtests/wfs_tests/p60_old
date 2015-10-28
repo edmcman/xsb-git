@@ -1,4 +1,4 @@
-Evaluating p60 : (p(A)  ','  q(A))
+Evaluating p60 : (p(A),q(A))
 p(1) is: false (OK)
 p(2) is: true (OK)
 p(3) is: true (OK)

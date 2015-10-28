@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: asm_inst.H,v 1.1.1.1 1998-11-05 17:00:01 sbprolog Exp $
+** $Id: asm_inst.H,v 1.4 2010-08-19 15:03:35 spyrosh Exp $
 ** 
 */
 

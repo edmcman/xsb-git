@@ -18,10 +18,17 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: register.h,v 1.2 1998-12-21 01:08:42 cbaoqiu Exp $
+** $Id: register.h,v 1.20 2010-08-19 15:03:37 spyrosh Exp $
 ** 
 */
 
+#ifndef __REGISTER_H__
+#define __REGISTER_H__
+
+#include "psc_xsb.h"
+#include "varstring_xsb.h"
+
+#ifndef MULTI_THREAD
 
 /* Argument Registers
    ------------------ */
@@ -39,19 +46,38 @@ extern CPtr sreg;	/* current build or unify field */
 extern byte *cpreg;	/* return point register        */
 extern byte *pcreg;	/* program counter              */
 
+// #define CP_DEBUG 1
+
+#ifdef CP_DEBUG
+extern Psc pscreg;
+#endif
 /*---- registers added for the SLG-WAM ---------------------------------*/
 
-#if (!defined(CHAT))
 extern CPtr efreg;
 extern CPtr bfreg;
 extern CPtr hfreg;
 extern CPtr *trfreg;
-#endif
 extern CPtr pdlreg;
 extern CPtr openreg;
 
 extern CPtr ptcpreg;	/* parent tabled CP (subgoal)	*/
 extern CPtr delayreg;
+extern CPtr interrupt_reg;
+
+/*---- registers added for demand support ------------------------------*/
+#ifdef DEMAND
+/* demand-freeze registers */
+extern CPtr edfreg;
+extern CPtr bdfreg;
+extern CPtr hdfreg;
+extern CPtr *trdfreg;
+#endif
+
+/*---- global thread-specific char buffers for local builtins ----------*/
+extern VarString *tsgLBuff1;
+extern VarString *tsgLBuff2;
+extern VarString *tsgSBuff1;
+extern VarString *tsgSBuff2;
 
 /*---- other stuff added for the SLG-WAM -------------------------------*/
 
@@ -63,4 +89,7 @@ extern CPtr root_address;
 
 extern CPtr ebreg;	/* breg into environment stack */
 
+#endif
 
+
+#endif /* __REGISTER_H__ */

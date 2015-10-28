@@ -19,23 +19,24 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: prof_sbp.H,v 1.1.1.1 1998-11-05 17:00:13 sbprolog Exp $
+** $Id: prof_sbp.H,v 1.10 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
 
-:- export prepare/0, member/2, name_append/3, append/3, otherwise/0.
+:- export prepare/0, name_append/3.
 :- export gensym/2, gennum/1, myclose/1, write_int/1, write_float/1.
 :- export copyterm/2, conlength/2.
-:- export conset/2, conget/2, coninc/1, system/1.
+:- export conset/2, conget/2, coninc/1.
 :- export newcounter/1, inccounter/1, getcounter/1.
 :- export ll_arg/3.
 
 :- import dict_lookup/3 from auxlry.
-:- import psc_set_prop/3, conpsc/2, conname/2,psc_prop/2, str_len/2,
- 	  stat_flag/2, file_puttoken/3, psc_set_type/3, sys_system/2,
-	  term_arg/3
+:- import append/3 from basics.
+:- import psc_set_prop/2, conpsc/2, conname/2,psc_prop/2, str_len/2,
+ 	  stat_flag/2, file_puttoken/3, psc_set_type/2
      from machine.
-:- import name/2, arg/3, functor/3, atomic/1, atom/1, told/0, tell/1, 
-	  integer/1, atom_chars/2
+:- import name/2, arg/3, functor/3, atomic/1, 
+	  integer/1, atom_codes/2
      from standard.
+:- import obsolete/2 from obsolete.

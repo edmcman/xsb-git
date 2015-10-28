@@ -26,22 +26,20 @@ test :-
 
 :- table a/1, b/1, c/1, d/1, e/1, f/1, g/1.
 
-:- import 't not'/1 from tables.
-
 a(X) :- b(X), d(X).
 
 b(X) :- c(X).
 b(_).
-b(X) :- 't not'(e(X)).
+b(X) :- sk_not(e(X)).
 
 c(X) :- b(X), fail.
 
-d(X) :- e(X), f(X), 't not'(g(X)).
+d(X) :- e(X), f(X), sk_not(g(X)).
 
 e(_).
 
-f(X) :- 't not'(c(X)), e(X).
-f(X) :- 't not'(e(X)).
+f(X) :- sk_not(c(X)), e(X).
+f(X) :- sk_not(e(X)).
 f(X) :- g(X).
 
 g(X) :- f(X).

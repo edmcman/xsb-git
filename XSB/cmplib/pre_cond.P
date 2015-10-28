@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: pre_cond.P,v 1.1.1.1 1998-11-05 17:00:11 sbprolog Exp $
+** $Id: pre_cond.P,v 1.6 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
@@ -49,6 +49,7 @@ args_same([A1|R1], [A2|R2]) :- arg_same(A1,A2), args_same(R1,R2).
 arg_same(varocc(ID),varocc(ID)).
 arg_same(integer(V), integer(V)).
 arg_same(constant(S), constant(S)).
+arg_same(string(S), string(S)).
 arg_same(structure(Sym, Args1), structure(Sym, Args2)) :-
 	args_same(Args1, Args2).
 
@@ -77,10 +78,10 @@ inline_neg(inlinegoal(P,A,Args), inlinegoal(NP,A,Args)) :-
 
 inline_neg0('=:=', 2, '=\=').
 inline_neg0('=\=', 2, '=:=').
-inline_neg0('>', 2, '=<').
-inline_neg0('>=', 2, '<').
-inline_neg0('=<', 2, '>').
-inline_neg0('<', 2, '>=').
+%%inline_neg0('>', 2, '=<').  %% not equivalent for floating point inf's 
+%%inline_neg0('>=', 2, '<').
+%%inline_neg0('=<', 2, '>').
+%%inline_neg0('<', 2, '>=').
 
 inline_neg0('==', 2, '\==').
 inline_neg0('\==', 2, '==').

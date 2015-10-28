@@ -22,7 +22,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: xsb.in,v 1.5 1998-12-23 21:09:13 kifer Exp $
+## $Id: xsb.in,v 1.18 2012-10-18 19:06:57 kifer Exp $
 ## 
 ##
 
@@ -43,39 +43,45 @@
 
 suffix=@config_tag@
 
-invocation_name=$0
+invocation_name="$0"
 
-# If symbolic link: is there a more elegant way to extract the value of a link?
-if test -h $invocation_name ; then
-    invocation_name=`ls -l $invocation_name | sed 's,.*-> ,,'`
+# if we have a symbolic link, then extract the full path of the target
+if test -h "$invocation_name" ; then
+    # NOT using readlink, for portability
+    invocation_name=`dirname "$invocation_name"`"/"`stat -f %Y "$invocation_name"`
 fi
 
 case $invocation_name in
-/*) thisfile=$invocation_name
+/*) thisfile="$invocation_name"
     ;;
-*)  thisfile=`pwd`/$invocation_name
+*)  thisfile="`pwd`/$invocation_name"
     ;;
 esac
 
 # rectify .. in path names - 7 times should suffice for the most weird 
 # invocations with multiple ..'s
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
-thisfile=`echo $thisfile | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo "$thisfile" | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo "$thisfile" | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo "$thisfile" | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo "$thisfile" | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo "$thisfile" | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo "$thisfile" | sed 's,[^/][^/]*//*\.\.//*,,'`
+thisfile=`echo "$thisfile" | sed 's,[^/][^/]*//*\.\.//*,,'`
 #rectify . in path names
-thisfile=`echo $thisfile | sed 's,//*\.//*,/,g'`
+thisfile=`echo "$thisfile" | sed 's,//*\.//*,/,g'`
 
-scriptdir=`dirname $thisfile`
-topdir=`dirname $scriptdir`
+# could use just scriptdir=`dirname \`readlink -f $0\`` but unfortunately
+# readlink is not standard (is in GNU core utils)
+scriptdir=`dirname "$thisfile"`
+topdir=`dirname "$scriptdir"`
 
-config=`$topdir/build/config.guess`
-canonical=`$topdir/build/config.sub $config`
-exec_dir=$topdir/config/${canonical}${suffix}
-executable=${exec_dir}/bin/xsb
+# NOT using @full_config_name@ so that the same physical install
+# would work for different architectures
+config=`"$topdir/build/config.guess"`
+canonical=`"$topdir/build/config.sub" $config`
+exec_dir="$topdir/config/${canonical}${suffix}"
+executable="${exec_dir}/bin/xsb"
+
 
 # The purpose of this complex thing is to make sure that arguments
 # with spaces in them get passed as one to the XSB executable, e.g., 
@@ -90,8 +96,12 @@ do
     fi
 done
 
+if test "@CROSS_SIMULATOR@none" != "none" ; then
+    mkdir -p "$HOME/.xsb/config/${config}${suffix}" 2>/dev/null
+fi
+
 if test -x "$executable" ; then
-   eval "$executable $xsb_cmd"
+   eval "exec @CROSS_SIMULATOR@ '$executable' $xsb_cmd"
 else
    echo "${executable}: "
    echo "       file doesn't exist or is not executable"
@@ -101,9 +111,14 @@ else
    echo "***This installation seems to have the following configurations available:"
    # First drop files that don't have "-".
    # Then drop the configuration that we just said doesn't exist.
-   ls -1  $topdir/config | egrep "-" \
+   ls -1  "$topdir/config" | egrep "-" \
     	    	    	    | egrep -v "^${canonical}${suffix}\$" 2> /dev/null
    echo "***configuration list end"
    echo ""
+   echo "One other frequent problem: you might be over your disk quota,"
+   echo "and your XSB executable might have been deleted by the system"
+   echo "immediately after it was created."
+   echo ""
    echo "Please contact your system administrator, if you can't rebuild XSB."
+   exit 1
 fi

@@ -1,21 +1,21 @@
 %--------------------------------------------------------------------------
 %  Currently, this test is quite pointless...  Unfortunately, I do not
 %  know of a good way of testing floundering (or have a variant of SLG
-%  that avoids unnecessary floundering.  Thus, the use of 't not'/1.
+%  that avoids unnecessary floundering.  Thus, the use of sk_not/1.
 %  However, one fine day this test can serve as an example of a floundering
 %  test.
 %--------------------------------------------------------------------------
 
 :- table p/1, q/1, r/1, t/1.
 
-:- import 't not'/1 from tables.
+:- import sk_not/1 from tables.
 
 %----------------------------------------------------
 % p/1 should not flounder for any query.
 % Furthermore, no query should require SCC detection.
 %----------------------------------------------------
 
-p(X) :- 't not'(p(X)).
+p(X) :- sk_not(p(X)).
 p(a).
 p(X) :- ( var(X) -> writeln('Universal answer derived for p(X)')
 	; X == a -> writeln('Major bug in early completion')
@@ -27,7 +27,7 @@ p(X) :- ( var(X) -> writeln('Universal answer derived for p(X)')
 %----------------------------------------------------
 
 q(a).
-q(X) :- 't not'(q(X)).
+q(X) :- sk_not(q(X)).
 q(X) :- ( var(X) -> writeln('Universal answer derived for q(X)')
 	; X == a -> writeln('Major bug in early completion')
 	; true
@@ -40,13 +40,13 @@ q(X) :- ( var(X) -> writeln('Universal answer derived for q(X)')
 %----------------------------------------------------
 
 r(a).
-r(X) :- 't not'(r(X)).
+r(X) :- sk_not(r(X)).
 
 %----------------------------------------------------
 % t/1 should have the same behaviour as r/1.
 %----------------------------------------------------
 
-t(X) :- 't not'(t(X)).
+t(X) :- sk_not(t(X)).
 t(a).
 
 %--------------------------------------------------------------------------

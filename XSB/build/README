@@ -2,13 +2,16 @@
     This file provides basic information about Autoconf 
     and the new XSB setup. Mostly the developer stuff.
 
+    For *NIX only. See ../INSTALL_WINDOWS for the info
+    on that other OS.
+
 
 The good news is that you don't really need to know much about
 Autoconf---the hard work has already been done! The following is primarily
-intended to make sure that noone deletes the files that Autoconf needs ;-)
+intended to make sure that no one deletes the files that Autoconf needs ;-)
 
 The new setup makes XSB much more flexible as a platform for building other
-sytems. XSB can be built in-place or installed in another place after the
+systems. XSB can be built in-place or installed in another place after the
 compilation. The executable code can be moved around without the fear of
 breaking the system.  XSB can be compiled for different architectures from
 the same source tree, and there will be no conflict between the
@@ -30,17 +33,16 @@ configure.in	  - this is the main workhorse that Autoconf uses to create
 aclocal.m4	  - some m4 macros customized for the XSB build.
 accconfig.h	  - a set of undef statements that autoheader uses to
 		    create def_config.h. Autoconf then uses def_config.h to 
-		    breate the file emu/configs/config.h.
-		    This file is a replacement of the old emu/config.h
+		    create the file config/<architecture>/xsb_config.h.
 
 topMakefile.in	  - the Makefile template from which the main makefile is
 		    produced. 
 emuMakefile.in	  - the Makefile template from which the makefile for the
 		    emu directory is derived.
-MS_VC_Mfile.mak   - the Makefile for building using MS Visual C++ on Windows.
+MSVC_Makefile.mak - the Makefile for building using MS Visual C++ on Windows.
+MSVC.sh           - shell script that creates dependencies for Microsoft NMAKE
+MSVC.sed          - sed script used by MSVC.sh
 
-def_config_pcdos.in - Out of this, configure generates a config.h file for
-		      DOS.
 def_config_wind.in  - Out of this, configure generates a config.h file for
 		     Windows NT/95/98.
 def_debug.h.in	  - the template from which debug.h is produced. Debug.h is 
@@ -97,15 +99,13 @@ YOU NEED TO RUN autoconf IFF YOU ENHANCE THE SETUP OR FIX A BUG!
 The new directory structure:
 
     emu		  - C source code for XSB
-    emu/configs/  - configuration files, created automatically
-    emu/debugs/   - debug include files. The debug.h file is created
-		    automatically. The other files are:
+    emu/debugs/   - debug include files. The files are:
 
 				  debug_biassert.h 
 				  debug_delay.h
-				  debug_kostis.h
 				  debug_residual.h
 				  debug_tries.h
+				  debug_tables.h
 
 		    These are NOT created automatically. I went into the
 		    trouble of sorting out the various debug variables left 
@@ -133,6 +133,11 @@ The new directory structure:
 
     packages/	  - XSB packages
 
+    prolog_includes/ - .h files that can be included by the C preprocessor
+		       into Prolog programs (files that are included into C
+		       programs and both C and Prolog programs are kept in
+		       the emu/ directory).
+
 The structure of the config directory:
 
     config/ has a subdirectory for each architecture. For instance:
@@ -148,6 +153,7 @@ The structure of the config directory:
 	 bin/
 	 saved.o/
 	 lib/
+
     The bin/ directory contains the XSB executable for the configuration
     at hand. The saved.o/ directory contains copies of the object code for
     the files from the emu/ directory. This is used by `make' to avoid
@@ -173,10 +179,11 @@ The structure of the config directory:
 		      in the build directory.
 	topMakefile - the top make file, which is originally created in the 
 		      build directory.
-        config.h    - The file that contains the appropriate #define
+       xsb_config.h - The file that contains the appropriate #define
 		      statements for this architecture. It gets copied into
 		      emu/configs/ when you type make in the build/ directory.
 		      This file replaces the old config.h
+        xsb_debug.h - The file containing some debug includes.
     	banner.msg  - Message displayed by XSB on startup.
 
 	xsb_configuration.P -
@@ -189,8 +196,6 @@ The structure of the config directory:
 		     available to the running XSB programs. No longer you
 		     need to use the stat_flag built in --- AND YOU MUST NOT!
 		     (Many of the old flags don't even exist any more.)
-        xsb_configuration_pcdos.P -
-	    	     template for creating configuration.P under DOS.
         xsb_configuration_wind.P  -
 	    	     template for configuration.P under Windows NT/95/98.
 
@@ -247,10 +252,13 @@ How to build:
     Configure has several options (type `configure --help' to see them all)
     that let you configure for debugging, with Oracle, etc. See ../INSTALL
     for details.  The outcome of running configure and makexsb is stored in
-    Installation_summary. This file is sent to xsb-contact by the
-    registration script and it is also saved in config/<configuration>/
-    directory, where <configuration is the canonical name for the current
-    configuration.
+    Installation_summary. This file is sent to
+
+	    xsb-installation@lists.sourceforge.net
+    
+    by the registration script and it is also saved in
+    config/<configuration>/ directory, where <configuration> is the
+    canonical name for the current configuration.
 
     A note about caching the configure tests: caching is disabled (the
     opposite of the standard Autoconf default). To enable it, type
@@ -278,12 +286,22 @@ How to build:
 
         makexsb devel
 
-    to rebuild the missing .O files in the XSB installation. (XSB CVS
-    repository stores only the very necessary .O files, leaving the rest to 
-    be rebuilt by the user.
+    to rebuild the missing object files in the XSB installation. (XSB CVS
+    repository stores only the very necessary object files, leaving the
+    rest to be rebuilt by the user.
+
+    Sometimes even this is not enough. When people make changes to the
+    compiler (however small they might be), it is necessary to recompile
+    all .P files with the new compiler. The way to do this is to type
+
+	makexsb superdevel
+
+    Use this when all else fails. On a slow machine, this can obviously
+    take time.
 
     Here are some other makexsb targets:
 
+             vfast  - Like fast, but gpp is not compiled.
 	     clean  - clean out the .o files in emu/ and in
 		      config/<arch>/saved.o/ where <arch> is the current
 		      architecture. 
@@ -299,7 +317,7 @@ How to build:
 		       meaning that you want to install it somewhere else
 		       (a copy of the executable will always be available
 		       in the source tree as well), then this target will
-		       copy the new executable and the .O files from the
+		       copy the new executable and the object files from the
 		       XSB libraries into the corresponding directories in
 		       DIR/<xsb-version>.
 		       XSB version is appended so as to not wipe out the

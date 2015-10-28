@@ -1,3 +1,4 @@
+:- compiler_options([allow_redefinition]).
 :- import set_unify/2 from set_unify.
 :- import numbervars/1 from num_vars.
 :- import normalize_result/2 from can_mono.
@@ -9,6 +10,13 @@ unify_sets([],[]).
 unify_sets([A|As],[B|Bs]) :- 
        set_unify(A,B), unify_sets(As,Bs).
 
+/* This file (wrongly?) makes calls to current_op/3 with arguments
+instantiated to lists, so the test ceased to work when I put in ISO
+error-testing.  Thus the patch -- TLS.  */
+
+local_current_op(X,Y,Z):-
+	(integer(X) ; var(X)),(atom(Y) ; var(Y)),(atom(Z) ; var(Z)),
+	current_op(X,Y,Z).
 
 %---------------- Transformed program ----------------------
 
@@ -458,41 +466,41 @@ expect__1(_270,_272,_274) :-
                          [_270,_272,_274]).
 prefixop__1(_253,_255,_257) :- 
         [_230] = _259, [_222] = _261, [_222] = _263, 
-        current_op([_222],[atom],[_230]),
+        local_current_op([_222],[atom],[_230]),
         normalize_result([_259,_261,_263],
                          [_253,_255,_257]).
 prefixop__1(_346,_348,_350) :- 
         [_296] = _352, [_313] = _354, [_304] = _356, 
-        current_op([_313],[atom],[_296]),
+        local_current_op([_313],[atom],[_296]),
         'my is'([_304],[[_313],[num]]),
         normalize_result([_352,_354,_356],
                          [_346,_348,_350]).
 postfixop__1(_253,_255,_257) :- 
         [_230] = _259, [_222] = _261, [_222] = _263, 
-        current_op([_222],[atom],[_230]),
+        local_current_op([_222],[atom],[_230]),
         normalize_result([_259,_261,_263],
                          [_253,_255,_257]).
 postfixop__1(_346,_348,_350) :- 
         [_296] = _352, [_304] = _354, [_313] = _356, 
-        current_op([_313],[atom],[_296]),
+        local_current_op([_313],[atom],[_296]),
         'my is'([_304],[[_313],[num]]),
         normalize_result([_352,_354,_356],
                          [_346,_348,_350]).
 infixop__1(_373,_375,_377,_379) :- 
         [_321] = _381, [_329] = _383, [_338] = _385, [_329] = _387, 
-        current_op([_338],[atom],[_321]),
+        local_current_op([_338],[atom],[_321]),
         'my is'([_329],[[_338],[num]]),
         normalize_result([_381,_383,_385,_387],
                          [_373,_375,_377,_379]).
 infixop__1(_373,_375,_377,_379) :- 
         [_321] = _381, [_329] = _383, [_338] = _385, [_338] = _387, 
-        current_op([_338],[atom],[_321]),
+        local_current_op([_338],[atom],[_321]),
         'my is'([_329],[[_338],[num]]),
         normalize_result([_381,_383,_385,_387],
                          [_373,_375,_377,_379]).
 infixop__1(_373,_375,_377,_379) :- 
         [_321] = _381, [_338] = _383, [_338] = _385, [_329] = _387, 
-        current_op([_338],[atom],[_321]),
+        local_current_op([_338],[atom],[_321]),
         'my is'([_329],[[_338],[num]]),
         normalize_result([_381,_383,_385,_387],
                          [_373,_375,_377,_379]).

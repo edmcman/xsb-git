@@ -546,7 +546,7 @@ ground_list__1(_93) :-
                           [_93]).
 ground_list__1(_204) :- 
         [list,_184] = _206, 
-        ground([_178]),
+        myground([_178]),
         ground_list([_184]),
         normalize_result([_206],
                          [_204]).
@@ -647,7 +647,7 @@ ground__1(_99) :-
 :- table configuration__1/1.
 :- table pgenconfig__1/1.
 
-ground(_63) :- 
+myground(_63) :- 
         ground__1(_65),
         unify_sets([_63], [_65]).
 quantity(_63) :- 

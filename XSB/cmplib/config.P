@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: config.P,v 1.1.1.1 1998-11-05 17:00:05 sbprolog Exp $
+** $Id: config.P,v 1.4 2010-08-19 15:03:35 spyrosh Exp $
 ** 
 */
 
@@ -26,7 +26,7 @@
 default_assert_size(17).	% Default size to make hash table for
 				% dynamic code.
 
-default_compile_size(5000).	% size (in WORDS) of largest file to
+%default_compile_size(10000).	% size (in WORDS) of largest file to
 				% automatically recompile when
 				% consulting.  Larger files will be
 				% loaded dynamically.

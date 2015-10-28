@@ -5,43 +5,45 @@ echo "--- Running neg_tests/test.sh                       ---"
 echo "-------------------------------------------------------"
 
 XEMU=$1
+options=$2
 
 #-------------------------------------------------
 # Tests of negation that give correct results.
 #-------------------------------------------------
-../gentest.sh $XEMU neg1 "test."
-../gentest.sh $XEMU neg2 "test."
-../gentest.sh $XEMU neg3 "test."
-../gentest.sh $XEMU ullman2 "test."
+    # XEMU and options must be together in quotes
+../gentest.sh "$XEMU $options" neg1 "test."
+../gentest.sh "$XEMU $options" neg2 "test."
+../gentest.sh "$XEMU $options" neg3 "test."
+../gentest.sh "$XEMU $options" ullman2 "test."
 #------------------------------------------------------
 # Tests of left-to-right modylarly stratified negation.
 #------------------------------------------------------
-../gentest.sh $XEMU lmod1 "test."
-../gentest.sh $XEMU lmod2 "test."
-../gentest.sh $XEMU lmod3 "test."
-../gentest.sh $XEMU lmod4 "test."
-../gentest.sh $XEMU lmod5 "test."
-../gentest.sh $XEMU lmod6 "test."
-../gentest.sh $XEMU lmod7 "test."
-../gentest.sh $XEMU lmod8 "test."
-../gentest.sh $XEMU lmod9 "test."
-../gentest.sh $XEMU lmod10 "test."
-../gentest.sh $XEMU lmod11 "test."
-../gentest.sh $XEMU ullman1 "test."
+../gentest.sh "$XEMU $options" lmod1 "test."
+../gentest.sh "$XEMU $options" lmod2 "test."
+../gentest.sh "$XEMU $options" lmod3 "test."
+../gentest.sh "$XEMU $options" lmod4 "test."
+../gentest.sh "$XEMU $options" lmod5 "test."
+../gentest.sh "$XEMU $options" lmod6 "test."
+../gentest.sh "$XEMU $options" lmod7 "test."
+../gentest.sh "$XEMU $options" lmod8 "test."
+../gentest.sh "$XEMU $options" lmod9 "test."
+../gentest.sh "$XEMU $options" lmod10 "test."
+../gentest.sh "$XEMU $options" lmod11 "test."
+../gentest.sh "$XEMU $options" ullman1 "test."
 #---------------------------------------------------------
 # Tests of left-to-right dynamically stratified negation.
 #---------------------------------------------------------
-../gentest.sh $XEMU przy2 "test."
-../gentest.sh $XEMU ldynstrat0 "test."
-../gentest.sh $XEMU ldynstrat1 "test."
-../gentest.sh $XEMU ldynstrat2 "test."
-../gentest.sh $XEMU ldynstrat3 "test."
-../gentest.sh $XEMU ldynstrat4 "test."
+../gentest.sh "$XEMU $options" przy2 "test."
+../gentest.sh "$XEMU $options" ldynstrat0 "test."
+../gentest.sh "$XEMU $options" ldynstrat1 "test."
+../gentest.sh "$XEMU $options" ldynstrat2 "test."
+../gentest.sh "$XEMU $options" ldynstrat3 "test."
+../gentest.sh "$XEMU $options" ldynstrat4 "test."
 #--------------------------------------------------------------------
 # Tests of modylarly stratified negation (that give correct results).
 #--------------------------------------------------------------------
-../gentest.sh $XEMU mod1 "test."
+../gentest.sh "$XEMU $options" mod1 "test."
 #-------------------------------------------------
 # Genome tests involving unclassified negation.
 #-------------------------------------------------
-../gentest.sh $XEMU q7 "test."
+../gentest.sh "$XEMU $options" q7 "test."

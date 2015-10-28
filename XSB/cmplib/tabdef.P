@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: tabdef.P,v 1.1.1.1 1998-11-05 17:00:17 sbprolog Exp $
+** $Id: tabdef.P,v 1.6 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
@@ -37,7 +37,6 @@ table_all_predicates([pred(Sym,_,_)|Preds]) :-
 	table_it(Sym),
 	table_all_predicates(Preds).
 
-
 /*======================================================================*/
 /* perform_auto_table(+Module)						*/
 /*	Runs the dependency graph of the predicates in the Module, and	*/
@@ -51,7 +50,6 @@ perform_auto_table(module(SymTab,_,CL0,_)) :-
 	table_preds_in_tabling_meta_preds(SymTab, CL0, CL1),
 	table_immediate_recursions(CL1, CL2),
 	table_to_break_all_loops(CL2).
-
 
 /*======================================================================*/
 /* table_preds_in_tabling_meta_preds(+SymTab, +PredsIn, -PredsOut)	*/
@@ -128,7 +126,7 @@ table_immediate_recursions([Pred|Preds], PredsOut) :-
 
 needs_tabling(Pred) :-
 	Pred = pred(Sym,Cls,_),
-	( sym_prop(tabled(_,_,_,_), Sym) -> fail
+	( sym_prop(tabled(_,_), Sym) -> fail
 	; clauses_call_sym(Cls, Sym), fail_if(proven_terminating(Pred))
 	).
 
@@ -165,8 +163,10 @@ body_calls_sym(goal(GoalSym,GoalArgs), Sym) :-
 
 :- mode call_in_meta_pred(+,+).
 
-call_in_meta_pred([Arg|Args], Sym):-
-	( call_in_arg(Arg, Sym) -> true ; call_in_meta_pred(Args, Sym) ).
+call_in_meta_pred([Arg], Sym) :-       % call/1 and not/1
+	call_in_arg(Arg, Sym).
+call_in_meta_pred([_,Arg,_], Sym) :-   % findall/3, setof/3 and bagof/3
+	call_in_arg(Arg, Sym).
 
 :- mode call_in_arg(+,+).
 
@@ -274,7 +274,7 @@ call_themselves([Pred|Preds], LoopPreds, AllPreds) :-
 /*----------------------------------------------------------------------*/
 
 path(Sym1, Sym2, Preds) :-
-	fail_if(sym_prop(tabled(_,_,_,_),Sym1)),
+	fail_if(sym_prop(tabled(_,_),Sym1)),
 	exclude(Preds, Sym1, Cls, RestPreds), nonvar(Cls),
 	path_in_clauses(Cls, Sym1, Sym2, RestPreds).
 
@@ -315,16 +315,29 @@ path_in_body(goal(GoalSym,GoalArgs), Sym1, Sym, Preds) :-
 
 :- mode path_in_meta_pred_args(+,+,+,+).
 
-path_in_meta_pred_args([Arg|Args], Sym0, Sym, Preds) :-
-	( path_in_meta_pred_arg(Arg, Sym0, Sym, Preds) -> true
-	; path_in_meta_pred_args(Args, Sym0, Sym, Preds)
-	).
+path_in_meta_pred_args([Arg], Sym0, Sym, Preds) :-      % call/1 and not/1
+	path_in_meta_pred_arg(Arg, Sym0, Sym, Preds).
+path_in_meta_pred_args([_,Arg,_], Sym0, Sym, Preds) :-  % findall/3, setof/3
+	path_in_meta_pred_arg(Arg, Sym0, Sym, Preds).   % and bagof/3
 
 path_in_meta_pred_arg(constant(Sym1), Sym0, Sym, Preds) :-
-         path_in_body(goal(Sym1,_), Sym0, Sym, Preds).
+	path_in_body(goal(Sym1,[]), Sym0, Sym, Preds).
 path_in_meta_pred_arg(structure(Sym1,Args), Sym0, Sym, Preds) :-
-	( path_in_body(goal(Sym1,_), Sym0, Sym, Preds) -> true
-	; path_in_meta_pred_args(Args, Sym0, Sym, Preds)
+	sym_name(Sym1, Name, Arity),
+	( Name == ',', Arity =:= 2 ->
+	    Args = [A1,A2], % code below immitates path_in_boby(and(A1,A2), ...
+	    ( path_in_meta_pred_arg(A1, Sym0, Sym, Preds) -> true
+	    ; path_in_meta_pred_arg(A2, Sym0, Sym, Preds)
+	    )
+	; Name == ';', Arity =:= 2 ->
+	    Args = [A1,A2], % code below immitates path_in_boby(or(A1,A2), ...
+	    ( path_in_meta_pred_arg(A1, Sym0, Sym, Preds) -> true
+	    ; path_in_meta_pred_arg(A2, Sym0, Sym, Preds)
+	    )
+	; Name == 'not', Arity =:= 1 ->
+	    Args = [A1],    % code below immitates path_in_boby(not(A1), ...
+	    path_in_meta_pred_arg(A1, Sym0, Sym, Preds)
+	; path_in_body(goal(Sym1,Args), Sym0, Sym, Preds)
 	).
 
 /*----------------------------------------------------------------------*/
@@ -433,13 +446,13 @@ is_meta_pred(Sym) :-
 /*----------------------------------------------------------------------*/
 
 table_it(Sym) :-
-	sym_propin(tabled(_,_), Sym),
+	sym_propin(tabled, Sym),
 	sym_name(Sym, Name, Arity),
 	message(('% Compiling predicate ', 
 		    Name, '/', Arity, ' as a tabled predicate')).
 
 table_sym_of_arg(Sym, Name, Arity) :-
-	( sym_prop(tabled(_,_,_,_), Sym) -> true
+	( sym_prop(tabled(_,_), Sym) -> true
 	; sym_prop(defined, Sym) -> table_it(Sym)
 	; sym_prop(im(_), Sym) -> true
 	; error(('Tabling meta predicate ', Name, '/', Arity,
@@ -460,7 +473,7 @@ tabling_meta_predicate_exists(SymTab) :-
 remove_tabled_preds([], []).
 remove_tabled_preds([Pred|Preds], PredsOut) :-
 	Pred = pred(Sym,_,_),
-	( sym_prop(tabled(_,_,_,_), Sym) -> PredsOut = P
+	( sym_prop(tabled(_,_), Sym) -> PredsOut = P
 	; PredsOut = [Pred|P]
 	),
 	remove_tabled_preds(Preds, P).

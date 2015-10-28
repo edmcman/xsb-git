@@ -18,17 +18,19 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: subsumes.H,v 1.8 2007/01/24 22:24:28 dwarren Exp $
 ** 
 */
 
 
-:- export subsumes_chk/2, variant/2, subsumes/2.
+:- export subsumes_chk/2, subsumes_term/2, variant/2, subsumes/2.
 
-
-:- import assert0/1 from assert.
-:- import numbervars/1 from num_vars.
-:- import buff_alloc/3, buff_set_word/3, buff_word/3,
-	  term_psc/2, psc_arity/2, term_arg/3, term_type/2
+%%:- import numbervars/1 from num_vars.
+%%:- import conset/2, conget/2 from gensym.
+:- import term_psc/2, psc_arity/2, term_arg/3, term_type/2
      from machine.
+:- import get_attributes/2,attv_unify/2 from machine.
+%%:- import functor/3, arg/3 from standard.
 
+:- import excess_vars/4 from setof.
+:- import is_most_general_term/1 from standard.

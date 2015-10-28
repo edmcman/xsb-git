@@ -5,12 +5,10 @@
 %	p(a,b) gets a conditional and then an unconditional answer;
 %	this answer is returned to t(a,b) and should be simplified.
 %  It requires no simplification after completion.  All simplification
-%  should be early performed.  It uses 't not'/1 to avoid floundering.
+%  should be early performed.  
 %
 %  --> All answers of t/2, p/2, and q/2 should be unconditional.
 %--------------------------------------------------------------------------
-
-:- import 't not'/1 from tables.
 
 :- table t/2, p/2, q/2, td/1.
 
@@ -25,7 +23,7 @@ q(b,c).
 q(b,b).
 q(b,X) :- td(X).
 
-td(X) :- 't not'(td(X)), X = b.
+td(X) :- sk_not(td(X)), X = b.
 
 %--------------------------------------------------------------------------
 

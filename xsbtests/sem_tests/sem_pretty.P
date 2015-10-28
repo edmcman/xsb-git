@@ -18,7 +18,7 @@
 :- import str_cat/3 from string.
 :- import term_type/2 from machine.
 :- import numbervars/1 from num_vars.
-:- import name/2, atom_chars/2 from standard.
+:- import name/2, atom_codes/2 from standard.
 
 /*======================================================================*/
 /*  sem_pretty(+UglyTerm, -PrettyAtom)					*/
@@ -148,7 +148,7 @@ pretty_string(Term, StrIn, StrOut) :-
 	; Type =:= 2 ->	/* integer(Term) */
 		name(StrIn, StrName), name(Term, TermName),
 		append(StrName, TermName, StrOutName),
-		atom_chars(StrOut, StrOutName)	% Do NOT use name/2 here!!
+		atom_codes(StrOut, StrOutName)	% Do NOT use name/2 here!!
 	).
 
 pretty_args([], Str, Str).

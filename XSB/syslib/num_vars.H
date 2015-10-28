@@ -1,5 +1,5 @@
 /* File:      numbervars.H
-** Author(s): Kostis F. Sagonas, Jiyang Xu
+** Author(s): Kostis F. Sagonas, Jiyang Xu, David S. Warren
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -18,12 +18,15 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: num_vars.H,v 1.1.1.1 1998/11/05 17:00:28 sbprolog Exp $
+** $Id: num_vars.H,v 1.3.8.2 2004/10/18 20:48:22 ruim Exp $
 ** 
 */
 
 
-:- export numbervars/1, numbervars/3.
+:- export numbervars/1, numbervars/3, numbervars/4.
+:- export unnumbervars/2, unnumbervars/3.
 
-:- import term_psc/2, term_type/2, psc_arity/2, term_arg/3 from machine.
-
+:- import term_psc/2, term_type/2, psc_arity/2, term_arg/3, term_new/2
+        from machine.
+:- import log_ith/3,member/2 from basics.
+:- import type_error/4, domain_error/4,instantiation_error/3 from error_handler.

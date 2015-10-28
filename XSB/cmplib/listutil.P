@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: listutil.P,v 1.1.1.1 1998-11-05 17:00:07 sbprolog Exp $
+** $Id: listutil.P,v 1.6 2011-09-06 17:33:46 dwarren Exp $
 ** 
 */
 
@@ -32,7 +32,7 @@ attach(X, Y) :- (var(Y), Y = [X|_]) ;
 
 
 merge([], L1, L1).
-merge([H|T], L1, L3) :- (member(H, L1), merge(T, L1, L3)) ;
+merge([H|T], L1, L3) :- (member(H, L1), merge(T, L1, L3)), ! ;
 			(L3 = [H | L4], merge(T, L1, L4)).
 
 
@@ -81,8 +81,15 @@ length1([_|R], Nin, Nout) :- Nmid is Nin+1, length1(R, Nmid, Nout).
 insert(Elem, [Elem|_]) :- !.
 insert(Elem, [_|Rest]) :- insert(Elem, Rest).
 
-membercheck(Elem, Table) :- nonvar(Table), Table = [Head|Rest],
-			    (Elem = Head ; membercheck(Elem, Rest)).
+/**membercheck(Elem, Table) :- nonvar(Table), Table = [Head|Rest],
+			    (Elem = Head ; membercheck(Elem, Rest)).*/
+			    
+membercheck(Elem, Table) :-
+	nonvar(Table), Table = [Head|Rest],
+	(Elem = Head
+	 ->	true
+	 ; membercheck(Elem, Rest)
+	).
 
 nthmember(X, [X|_], 1).
 nthmember(X, [_|Rest], N) :- nthmember(X,Rest,N1), nonvar(N1), N is N1 + 1.
@@ -114,6 +121,56 @@ reverse(List, Reversed) :- reverse(List, [], Reversed).
 
 reverse([], X, X).
 reverse([X|Xs], Y, Z) :- reverse(Xs, [X|Y], Z).
+
+
+:- export build_bt/2,find_in_bt/2.
+
+build_bt([],[]) :- !.
+build_bt(List,Tree) :-
+	sort(List,SList),
+	length(SList,Len),
+	K is ceiling(log(Len)/log(2)),
+	bbt(SList,K,Tree,_).
+
+/***print_bt(node(Sym,N1,N2),Ind) :-
+	tabb(Ind),
+	standard:writeln(userout,Sym),
+	Ind1 is Ind+2,
+	(print_bt(N1,Ind1);true),
+	(print_bt(N2,Ind1);true),
+	fail.
+
+tabb(N) :-
+	(N > 0
+	 ->	standard:write(userout,' '),
+		N1 is N-1,
+		tabb(N1)
+	 ;	true
+	).
+***/
+
+bbt(List,K,Tree,ListLeft) :-
+	(K =:= 0
+	 ->	(List = [Node|ListLeft]
+		 ->	Tree = node(Node,[],[])
+		 ;	Tree = [], ListLeft = []
+		)
+	 ;	K1 is K-1,
+		bbt(List,K1,SubTree1,List1),
+		(List1 = [Mid|List2]
+		 ->	bbt(List2,K1,SubTree2,ListLeft),
+			Tree = node(Mid,SubTree1,SubTree2)
+		 ;	Tree = SubTree1, ListLeft = []
+		)
+	).
+
+find_in_bt(Val,node(Val0,LT,RT)) :-
+	(Val == Val0
+	 ->	true
+	 ; Val @< Val0
+	 ->	find_in_bt(Val,LT)
+	 ;	find_in_bt(Val,RT)
+	).
 
 
 force_listutil_loaded.

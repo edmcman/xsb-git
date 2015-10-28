@@ -1,6 +1,5 @@
 :- export set_unify/2.
 
-:- import ground/1 from basics.
 :- import table2graph/2 from can_mono.
 :- import flatten/2 from set_basics_mono.
 :- import ord_union/3, ord_subtract/3, ord_setproduct/3 from ordsets.

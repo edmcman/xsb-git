@@ -126,21 +126,21 @@ category(VarDict, CatVar, CatChkGoal) -->
 :- table expr/4.
 
 expr(VarDict, (E1; E2)) -->
-	expr(VarDict, E1), ['\/'], and_expr(VarDict, E2).
+	expr(VarDict, E1), [\/], and_expr(VarDict, E2).
 expr(VarDict, E) -->
 	and_expr(VarDict, E).
 
 :- table and_expr/4.
 
 and_expr(VarDict, (E1, E2)) -->
-	and_expr(VarDict, E1), ['&'], simple_expr(VarDict, E2).
+	and_expr(VarDict, E1), [&], simple_expr(VarDict, E2).
 and_expr(VarDict, E) -->
 	simple_expr(VarDict, E).
 
 simple_expr(VarDict, Expr) -->
 	( ['('] ->
 		expr(VarDict, Expr), [')']
-	; ['-'] ->
+	; [-] ->
 		simple_expr(VarDict, E), {Expr = not(E)}
 	; term(VarDict, Expr)
 	).
@@ -150,10 +150,10 @@ term(VarDict, Term) -->
 term(VarDict, SetRelation) -->
 	cardinality_relation(VarDict, SetRelation).
 term(VarDict, 'set equal'(SetTerm1,SetTerm2)) -->
-	set_expr(VarDict, SetTerm1), ['='], set_expr(VarDict, SetTerm2).
+	set_expr(VarDict, SetTerm1), [=], set_expr(VarDict, SetTerm2).
 term(VarDict, Term) -->
 	simple_term(VarDict, Term1),
-	( ['='] ->
+	( [=] ->
 		simple_term(VarDict, Term2),
 		{Term = 'term equal'(Term1,Term2)}
 	; ['\in'], set_expr(VarDict, SetExpr),
@@ -169,16 +169,16 @@ simple_term(VarDict, T) --> simple_variable(VarDict, T), !
 :- table set_expr/4.
 
 set_expr(VarDict, 'set intersection'(Set1,Set2)) -->
-	set_expr(VarDict, Set1), ['/\'], diff_set_expr(VarDict, Set2).
+	set_expr(VarDict, Set1), [/\], diff_set_expr(VarDict, Set2).
 set_expr(VarDict, 'set union'(Set1,Set2)) -->
-	set_expr(VarDict, Set1), ['\/'], diff_set_expr(VarDict, Set2).
+	set_expr(VarDict, Set1), [\/], diff_set_expr(VarDict, Set2).
 set_expr(VarDict, SetExpr) -->
         diff_set_expr(VarDict, SetExpr).
 
 :- table diff_set_expr/4.
 
 diff_set_expr(VarDict, 'set difference'(Set1,Set2)) -->
-	diff_set_expr(VarDict, Set1), ['-'], simple_set_expr(VarDict, Set2).
+	diff_set_expr(VarDict, Set1), [-], simple_set_expr(VarDict, Set2).
 diff_set_expr(VarDict, SetExpr) -->
 	simple_set_expr(VarDict, SetExpr).
 
@@ -283,7 +283,7 @@ set_cardinal(VarDict, Cardinal) -->
 /*----------------------------------------------------------------------*/
  
 tuple_of_variables(VarDict, VarList) -->
-	['<'], variables(VarDict, VarList), ['>'].
+	[<], variables(VarDict, VarList), [>].
 
 variables(VarDict, [Var]) -->
 	variable(VarDict, Var).
@@ -334,9 +334,9 @@ true(True) --> [True], {is_true(True)}.
 :- mode strip_indicator(+,-).
 
 strip_indicator(Cat_i, Cat) :-
-	atom_chars(Cat_i, Cat_i_List),
+	atom_codes(Cat_i, Cat_i_List),
 	( append(Cat_List, [0'_|_Indicator], Cat_i_List) ->
-		atom_chars(Cat, Cat_List)
+		atom_codes(Cat, Cat_List)
 	; Cat = Cat_i
 	).
 
@@ -361,17 +361,17 @@ construct(Arg1, Op, Arg2, Term) :-
 card_op(InternalCardOp) -->
 	read_card_op(CardOp), {card_relop(CardOp, InternalCardOp)}.
 
-read_card_op(CardOp) --> ['=','<'], !, {CardOp = '=<'}
-		      |  ['='],	       {CardOp = '='}
-		      |  ['>','='], !, {CardOp = '>='}
-		      |  ['>'],	       {CardOp = '>'}
-		      |  ['<'],	       {CardOp = '<'}.
+read_card_op(CardOp) --> [=,<], !, {CardOp = =<}
+		      |  [=],	       {CardOp = =}
+		      |  [>,=], !, {CardOp = >=}
+		      |  [>],	       {CardOp = >}
+		      |  [<],	       {CardOp = <}.
 
-card_relop('=',  'card eq').
-card_relop('=<', 'card le').
-card_relop('<',  'card lt').
-card_relop('>',  'card gt').
-card_relop('>=', 'card ge').
+card_relop(=,  'card eq').
+card_relop(=<, 'card le').
+card_relop(<,  'card lt').
+card_relop(>,  'card gt').
+card_relop(>=, 'card ge').
 
 /*----------------------------------------------------------------------*/
 /* Semantic information about the syntactic conventions.		*/
@@ -383,8 +383,8 @@ is_true(t).
 
 is_a_variable(X) :-
 	atom(X),
-	atom_chars(X, [Var|NumberList]),
-	atom_chars(VarName, [Var]), is_variable(VarName),
+	atom_codes(X, [Var|NumberList]),
+	atom_codes(VarName, [Var]), is_variable(VarName),
 	( NumberList == [] -> true
 	; name(Number, NumberList), integer(Number)
 	).
@@ -402,8 +402,8 @@ is_variable(v).
 
 is_an_event(X) :-
 	atom(X),
-	atom_chars(X, [Var|NumberList]),
-	atom_chars(VarName, [Var]), is_event(VarName),
+	atom_codes(X, [Var|NumberList]),
+	atom_codes(VarName, [Var]), is_event(VarName),
 	( NumberList == [] -> true
 	; NumberList == [0''] -> true
 	; name(Number, NumberList), integer(Number)
@@ -415,8 +415,8 @@ is_event(e).
 
 is_a_set_variable(X) :-
 	atom(X),
-	atom_chars(X, [Var|NumberList]),
-	atom_chars(VarName, [Var]), is_set_variable(VarName),
+	atom_codes(X, [Var|NumberList]),
+	atom_codes(VarName, [Var]), is_set_variable(VarName),
 	( NumberList == [] -> true
 	; name(Number, NumberList), integer(Number)
 	).

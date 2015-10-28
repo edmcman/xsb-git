@@ -18,7 +18,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: proc.mk,v 1.1.1.1 1998-11-05 16:55:27 sbprolog Exp $
+## $Id: proc.mk,v 1.7 2010-08-19 15:03:36 spyrosh Exp $
 ## 
 ##
 
@@ -32,9 +32,7 @@ LDSTRING=
 PRODUCT_LIBHOME=
 MAKEFILE=proc.mk
 PROCPLSFLAGS= sqlcheck=full userid=$(USERID) dbms=v6_char
-PROCPPFLAGS= code=cpp include=/usr/include include=/usr/local/pkg/SUNWspro/SC2.0.1/include/CC
-# H.D. change on 6/28/97
-#include=/opt/SUNWspro/SC3.0.1/include/CC 
+PROCPPFLAGS= code=cpp include=/usr/include
 USERID=scott/tiger
 INCLUDE=$(I_SYM). $(PRECOMPPUBLIC)
 

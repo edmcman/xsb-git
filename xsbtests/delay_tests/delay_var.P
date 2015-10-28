@@ -19,7 +19,11 @@ test(C,D) :- C = r2(_,_), get_residual(C,D).
 test(C,D) :- C = app1(_,_,_), get_residual(C,D).
 test(C,D) :- C = reverse([_,_,_], _), get_residual(C,D).
 
-call_them :- p(_,_), p2(_,_), app1(_,_,_), reverse([_,_,_],_).
+%call_them :- p(_,_), p2(_,_), app1(_,_,_), reverse([_,_,_],_).
+call_them :- p(_,_).
+call_them :- p2(_,_).
+call_them :- app1(_,_,_).
+call_them :- reverse([_,_,_],_).
 
 write_body([]) :- writeln('].').
 write_body([H|T]) :- write(H), (T \== [] -> write(', ') ; true), write_body(T).
@@ -36,6 +40,7 @@ und :- tnot(und).
 :- table reverse/2.
 
 p(f(88,X), _XX) :- q(X, f(Y,g(Z))), r(Y), Y=h(_DD,_EE,_FF), Z=fff(_).
+%p(f(88,X), XX) :- q(X, f(Y,g(Z))), r(Y), Y=h(_DD,_EE,_FF), Z=fff(_),writeln(p(f(88,X),XX)).
 p(_X, XX) :- r(XX, t(ZZ)), XX = fff(_SS,_TT), r(ZZ).
 q(ggg(_X,Y,_Z,8),_) :- und, Y = 555.
 r(_,_) :- und.

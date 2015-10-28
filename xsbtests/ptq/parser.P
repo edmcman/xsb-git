@@ -17,7 +17,7 @@ consult_et to read in clauses.
 :- import append/3, copy_term/2 from basics.
 :- import term_arg/3, psc_arity/2, term_psc/2, term_type/2, term_new/2
 	from machine.
-
+:- import word/3 from usermod.
 
 /* parse a string */
 parse(Nonterm,String) :-

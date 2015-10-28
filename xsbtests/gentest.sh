@@ -1,5 +1,6 @@
 #! /bin/sh
 
+# $1 is expected to have xsb ececutable + command line options
 EMU=$1
 FILE=$2
 CMD=$3
@@ -9,7 +10,9 @@ BASEDIR=`basename $DIR`
 
 echo "--------------------------------------------------------------------"
 echo "Testing $BASEDIR/$FILE"
-$EMU -m 3000 -i << EOF
+#echo "$EMU"     # debug check: verify that options have been passed to xsb
+
+$EMU << EOF
 [$FILE].
 tell(temp).
 $CMD
@@ -22,17 +25,19 @@ if test -f ${FILE}_new; then
 fi
     
 sort temp > ${FILE}_new
+sort ${FILE}_old > temp
 
 #-----------------------
 # print out differences.
 #-----------------------
-d=`diff ${FILE}_new ${FILE}_old`
-if test -z "$d"; then 
+status=0
+diff -w ${FILE}_new temp || status=1
+if test "$status" = 0 ; then 
 	echo "$BASEDIR/$FILE tested"
 	rm -f ${FILE}_new
 else
 	echo "$BASEDIR/$FILE differ!!!"
-	diff ${FILE}_new ${FILE}_old
+	diff -w ${FILE}_new temp
 fi
 
 rm -f temp

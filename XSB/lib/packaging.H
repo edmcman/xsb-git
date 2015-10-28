@@ -18,22 +18,25 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: packaging.H,v 1.2 1998-11-15 06:07:50 kifer Exp $
+** $Id: packaging.H,v 1.9 2011-04-15 16:05:00 dwarren Exp $
 ** 
 */
 
 
 :- export bootstrap_package/2, bootstrap_syspackage/2,
+	  ensure_package_bootstrapped/2,
 	  bootstrap_sitepackage/2, bootstrap_userpackage/3,
-	  package_configuration/2, unload_package/1.
+	  unload_package/1.
 
 :- import (dynamic)/1, assert/1, retract/1
    from assert.
-:- import abort/1
-   from standard.
 
-:- import fmt_write_string/3, slash/1, expand_filename/2
+%% :- import abort/1 from standard.
+
+:- import slash/1, expand_filename/2
    from machine.
-:- import xsb_configuration/2 from configuration.
+:- import xsb_configuration/2 from xsb_configuration.
+
+:- import fmt_write_string/3 from file_io.
 
 

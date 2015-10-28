@@ -1,5 +1,5 @@
 /* File:      xsb_read.P
-** Author(s): Saumya K. Debray, Jiyang Xu, Kostis F. Sagonas
+** Author(s): Saumya K. Debray, Jiyang Xu, Kostis Sagonas
 **     	      (adapted from D.H.D.Warren, Richard O'Keefe)
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
@@ -20,68 +20,102 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: xsb_read.P,v 1.28 2008/04/02 16:21:17 dwarren Exp $
 ** 
 */
 
 
-string_as(list).
-
+:- compiler_options([xpp_on,sysmod,optimize]).
+#include "standard.h"
+#include "char_defs.h"
+#include "flag_defs_xsb.h"
+#include "thread_defs_xsb.h"
 
 %   file_read(+File, -Answer).
-
 file_read(File, Answer) :- 
 	file_read(File, Answer, _).
 
-%   file_read_foe(+File, -Answer, -Variables) reads a term from the
-%   current input stream and unifies it with Answer.  Variables is
-%   bound to a list of vv(Atom,Variable) pairs.  It fails if it finds an
-%   error (and doesn't try again to read another term.)
+/***********
+file_read_foe(+File, -Answer, -Variables) (foe = fail on error) 
+reads a term from the current input stream and unifies it with Answer.
+Variables is bound to a list of vv(Atom,Variable) pairs.  It fails
+if it finds an error (and doesn''t try again to read another term.)
+*************/
 
 file_read_foe(File, Answer, Variables) :-
-	stat_set_flag(51, File, 1),
-	term_psc('_$synerr'(_), Psc), psc_set_prop(Psc, -1, 1),
-	read_tokens(File, 10, Tokens, Variables),	% 10 is the first char
+	xsb_stream_lock(File),
+	term_psc('_$synerr'(_), Psc), psc_set_prop(Psc, -1),
+	read_tokens(File, 10, Tokens, Variables, _Pos),	% 10 is the first char
 	read4(Tokens, 1200, Term, LeftOver),	% 1200 is the maximum
 	read_all(LeftOver),			% precedence
-	Answer = Term.
+	Answer = Term,
+	xsb_stream_unlock(File).
 
-%   file_read(+File, -Answer, -Variables)
-%   reads a term from the current input stream and unifies it with
-%   Answer.  Variables is bound to a list of [Atom=Variable] pairs.
+/************ 
+file_read_fapoe(+File, -Answer, -Variables) (fail and print on error)
+This is the older version of file_read, and still used in the
+compiler.  It reads a term from the current input stream and unifies
+it with Answer.  Variables is bound to a list of [Atom=Variable]
+pairs.  It "handles" its own syntax errors by printing out an error
+message, and failing.  
+**************/
 
-file_read(File, Answer, Variables) :-
-	stat_set_flag(51, File, 1),
-	term_psc('_$synerr'(_), Psc), psc_set_prop(Psc, -1, 1),
+file_read_fapoe(File, Answer, Variables) :-
+	xsb_stream_lock(File),
 	repeat,	% reading terms until you find one with no syntax errors
-	    read_tokens(File, 10, Tokens, Variables),	% 10 is the first char
+%	    term_psc('_$synerr'(_), Psc), 
+	    get_synerr_psc(Psc),
+	    psc_set_prop(Psc, -1),
+	    read_tokens(File, 10, Tokens, Variables, _Pos),	% 10 is the first char
 	    ( read4(Tokens, 1200, Term, LeftOver),	% 1200 is the maximum
 	      read_all(LeftOver)			% precedence
-	    ; read_syntax_error(Tokens), 
+	    ; read_syntax_error(Psc,Tokens), 
 	      Term = Term			% To avoid a lamp variable
 	    ),
 	!,
-	Answer = Term.
+	Answer = Term,
+	xsb_stream_unlock(File).
+
+/************ 
+
+file_read(+File, -Answer, -Variables) Support for the ISO family of
+read predicates.  It explicitly throws a syntax error if the tokens
+cannot be parsed. If the errors_with_position flag is on then the error
+message will be Message-P, where P is the position of the first bad token
+
+************/
+
+file_read(File, Answer, Variables) :-
+	xsb_stream_lock(File),
+	repeat,	% reading terms until you find one with no syntax errors
+%	    term_psc('_$synerr'(_), Psc), 
+	    get_synerr_psc(Psc),
+	    psc_set_prop(Psc, -1),
+	    read_tokens(File, 10, Tokens, Variables, Positions),	% 10 is the first char
+	    ( read4(Tokens, 1200, Term, LeftOver),	% 1200 is the maximum
+	      read_all(LeftOver)			% precedence
+	    ; iso_read_syntax_error(Psc,Tokens,Positions),
+	      Term = Term			% To avoid an uninitialized variable
+	    ),
+	!,
+	Answer = Term,
+	xsb_stream_unlock(File).
 
 
-	/*****************************************/
-	/*  fmt_read, read_line                  */
-	/*****************************************/
-fmt_read(Fmt,Types,Result,Status) :-
-        stat_flag(10, File),
-	( atom(Fmt), callable(Types), compound(Result), var(Status)
-		     -> fmt_read(File,Fmt,Types,Result,Status)
-	    ;
-	    abort('Usage: fmt_read(+FmtString, types(+T1,+T2,...), result(-R1,-R2,...), -RetCode)')
-    	).
+#ifndef MULTI_THREAD
+get_synerr_psc(Psc):- term_psc('_$synerr'(_), Psc).
+#else 
+:- import xsb_thread_self/1 from thread.
+get_synerr_psc(Psc):- 
+	xsb_thread_self(Thread),
+	(Thread == 0 -> 
+	    term_psc('_$synerr'(_), Psc)
+          ; 
+	    concat_atom(['_$synerr',Thread],Atom),
+	    functor(Term,Atom,1),
+ 	    term_psc(Term, Psc)).
 
-read_line(Str, IsFullLine) :-
-   stat_flag(10, File),
-   ( var(Str), var(IsFullLine) -> file_read_line(File, Str, IsFullLine)
-     ;
-      abort('Usage: read_line(-InputStr, -IsFullLine)')
-   ).
-
+#endif
 
 %   read_all(+Tokens)
 %   checks that there are no unparsed tokens left over.
@@ -91,12 +125,11 @@ read_all(S) :- read_record_error(S).
 	/* something left over after entire expression. May always
 	   be detected earlier and hence redundant. */
 
-
 %   read_expect(Token, TokensIn, TokensOut)
 %   reads the next token, checking that it is the one expected, and
 %   giving an error message if it is not.  It is used to look for
 %   right brackets of various sorts (Prolog and HiLog ones), 
-%   as they're all we can be sure of.
+%   as they''re all we can be sure of.
 
 read_expect(Token, [Token|Rest], Rest) :- !.
 read_expect(_Token, S0, _) :-  
@@ -132,19 +165,28 @@ read_ambigop(F, L1, O1, R1, L2, O2) :-
         read_postfixop(F, L2, O2),
         read_infixop(F, L1, O1, R1), !.
 
-read_hilog_prefixop(Op, Prec, Prec) :-
-        '_$op'(Prec, hy, Op), !.
-read_hilog_prefixop(Op, Prec, Less) :-
-        '_$op'(Prec, hx, Op), !,
-        Less is Prec-1.
-
 
 %   read4(+TokenList, +Precedence, -Term, -LeftOver)
 %   parses a Token List in a context of given Precedence,
 %   returning a Term and the unread Left Over token list.
 
+/* TLS, 11/03: applied Paul Broome's patch to first clause.  This allows
+     proper parsing of a term abutting an infix operator on the right, e.g. 
+     a+(b/c) */
 read4([Token|RestTokens], Precedence, Term, LeftOver) :-
-        read5(Token, RestTokens, Precedence, Term, LeftOver).
+        read5(Token, RestTokens, Precedence, LeftTerm, LeftLeftOver),
+        (  (LeftLeftOver = [func(Functor)|Remain],
+	 read_infixop(Functor, _L, O, _R),
+	 Precedence >= O,
+	 \+ '_$hilog_symbol'(Functor),
+	 read4(Remain,O,RightTerm,LeftOver),
+	 'read=..'(Term,[Functor,LeftTerm,RightTerm]))
+          ; (Term = LeftTerm,
+	  LeftOver = LeftLeftOver)  ),
+%	  Tokens = [Token|RestTokens],
+	  !.
+%read4([Token|RestTokens], Precedence, Term, LeftOver) :-
+%        read5(Token, RestTokens, Precedence, Term, LeftOver).
 read4([], _, _, _) :-  
 	read_record_error([]).   /* a token was expected, i.e. after an "[" */
 
@@ -156,7 +198,7 @@ read4([], _, _, _) :-
 % HiLog terms with a variable functor of the following forms:
 %      a) Term ::= VAR '(' Arg Args ')' 
 %      b) Term ::= VAR '(' Arg Args ')' .... '(' Arg Args ')'
-read5(varfunc(Variable,_), [punc(40)|S1], Precedence, Answer, S) :- 
+read5(varfunc(Variable,_), [punc(CH_LPAREN)|S1], Precedence, Answer, S) :- 
 	!,
         read4(S1, 999, Arg1, S2),
         hilog_read_args(S2, RestArgs, S3), 
@@ -184,7 +226,7 @@ read5(atom(-), [real(Real)|S1], Precedence, Answer, S) :-
 % Takes care of the following HiLog terms:
 % 	a) Term ::= HiLog_Symbol '(' Arg, Args ')' 
 % 	b) Term ::= HiLog_Symbol '(' Arg, Args ')' .... '(' Arg, Args ')'
-read5(func(Functor), [punc(40)|S1], Precedence, Answer, S) :-
+read5(func(Functor), [punc(CH_LPAREN)|S1], Precedence, Answer, S) :-
         '_$hilog_symbol'(Functor),
 	!,
 	read4(S1, 999, Arg1, S2),
@@ -197,22 +239,21 @@ read5(func(Functor), [punc(40)|S1], Precedence, Answer, S) :-
 % (structures with a Prolog symbol as a functor):
 %	a) Term ::= Prolog_Symbol '(' Arg, Args ')'
 %	b) Term ::= Prolog_Symbol '(' Arg, Args ')' .... '(' Arg, Args ')'
-read5(func(Functor), [punc(40)|S1], Precedence, Answer, S) :-
+read5(func(Functor), [punc(CH_LPAREN)|S1], Precedence, Answer, S) :-
 	!,
-	read4(S1, 999, Arg1, S2),
-	rest_read_structure(Functor, Arg1, S2, Precedence, Answer, S).
+	(S1 = [punc(CH_RPAREN)|S2] % support p() syntax for 0-ary structure symbols (not strings)
+	 ->	'read=..'(Term,[Functor]),
+		read_exprtl0(S2,Term,Precedence,Answer,S)
+	 ;	read4(S1, 999, Arg1, S2),
+		rest_read_structure(Functor, Arg1, S2, Precedence, Answer, S)
+	).
 
 % Term ::= PreOp Term
 read5(atom(Functor), S0, Precedence, Answer, S) :-
         read_prefixop(Functor, Prec, Right),
+	avoid_nonsense_parentheses(S0),
 	!,
         read_aft_pref_op(Functor, Prec, Right, S0, Precedence, Answer, S).
-
-% Term ::= HiLogPreOp Term
-read5(atom(HiLogOP), S0, Precedence, Answer, S) :-
-        read_hilog_prefixop(HiLogOP, Prec, Right),
-	!,
-	read_aft_hilog_pref_op(HiLogOP, Prec, Right, S0, Precedence, Answer, S).
 
 % Term ::= Atom
 read5(atom(Atom), S0, Precedence, Answer, S) :- 
@@ -231,7 +272,7 @@ read5(real(Real), S0, Precedence, Answer, S) :-
 
 % Term ::= Integer '(' Arg Args ')'
 % Term ::= Integer '(' Arg Args ')' .... '(' Arg Args ')'
-read5(intfunc(Integer), [punc(40)|S1], Precedence, Answer, S) :-
+read5(intfunc(Integer), [punc(CH_LPAREN)|S1], Precedence, Answer, S) :-
         !,
         read4(S1, 999, Arg1, S2),
         hilog_read_args(S2, RestArgs, S3),
@@ -241,7 +282,7 @@ read5(intfunc(Integer), [punc(40)|S1], Precedence, Answer, S) :-
 
 % Term ::= Real '(' Arg Args ')'
 % Term ::= Real '(' Arg Args ')' .... '(' Arg Args ')'
-read5(realfunc(Real), [punc(40)|S1], Precedence, Answer, S) :-
+read5(realfunc(Real), [punc(CH_LPAREN)|S1], Precedence, Answer, S) :-
         !,
         read4(S1, 999, Arg1, S2),
         hilog_read_args(S2, RestArgs, S3),
@@ -250,17 +291,17 @@ read5(realfunc(Real), [punc(40)|S1], Precedence, Answer, S) :-
         hilog_read_exprtl0(S3, Term, Precedence, Answer, S).
 
 % Term ::= ';'
-read5(punc(59), S0, Precedence, Answer, S) :- 
+read5(punc(CH_SEMICOL), S0, Precedence, Answer, S) :- 
 	!,
         read_exprtl0(S0, ';', Precedence, Answer, S).
 
 % Term ::= '[]'
-read5(punc(91), [punc(93)|S1], Precedence, Answer, S) :- 
+read5(punc(CH_LBRACKET), [punc(CH_RBRACKET)|S1], Precedence, Answer, S) :- 
 	!,
         read_exprtl0(S1, [], Precedence, Answer, S).
 
 % Term ::= '[' Arg List ']'
-read5(punc(91), S1, Precedence, Answer, S) :- 
+read5(punc(CH_LBRACKET), S1, Precedence, Answer, S) :- 
 	!,
         read4(S1, 999, Arg1, S2),
         read_list(S2, RestArgs, S3), 
@@ -268,38 +309,44 @@ read5(punc(91), S1, Precedence, Answer, S) :-
         read_exprtl0(S3, [Arg1|RestArgs], Precedence, Answer, S).
 
 % Term ::= '(' Terms ')'
-read5(punc(40), S1, Precedence, Answer, S) :-
+read5(punc(CH_LPAREN), S1, Precedence, Answer, S) :-
 	!,
 	read4(S1, 1200, Term, S2),
 	rest_parenthesized(S2, Term, Precedence, Answer, S).
 
 % Term ::= '{' '}'
-read5(punc(123), [punc(125)|S1], Precedence, Answer, S) :- 
+read5(punc(CH_LBRACE), [punc(CH_RBRACE)|S1], Precedence, Answer, S) :- 
         !,
         read_exprtl0(S1, '{}', Precedence, Answer, S).
 
 % Term ::= '{' Terms '}'
-read5(punc(123), S1, Precedence, Answer, S) :- 
+read5(punc(CH_LBRACE), S1, Precedence, Answer, S) :- 
         !,
         read4(S1, 1200, Term, S2),
-        read_expect(punc(125), S2, S3), 
+        read_expect(punc(CH_RBRACE), S2, S3), 
         !,
-        read_exprtl0(S3, '{}'(Term), Precedence, Answer, S).
+	BracTerm =.. ['{}',Term],  % use current usermod '{}'/1 psc_rec
+        read_exprtl0(S3, BracTerm, Precedence, Answer, S).
 
 % Term ::= String
 read5(string(String), S0, Precedence, Answer, S) :- 
         !,
-	( string_as(list) -> str_tolist(String, Term)  %This is the case for 
-                                                       %the moment.
-	; string_as(string) -> Term = String
-	; string_as(constant) -> read_getcon(String, Term)
-	),
+	atom_codes(String, Term),
         read_exprtl0(S0, Term, Precedence, Answer, S).
 
 read5(_Token, S0, _, _, _) :- 
 	read_record_error(S0).     /* Found a token that cannot start an */
 	                           /* expression, i.e. "]", "," */
 
+
+% total hack which fixes commonly reported problem of O'Keefe reader in the
+% handling of atoms who also happen to be operators with precedence > 1000.
+% by Kostis.
+avoid_nonsense_parentheses([punc(Punc)|_]) :-
+	!,
+	Punc =\= CH_RPAREN, Punc =\= CH_COMMA,
+	Punc =\= CH_RBRACKET, Punc =\= CH_BAR.
+avoid_nonsense_parentheses(_).
 
 %   rest_read_structure(+Functor, +FirstArg, +TermList, 
 %			+Precedence, -Term, -LeftOver)
@@ -313,11 +360,11 @@ rest_read_structure(Functor, FirstArg, S1, Precedence, Answer, S) :-
 	!,
 	read_exprtl0(S2, Term, Precedence, Answer, S).
 rest_read_structure(Functor, FirstArg, S1, Precedence, Answer, S) :-
-	hilog_read_args(S1, RestArgs, [h_punc(41)|S2]),	% Found a term of the
-							% form: f(...)(...
+	%% Found a term of the form: f(...)(...
+	hilog_read_args(S1, RestArgs, [h_punc(CH_RPAREN)|S2]),
 	'read=..'(Term, [Functor,FirstArg|RestArgs]),
 	!,
-	hilog_read_exprtl0([h_punc(41)|S2], Term, Precedence, Answer, S).
+	hilog_read_exprtl0([h_punc(CH_RPAREN)|S2], Term, Precedence, Answer,S).
 
 
 %   rest_parenthesized(+TermList, +ReadTerm, +Precedence, -Term, -LeftOver)
@@ -325,12 +372,12 @@ rest_read_structure(Functor, FirstArg, S1, Precedence, Answer, S) :-
 %   top be parsed and the already read term ReadTerm that is parenthesized.
 
 rest_parenthesized(S1, Term, Precedence, Answer, S) :-	% Prolog term
-	read_expect(punc(41), S1, S2),
+	read_expect(punc(CH_RPAREN), S1, S2),
 	!,
 	read_exprtl0(S2, Term, Precedence, Answer, S).
 rest_parenthesized(S1, Term, Precedence, Answer, S) :-	% HiLog term.
-	read_expect(h_punc(41), S1, _),		% Keep this HiLog parenthesis
-	!,					% ...(messy, isn't it?)
+	read_expect(h_punc(CH_RPAREN), S1, _),	% Keep this HiLog parenthesis
+	!,					% ...(messy, isn''t it?)
 	is_a_hilog_term(Term),
 	hilog_read_exprtl0(S1, Term, Precedence, Answer, S).
 
@@ -345,10 +392,10 @@ read_args(S, _, _) :-
         read_record_error(S).     /* A "," or ")" was expected during the */
                                   /* processing of the arguments. */
 
-read_args1(punc(44),[Term|Rest],S,S1) :- 	% ','
+read_args1(punc(CH_COMMA),[Term|Rest],S,S1) :- 	% ','
         read4(S1, 999, Term, S2), !,
         read_args(S2, Rest, S).
-read_args1(punc(41),[],S,S).			% ')'
+read_args1(punc(CH_RPAREN),[],S,S).		% ')'
 
 
 %   hilog_read_args(+Tokens, -TermList, -LeftOver)
@@ -368,11 +415,13 @@ hilog_read_args(S, _, _) :-
         read_record_error(S).    /* A "," or one of the ")" was expected    */
                                  /* during the processing of the arguments. */
 
-hilog_read_args1(punc(44),[Term|Rest],S,S1) :- 	    % ','
+hilog_read_args1(punc(CH_COMMA),[Term|Rest],S,S1) :- 	    % ','
         read4(S1, 999, Term, S2), !,
         hilog_read_args(S2, Rest, S).
-hilog_read_args1(h_punc(41),[],[h_punc(41)|S],S).   % A non end-of term ')' keep it!
-hilog_read_args1(punc(41),[],[punc(41)|S],S).       % An end-of-term ')' keep it!
+%% A non end-of-term ')' keep it!
+hilog_read_args1(h_punc(CH_RPAREN),[],[h_punc(CH_RPAREN)|S],S).
+%% A non end-of-term ')' keep it!
+hilog_read_args1(punc(CH_RPAREN),[],[punc(CH_RPAREN)|S],S).
 
 
 %   read_list(+Tokens, -TermList, -LeftOver)
@@ -383,99 +432,23 @@ read_list([Tok|S1],Term,S) :-
 	!.
 read_list(S, _, _) :- 
 	read_record_error(S).	/* A "," or "|" or "]" was expected during */
-				/* the processing of the list's elements.  */
+				/* the processing of the list''s elements.  */
 
-read_list1(punc(44),[Term|Rest],S,S1) :-	% ','
+read_list1(punc(CH_COMMA),[Term|Rest],S,S1) :-	% ','
         read4(S1, 999, Term, S2), 
         !,
         read_list(S2, Rest, S).
-read_list1(punc(124),Rest,S,S1) :-		% '|'
+read_list1(punc(CH_BAR),Rest,S,S1) :-		% '|'
         read4(S1, 999, Rest, S2), 
 	!,
-        read_expect(punc(93), S2, S).		% ']'
-read_list1(punc(93),[],S,S).			% ']'
+        read_expect(punc(CH_RBRACKET), S2, S).		% ']'
+read_list1(punc(CH_RBRACKET),[],S,S).			% ']'
 
 
 /*===========================================================================*/
-/* read_aft_hilog_pref_op( +Op, +Prec, +ArgPrec, +Rest, 		     */
-/*			   +Precedence, -Ans, -LeftOver)		     */
+/*  read_aft_pref_op(+Op, +Prec, +ArgPrec, +Rest, 			     */
+/*		     +Precedence, -Ans, -LeftOver)			     */
 /*===========================================================================*/
-
-read_aft_hilog_pref_op(_, Oprec, _, S0, Precedence, _, _) :-
-        Precedence < Oprec, 
-        !,
-        read_record_error(S0).   /* The HiLog prefix operator Op is in */
-                                 /* context with precedence Precedence */
-read_aft_hilog_pref_op(HiLogOP, _Oprec, ArgPrec, S1, Precedence, Answer, S) :-
-	find_applied_term4(S1, ArgPrec, AppliedTerm, S2),
-	( '_$hilog_symbol'(HiLogOP) ->
-	    'read=..'(Term, [apply,HiLogOP,AppliedTerm])
-        ; 'read=..'(Term, [HiLogOP,AppliedTerm])
-        ),
-	!,
-	hilog_read_exprtl0(S2, Term, Precedence, Answer, S).
-%---------------------------------ADDED---------------------------------------%
-read_aft_hilog_pref_op(HiLogOP, _Oprec, _ArgPrec, S, _Precedence, HiLogOP, S).
-%-----------------I am not sure if it has any side-effects--------------------%
-
-
-%   find_applied_term4( +TokenList, +Precedence, -AppliedTerm, -LeftOver)
-%   parses the TokenList in the context of the given Precedence, returning the 
-%   term AppliedTerm to which the HiLog operator is applied, and the unread
-%   LeftOver token list.
- 
-find_applied_term4([Token|RestTokens], Precedence, AppliedTerm, LeftOver) :-
-        find_applied_term5(Token, RestTokens, Precedence, AppliedTerm, LeftOver).
-find_applied_term4([], _, _, _) :-  
-	read_record_error([]).   /* a token was expected, i.e. after an "[" */
-
-/*============================================================================*/
-/*   find_applied_term5( +Token, +RestTokens, +Precedence, 		      */
-/*			 -AppliedTerm, -LeftOver)			      */
-/*============================================================================*/
-
-%   In some of the first five clauses (1, 2, 4, 5) I did a dirty job. Namely, I 
-%   forced a "h_punc(41)" token to be added in the token list yet to be parced. 
-%   This allowed me to use the already defined "hilog_read_exprtl0/4" predicate 
-%   instead of declaring a new one. This predicate is used to read the rest  of 
-%   a HiLog term when a subterm of it is already read. I must confess that I do 
-%   not like what I did, but what do you expect to happen  when you are anxious 
-%   to see your progarm running as soon as possible? I am sure that this has no
-%   effect on the correctness of my program, but I still do not like it!
-
-find_applied_term5(varfunc(Variable,_), S1, _, Variable, [h_punc(41)|S1]) :- 
-	!.
-find_applied_term5(func(Functor), S1, _, Functor, [h_punc(41)|S1]) :- 
-	'_$hilog_symbol'(Functor), 
-	!.
-find_applied_term5(func(Functor), [punc(40)|S1], _, AppliedTerm, [h_punc(41)|S]) :-
-	read4(S1, 999, Arg1, S2),
-	hilog_read_args(S2, RestArgs, [h_punc(41)|S]),
-	!,
-	'read=..'(AppliedTerm, [Functor,Arg1|RestArgs]).
-find_applied_term5(integer(Integer), S1, _, Integer, [h_punc(41)|S1]) :-
-	!.
-find_applied_term5(real(Real), S1, _, Real, [h_punc(41)|S1]) :-
-	!.
-find_applied_term5(punc(40), S1, _, AppliedTerm, S2) :-
-	read4(S1, 999, AppliedTerm, S2),
-	( atom(AppliedTerm) -> 
-               '_$hilog_symbol'(AppliedTerm)  % The only atoms that can be parenthesized
-               ; true),                   % are the ones declared as HiLog symbols.
-	( read_expect(punc(41), S2, _) 
-	; read_expect(h_punc(41), S2, _)).
-find_applied_term5(atom(HiLogOP), S1, Precedence, AppliedTerm, S) :-
-	read_hilog_prefixop(HiLogOP, Prec, Right),
-	!,
-	read_aft_hilog_pref_op(HiLogOP, Prec, Right, S1, Precedence, AppliedTerm, S).
-find_applied_term5(_Token, S1, _, _, _) :-
-	read_record_error(S1).
-
-
-/*============================================================================*/
-/*  read_aft_pref_op(+Op, +Prec, +ArgPrec, +Rest, 			      */
-/*		     +Precedence, -Ans, -LeftOver)			      */
-/*============================================================================*/
 
 read_aft_pref_op(_, Oprec, _, S0, Precedence, _, _) :-
         Precedence < Oprec, 
@@ -484,19 +457,19 @@ read_aft_pref_op(_, Oprec, _, S0, Precedence, _, _) :-
 				/* with precedence Precedence.		*/
 read_aft_pref_op(Op, Oprec, _Aprec, S0, Precedence, Answer, S) :-
         read_peepop(S0, S1),
-        read_prefix_is_atom(S1, Oprec),	% can't cut but would like to
+        read_prefix_is_atom(S1, Oprec),	% can''t cut but would like to
         read_exprtl(S1, Oprec, Op, Precedence, Answer, S).
 read_aft_pref_op(Op, Oprec, Aprec, S1, Precedence, Answer, S) :-
         read4(S1, Aprec, Arg, S2),
         'read=..'(Term, [Op,Arg]),   %<--- This MAY NEED A CHANGE FOR HiLog!!!
-	!,		      % If Op is a HiLog symbol but not a HiLog Operator
+	!,		      % If Op is a HiLog symbol
         read_exprtl(S2, Oprec, Term, Precedence, Answer, S).
 
 
 %   The next clause fixes a bug concerning "mop dop(1,2)" where
 %   mop is monadic and dop dyadic with higher Prolog priority.
 
-read_peepop([atom(F), punc(40)|S1], [atom(F), punc(40)|S1]) :- !.   % '('
+read_peepop([atom(F), punc(CH_LPAREN)|S1], [atom(F), punc(CH_LPAREN)|S1]) :- !.
 read_peepop([atom(F)|S1], [infixop(F,L,P,R)|S1]) :- 
 	read_infixop(F, L, P, R).
 read_peepop([atom(F)|S1], [postfixop(F,L,P)|S1]) :- 
@@ -512,13 +485,15 @@ read_peepop(S0, S0).
 read_prefix_is_atom([Token|_], Precedence) :-
         read_prefix_is_atom(Token, Precedence).
 
-read_prefix_is_atom(infixop(_,L,_,_), P) :- L >= P.
+%%read_prefix_is_atom(infixop(_,L,_,_), P) :- L >= P.
+read_prefix_is_atom(infixop(Op,L,_,_), P) :-
+	L >= P, \+ (read_prefixop(Op,Pp,_), Pp =< L, Pp >= P).
 read_prefix_is_atom(postfixop(_,L,_), P) :- L >= P.
-read_prefix_is_atom(punc(41), _).			% ')'
-read_prefix_is_atom(punc(93), _).			% ']'
-read_prefix_is_atom(punc(125), _).			% '}'
-read_prefix_is_atom(punc(124), P) :- 1100 >= P.		% '|'
-read_prefix_is_atom(punc(44), P) :- 1000 >= P.		% ','
+read_prefix_is_atom(punc(CH_RPAREN), _).			% ')'
+read_prefix_is_atom(punc(CH_RBRACKET), _).			% ']'
+read_prefix_is_atom(punc(CH_RBRACE), _).			% '}'
+read_prefix_is_atom(punc(CH_BAR), P) :- 1100 >= P.		% '|'
+read_prefix_is_atom(punc(CH_COMMA), P) :- 1000 >= P.		% ','
 read_prefix_is_atom([],  _).
 
 
@@ -528,14 +503,15 @@ read_prefix_is_atom([],  _).
 %   term being constructed or not. The next tokens belong there if they
 %   are a ')(' pair. 
 
-hilog_read_exprtl0([h_punc(41),punc(40)|S1], Term, Precedence, Answer, S) :-
-        !,        % found a ')(' pair
+hilog_read_exprtl0([h_punc(CH_RPAREN),punc(CH_LPAREN)|S1],
+		   Term, Precedence, Answer, S) :-
+        !,			% found a ')(' pair
         read4(S1, 999, Arg1, S2),
         hilog_read_args(S2, RestArgs, S3),
         'read=..'(HiLogTerm, [apply,Term,Arg1|RestArgs]),
 	!,
 	hilog_read_exprtl0(S3, HiLogTerm, Precedence, Answer, S).
-hilog_read_exprtl0([punc(41)|Tokens], Term, Precedence, Answer, S) :- 
+hilog_read_exprtl0([punc(CH_RPAREN)|Tokens], Term, Precedence, Answer, S) :- 
         read_exprtl0(Tokens, Term, Precedence, Answer, S).
 hilog_read_exprtl0(Tokens, Term, Precedence, Answer, S) :- 
         read_exprtl0(Tokens, Term, Precedence, Answer, S).
@@ -564,19 +540,19 @@ read_exprtl01(atom(F),Term,Precedence,Answer,S,S1) :-
         read_postfixop(F, L2, O2), 
         !,
         read_exprtl([postfixop(F,L2,O2) |S1],0,Term,Precedence,Answer,S).
-read_exprtl01(punc(59), Term, Precedence, Answer, S, S1) :-	% ';'
+read_exprtl01(punc(CH_SEMICOL), Term, Precedence, Answer, S, S1) :-	% ';'
 	Precedence >= 1100, 
         !,
 	read4(S1, 1100, Next, S2), 
         !,
 	read_exprtl(S2, 1100, (Term;Next), Precedence, Answer, S).
-read_exprtl01(punc(44), Term, Precedence, Answer, S,S1) :-	% ','
+read_exprtl01(punc(CH_COMMA), Term, Precedence, Answer, S,S1) :-	% ','
         Precedence >= 1000, 
         !,
         read4(S1, 1000, Next, S2), 
         !,
         read_exprtl(S2, 1000, (Term,Next), Precedence, Answer, S).
-read_exprtl01(punc(124), Term, Precedence, Answer, S,S1) :-	% '|'
+read_exprtl01(punc(CH_BAR), Term, Precedence, Answer, S,S1) :-	% '|'
         Precedence >= 1100,
         !,
         read4(S1, 1100, Next, S2), 
@@ -595,9 +571,9 @@ read_cfexpr(var(_,_),      variable).
 read_cfexpr(integer(_),    integer).
 read_cfexpr(real(_),       real).
 read_cfexpr(string(_),     string).
-read_cfexpr(punc(40),      bracket).		% '('
-read_cfexpr(punc(91),      bracket).		% '['
-read_cfexpr(punc(123),     bracket).		% '{'
+read_cfexpr(punc(CH_LPAREN),      bracket).		% '('
+read_cfexpr(punc(CH_LBRACKET),      bracket).		% '['
+read_cfexpr(punc(CH_LBRACE),     bracket).		% '{'
 
 
 read_exprtl([Tok|S1], C, Term, Precedence, Answer, S) :-
@@ -619,19 +595,19 @@ read_exprtl1(postfixop(F,L,O), C, Term, Precedence, Answer, S, S1) :-
         'read=..'(Expr, [F,Term]),
         read_peepop(S1, S2),
         read_exprtl(S2, O, Expr, Precedence, Answer, S).
-read_exprtl1(punc(59), C, Term, Precedence, Answer, S, S1) :-	% ';'
+read_exprtl1(punc(CH_SEMICOL), C, Term, Precedence, Answer, S, S1) :-	% ';'
         Precedence >= 1100, 
         C < 1100, 
         !,
         read4(S1, 1100, Next, S2), /*!,*/
         read_exprtl(S2, 1100, (Term;Next), Precedence, Answer, S).
-read_exprtl1(punc(44), C, Term, Precedence, Answer, S, S1) :-	% ','
+read_exprtl1(punc(CH_COMMA), C, Term, Precedence, Answer, S, S1) :-	% ','
         Precedence >= 1000, 
 	C < 1000, 
 	!,
         read4(S1, 1000, Next, S2), /*!,*/
         read_exprtl(S2, 1000, (Term,Next), Precedence, Answer, S).
-read_exprtl1(punc(124), C, Term, Precedence, Answer, S, S1) :-	% '|'
+read_exprtl1(punc(CH_BAR), C, Term, Precedence, Answer, S, S1) :-	% '|'
         Precedence >= 1100, 
         C < 1100, 
         !,
@@ -666,32 +642,45 @@ is_a_hilog_term(_).   % Everything else is a HiLog term.
 %   report an error message and then decide that it is happy with the input
 %   after all.  Sorry about that.
 
-/* Modified by Kostis F. Sagonas to use HiLog's internal data structures */
+/* Modified by Kostis F. Sagonas to use HiLog''s internal data structures */
 /* (psc records) to record the number of syntax errors found.		 */
 
 read_record_error(List) :-
-	term_psc('_$synerr'(_), Psc), psc_prop(Psc, Loc),
+	term_psc('_$synerr'(_), Psc), 
+	psc_prop(Psc, Loc),
 	( Loc < 0, 
 		l_length(List, Length),
-		psc_set_prop(Psc, Length, 1)
+		psc_set_prop(Psc, Length)
 	; Loc >= 0
 	),
 	!,
 	fail.
 
-read_syntax_error(List) :-
+read_syntax_error(Psc,List) :-
 	increase_syntax_errors,
-	file_write0(2, '*** syntax error ***'),
-	file_nl(2),
-	term_psc('_$synerr'(_), Psc), psc_prop(Psc, AfterError),
+	file_nl(STDERR),
+	file_write0(STDERR, '*** syntax error '),
+	file_nl(STDERR),
+%	term_psc('_$synerr'(_), Psc), 
+	psc_prop(Psc, AfterError),
         l_length(List,Length),
         BeforeError is Length - AfterError,
+	file_write0(STDERR, '>>>   '),
         read_display_list(List, BeforeError, Rest),
-	file_nl(2),
-        file_write0(2, '*** may be here? *** '),
-	file_nl(2),
+        file_write0(STDERR, ' <--- HERE? ************ '),
+	file_nl(STDERR),
+        file_write0(STDERR, '>>>   '),
         read_display_list(Rest, AfterError, _),
-	file_nl(2), 
+	file_nl(STDERR),
+        file_write0(STDERR, '*** Discarding input ...  '),
+	file_nl(STDERR),
+	%% Don't print prompt, if --noprompt specified on cmd line
+	%% Useful when spawning xsb subprocesses, 
+	%% so they won't send junk back to the parent.
+	(    banner_control(noprompt)
+	 ->  true
+	 ;   file_write0(STDFDBK, '| ?- ')
+	),
 	!,
 	fail.	% Force the reader not to return until 
 		% it finds a term with no errors
@@ -700,29 +689,89 @@ increase_syntax_errors :-
 	conpsc('syntax errors', PSC),
 	psc_prop(PSC, N),
 	New_N is N + 1,
-	psc_set_prop(PSC, New_N, 1).
+	psc_set_prop(PSC, New_N).
 
 read_display_list(X, 0, X).
 read_display_list([Head|Tail], Count, Rest) :-
 	Count > 0,
         print_token(Head),
-        file_put(2, 32),	% print a blank
+        file_put(STDERR, 32),	% print a blank
         Count1 is Count-1, !,
         read_display_list(Tail, Count1, Rest).
 
 print_token(atom(X))		:- !, read_writecon(X).
 print_token(var(_V,X))		:- !, read_writecon(X).
 print_token(varfunc(_V,X))	:- !, read_writecon(X).		% For HiLog
-print_token(integer(X))		:- !, file_write0(2, X).
-print_token(real(X))		:- !, file_write0(2, X).
-print_token(intfunc(X))		:- !, file_write0(2, X).	% For HiLog
-print_token(realfunc(X))	:- !, file_write0(2, X).	% For HiLog
-print_token(punc(V))		:- !, file_put(2, V).
-print_token(h_punc(V))		:- !, file_put(2, V).		% For HiLog
+print_token(integer(X))		:- !, file_write0(STDERR, X).
+print_token(real(X))		:- !, file_write0(STDERR, X).
+print_token(intfunc(X))		:- !, file_write0(STDERR, X).	% For HiLog
+print_token(realfunc(X))	:- !, file_write0(STDERR, X).	% For HiLog
+print_token(punc(V))		:- !, file_put(STDERR, V).
+print_token(h_punc(V))		:- !, file_put(STDERR, V).	% For HiLog
 print_token(func(X))		:- !, read_writecon(X).
-print_token(tk_eoc)		:- !, file_put(2, 46).
+print_token(tk_eoc)		:- !, file_put(STDERR, 46).
 print_token(X)			:-    read_writecon(X).
 
+%--------------------------------------------------------------------------
+
+% Last arg is list of token start positions
+iso_read_syntax_error(Psc,Tokens,Positions):- 
+	psc_prop(Psc, After),
+	length(Tokens,L),				
+	Length is L - After,		     
+    iso_read_display_list(Tokens, Length, PrintList,Tail,Remaining),
+	Tail = [' <--- HERE? ************ 
+++                              '|T1],
+    iso_read_display_list(Remaining, After, PrintList1,NewTail,_Remaining),
+	SpaceLength is 2*Length,
+	make_spaces(SpaceLength,SpaceList,T2),
+	T1 = SpaceList,
+	T2 = PrintList1,
+	NewTail = [],
+	cvt_strings(PrintList,PrintListNoStr),
+	concat_atom(PrintListNoStr,NewMessage),
+	( current_prolog_flag(errors_with_position,on) -> 
+		(Index is Length + 1,
+		ith(Index,Positions,Position),
+		syntax_error(NewMessage-Position)) 
+		;
+		syntax_error(NewMessage)).		
+
+
+cvt_strings([],[]).
+cvt_strings([T|Ts],NTs) :-
+	(T = string(NT)
+	 ->	NTs = ['"',NT,'"'|NTs0]  % for error message
+	 ;	NTs = [T|NTs0]
+	),
+	cvt_strings(Ts,NTs0).
+
+make_spaces(0,T,T):-!.
+make_spaces(N,[' '|R],Handle):-
+	N1 is N - 1,
+	make_spaces(N1,R,Handle).
+
+iso_read_display_list(Rest, 0, H,H,Rest).
+iso_read_display_list([Head|Tail], Count, [NewHead,' '|Rest],Out,Remaining) :-
+	Count > 0,
+        strip_token(Head,NewHead),
+        Count1 is Count-1, !,
+        iso_read_display_list(Tail, Count1, Rest,Out,Remaining).
+
+strip_token(atom(X),X):- !.
+strip_token(var(_V,X),X):- !.
+strip_token(varfunc(_V,X),X):- !.
+strip_token(integer(X),X):- !.
+strip_token(real(X),X):-!.
+strip_token(intfunc(X),X):-!.
+strip_token(realfunc(X),X):-!.
+strip_token(punc(V),X):- !,atom_codes(X,[V]).
+strip_token(h_punc(V),X):- !,atom_codes(X,[V]).
+strip_token(func(X),X):- !.
+strip_token(tk_eoc,'.'):- !.
+strip_token(X,X).
+
+%--------------------------------------------------------------------------
 
 /*  The following predicates are sort of standard, but to avoid backward  */
 /*  imports, they are included here.					  */
@@ -758,10 +807,9 @@ read_newargs([Arg|Args], I, Term) :-
 l_length([], 0).
 l_length([_|Y], N) :- l_length(Y, N1), N is N1 + 1.
 
-read_writecon(X) :- file_write0(2, X).
+read_writecon(X) :- file_write0(STDERR, X).
 
-
-/*==========================================================================*/
+/*==============================================================*/
 /*									    */
 %   read_tokens(+File, -TokenList, -Dictionary)
 %   returns a list of tokens.  It is needed to "prime" read_tokens/2
@@ -770,20 +818,22 @@ read_writecon(X) :- file_write0(2, X).
 %   The way end of file is handled is that everything else FAILS when it
 %   hits character "26", sometimes printing a warning.  It might have been
 %   an idea to return the atom 'end_of_file' instead of the same token list
-%   that you'd have got from reading "end_of_file. ", but (a) this file is
+%   that you''d have got from reading "end_of_file. ", but (a) this file is
 %   for compatibility, and (b) there are good practical reasons for wanting
 %   this behaviour. 
 /*									    */
-/*==========================================================================*/
+/*==============================================================*/
 
-read_tokens(File, Char, TokenList, Dict) :-
+% Version with extra arg returning a list of token char start positions
+read_tokens(File, Char, TokenList, Dict, Positions) :-
 %	read_next_token(Char, Type, Value, NextChar),	      % Prolog Version
+	file_pos(File,Pos1),
 	read_next_token_c(File, Char, Type, Value, NextChar), % C Version
-	( Type == tk_eoc -> TokenList = []
-	; ( Type == tk_eof -> TokenList = [atom(end_of_file)]
+	( Type == tk_eoc -> (TokenList = [], Positions = [])
+	; ( Type == tk_eof -> (TokenList = [atom(end_of_file)], Positions = [Pos1])
 	  ; read_proc_token(Type, Value, Token, Dict),
-	    TokenList = [Token|Rest],
-	    read_tokens(File, NextChar, Rest, Dict)
+	    TokenList = [Token|Rest], Positions = [Pos1|RestPositions], 
+	    read_tokens(File, NextChar, Rest, Dict, RestPositions)
           )
 	).
 
@@ -795,7 +845,7 @@ read_proc_token(tk_atom, V, atom(Sym), _Dict) :-
 read_proc_token(tk_list, V, string(String), _Dict) :-
 	read_getcon(V, String).
 read_proc_token(tk_punc, V, punc(V), _Dict).
-read_proc_token(tk_hpunc, V, h_punc(V), _Dict).			% For HiLog
+read_proc_token(tk_hpunc, V, h_punc(V), _Dict).		% For HiLog
 read_proc_token(tk_varfunc, V, varfunc(R,Name), Dict) :-	% For HiLog
 	read_getcon(V, Name),
 	read_lookup(Dict, vv(Name, R)).
@@ -807,12 +857,12 @@ read_proc_token(tk_intfunc, V, intfunc(V), _Dict).
 read_proc_token(tk_realfunc, V, realfunc(V), _Dict).
 read_proc_token(tk_vvar, V, var(R, Name), Dict) :-
 	read_getcon(V, Name),
-	( Name = '_' -> true
+	( Name = '_' -> read_add(Dict,vv(Name,R))
 	; read_lookup(Dict, vv(Name, R))
 	).
 read_proc_token(tk_vvarfunc, V,  varfunc(R,Name), Dict) :-    % For HiLog
         read_getcon(V, Name),
-	( Name = '_' -> true
+	( Name = '_' -> read_add(Dict,vv(Name,R))
         ; read_lookup(Dict, vv(Name, R))
         ).
 read_proc_token(tk_eoc, _, tk_eoc, _).
@@ -830,15 +880,14 @@ read_lookup([X|_], X) :- !.
 read_lookup([_|T], X) :-
         read_lookup(T, X). 
 
+% to add anonymous variables
+read_add(Dict,Pair) :- var(Dict), !, Dict = [Pair|_].
+read_add([_|Dict],Pair) :- read_add(Dict,Pair).
 
 %   gets the constant with the the name "String"
 
-read_getcon(String, Con) :-
-	term_type(test, T),
-	( T =:= 2 -> str_insert(String, Con)	% in buffer
-	; T =:= 5 -> str_insert(String, Con)
-	; T =:= 1 -> psc_insert(String, 0, Psc, 0), term_new(Psc, Con)
-	).
+%read_getcon(String, Con) :- intern_string(String, Con).
+read_getcon(String, String).
 
 
 %   reads the next token from the input file when the C tokenizer is used.
@@ -847,7 +896,6 @@ read_next_token_c(File, Char, Type, Value, NextChar) :-
 	file_gettoken(File, Char, Type0, Value, NextChar),  %Imported from 
                                                             %  machine.P
 	token_type(Type0, Type).
-
 
 %  token_type(+C_Token_Type, -Prolog_Token_Type)
 %  Prolog_Token_Type is the corresponding token type to the C_Token_Type.
@@ -871,7 +919,6 @@ token_type(13, tk_hpunc).	% Added for HiLog to distinguish terms of the
 				% the scanner thows away all the spaces. 
 token_type(14, tk_intfunc).	% Added for terms of the form: integer( ...
 token_type(15, tk_realfunc).	% Added for terms of the form: real( ...
-
 
 /* this will go away in the future; its purpose is to make sure that
    sysinitrc.P loads xsb_read.P before users have a chance to load

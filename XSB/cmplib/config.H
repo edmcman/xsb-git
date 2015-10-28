@@ -18,10 +18,11 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: config.H,v 1.1.1.1 1998-11-05 17:00:04 sbprolog Exp $
+** $Id: config.H,v 1.4 2010-08-19 15:03:35 spyrosh Exp $
 ** 
 */
 
 
-:- export default_assert_size/1, default_compile_size/1.
+:- export default_assert_size/1.
+%%:- export default_compile_size/1.
 

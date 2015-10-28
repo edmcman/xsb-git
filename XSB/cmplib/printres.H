@@ -1,5 +1,5 @@
 /* File:      printres.H
-** Author(s): Saumya Debray, Terrance Swift
+** Author(s): Saumya Debray
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -19,16 +19,14 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: printres.H,v 1.1.1.1 1998-11-05 17:00:12 sbprolog Exp $
+** $Id: printres.H,v 1.5 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
 
-:- export print_result/1, show_internal_result/1.
+:- export print_result/1.
 
 :- import option/1 from auxlry.
-:- import freeze/1 from prof_sbp.
-:- import recorded/3 from record.
 :- import get_symtab/2 from parse.
-:- import extract_symlist/3, sym_prop/2, sym_scan/3, sym_name/3 from symtab.
-:- import write/1, nl/0, ttywritenl/1, arg/3, tab/1, functor/3 from standard.
+:- import extract_symlist/3, sym_name/3 from symtab.
+:- import write/1, nl/0, ttywritenl/1 from standard.

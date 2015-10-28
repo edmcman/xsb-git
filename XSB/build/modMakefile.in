@@ -25,7 +25,7 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: modMakefile.in,v 1.2 1998-12-21 06:01:13 kifer Exp $
+## $Id: modMakefile.in,v 1.6 2010-08-19 15:03:35 spyrosh Exp $
 ## 
 
 ## DON'T EDIT FROM HERE TIL NEXT NOTICE
@@ -38,7 +38,6 @@ CC=@CC@
 CPP=@CPP@
 CFLAGS=@CFLAGS@
 # Flags for files requiring lower optimization level (emuloop.c)
-LCFLAGS=@LCFLAGS@
 CPPFLAGS=@CPPFLAGS@
 LDFLAGS=@LDFLAGS@
 

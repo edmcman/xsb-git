@@ -18,12 +18,12 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: dynload.h,v 1.1.1.1 1998-11-05 16:55:15 sbprolog Exp $
+** $Id: dynload.h,v 1.7 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
 
 
-extern byte *load_obj(char *, Psc, char *);
+extern byte *load_obj(CTXTdeclc char *, Psc, char *);
 
 /*----------------------------------------------------------------------*/

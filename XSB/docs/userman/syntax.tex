@@ -1,11 +1,12 @@
 \chapter{Syntax} \label{Syntax}
 %==============================
 
-The syntax of \ourprolog\ is taken from C-Prolog with extensions.
-This chapter mainly introduces the extensions.
-The syntax of \ourprolog\ is that of the HiLog language.  The syntax
-of HiLog is a proper superset of the Prolog syntax.
-
+The syntax of XSB is based on ISO Prolog~\cite{ISO-Prolog}, although
+it lacks a few of the ISO standard's somewhat arcane features.
+Beginning with \version, XSB supports Unicode through UTF-8 atoms as
+described in Section~\ref{sec:atoms}.  XSB's reader also contains extensions to
+support HiLog~\cite{ChKW93}, which adds certain features of
+second-order syntax to Prolog.
 
 \section{Terms} \label{TermSyntax}
 %=================================
@@ -14,21 +15,70 @@ A {\em HiLog term} can be constructed from any logical symbol or a term
 followed by any finite number of arguments.  In any case, a {\em term}
 is either a {\em constant}, a {\em variable}, or a {\em compound term}.
 
-A {\em constant} is either a {\em number} (integer or floating-point) or an
-{\em atom}.  Constants are definite elementary objects, and correspond to
-proper nouns in natural language.
-
+A {\em constant} is either a {\em number} (integer or floating-point)
+or an {\em atom}~\footnote{This Prolog usage contradicts the usage of
+  the word ``atom'' in logic as short for ``atomic formula''.}  Constants
+are definite elementary objects, and correspond to proper nouns in
+natural language.
 
 \subsection{Integers}
-The printed form of an integer in HiLog consists of a sequence of digits
-optionally preceded by a minus sign ({\tt '-'}).  These are normally 
-interpreted as base $10$ integers.  It is also possible to enter integers
-in other bases ($2$ through $36$); this can be done by preceding the digit
-string by the base (in decimal) followed by an apostrophe ({\tt '}).  If a
-base greater than $10$ is used, the characters {\tt A-Z} or {\tt a-z} are
-used to stand for digits greater than $9$.
+\index{syntax!integers}
+\index{syntax!integers!binary}
+\index{syntax!integers!octal}
+\index{syntax!integers!hexidecimal}
+\subsubsection{ISO Integers}
+%
+The printed form of an integer normally consists of a sequence of
+digits optionally preceded by a minus sign ({\tt '-'}), interpreted,
+of course, as base $10$ integers.  It is also possible to enter
+integers in other bases: 
+\begin{itemize}
+\item {\tt 0b}{\em nnn} represents an integer in base 2, e.g., 
+\begin{verbatim}
+                        | ?- X = 0b110.
 
-Using these rules, examples of valid integer representations in \ourprolog\ are:
+                        X = 6
+\end{verbatim}
+
+\item {\tt 0o}{\em nnn} represents an integer in base 8, e.g., 
+\begin{verbatim}
+                        | ?- X = 0o110.
+
+                        X = 72
+\end{verbatim}
+
+\item {\tt 0x}{\em nnn} represents an integer in base 16, e.g., 
+\begin{verbatim}
+                        | ?- X = 0x110.
+
+                        X = 272
+\end{verbatim}
+\end{itemize}
+\index{character code constancts}
+Character code constants are integers of the form {\tt 0'}{\em nnn},
+where nnn is the decimal form of any UTF-8 codepoint.  E.g.,
+\begin{verbatim}
+                        | ?- 0'A = X
+
+                        X = 65
+\end{verbatim}
+Escape characters (cf. Section~\ref{sec:atoms}) can be written
+similarly (if this is ever needed):
+\begin{verbatim}
+                        | ?- 0'\n = X
+
+                        X = 10
+\end{verbatim}
+
+\subsubsection{Other Integer Representations}
+
+It is also possible to enter integers in bases $2$ through $36$; this
+can be done by preceding the digit sequence by the base (in decimal)
+followed by an apostrophe ({\tt '}).  If a base greater than $10$ is
+used, the characters {\tt A-Z} or {\tt a-z} are used to stand for
+digits greater than $9$.
+
+Using these rules, examples of valid integer representations in XSB are:
 \begin{verbatim}
            1    -3456    95359    9'888    16'1FA4    -12'A0    20'
 \end{verbatim}
@@ -41,22 +91,24 @@ Note that the following:
 \begin{verbatim}
                    +525     12'2CF4     37'12     20'-23
 \end{verbatim}
-are not valid integers of \ourprolog.
+are not valid integers of XSB.
 
-A base of $0$ (zero) will return the ASCII code of the (single) character
-after the apostrophe; for example,
-\begin{verbatim}
-                                 0'A = 65
-\end{verbatim}
+Character code constants, mentioned above, can be seen as integers in ``base zero''.
+
+%\begin{CJK}{UTF8}
+%今
+%\end{CJK}
 
 
+\index{syntax!floats}
 \subsection{Floating-point Numbers}
-A HiLog floating-point number consists of a sequence of digits with an
-embedded decimal point, optionally preceded by a minus sign ({\tt '-'}), and
-optionally followed by an exponent consisting of uppercase or lowercase
-{\tt 'E'} and a signed base $10$ integer.
+XSB supports ISO floating-point numbers, which consist of a sequence
+of digits with an embedded decimal point, optionally preceded by a
+minus sign ({\tt '-'}), and optionally followed by an exponent
+consisting of uppercase or lowercase {\tt 'E'} and an optionally
+signed base $10$ integer.
 
-Using these rules, examples of HiLog floating point numbers are:
+Using these rules, examples of floating point numbers are:
 \begin{verbatim}
               1.0    -34.56    817.3E12    -0.0314e26    2.0E-1
 \end{verbatim}
@@ -64,60 +116,100 @@ Note that in any case there must be at least one digit before, and one digit
 after, the decimal point.
 
 
-\subsection{Atoms}
-A HiLog atom is identified by its name, which is a sequence of up to 1000
-characters (other than the null character).  Just like a Prolog atom, a HiLog
-atom can be written in any of the following forms:
-\begin{itemize}
-\item Any sequence of alphanumeric characters (including {\tt '\_'}), starting
-      with a lowercase letter.
+\index{syntax!atoms}
+\index{syntax!escaped characters}
+\subsection{Atoms} \label{sec:atoms}
+\index{Unicode!UTF-8}
+An atom consists of a sequence of characters that follow the following rules.
 
-\item Any sequence from the following set of characters (except of the
-      sequence {\tt '/*'}, which begins a comment):
+\begin{itemize}
+\item {\em Non-guoted Atoms} begin with the ASCII character {\tt
+  a}-{\tt z} and are followed by a sequence of {\em ISO alphanumeric characters}: {\tt
+  a}-{\tt z}, {\tt A}-{\tt Z}, {\tt 0}-{\tt 9}, and underscore {\tt \_}.
+%
+\item {\em Quoted Atoms} begin and end with the ASCII character \verb|'| and may contain any sequence of 
+\begin{itemize}
+\item Printable UTF-8 characters
+
+\item Meta-escaped quotes.  E.g., 
+\begin{verbatim}
+                        | ?- X = 'a''b'.
+
+                        X = a'b
+\end{verbatim}
+(Unfortunately, the current version of XSB does not support escaped
+quotes (\verb|\'|).)
+\item ISO escape characters and sequences
+\begin{itemize}
+\item \verb|\b| the newline character (ASCII 7).
+
+\item \verb|\b| the newline character (ASCII 8).
+
+\item \verb|\f| the form feed character (ASCII 12).
+
+\item \verb|\n| the newline character (ASCII 10).
+
+\item \verb|\r| the carriage return character (ASCII 13).
+
+\item \verb|\t| a tab character (ASCII 9).
+
+\item \verb|\v| a vertical tab character (ASCII 11).
+
+\item Octal escapes of the form \verb|\nnn\|, where {\tt nnn} is the octal number corresponding to an ASCII code.  E.g., 
+\begin{verbatim}
+                        | ?- write('\60\').
+                        0
+\end{verbatim}
+\item Hexidecimal escapes of the form \verb|\xnn|, where {\tt nn} is
+  the hexidecimal number corresponding to an ASCII code~\footnote{The
+    current version of XSB differs from the ISO specification in that
+    hexidecimal escapes do not have a trailing slash.}.  .  E.g.,
+\begin{verbatim}
+                        | ?- write('\30\').
+                        0
+\end{verbatim}
+\end{itemize}
+\item UTF-8 escape sequences have the form \verb|\unnnn| where {\em
+  nnnn} is the hexidecimal number corresponding to a UTF-8 codepoint.  
+\end{itemize}
+\item {\em Operator-based Atoms} are defined as any sequence from the following set
+  of characters (except of the sequence {\tt '/*'}, which begins a
+  comment):
       \begin{verbatim}
                      + - * / \ ^ < > = ` ~ : . ? @ # &
       \end{verbatim}
+Examples of such atoms are:
+\begin{verbatim}
+               ^=..   ::=   ===
+\end{verbatim}
 
-\item Any sequence of characters delimited by single quotes, such as:
-      \begin{verbatim}
-                         'sofaki'    '%'    '_$op'
-      \end{verbatim}
-      If the single quote character is to be included in the sequence it must
-      be written twice. For example:
-      \begin{verbatim}
-                             'don''t'      ''''
-      \end{verbatim}
-
-\item Any of the following:
+\item {\em Special Atoms} are
       \begin{verbatim}
                                  !  ;  []  {}
       \end{verbatim}
-      Note that the bracket pairs are special. While {\tt '[]'} and {\tt '\{\}'}
-      are atoms, {\tt '['}, {\tt ']'}, {\tt '\{'}, and {\tt '\}'} are not.
-      Like Prolog, the form {\tt [X]} is a special notation for lists
-      (see section~\ref{Lists}), while the form {\tt \{X\}} is just ``syntactic
-      sugar'' for the term {\tt '\{\}'(X)}.
+      Note that the bracket pairs are special. While {\tt '[]'} and
+      {\tt '$\{\}$'} are atoms, {\tt '['}, {\tt ']'}, {\tt '$\{$'},
+      and {\tt '$\}$'} are not~\footnote{The form {\tt [X]} is a
+        special notation for lists (see Section~\ref{Lists}), while
+        the form {\tt $\{$X$\}$} is just ``syntactic sugar'' for the
+        term {\tt '$\{\}$'(X)}.}.
 \end{itemize}
 
-Examples of HiLog atoms are:
-\begin{verbatim}
-               h   foo   ^=..   ::=   'I am also a HiLog atom'   []
-\end{verbatim}
 
 
 \subsection{Variables}
-Variables may be written as any sequence of alphanumeric characters
-(including {\tt '\_'}) beginning with either a capital letter or {\tt '\_'}.
-For example:
+Variables may be written as any sequence of (ASCII) ISO alphanumeric
+characters  beginning with either a capital
+letter or {\tt '\_'}.  For example:
 \begin{verbatim}
                       X   HiLog   Var1   _3   _List
 \end{verbatim}
 
-If a variable is referred to only once in a clause, it does not need to be
-named and may be written as an {\em anonymous variable}, represented by a
-single underscore character {\tt '\_'}.  Any number of anonymous variables
-may appear in a HiLog clause; all of these variables are read as distinct
-variables.  Anonymous variables are not special at runtime.
+If a variable is referred to only once in a clause, it does not need
+to be named and may be written as an {\em anonymous variable},
+represented by a single underscore character {\tt '\_'}.  Any number
+of anonymous variables may appear in a clause; all of these variables
+are read as distinct variables.  
 
 
 \subsection{Compound Terms}
@@ -248,7 +340,7 @@ readability. The above examples could have been written equally well as:
 \end{verbatim}
 
 For convenience, a further notational variant is allowed for lists of
-integers that correspond to ASCII character codes.  Lists written in this
+integers that correspond to UTF-8< character codes.  Lists written in this
 notation are called {\em strings}.  For example,
 \begin{verbatim}
                             "I am a HiLog string"
@@ -362,9 +454,9 @@ Assuming that the following declarations of parameter symbols have taken place,
 \end{verbatim}
 \end{minipage}
 \end{center}
-before the compound terms of page~\pageref{some_compound_terms} were read by
-\ourprolog, the encoding of these terms in predicate calculus using the
-described transformation is as follows:
+before the compound terms of page~\pageref{some_compound_terms} were
+read by XSB, the encoding of these terms in predicate calculus using
+the described transformation is as follows:
 \begin{center}
 \begin{minipage}{4.5in}
 \begin{verbatim}
@@ -439,26 +531,27 @@ first (left-hand) subexpression must be of lower precedence; the right-hand
 subexpression can be of the same precedence as the main operator.
 {\em Left-associative} operators (type {\tt 'yfx'}) are the other way around.
 
-An atom named {\tt Name} can be declared as an operator of type {\tt Type} and
-precedence {\tt Precedence} by the command;
-\begin{verbatim}
-                    :- op(Precedence, Type, Name).
-\end{verbatim}
-The same command can be used to redefine one of the predefined \ourprolog\
-operators (see appendix~\ref{operator_list}).  However, it is not allowed to
-alter the definition of the comma ({\tt ','}) operator.  An operator
-declaration can be cancelled by redeclaring the {\tt Name} with the same
-{\tt Type}, but {\tt Precedence} 0.
+An atom named {\tt Name} can be declared as an operator of type {\tt
+Type} and precedence {\tt Precedence} by the command;
+
+\begin{description}
+\isoitem{op(+Precedence,+Type,+Name)}{op/3}
+\end{description}
+%
+The same command can be used to redefine one of the predefined XSB
+operators (obtainable via {\tt current\_op/3}).  However, it is not
+allowed to alter the definition of the comma ({\tt ','}) operator.  An
+operator declaration can be cancelled by redeclaring the {\tt Name}
+with the same {\tt Type}, but {\tt Precedence} 0.
 
 As a notational convenience, the argument {\tt Name} can also be a list of
 names of operators of the same type and precedence.
 
-It is possible to have more than one operator of the same name, so long as
-they are of different kinds:  infix, prefix, or postfix.  An operator of any
-kind may be redefined by a new declaration of the same kind.  Declarations
-for all these built-in operators can be found in appendix~\ref{operator_list}.
-For example, the built-in operators {\tt '+'} and {\tt '-'} are as if they had
-been declared by the command:
+It is possible to have more than one operator of the same name, so
+long as they are of different kinds: infix, prefix, or postfix.  An
+operator of any kind may be redefined by a new declaration of the same
+kind.  For example, the built-in operators {\tt '+'} and {\tt '-'} are
+as if they had been declared by the command:
 \begin{verbatim}
                        :- op(500, yfx, [+,-]).
 \end{verbatim}
@@ -479,12 +572,12 @@ or pictorially:
                                 1   2
 \end{verbatim}
 
-In \ourprolog, the list functor {\tt '.'/2} is one of the standard operators, 
+In XSB, the list functor {\tt '.'/2} is one of the standard operators,
 that can be thought as declared by the command:
 \begin{verbatim}
                           :- op(661, xfy, .).
 \end{verbatim}
-So, in \ourprolog,
+So, in XSB,
 \begin{verbatim}
                                   1.2.[]
 \end{verbatim}
@@ -496,17 +589,17 @@ represents the structure
                                      / \
                                     2   []
 \end{verbatim}
-Contrasting this picture with the picture above for {\tt 1-2+3} shows the
-difference between {\tt 'yfx'} operators where the tree grows to the left,
-and {\tt 'xfy'} operators where it grows to the right.  The tree cannot
-grow at all for {\tt 'xfx'} type operators.  It is simply illegal to combine
-{\tt 'xfx'} operators having equal precedences in this way.
+Contrasting this picture with the picture above for {\tt 1-2+3} shows
+the difference between {\tt 'yfx'} operators where the tree grows to
+the left, and {\tt 'xfy'} operators where it grows to the right.  The
+tree cannot grow at all for {\tt 'xfx'} type operators.  It is simply
+illegal to combine {\tt 'xfx'} operators having equal precedences in
+this way.
 
 If these precedence and associativity rules seem rather complex, remember
 that you can always use parentheses when in any doubt.
 
-In \ourprolog, at the time when this is written, the possible types for
-prefix operators are:
+In \version{} of XSB the possible types for prefix operators are:
 \begin{verbatim}
                       fx       fy       hx       hy
 \end{verbatim}
@@ -515,8 +608,8 @@ and the possible types for postfix operators are:
                                xf       yf
 \end{verbatim}
 
-We end our discussion about operators by just mentioning that prefix operators
-of type {\tt hx} and {\tt hy} are {\em proper HiLog operators}.  The discussion 
-of proper HiLog operators and their properties is deferred for the manual
-of a future version.
+We end our discussion about operators by mentioning that prefix
+operators of type {\tt hx} and {\tt hy} are {\em proper HiLog
+  operators}.  The discussion of proper HiLog operators and their
+properties is deferred for the manual of a future version.
 

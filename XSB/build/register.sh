@@ -6,47 +6,28 @@ cat <<EOF
 
 The installation process is now complete. The log is in: Installation_summary
 
-We shall greatly appreciate, if you would agree to send us this log.
+We would like to ask you to email this log to us.
 Installation logs help the XSB group to keep track of the usage of the
-system on different architectures and to focus its efforts on the 
-architectures that are used more frequently.
+system on different architectures and to isolate problems more easily.
 
-The log will be sent automatically to  \`xsb-contact@cs.sunysb.edu'
+The log will be sent automatically to  xsb-installation@lists.sourceforge.net
 Would you like to send us the installation log? (y/n): y
 EOF
 
 read sendlog
 
-if test "$sendlog" != "n" -a "$sendlog" != "no" ; then
+if test "$sendlog" != "n" -a "$sendlog" != "no" -a "$sendlog" != "N" ; then
     (cat sendlog.msg Installation_summary \
-	| mail xsb-contact@cs.sunysb.edu) \
+	| mail xsb-installation@lists.sourceforge.net) \
     && echo "" ; echo "Thank you!"; echo ""
 fi
 
-if test ! -f "$HOME/.xsb/registration" ; then
+cat <<EOF
+Should you find a bug in XSB, please report it using our bug tracking system at
 
-    cat <<EOF
-*******************************************************************************
+	http://sourceforge.net/bugs/?group_id=1176 
 
-Now, the final step of the installation procedure is to register you as  
-an XSB user.  This will be done by automatically sending an e-mail  
-message to  \`xsb-contact@cs.sunysb.edu'
-   
-We strongly encourage you to register.  If you do so, you will be	  
-included in a mailing list for future releases and major bug-fixes.  
+and also to  xsb-development@lists.sourceforge.net
 
-Would you like to register as an XSB user? (y/n): y
 EOF
 
-    read register
-
-    if test "$register" != "n" -a "$register" != "no" ; then
-	(cat registration.msg | mail xsb-contact@cs.sunysb.edu \
-	    && echo ""; \
-		echo "Thank you for registering as an XSB user!"); echo ""
-
-	#make sure .xsb/ exists
-	test -d "$HOME/.xsb" || mkdir "$HOME/.xsb"
-	date > "$HOME/.xsb/registration"
-    fi
-fi

@@ -18,37 +18,45 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: sysinitrc.P,v 1.3 1998/11/15 01:03:24 kifer Exp $
+** $Id: sysinitrc.P,v 1.13 2004/03/13 21:03:22 dwarren Exp $
 ** 
 */
 
 
 %% This file is consulted from loader.P
 
+:- compiler_options([xpp_on,sysmod]).
 
-:- import stat_flag/2, str_cat/3, stat_set_flag/3, is_backslashing_os/0,
-     	  fmt_write_string/3, slash/1
-   from machine.
-:- import xsb_configuration/2 from configuration.
+#include "flag_defs_xsb.h"
 
+
+:- import stat_set_flag/2 from machine.
+:- import xsb_configuration/2 from xsb_configuration.
+
+:- thread_shared library_directory/1.
 :- dynamic library_directory/1.
 
-:-
-   %% Add the package library to the search path
+:- %% Add the packages dir to the search path
    xsb_configuration(packagesdir, LibDir1),
    assert(library_directory(LibDir1)),
 
    %% Add the configuration-INDEPENDENT SITE library to the search path
-   xsb_configuration(site_libdir, LibDir2),
-   assert(library_directory(LibDir2)),
+   (xsb_configuration(site_libdir, LibDir2)
+   -> assert(library_directory(LibDir2))
+   ;  true
+   ),
 
    %% Add the configuration-SPECIFIC SITE library to the search path
-   xsb_configuration(site_config_libdir, LibDir3),
-   assert(library_directory(LibDir3)),
+   (xsb_configuration(site_config_libdir, LibDir3)
+   -> assert(library_directory(LibDir3))
+   ;  true
+   ),
 
    %% Add the SYSTEM configuration-SPECIFIC library to the search path
-   xsb_configuration(config_libdir, LibDir4),
-   assert(library_directory(LibDir4)),
+   (xsb_configuration(config_libdir, LibDir4)
+   -> assert(library_directory(LibDir4))
+   ;  true
+   ),
 
    %% Add the $USER_HOME/.xsb/config/<arch> directory -- the place for
    %% dynamically compiles *.so files and similar stuff.
@@ -62,12 +70,11 @@
 :- import force_file_read_loaded/0 from xsb_read.
 :- force_file_read_loaded.
 
-%% Flag 50 tells the loader to start looking at the user-supplied libraries 
-%% in site/lib and .xsbinitrc.
-
-:- stat_set_flag(50, 1, 1). % Setting flags[50] tell the loader to start
-			    % searching library_directory for non-system
-			    % libraries
+%% tell the loader to start looking in non-system libraries
+:- stat_set_flag(LIBS_LOADED, 1). 
 
 %% load package maintenance definitions
-:- [packaging].
+%% NO, made standard preds so this will be loaded on demand.
+%%:- [packaging].
+
+:- [xsbbrat].

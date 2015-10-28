@@ -18,20 +18,23 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xcallxsb.H,v 1.2 1998/11/15 06:07:55 kifer Exp $
+** $Id: xcallxsb.H,v 1.13 2007/10/09 16:40:18 dwarren Exp $
 ** 
 */
 
+:- export c_callloop/0.  % to force it to be a module!
 
+:- import c_callloop_query_loop/1 from ccallxsb.
 
-:- import
-       integer/1, file_open/3, file_close/1, close_open_tables/0
-   from machine.
-:- import
-       call_c/1, call_expose/1, goal_cut_trans/3, repeat/0, (=..)/2
-   from standard.
-:- import file_write/2, file_nl/1 from xsb_writ.
-:- import file_read_foe/3, file_read/3 from xsb_read.
-:- import excess_vars/4 from setof.
-:- import conset/2 from prof_sbp.
-:- import [] / 0 from usermod.	       % just to make usermod typed "module"
+:- import set_inthandler/2 from loader.
+
+:- import catch/3, repeat/0, call/1, (\=)/2, abort/0 from standard.
+
+:- import file_open/3, file_close/1
+     from file_io.
+
+:- import file_read/2 from xsb_read.
+
+:- import xsb_flag/2 from curr_sym.
+
+ :- import ccall_error_handler/1 from error_handler.

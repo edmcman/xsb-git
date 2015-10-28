@@ -1,6 +1,17 @@
 :- import asserti/2, assertai/2, retract_nr/1, reclaim_space/1 from assert.
 
+:- import pp/0 from usermod.
 
+test_0a :- abolish(p), retractall(p),
+	(  retract(p) ; 
+	   retract_nr(p) ; 
+	   reclaim_space(p) 
+	),
+	   retractall(pp),
+	(  retract(pp) ; 
+	   retract_nr(pp) ; 
+	   reclaim_space(pp)
+	).
 
 test_a :-
 	abolish(p/4),

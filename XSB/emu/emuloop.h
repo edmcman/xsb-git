@@ -19,11 +19,15 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: emuloop.h,v 1.1.1.1 1998-11-05 16:55:16 sbprolog Exp $
+** $Id: emuloop.h,v 1.10 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
+#include "export.h"
+#include "context.h"
 
-extern int xsb(int, int, char **);
+extern int wam_initialized ;
+
+DllExport extern int call_conv xsb(CTXTdeclc int, int, char **);
 
 /*----------------------------------------------------------------------*/

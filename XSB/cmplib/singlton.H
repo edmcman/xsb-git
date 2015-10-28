@@ -1,5 +1,5 @@
 /* File:      singlton.H
-** Author(s): Kostis F. Sagonas
+** Author(s): Sagonas
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -18,17 +18,18 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: singlton.H,v 1.1.1.1 1998-11-05 17:00:14 sbprolog Exp $
+** $Id: singlton.H,v 1.13 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
 
-:- export singleton_check/2.
+:- export singleton_check/2,calculate_singleton/3.
 
 :- import vv/2 from xsb_read.
 :- import warning/1 from auxlry.
-:- import numbervars/3 from num_vars.
-:- import ll_arg/3, append/3 from prof_sbp.
-:- import atom_chars/2, functor/3, hilog_functor/3, atomic/1, integer/1,
+:- import numbervars_cmplib/3 from auxlry.
+:- import option/1 from auxlry.
+:- import append/3, copy_term/2, log_ith/3 from basics.
+:- import atom_codes/2, functor/3, hilog_functor/3, atomic/1, integer/1,
 	  arg/3, '=..'/2
      from standard.

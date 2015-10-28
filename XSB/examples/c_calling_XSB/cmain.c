@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: cmain.c,v 1.3 1998-11-19 05:24:42 kifer Exp $
+** $Id: cmain.c,v 1.9 2010-08-19 15:03:38 spyrosh Exp $
 ** 
 */
 
@@ -44,28 +44,33 @@
  *
  */
 
+/* on Windows, be sure to set the cinterf.h include file path
+correctly, and also myargv[0].  When compiling this file, be sure to
+include the XSB_DLL or XSB_DLL_C flag as was included when the xsb.dll
+was compiled.  */
+
 #include <stdio.h>
 
 /* The following include is necessary to get the macros and routine
    headers */
 
-#include "../../emu/cinterf.h"
+#include "cinterf.h"
 extern char *xsb_executable_full_path(char *);
 extern char *strip_names_from_path(char*, int);
 
 int main(int argc, char *argv[])
 { 
   int rcode;
-  int myargc = 2;
-  char *myargv[2];
+  int myargc = 3;
+  char *myargv[3];
 
   /* xsb_init relies on the calling program to pass the absolute or relative
      path name of the XSB installation directory. We assume that the current
-     program is sitting in the xsb executable directory
-     .../config/<architecture>/bin/...  To get installation directory, we strip
-     4 file names from the path. */
-  myargv[0] = strip_names_from_path(xsb_executable_full_path(argv[0]), 4);
+     program is sitting in the directory .../examples/c_calling_xsb/
+     To get installation directory, we strip 3 file names from the path. */
+  myargv[0] = strip_names_from_path(xsb_executable_full_path(argv[0]), 3);
   myargv[1] = "-n";
+  myargv[2] = "-e writeln(hello). writeln(kkk).";
 
   /* Initialize xsb */
   xsb_init(myargc,myargv);  /* depend on user to put in right options (-n) */
@@ -73,10 +78,15 @@ int main(int argc, char *argv[])
   /* Create command to consult a file: ctest.P, and send it. */
   c2p_functor("consult",1,reg_term(1));
   c2p_string("ctest",p2p_arg(reg_term(1),1));
-  if (xsb_command()) printf("Error consulting ctest.P.\n");
+  if (xsb_command()) {
+    printf("Error consulting ctest.P.\n");
+    fflush(stdout);
+  }
 
-  if (xsb_command_string("consult(basics).")) 
+  if (xsb_command_string("consult(basics).")) {
     printf("Error (string) consulting basics.\n");
+    fflush(stdout);
+  }
 
   /* Create the query p(300,X,Y) and send it. */
   c2p_functor("p",3,reg_term(1));
@@ -97,6 +107,7 @@ int main(int argc, char *argv[])
 	     p2c_string(p2p_arg(reg_term(1),3)),
 	     xsb_var_string(2)
 	     );
+    fflush(stdout);
     rcode = xsb_next();
   }
 
@@ -118,6 +129,7 @@ int main(int argc, char *argv[])
 	     xsb_var_string(2),
 	     xsb_var_string(3)
 	     );
+    fflush(stdout);
     rcode = xsb_next();
   }
 

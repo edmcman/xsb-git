@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: xsbpattern.c,v 1.3 1998-11-18 08:00:19 kifer Exp $
+** $Id: xsbpattern.c,v 1.13 2010-08-19 15:03:39 spyrosh Exp $
 ** 
 */
 
@@ -27,7 +27,7 @@
        try_match__() -- find the match pattern,
        next_match__() -- find the next match pattern,
        do_bulk_match__() -- find the global match patterns,
-       string_substitute__() -- substitute the string with expected pattern,
+       perl_substitute__() -- substitute the string with expected pattern,
        load_perl__() -- load the perl interpretor,
        unload_perl__() -- release the perl interpretor object,
        get_match_resultC__() -- get the perl pattern match C function,
@@ -37,173 +37,19 @@
 
 
 #include "interface.h"
-#include "perlpattern.c"          /*pattern match basic functions */   
+#include "perlpattern.c"          /* pattern match basic functions */   
 
 void build_sub_match_spec( void );
-bool is_global_pattern( char *);
-bool global_pattern_mode = FALSE;
+int is_global_pattern( char *);
+int global_pattern_mode = FALSE;
 
+extern void xsb_abort(char *, ...);
 
 #define xsb_warn(warning)	fprintf(stderr, "++Warning: %s\n", warning)
 
-
-/*----------------------------------------------------------------------------
-try_match__()
-The pattern matching function which includes loading perl interpreter and 
-trying the perl pattern matching.
-arguments: 
-  input: char* string,    -- input text
-	 char* pattern    --  match pattern
-  output:if no match found, return FAILURE (0).
-----------------------------------------------------------------------------*/
-int try_match__( void )
-{
-
-   SV *text=newSV(0);       /*the storage for the string in embeded Perl*/
-   SV *string_buff=newSV(0);/*the storage for the string in embeded Perl*/
-   int was_match;           /*number of the matches*/
-   char *string = ptoc_string(1),
-        *pattern = ptoc_string(2);
-
-   sv_setpv(text, string );  /*store the string in the SV */
-
-   /* load the perl interpreter */
-   if (perlObjectStatus == UNLOADED )
-     load_perl__();
-
-   was_match = match(text, pattern );
-
-   global_pattern_mode = is_global_pattern(pattern);
-   
-   SvREFCNT_dec(string_buff);
-   SvREFCNT_dec(text);
-  
-   return(was_match);
-}
-
-
-/*----------------------------------------------------------------------------
-next_match__()
-The pattern match function which repeats pattern match after 
-the pattern match of the function try_match__().
-If there is no calling of function try_match__() before, give warning! 
-   output: if no match found, return FAILURE.
-----------------------------------------------------------------------------*/
-int next_match__( void )
-{
-
-  int was_match;        /* return code */
-
-   if ( matchPattern == NULL ) { /*didn't try_match__ before*/
-     xsb_warn("call try_match/2 first!");
-     was_match = FAILURE;
-   }
-   else /*do next match*/
-     was_match = match_again( );
-
-   if (global_pattern_mode)
-     return(was_match);
-   /* always fail, if Perl pattern is not global */
-   return FAILURE;
-
-}
-
-/*----------------------------------------------------------------------------
-do_bulk_match__()
-The pattern match function which includes loading perl interpreter and 
-doing the global perl pattern match, and storing the results in the global 
-array of bulkMatchList.
-argument: 
-  input: char* string	     	     -- input text
-	 char* pattern	     	     --  match pattern
-  output: int* num_match     	     --  the number of the matches	 
-----------------------------------------------------------------------------*/
-int do_bulk_match__( void )
-{
-
-  AV *match_list;           /* AV storage of matches list*/
-  SV *text=newSV(0);        /* storage for the embeded perl cmd */
-  SV *string_buff=newSV(0); /* storage for the embedded perl cmd */
-  int num_match;            /* the number of the matches */
-  int i;
- 
-  sv_setpv(text, ptoc_string(1) );  /*put the string into an SV */
- 
-  if (perlObjectStatus == UNLOADED) load_perl__();                   
-        /*load perl interpreter*/
-
-  /*------------------------------------------------------------------------
-    free the old match list space and allocate new space for current match list
-    -----------------------------------------------------------------------*/
-  for ( i=0; i<preBulkMatchNumber; i++ ) 
-    free(bulkMatchList[i]);
-  if (bulkMatchList != NULL ) free(bulkMatchList);
-  bulkMatchList = NULL;   
-
-  /*------------------------------------------------------------------------
-    do bulk match
-    ----------------------------------------------------------------------*/
-  num_match = all_matches(text, ptoc_string(2),&match_list);
-    
-  /* allocate the space to store the matches */
-  if ( num_match != 0 ) {
-    preBulkMatchNumber = num_match; /* reset the pre bulk match number */
-    bulkMatchList = (char **)malloc(num_match*sizeof(char *)); 
-    if ( bulkMatchList == NULL ) 
-      xsb_abort("Cannot alocate memory to store the results for bulk match");
-  }
-
-  /*get the matches from the AV */
-  for ( i=0;i<num_match;i++ ) {
-    string_buff = av_shift(match_list);
-    bulkMatchList[i] = (char *)malloc( strlen(SvPV(string_buff,na))+1 ); 
-    strcpy((char *)bulkMatchList[i], SvPV(string_buff,na) );   
-  } 
-
-  SvREFCNT_dec(string_buff); /* release space*/
-  SvREFCNT_dec(text);
-  
-  ctop_int(3, num_match);           /*return the number of matches*/
-
-}
-
-/*----------------------------------------------------------------------------
-string_substitute__()
-The pattern substitution function which includes loading perl interpreter 
-and doing the pattern substitution, then returning the replaced string.
-arguments: 
-  input: char* string, input text
-	 char* pattern, match pattern
-  output:char* string, output text
-----------------------------------------------------------------------------*/
-int string_substitute__( void )
-{
-
-  SV *text=newSV(0);    /* Perl representation for the string to be 
-			   modified by substitution */ 
-  char *subst_cmd = ptoc_string(2);
-  int i;                
-
-  sv_setpv(text, ptoc_string(1) );  /*put the string to the SV */
-  
-  if ( perlObjectStatus == UNLOADED ) load_perl__(); 
-  /*load perl interpreter*/
-   
-  if( !substitute(&text, subst_cmd) )
-    return(FAILURE);
-  
-  global_pattern_mode = is_global_pattern(subst_cmd);
-
-  if (substituteString != NULL ) free(substituteString);
-
-  substituteString = malloc(strlen(SvPV(text,na))+1);
-  strcpy(substituteString,SvPV(text,na));
-  
-  SvREFCNT_dec(text);  /*release space*/
-  
-  ctop_string(3, string_find(substituteString,1));  /*return changed text*/
-  
-}
+#ifdef MULTI_THREAD
+	static th_context *th = NULL;
+#endif
 
 /*----------------------------------------------------------------------------
 load_perl__():
@@ -214,12 +60,16 @@ is ready to run.
 
 int load_perl__( void ) 
 {
-
   char *embedding[] = {"","-e","0"};  /* perl interpreter config params */
   int i;
 
+#ifdef MULTI_THREAD
+  if( NULL == th)
+	th = xsb_get_main_thread();
+#endif
+
   /* check if the perl interpreter is loaded already*/
-  if ( perlObjectStatus == LOADED ) return;
+  if ( perlObjectStatus == LOADED ) return SUCCESS;
 
   /*------------------------------------------------------------------------
     initial the global variables
@@ -240,7 +90,6 @@ int load_perl__( void )
   perlObjectStatus = LOADED;
 
   return (SUCCESS); 
-
 }
 
 /*---------------------------------------------------------------------------
@@ -252,7 +101,12 @@ int unload_perl__( void )
 {
   int i;
 
-  perl_destruct_level = 1;
+#ifdef MULTI_THREAD
+  if( NULL == th)
+	th = xsb_get_main_thread();
+#endif
+
+  PL_perl_destruct_level = 1;
   perl_destruct( my_perl );
   perl_free( my_perl );
 
@@ -271,6 +125,184 @@ int unload_perl__( void )
   return SUCCESS;
 }  
 
+
+/*----------------------------------------------------------------------------
+try_match__()
+The pattern matching function which includes loading perl interpreter and 
+trying the perl pattern matching.
+arguments: 
+  input: char* string,    -- input text
+	 char* pattern    --  match pattern
+  output:if no match found, return FAILURE (0).
+----------------------------------------------------------------------------*/
+int try_match__( void )
+{
+  SV *text;        /* the storage for the string in embedded Perl */
+  SV *string_buff; /* the storage for the string in embedded Perl */
+  int was_match;   /* number of the matches */
+
+#ifdef MULTI_THREAD
+  if( NULL == th)
+	th = xsb_get_main_thread();
+#endif
+
+  char *string = ptoc_string(CTXTc 1),
+    *pattern = ptoc_string(CTXTc 2);
+
+  /* first load the perl interpreter, if unloaded */
+  if (perlObjectStatus == UNLOADED) load_perl__();
+
+  text = newSV(0);
+  string_buff = newSV(0);
+  sv_setpv(text, string);  /* store the string in the SV */
+    
+  was_match = match(text, pattern );
+  
+  global_pattern_mode = is_global_pattern(pattern);
+  
+  SvREFCNT_dec(string_buff);
+  SvREFCNT_dec(text);
+  
+  return(was_match);
+}
+
+
+/*----------------------------------------------------------------------------
+next_match__()
+The pattern match function which repeats pattern match after 
+the pattern match of the function try_match__().
+If there is no calling of function try_match__() before, give warning! 
+   output: if no match found, return FAILURE.
+----------------------------------------------------------------------------*/
+int next_match__( void )
+{
+  int was_match;        /* return code */
+
+#ifdef MULTI_THREAD
+  if( NULL == th)
+	th = xsb_get_main_thread();
+#endif
+
+   if ( matchPattern == NULL ) { /*didn't try_match__ before*/
+     xsb_warn("call try_match/2 first!");
+     was_match = FAILURE;
+   }
+   else /*do next match*/
+     was_match = match_again( );
+
+   if (global_pattern_mode)
+     return(was_match);
+   /* always fail, if Perl pattern is not global */
+   return FAILURE;
+}
+
+/*----------------------------------------------------------------------------
+do_bulk_match__()
+The pattern match function which includes loading perl interpreter and 
+doing the global perl pattern match, and storing the results in the global 
+array of bulkMatchList.
+argument: 
+  input: char* string	     	     -- input text
+	 char* pattern	     	     --  match pattern
+  output: int* num_match     	     --  the number of the matches	 
+----------------------------------------------------------------------------*/
+int do_bulk_match__( void )
+{
+  AV *match_list;           /* AV storage of matches list*/
+  SV *text;                 /* storage for the embedded perl cmd */
+  SV *string_buff;          /* storage for the embedded perl cmd */
+  int num_match;            /* the number of the matches */
+  int i;
+ 
+#ifdef MULTI_THREAD
+  if( NULL == th)
+	th = xsb_get_main_thread();
+#endif
+
+  /* first load the perl interpreter, if unloaded */
+  if (perlObjectStatus == UNLOADED) load_perl__();
+
+  text = newSV(0);
+  string_buff = newSV(0);
+  sv_setpv(text, ptoc_string(CTXTc 1));  /*put the string into an SV */
+ 
+  /*------------------------------------------------------------------------
+    free the old match list space and allocate new space for current match list
+    -----------------------------------------------------------------------*/
+  for ( i=0; i<preBulkMatchNumber; i++ ) 
+    free(bulkMatchList[i]);
+  if (bulkMatchList != NULL ) free(bulkMatchList);
+  bulkMatchList = NULL;   
+
+  /*------------------------------------------------------------------------
+    do bulk match
+    ----------------------------------------------------------------------*/
+  num_match = all_matches(text, ptoc_string(CTXTc 2),&match_list);
+    
+  /* allocate the space to store the matches */
+  if ( num_match != 0 ) {
+    preBulkMatchNumber = num_match; /* reset the pre bulk match number */
+    bulkMatchList = (char **)malloc(num_match*sizeof(char *)); 
+    if ( bulkMatchList == NULL ) 
+      xsb_abort("Cannot alocate memory to store the results for bulk match");
+  }
+
+  /*get the matches from the AV */
+  for ( i=0;i<num_match;i++ ) {
+    string_buff = av_shift(match_list);
+    bulkMatchList[i] = (char *)malloc( strlen(SvPV(string_buff,PL_na))+1 ); 
+    strcpy((char *)bulkMatchList[i], SvPV(string_buff,PL_na) );   
+  } 
+
+  SvREFCNT_dec(string_buff); /* release space*/
+  SvREFCNT_dec(text);
+  
+  ctop_int(CTXTc 3, num_match);           /*return the number of matches*/
+  return SUCCESS;
+}
+
+/*----------------------------------------------------------------------------
+perl_substitute__()
+The pattern substitution function which includes loading perl interpreter 
+and doing the pattern substitution, then returning the replaced string.
+arguments: 
+  input: char* string, input text
+	 char* pattern, match pattern
+  output:char* string, output text
+----------------------------------------------------------------------------*/
+int perl_substitute__( void )
+{
+  SV *text;    /* Perl representation for the string to be 
+		  modified by substitution */ 
+  char *subst_cmd = ptoc_string(CTXTc 2);
+  
+#ifdef MULTI_THREAD
+  if( NULL == th)
+	th = xsb_get_main_thread();
+#endif
+
+  /* first load the perl interpreter, if unloaded */
+  if (perlObjectStatus == UNLOADED) load_perl__();
+  
+  text = newSV(0);
+  sv_setpv(text, ptoc_string(CTXTc 1));  /* put the string to the SV */
+     
+  if( !substitute(&text, subst_cmd) )
+    return(FAILURE);
+  
+  global_pattern_mode = is_global_pattern(subst_cmd);
+
+  if (substituteString != NULL ) free(substituteString);
+
+  substituteString = malloc(strlen(SvPV(text,PL_na))+1);
+  strcpy(substituteString,SvPV(text,PL_na));
+  
+  SvREFCNT_dec(text);  /*release space*/
+  
+  ctop_string(CTXTc 3, string_find(substituteString,1));  /*return changed text*/
+  return SUCCESS;
+}
+
 /*----------------------------------------------------------------------------
 get_bulk_match_result__(order, argumentValue):
 The function to get the values of all the matches.
@@ -280,19 +312,27 @@ output: is the string of match result.
 
 int get_bulk_match_result__( void ) {
 
+#ifdef MULTI_THREAD
+  if( NULL == th)
+	th = xsb_get_main_thread();
+#endif
+
   if (perlObjectStatus == UNLOADED ) {
     load_perl__();
     return(FAILURE);
   }
 
-  if ( bulkMatchList[ptoc_int(1)] == NULL )
-    return(FAILURE);        /*no match*/
+  if ( bulkMatchList[ptoc_int(CTXTc 1)] == NULL )
+    return FAILURE;        /*no match*/
   else{
-    int match_seq_number= ptoc_int(1);
-    int match_array_sz= ptoc_int(3);
-    if (match_seq_number < match_array_sz)
-      c2p_string( bulkMatchList[match_seq_number], reg_term(2));
-    else return(FAILURE);
+    int match_seq_number= ptoc_int(CTXTc 1);
+    int match_array_sz= ptoc_int(CTXTc 3);
+    if (match_seq_number < match_array_sz) {
+      /* c2p_string(CTXTc  bulkMatchList[match_seq_number], reg_term(CTXTc 2)); */
+      ctop_string(CTXTc 2, (char *)string_find(bulkMatchList[match_seq_number],1));
+      return SUCCESS;
+    }
+    else return FAILURE;
   }
 }
 
@@ -334,7 +374,12 @@ int get_match_resultC__( void ) {
 
   int order; 
  
-  int submatch_number=ptoc_int(1);
+#ifdef MULTI_THREAD
+  if( NULL == th)
+	th = xsb_get_main_thread();
+#endif
+
+  int submatch_number=ptoc_int(CTXTc 1);
   
   /*--------------------------------------------------------------------------
     Convert from Prolog-side convention for refering to submatches to
@@ -374,10 +419,9 @@ int get_match_resultC__( void ) {
    } else if ( !strcmp(matchResults[order],"") || matchResults[order] == NULL )
      return(FAILURE);           /*no match found, return FAILURE */
   else {
-    c2p_string( matchResults[order], reg_term(2));
+    c2p_string(CTXTc  matchResults[order], reg_term(CTXTc 2));
     return(SUCCESS);
   }
-
 }
 
 /*----------------------------------------------------------------------------
@@ -428,7 +472,7 @@ void build_sub_match_spec( void ) {
 ** This is needed so that next_match will know that it has to fail immediately,
 ** if no `g' has been specified.
 */
-bool is_global_pattern(char *pattern) {
+int is_global_pattern(char *pattern) {
   int len = strlen(pattern), i = len-1;
 
   /* skip other Perl pattern modifiers and spaces */

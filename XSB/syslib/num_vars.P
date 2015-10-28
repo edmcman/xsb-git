@@ -18,10 +18,13 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: num_vars.P,v 1.1 1998/11/15 00:47:47 kifer Exp $
+** $Id: num_vars.P,v 1.8 2005/01/14 18:32:01 ruim Exp $
 ** 
 */
 
+:- compiler_options([xpp_on,sysmod]).
+
+#include "celltags_xsb.h"
 
 %   numbervars(+Term, +FirstN, ?LastN) 
 %   Each variable in the HiLog Term is instantiated to a term of the form 
@@ -32,23 +35,50 @@
 %   value FirstVar+2, and so on.  The last variable in Term has the value 
 %   LastVar-1.
 
-numbervars(Y,I,J) :- term_type(Y,T),
-	(T =:= 0
+
+numbervars(Y,I,J,Options) :-
+	check_numbervars_options(Options,Attv_Act),
+	numbervars_int(Y,I,J,Attv_Act).
+
+numbervars(Y,I,J) :- numbervars_int(Y,I,J,error).
+
+%:- import writeln/1 from standard.
+numbervars_int(Y,I,J,AttvAct) :- term_type(Y,T),
+	(T =:= XSB_FREE
 	 ->	Y='$VAR'(I), J is I+1
-	 ; T =:= 3
+	 ; T =:= XSB_ATTV
+	 ->	(AttvAct == error -> type_error(non_attributed_variable,Y,numbervars,1)
+	          ; (AttvAct == bind -> Y='$VAR'(I), J is I+1
+	          ;  AttvAct == skip -> J = I) )
+	 ; T =:= XSB_LIST
 	 ->	Y=[A1|A2],
-	 	numbervars(A1,I,I1), numbervars(A2,I1,J)
-	 ; T =:= 1
+	 	numbervars_int(A1,I,I1,AttvAct), numbervars_int(A2,I1,J,AttvAct)
+	 ; T =:= XSB_STRUCT
 	 ->	term_psc(Y,PSC), psc_arity(PSC,N),
-	 	numbervars(Y,I,J,1,N)
+	 	numbervars(Y,I,J,1,N,AttvAct)
 	 ;	J=I
 	).
-numbervars(Y,I,J,N,A) :-
+
+check_numbervars_options(Options,_):-
+	var(Options),!,
+	instantiation_error(numbervars/4,4,ground).
+check_numbervars_options([],error):-!.
+check_numbervars_options([attvar(Action)],Action):- !,
+	check_numbervars_options(attvar(Action),Action).
+check_numbervars_options(attvar(Action),Action):- !,
+	(member(Action,[bind,skip,error]) -> 
+	   true 
+         ; domain_error('bind, error or skip',Action,numbervars/4,4)).
+check_numbervars_options(Options,_):- 
+	domain_error('attvar(Action)',Options,numbervars/4,4).
+
+% Internal predicate -- not exported.
+numbervars(Y,I,J,N,A,AttvAct) :-
 	(N > A
 	 ->	J=I
 	 ;	term_arg(Y,N,Arg),
-	 	numbervars(Arg,I,I1),
-	 	N1 is N+1, numbervars(Y,I1,J,N1,A)
+	 	numbervars_int(Arg,I,I1,AttvAct),
+	 	N1 is N+1, numbervars(Y,I1,J,N1,A,AttvAct)
 	).
 
 %   numbervars(+Term)
@@ -59,3 +89,46 @@ numbervars(Y,I,J,N,A) :-
 numbervars(Term) :-
         numbervars(Term, 0, _).
 
+
+/* unnumbervars(+TermIn,+FirstN,-TermOut) takes a numbervarred term
+(ground term with terms of the form '$VAR'(<int>)) and converts it to
+a term with variables in it, by replacing uniformly the '$VAR'(<int>)
+terms where <int> >= FirstN with new variables.  It is the converse of
+numbervars, and must copy the input term. */
+
+unnumbervars(TermIn,TermOut) :- unnumbervars(TermIn,0,TermOut,_Vars).
+
+unnumbervars(TermIn,FirstN,TermOut) :- 
+	unnumbervars(TermIn,FirstN,TermOut,_Vars).
+
+unnumbervars(TermIn,FirstN,TermOut,Vars) :-
+	term_type(TermIn,Type),
+	(Type =:= XSB_STRUCT
+         ->     (TermIn = '$VAR'(I)
+                 ->     (I >= FirstN
+	                 ->     log_ith(I,Vars,TermOut)
+		         ;      TermOut = TermIn
+		        )
+                 ;      term_psc(TermIn,PSC),
+		        term_new(PSC,TermOut),
+			psc_arity(PSC,Arity),
+			unnumbervars(1,Arity,TermIn,FirstN,TermOut,Vars)
+		)
+         ; Type =:= XSB_LIST
+         ->     TermIn = [A1|A2],
+	        TermOut = [B1|B2],
+		unnumbervars(A1,FirstN,B1,Vars),
+		unnumbervars(A2,FirstN,B2,Vars)
+         ;      TermOut = TermIn
+        ).
+
+
+unnumbervars(I,Arity,TermIn,FirstN,TermOut,Vars) :-
+	(I =< Arity
+         ->     term_arg(TermIn,I,ArgIn),
+		term_arg(TermOut,I,ArgOut),
+	        unnumbervars(ArgIn,FirstN,ArgOut,Vars),
+		I1 is I+1,
+		unnumbervars(I1,Arity,TermIn,FirstN,TermOut,Vars)
+	 ;      true
+        ).

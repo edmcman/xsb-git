@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: perlpattern.c,v 1.3 1998-11-18 08:00:17 kifer Exp $
+** $Id: perlpattern.c,v 1.7 2010-08-19 15:03:39 spyrosh Exp $
 ** 
 */
 
@@ -55,7 +55,8 @@ int match(SV *string, char *pattern)
   /*-------------------------------------------------------------------------
     initialize the seaching string 
     -----------------------------------------------------------------------*/
-  sv_setpvf(command, "$__text__='%s'", SvPV(string,na)); 
+  /* sv_setpvf(command, "$__text__='%s'", SvPV(string,PL_na)); */
+  sv_setpvf(command, "$__text__= <<'ENDj9yq6QC43b'; chop($__text__);\n%s\nENDj9yq6QC43b\n", SvPV(string,PL_na)); 
   my_perl_eval_sv(command, TRUE);     /* execute the perl command */
   
   /*-------------------------------------------------------------------------
@@ -84,8 +85,8 @@ int match(SV *string, char *pattern)
   for ( i=0;i<number;i++ ) {
     string_buff = av_shift(matchArray);
     if (matchResults[i] != NULL) free(matchResults[i]);
-    matchResults[i] = (char *)malloc( strlen(SvPV(string_buff,na))+1 ); 
-    strcpy((char *)matchResults[i], SvPV(string_buff,na) );   
+    matchResults[i] = (char *)malloc( strlen(SvPV(string_buff,PL_na))+1 ); 
+    strcpy((char *)matchResults[i], SvPV(string_buff,PL_na) );   
   } 
 
   if ( strcmp(matchResults[0],"") ) returnCode=SUCCESS; 
@@ -139,8 +140,8 @@ int match_again( void )
   for ( i=0;i<number;i++ ) {
     string_buff = av_shift(matchArray);
     if (matchResults[i] != NULL) free(matchResults[i]);
-    matchResults[i] = (char *)malloc( strlen(SvPV(string_buff,na))+1 ); 
-    strcpy((char *)matchResults[i], SvPV(string_buff,na) );   
+    matchResults[i] = (char *)malloc( strlen(SvPV(string_buff,PL_na))+1 ); 
+    strcpy((char *)matchResults[i], SvPV(string_buff,PL_na) );   
   } 
 
   if ( strcmp(matchResults[0],"") ) returnCode=SUCCESS; 
@@ -171,8 +172,9 @@ int substitute(SV **string, char *pattern)
 {
   SV *command = newSV(0), *retval; /*allocate space for SV data */
   
-  sv_setpvf(command, "$__string__ = '%s'; ($__string__ =~ %s)",
-	    SvPV(*string,na), pattern);
+  /*  sv_setpvf(command, "$__string__ = '%s'; ($__string__ =~ %s)",*/
+  sv_setpvf(command, "$__string__ = <<'ENDj9yq6QC43b'; chop($__string__);\n%s\nENDj9yq6QC43b\n ($__string__ =~ %s)",
+	    SvPV(*string,PL_na), pattern);
 
   retval = my_perl_eval_sv(command, TRUE);
   if (retval == 0 ) return FAILURE;
@@ -201,8 +203,9 @@ int all_matches(SV *string, char *pattern, AV **match_list)
   SV *command = newSV(0), *retval; /*allocate space for SV data */
   I32 num_matches;
 
-  sv_setpvf(command, "my $string = '%s'; @__array__ = ($string =~ %s)",
-	    SvPV(string,na), pattern);
+  /*  sv_setpvf(command, "my $string = '%s'; @__array__ = ($string =~ %s)",*/
+  sv_setpvf(command, "my $string = <<'ENDj9yq6QC43b'; chop($string);\n%s\nENDj9yq6QC43b\n @__array__ = ($string =~ %s)",
+	    SvPV(string,PL_na), pattern);
 
   retval=my_perl_eval_sv(command, TRUE);
   if (retval == 0 ) return FAILURE;
@@ -237,7 +240,7 @@ SV* my_perl_eval_sv(SV *sv, I32 croak_on_error)
     retval = POPs;
     PUTBACK;           /*pop out*/
 
-    if (croak_on_error && SvTRUE(GvSV(errgv))) {
+    if (croak_on_error && SvTRUE(GvSV(PL_errgv))) {
       printf("Warning: syntax error in the pattern expression!\n");
       /*
 	printf("The entire Perl expression was: \n\t %s\n", SvPV(sv));

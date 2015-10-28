@@ -1,5 +1,0 @@
-top level solution\A.*A(^j)(^\B.\C.*C(^m)(^\D.\E.*E(B)(^\F.\G.*F(^\H.date*(*H)(*G))(^\I.*I(D)))))  (last) 
-
-
-top level solution\A.*A(^j)(^\B.C(^\D.\E.*E(B)(^\F.\G.*F(^\H.date*(*H)(*G))(^\I\.*I(J)))))
-

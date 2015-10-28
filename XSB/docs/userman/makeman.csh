@@ -1,31 +1,31 @@
 #!/bin/csh -f
 
-echo **** Making XSB manual for local consumption.
-echo **** To release to the web server, please follow usual release procedure.
+if ( ($#argv > 2) || ($#argv < 1) ) then
+  echo "Usage:	`basename $0` Volume# [pdf|html]"
+  exit(1)
+endif
 
-latex manual	
-bibtex manual
-latex manual	# now, \cites are correct, but references aint, but thats ok.
-MAKE_INDEX/makeindex manual  # assuming no indexes in the bibliography
-latex manual	# now, index entries to all pages xcept index itself is ok.
-latex manual	# make that correct too.
+set manual = manual{$1}
 
-# Now that we have made .dvi file,
+if ( ($#argv == 1) || ($2 == pdf) ) then
+  latex ${manual}	
+  bibtex ${manual}
+  latex ${manual}	# now cites are correct, but references aint
+  makeindex ${manual}	# assuming no indexes in the bibliography
+  latex ${manual}	# now index entries to all pages except index itself
+  if ($1 == 1) then 
+    makeindex manual1.prdx -o manual1.pnd
+  endif
+  latex ${manual}	# now index entries to all pages except index itself
+			#   is ok...
+  latex ${manual}	# make that correct too
+  dvips -t letter -o ${manual}.ps ${manual}.dvi
+  ps2pdf ${manual}.ps
+  \rm -f ${manual}.ps
+endif
 
-dvips manual.dvi -o manual.ps
+if ( ($#argv == 1) || ($2 == html) ) then
+  latex2html -local_icons -scalable_fonts -show_section_numbers ${manual}
+endif
 
-# we're ready for the html part
-
-echo **** Making HTML version; don't worry, it'll be done by tomorrow...
-
-latex2html manual
-
-
-echo **** latex2html done, Making images transparent
-(cd manual; ../cleargif.csh)
- 
-echo **** Copying icons...
-cp -r icons manual
-echo ****                 done.
-
- 
+exit(0)

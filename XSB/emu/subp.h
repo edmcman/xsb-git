@@ -19,27 +19,35 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: subp.h,v 1.2 1998-11-14 05:05:31 kifer Exp $
+** $Id: subp.h,v 1.25 2011-11-09 02:28:19 dwarren Exp $
 ** 
 */
 
+#include "context.h" 
 
-extern void intercept(Psc);
+extern void intercept(CTXTdeclc Psc);
 extern void init_interrupt(void);
-extern void print_statistics(int);
-extern void print_qatom(FILE *, char *);
-extern void print_op(FILE *, char *, int);
-extern void remove_open_tables_reset_freezes(void);
+extern void print_qatom(FILE *, int, char *);
+extern void print_aqatom(FILE *, int, char *);
+extern void print_dqatom(FILE *, int, char *);
+extern void print_op(FILE *, int, char *, int);
+extern void remove_incomplete_tables_reset_freezes(CTXTdeclc int);
 
-extern bool unify(Cell, Cell);
-extern bool int_unify(Cell, Cell);
-extern bool atom_unify(Cell, Cell);
+extern xsbBool unify(CTXTdeclc Cell, Cell);
+extern xsbBool unify_rat(CTXTdeclc Cell, Cell, CPtr);
+extern xsbBool are_identical_terms(Cell, Cell);
+extern xsbBool startSleeperThread(int);
+extern xsbBool cancelSleeperThread(void);
 
-/* don't use Cell declarations here, to avoid compiler warnings */
-extern int compare(/* Cell, Cell */);
-extern int key_compare(/* Cell, Cell */);
+/* don't use Cell declarations here, to avoid gcc compiler warnings;
+   However, this causes warnings under Windows */
+extern int compare( CTXTdeclc const void *, const void * );
+extern int key_compare( CTXTdeclc const void *, const void * );
 
-extern byte *exception_handler(char *);
+extern byte *exception_handler(CTXTdeclc char *);
 
-extern Psc synint_proc(Psc, int, byte *);
+extern Psc synint_proc(CTXTdeclc Psc, int);
+extern void add_interrupt(CTXTdeclc Cell, Cell);
+extern Cell build_interrupt_chain(CTXTdecl);
 
+#define INT_REC_SIZE 4   /* number of words in heap interrupt record */

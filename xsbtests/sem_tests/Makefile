@@ -6,8 +6,11 @@
 #
 #-----------------------------------------------------------------------#
 
-ALL =	sem_lex.O sem_parse.O sem_pe.O semantica.O sem_pretty.O sem_incl.O \
-	sem_eval.O sem_dnf.O
+OBJEXT=.xwam
+
+ALL =	sem_lex${OBJEXT} sem_parse${OBJEXT} sem_pe${OBJEXT} \
+	semantica${OBJEXT} sem_pretty${OBJEXT} sem_incl${OBJEXT} \
+	sem_eval${OBJEXT} sem_dnf${OBJEXT}
 
 Option = [optimize]
 
@@ -21,8 +24,8 @@ Prolog = xsb
 .IGNORE:
 
 # suffix rules
-.SUFFIXES: .P .O .H
-.P.O:
+.SUFFIXES: .P ${OBJEXT} .H
+.P${OBJEXT}:
 	echo 'mc($*, $(Option)).' >> cmd...
 
 all: $(ALL)

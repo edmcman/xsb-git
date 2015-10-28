@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: preproc.P,v 1.1.1.1 1998-11-05 17:00:11 sbprolog Exp $
+** $Id: preproc.P,v 1.8 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
@@ -93,7 +93,7 @@ pre_clauses([clause(Args,Body,P)|Rest], [clause(Args,NBody,P)|NRest]) :-
 
 pre_cutclauses([], []).
 pre_cutclauses([clause(A,B,P)|CRest], [clause(NA,NB,P)|NCRest]) :-
-        gensym('_v', CutVid),
+        cmp_gensym('_v', CutVid),
         append(A, [varocc(CutVid)], NA),
 	pre_body(B, NB, CutVid),
         pre_cutclauses(CRest, NCRest).
@@ -128,7 +128,7 @@ pre_body(and(A,B), and(NA,NB), CutVid) :- !,
 	pre_body(B, NB, CutVid).
 pre_body(if(A,B), NB, CutVid) :- !,
 	pre_ifthen(A, B, inlinegoal(fail,0,[]), NB, CutVid).
-pre_body(or(if(A,B),C), NB, CutVid) :-
+pre_body(or(if(A,B),C), NB, CutVid) :- !,
 	pre_ifthen(A, B, C, NB, CutVid).
 pre_body(or(A,B), Goal, CutVid) :-
 	compl_cond(A, B, Test, TP0, FP0),
@@ -142,43 +142,43 @@ pre_body(or(A,B), Goal, CutVid) :-
 pre_body(or(A,B), or(NA,NB), CutVid) :- !,
 	pre_body(A, NA, CutVid),
 	pre_body(B, NB, CutVid).
-pre_body(not(Goal), NewGoal, _CutVid) :- !,
-	( inline_neg(Goal, NewGoal)
-	; gensym('_v', CutVid1),
-	  NewGoal = and(inlinegoal('_$savecp',1,[varocc(CutVid1)]),
-			or( and( NegGoal,
-			      and(inlinegoal('_$cutto',1,[varocc(CutVid1)]),
-				  inlinegoal(fail, 0, []))),
-			    inlinegoal(true, 0, []))),
-	  pre_body(Goal, NegGoal, CutVid1)
-	).
+pre_body(not(Goal), NewGoal, CutVid) :- !,
+	pre_ifthen(Goal,inlinegoal(fail,0,[]),inlinegoal(true,0,[]),NewGoal,CutVid).
 pre_body(inlinegoal('!',0,_),
 	 inlinegoal('_$cutto',1,[varocc(CutVid)]), CutVid) :- !.
 pre_body(Goal, Goal, _CutVid).
 
 
-pre_ifthen(A,B,C,if_then_else(A,NB,NC),CutVid) :-
-	all_inline_tests(A),
+pre_ifthen(A,B,C,if_then_else(A1,NB,NC),CutVid) :-
+	all_inline_tests(A,A1),
 	!,
 	pre_body(B,NB,CutVid),
 	pre_body(C,NC,CutVid).
 pre_ifthen(A,B,C,NGoal,CutVid) :-
-	gensym('_v', CutVid1),
-	pre_body(A, T1, CutVid1),
+	cmp_gensym('_v', CutVid1),
+	have_hardcut_1(A,Hardcut),
+	(Hardcut =:= 1
+	 ->	cmp_gensym('_v',CutVidCond),
+		pre_body(A, T1a, CutVidCond),
+		T1 = and(inlinegoal('_$savecp', 1, [varocc(CutVidCond)]),
+			 T1a)
+	 ;	pre_body(A, T1, _)
+	),
 	pre_body(B, NB, CutVid),
-	( C = inlinegoal(fail,0,_), !,
-	  NGoal = and(inlinegoal('_$savecp', 1, [varocc(CutVid1)]),
-		    and(T1,
-			 and(inlinegoal('_$cutto', 1, [varocc(CutVid1)]),
-			    NB)))
-	; pre_else(C, NC, CutVid, CutVid1),
-	  NGoal = and(inlinegoal('_$savecp', 1, [varocc(CutVid1)]),
-		 or( and(T1,
-			 and(inlinegoal('_$cutto', 1, [varocc(CutVid1)]),
-			    NB)),NC))
+	(C == inlinegoal(fail,0,[])
+	 ->	NGoal = and(inlinegoal('_$savecp', 1, [varocc(CutVid1)]),
+			    and(T1,
+				and(inlinegoal('_$cutto', 1, [varocc(CutVid1)]),
+				    NB)))
+	 ;	pre_else(C, NC, CutVid, CutVid1),
+		NGoal = and(inlinegoal('_$savecp', 1, [varocc(CutVid1)]),
+			    or( and(T1,
+				    and(inlinegoal('_$cutto', 1, [varocc(CutVid1)]),
+					NB)),NC))
 	).
 
-
+pre_else(or(if(A,B),inlinegoal(fail,0,[])), NGoal, CutVid, _) :- !,
+	pre_body(if(A,B),NGoal,CutVid).
 pre_else(or(if(A,B),C), NGoal, CutVid, CutVid1) :- !,
 	NGoal = or( and(NA,and(inlinegoal('_$cutto', 1, [varocc(CutVid1)]),
 			NB)), NC),
@@ -188,9 +188,10 @@ pre_else(or(if(A,B),C), NGoal, CutVid, CutVid1) :- !,
 pre_else(Goal, NGoal, CutVid, _) :- pre_body(Goal, NGoal, CutVid).
 
 /*======================================================================*/
-/* all_inline_tests(+Goal)						*/
-/*	Succeeds if the Goal is one or more inline tests that does not 	*/
-/*	change the state (without unification).				*/
+/* all_inline_tests(+Goal,-GoalOut)					*/
+/*	Succeeds if the Goal can be transformed (into GoalOut) into	*/
+/*	one or more inline tests that does not change the state 	*/
+/*	(without unification).						*/
 /*	At this point, a test is considered to be inline (and hence a	*/
 /*	candidate for transformation to an "if-then-else") iff it is	*/
 /*	either an inline test, or a conjunction or disjunction of	*/
@@ -200,26 +201,16 @@ pre_else(Goal, NGoal, CutVid, _) :- pre_body(Goal, NGoal, CutVid).
 /*	complex constructs are encountered frequently in practice.	*/
 /*======================================================================*/
 
-all_inline_tests(and(G1,G2)) :-
-	all_inline_tests_conj(G1),
-	all_inline_tests_conj(G2).
-all_inline_tests(or(G1,G2)) :-
-	all_inline_tests_disj(G1),
-	all_inline_tests_disj(G2).
-all_inline_tests(inlinegoal(Pred,Arity,_)) :- 
+all_inline_tests(and(G1,G2),and(G1o,G2o)) :-
+	all_inline_tests(G1,G1o),
+	all_inline_tests(G2,G2o).
+all_inline_tests(or(G1,G2),or(G1o,G2o)) :-
+	all_inline_tests(G1,G1o),
+	all_inline_tests(G2,G2o).
+all_inline_tests(inlinegoal(Pred,Arity,Args),inlinegoal(Pred,Arity,Args)) :- 
 	inline_test(Pred,Arity).
-
-all_inline_tests_conj(and(G1,G2)) :-
-	all_inline_tests_conj(G1),
-	all_inline_tests_conj(G2).
-all_inline_tests_conj(inlinegoal(Pred,Arity,_)) :-
-	inline_test(Pred,Arity).
-
-all_inline_tests_disj(or(G1,G2)) :-
-	all_inline_tests_disj(G1),
-	all_inline_tests_disj(G2).
-all_inline_tests_disj(inlinegoal(Pred,Arity,_)) :-
-	inline_test(Pred,Arity).
+all_inline_tests(goal(sym(Pred,Arity,_,_),Args),inlinegoal(Pred,Arity,Args)) :- 
+	inline_jumpcof_cond(Pred,Arity,_).
 
 /*======================================================================*/
 /* inline_test(+Pred, +Arity)						*/
@@ -235,6 +226,7 @@ inline_test('=:=', 2).
 inline_test('=\=', 2).
 
 inline_test('==', 2).
+inline_test('@=', 2).
 inline_test('\==', 2).
 inline_test('@<', 2).
 inline_test('@=<', 2).
@@ -245,6 +237,7 @@ inline_test(var, 1).
 inline_test(nonvar, 1).
 
 inline_test(true, 0).
+inline_test(Pred,Arity) :- inline_jumpcof_cond(Pred,Arity,_).
 
 /*======================================================================*/
 /* find_prag(+Sym, -PredPrag)						*/
@@ -284,8 +277,14 @@ ti_prag(Sym, Prag) :-
 empty_ifthen_else(inlinegoal(true,0,[]), inlinegoal(true,0,[])).
 
 gensym_pred(P, NP) :-
-	gensym('_#', N2),
-	name_append(P, N2, NP).
+	cmp_gensym('_#', N2),
+	str_cat(P, N2, NP).
+
+cmp_gensym(Root,Sym) :-
+	coninc('_$compiler_gensym_ctr',Cnt),
+	number_codes(Cnt,CntC),
+	atom_codes(CntA,CntC),
+	str_cat(Root,CntA,Sym).
 
 force_preprocess_loaded.
 

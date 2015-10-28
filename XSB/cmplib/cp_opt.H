@@ -18,17 +18,25 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: cp_opt.H,v 1.1.1.1 1998-11-05 17:00:05 sbprolog Exp $
+** $Id: cp_opt.H,v 1.15 2012-02-01 20:06:42 dwarren Exp $
 ** 
 */
 
 
 :- export cp_opt/2.
+:- export perform_tabling_transforms/2.
+:- export extract_aggr_spec/4.
 
 :- import nthmember/3 from listutil.
-:- import parse_preddef/4 from parse.
 :- import have_hardcut/2 from preproc.
 :- import index_split/2 from tp_index.
-:- import member/2, append/3 from prof_sbp.
-:- import functor/3, arg/3, atom_chars/2 from standard.
-:- import sym_type/2, sym_name/3, sym_index/2 from symtab.
+:- import member/2, append/3, length/2, copy_term/2 from basics.
+:- import functor/3, arg/3, atom_codes/2, '=..'/2, call/1 from standard.
+:- import sym_type/2, sym_name/3, sym_index/2, sym_insert/5, sym_propin/2, sym_prop/2 from symtab.
+:- import warning/1 from auxlry.
+:- import syntax_error/1 from error_handler.
+:- import excess_vars/4 from setof.
+:- import concat_atom/2 from string.
+:- import trans_head/5, trans_goals/5 from parse.
+:- import memberchk/2 from basics.
+:- import '\='/2 from standard.

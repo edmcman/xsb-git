@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: asm_opt.H,v 1.1.1.1 1998-11-05 17:00:01 sbprolog Exp $
+** $Id: asm_opt.H,v 1.5 2010-08-19 15:03:35 spyrosh Exp $
 ** 
 */
 
@@ -28,5 +28,5 @@
 
 :- import option/1 from auxlry.
 :- import sym_prop/2 from symtab.
-:- import member/2 from prof_sbp.
+:- import member/2 from basics.
 

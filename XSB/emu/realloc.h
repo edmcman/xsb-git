@@ -36,22 +36,38 @@
                  *cell_ptr = cell_val + local_offset ;          \
 }       }
 
+#define realloc_ref_pre_image(cell_ptr, cell_val)                     \
+{       if (heap_bot <= cell_val)                                     \
+      /* <= because of heaptop in CP 13-10-1998 */                    \
+  {   if (cell_val <= heap_top)                                       \
+                *cell_ptr = (CPtr) ((Cell)(cell_val + heap_offset)   \
+                            | PRE_IMAGE_MARK) ;                       \
+            else if (cell_val <= ls_bot)                              \
+                 *cell_ptr = (CPtr) ((Cell) (cell_val + local_offset) \
+                            | PRE_IMAGE_MARK) ;                       \
+} }
+
 #define reallocate_heap_or_ls_pointer(cell_ptr) 		\
     cell_val = (Cell)*cell_ptr ; 				\
-    switch (cell_tag(cell_val)) 				\
-    { case REF: case REF1 : 					\
-        realloc_ref(cell_ptr,(CPtr)cell_val);            	\
-        break ; /* end case FREE or REF */ 			\
-      case CS : 						\
-        if (heap_bot<=(clref_val(cell_val)) && (clref_val(cell_val))<heap_top)\
+    switch (cell_tag(cell_val)) { 				\
+    case XSB_REF:    	     	     	     	     	\
+    case XSB_REF1 : 					\
+      realloc_ref(cell_ptr,(CPtr)cell_val);            	\
+      break ; /* end case XSB_FREE or XSB_REF */ 			\
+    case XSB_STRUCT : 						\
+      if (heap_bot<=(clref_val(cell_val)) && (clref_val(cell_val))<heap_top)\
 	  *cell_ptr = (CPtr)makecs((Cell)(clref_val(cell_val)+heap_offset)) ; \
-        break ; 						\
-      case LIST : 						\
-        if (heap_bot<=(clref_val(cell_val)) && (clref_val(cell_val))<heap_top)\
+      break ; 						\
+    case XSB_LIST : 						\
+      if (heap_bot<=(clref_val(cell_val)) && (clref_val(cell_val))<heap_top)\
           *cell_ptr = (CPtr)makelist((Cell)(clref_val(cell_val)+heap_offset));\
-        break ; 						\
-      default : /* no need to reallocate */ 			\
-        break ; 						\
+      break ; 						\
+    case XSB_ATTV:							\
+      if (heap_bot<=(clref_val(cell_val)) && (clref_val(cell_val))<heap_top)\
+          *cell_ptr = (CPtr)makeattv((Cell)(clref_val(cell_val)+heap_offset));\
+      break ; 						\
+    default : /* no need to reallocate */ 			\
+      break ; 						\
     }
 
 

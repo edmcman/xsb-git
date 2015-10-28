@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: modes.H,v 1.1.1.1 1998-11-05 17:00:09 sbprolog Exp $
+** $Id: modes.H,v 1.16 2010-08-19 15:03:35 spyrosh Exp $
 ** 
 */
 
@@ -26,7 +26,7 @@
 :- export ma/2.
 :- mode ma(++,++).
 
-:- import 
+:- import
 	trie_assert/1, trie_retract/1,
 	trie_retract_all/1, trie_dynamic/1,
 	abolish_table_pred/1, get_calls/3, get_returns/2
@@ -35,21 +35,20 @@
 :- import assert/1, clause/2, (dynamic)/1, retractall/1 from assert.
 
 :- import 
-	abort/0, atom_chars/2, cputime/1, call/1, 
+	abort/0, atom_codes/2, cputime/1, call/1, 
 	expand_term/2, file_exists/1, functor/3,
 	(index)/3, name/2, nl/0, (not)/1, op/3, read/1, repeat/0,
-	statistics/0, see/1, seeing/1, seen/0, (table)/1, tell/1,
+	statistics/0, see/1, seeing/1, seen/0, tell/1,
 	telling/1, told/0, write/1, writeln/1, write_canonical/1,
 	writeq/1, ('=..')/2
    from standard.
+:- import ground/1 from basics.
 
 :- import message/1, time_message/2 from auxlry.
-
 :- import findall/3 from setof.
-
-:- import append/3, ground/1, length/2, member/2 from basics.
-:- import str_length/2, str_cat/3, str_substring/4 from string.
-:- import conset/2, conget/2 from prof_sbp.
+:- import append/3, length/2, member/2 from basics.
+:- import str_cat/3 from string.
+:- import conset/2, conget/2 from gensym.
 :- import libpath/1 from loader.
 
 :- import '_$call_user'/1 from usermod.
@@ -58,3 +57,7 @@
 :- import bagPO/3, bagPO1/3 from aggregs.
 :- import subsumes_chk/2 from subsumes.
 :- import get_maximal_calls/1 from usermod.
+
+:- import '_$local_calls'/1, apply/2, (:-)/2, (:-)/1 from usermod.
+
+:- import inline_predicate/2 from builtin.

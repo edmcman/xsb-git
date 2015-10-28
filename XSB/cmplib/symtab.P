@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: symtab.P,v 1.1.1.1 1998-11-05 17:00:16 sbprolog Exp $
+** $Id: symtab.P,v 1.20 2011-09-06 17:33:46 dwarren Exp $
 ** 
 */
 
@@ -50,7 +50,7 @@
 /*          * PropList: an open list of                                 */
 /*                      pred, module,		                        */
 /*                      ex, local, im(Modname)                          */
-/*                      defined,                                        */
+/*                      defined, defined(Modname,Predname)              */
 /*              * Two special modname: system, quintus                  */
 /*          * Other: not used yet                                       */
 /*                                                                      */
@@ -65,47 +65,52 @@
 /*	are added and the symbol Sym is returned.			*/
 /*======================================================================*/
 
-sym_insert(Name, Arity, Prop, sym_tab(Buff,_Completed,HashTab), Sym) :-
-	( var(HashTab) ->	% SymTab does not exist yet (is empty).
-		buff_alloc(8, Buff, 1),
-                buff_set_word(Buff, 4, 0),
-		functor(HashTab, hash_tab, 101)
-	; true
+sym_insert(Name, Arity, Prop, SymTab, Sym) :-
+	SymTab = sym_tab(Count,_Completed,HashTab),
+	(var(Count)	% SymTab does not exist yet (is empty).
+	 ->	Count = 0
+	 ;	true
 	),
-	term_hash(Name, 101, Hash0), Hash is Hash0+1,
-	ll_arg(Hash, HashTab, Symlist),
+	log_ith(0,HashTab,HashSize),
+	term_hash(Name, HashSize, Hash0), Hash is Hash0+1,
+	log_ith(Hash, HashTab, Symlist),
+%%	(nonvar(_Completed) -> standard:writeln(userout,add_after_complete(Name,Arity));true),
 	sym_inserti(Name, Arity, Prop, Symlist, Sym, Index),
 	( var(Index) ->	% First time we encounter the symbol.
-		buff_word(Buff, 4, Index), New_I is Index+1,
-		backtrackable_buff_set_word(Buff, 4, New_I, Index)
+		Index = Count,
+		New_I is Index+1,
+	        term_set_arg(SymTab,1,New_I,-1)
         ; true
 	).
 
 %   for indexed insertion both into an uncompleted and a completed symbol table
-sym_inserti(Name, Arity, Prop, [Sym|_], Sym, Index) :- 
+sym_inserti(Name, Arity, Prop, [Sym|_], Sym, Index) :-
 	Sym = sym(Name,Arity,PropList,Index),
 	!,
 	sym_propin(Prop, PropList, Name, Arity).
 sym_inserti(Name, Arity, Prop, [_|SymTab], Sym, Index) :-
 	sym_inserti(Name, Arity, Prop, SymTab, Sym, Index).
 
-dispose_symtab( sym_tab(Buff,_,_) ) :- buff_dealloc( Buff, 8, 0, 1 ).
+dispose_symtab(_).
+
 
 /*======================================================================*/
 /*  sym_complete(#SymTab)						*/
 /*	Completes the hash table part of the symbol table by		*/
 /*	concatenating all the hash buckets.				*/
+/* DSW: This should be done better using the log_ith structure...	*/
 /*======================================================================*/
 
-sym_complete(sym_tab(_Buff,completed,HashTab)) :-
-	sym_complete1(1, _, HashTab).
+sym_complete(sym_tab(_Count,completed,HashTab)) :-
+	log_ith(0,HashTab,HashSize),
+	sym_complete1(1, HashSize, _, HashTab).
 
-sym_complete1(I, BucketList, HashTab) :-
-	( I > 101 -> true
-	; ll_arg(I, HashTab, BucketList),
+sym_complete1(I, HashSize, BucketList, HashTab) :-
+	( I > HashSize -> true
+	; log_ith(I, HashTab, BucketList),
 	  get_end_ith_bucket(BucketList, NextBucketList),
 	  NewI is I+1,
-	  sym_complete1(NewI, NextBucketList, HashTab)
+	  sym_complete1(NewI, HashSize, NextBucketList, HashTab)
 	).
 
 get_end_ith_bucket(BucketList, NextBucketList) :-
@@ -115,15 +120,13 @@ get_end_ith_bucket(BucketList, NextBucketList) :-
 	  get_end_ith_bucket(More, NextBucketList)
 	).
 
-
 /*======================================================================*/
 /*  sym_count(+SymTab, -NumberOfSymbols).				*/
 /*	Returns the number of symbols NumberOfSymbols stored in the	*/
 /*	SymTab symbol table.						*/
 /*======================================================================*/
 
-sym_count(sym_tab(Buff,_,_), NumberOfSymbols) :-
-	buff_word(Buff, 4, NumberOfSymbols).
+sym_count(sym_tab(Count,_,_), Count).
 
 
 /*======================================================================*/
@@ -141,7 +144,7 @@ sym_scan(Sym, Symtab, RestSymTab) :-
 		true
 	; Symtab = sym_tab(_,Comp,HashTab), 
 	  nonvar(Comp),		% can't use this until it's completed
-	  ll_arg(1,HashTab,[Sym|RestSymTab])
+	  log_ith(1,HashTab,[Sym|RestSymTab])
 	).
 
 
@@ -222,14 +225,9 @@ sym_propin1(Use, prop(_,_,_,OUse,_,_), N, A) :-
 sym_propin1(ep(EP), prop(_,_,_,_,ep(OEP),_), N, A) :- 
 	!,
 	( EP = OEP -> true ; error((N/A, ' has already an entry point!')) ).
-sym_propin1(tabled(Chs,Rhs), prop(_,_,_,_,_,List), _N, A) :- !,
-	member1(tabled(Tabind,Chs,Rhs,A), List),
-	(integer(Chs) -> true 
-	 ;		 Chs = 0),
-	(integer(Rhs) -> true 
-	 ;		 Rhs = 0),
-	(integer(Tabind) -> true 
-	 ;		 get_and_inc_tabnum(Tabind)).
+sym_propin1(tabled, prop(_,_,_,_,_,List), _N, A) :- !,
+	memberchk(tabled(Tabind,A), List),
+	( integer(Tabind) -> true ; get_and_inc_tabnum(Tabind) ).
 sym_propin1(Other, prop(_,_,_,_,_,OtherList), _N, _A) :- 
 	member(Other, OtherList), !.
 
@@ -245,7 +243,7 @@ get_and_inc_tabnum(N):-
 
 sym_prop(X, sym(_,_,PropList,_)) :- sym_prop0(X, PropList).
 
-sym_prop0(pred, prop(Type,_,_,_,_,_)) :- !, Type == pred.
+sym_prop0(pred, prop(Type,_,_,_,_,_)) :- !, Type == (pred).
 sym_prop0(module, prop(Type,_,_,_,_,_)) :- !, Type == module.
 
 sym_prop0(ex, prop(_,Env,_,_,_,_)) :- !, Env == ex.
@@ -255,6 +253,7 @@ sym_prop0(internal, prop(_,Env,_,_,_,_)) :- !, Env == internal.
 sym_prop0(global, prop(_,Env,_,_,_,_)) :- !, Env == global.
 
 sym_prop0(defined, prop(_,_,Def,_,_,_)) :- !, Def == defined.
+sym_prop0(defined(Mod,Pred), prop(_,_,Def,_,_,_)) :- !, nonvar(Def), Def = defined(Mod,Pred).
 sym_prop0(undef, prop(_,_,Def,_,_,_)) :- !, Def == undef.
 sym_prop0(used, prop(_,_,_,Used,_,_)) :- !, Used == used.
 sym_prop0(unused, prop(_,_,Used,_,_)) :- !, Used == unused.
@@ -273,7 +272,7 @@ sym_prop0(Other, prop(_,_,_,_,_,OtherList)) :- membercheck(Other, OtherList).
 
 extract_symlist(Prop, Symlist, sym_tab(_,Comp,Hashtab)) :-
 	nonvar(Comp),
-	ll_arg(1, Hashtab, Symtab),
+	log_ith(1, Hashtab, Symtab),
 	extract_symlist1(Prop, Symlist, Symtab).
 
 extract_symlist1(_Prop, [], SymTab) :- var(SymTab), !.
@@ -298,18 +297,21 @@ props_match(Prop, PropList) :- sym_prop0(Prop, PropList).
 /*	index field, giving them in the list Sorted_SymList.  The	*/
 /*	procedure should be carefully used, since it has side-effects.	*/
 /*======================================================================*/
-
 safe_sort_by_index(sym_tab(_,_,HashTab), Sorted_SymList) :-
-	ll_arg(1, HashTab, SymList),	% Be careful; SymList is open-ended.
+	log_ith(1, HashTab, SymList),	% Be careful; SymList is open-ended.
 	copy_term(SymList,Safe_list),	
 	closetail(Safe_list),		% This closes the open-end of SymList.
 	sort_indices(Safe_list, Sorted_SymList).
 
 sort_by_index(sym_tab(_,_,HashTab), Sorted_SymList) :-
-	ll_arg(1, HashTab, SymList),	% Be careful; SymList is open-ended.
+	log_ith(1, HashTab, SymList),	% Be careful; SymList is open-ended.
 	closetail(SymList),		% This closes the open-end of SymList.
 	sort_indices(SymList, Sorted_SymList).
 
+sort_indices(SymList,Sorted_SymList) :-
+	parsort(SymList,[asc(4)],0,Sorted_SymList).
+
+/****:- import append/3 from basics.
 sort_indices([], []).	
 sort_indices([Sym|Tail], Sorted_SymList) :-
 	Sym = sym(_,_,_,I),
@@ -327,7 +329,7 @@ split([Sym|Tail], Index, Small, Big) :-
 	; Big = [Sym|BigTail],
 	  split(Tail, Index, Small, BigTail)
 	).
-
+************/
 
 /*======================================================================*/
 /* Symbol's Properties:							*/
@@ -363,6 +365,7 @@ els_prop(mode(_)).
 % Usage checking
 %----------------
 def_prop(defined).
+def_prop(defined(_,_)).
 def_prop(undef).
 
 use_prop(used).
@@ -374,7 +377,11 @@ use_prop(unused).
 /*	Return the name Name and the arity Arity of the symbol Sym.	*/
 /*======================================================================*/
 
-sym_name(sym(P, A, _, _), P, A).
+sym_name(sym(P, A, _, _), P1, A) :-
+	(P = _Mod:P1
+	 ->	true
+	 ;	P1 = P
+	).
 
 
 /*======================================================================*/
@@ -406,8 +413,15 @@ sym_category(sym(_,_,prop(Cat,_,_,_,_,_),_), Cat).
 /*	Return the type Type of the symbol Sym.				*/
 /*======================================================================*/
 
-sym_type(sym(_,_,prop(_,_,_,_,_,Other),_), tabled(Ind,Chs,Rhs,Arity)) :-
-	member2(tabled(Ind,Chs,Rhs,Arity), Other).
+sym_type(sym(_,_,prop(_,_,_,_,_,Other),_), tabled(Ind,Arity)) :-
+	member2(tabled(Ind,Arity), Other),
+	!.
+sym_type(sym(_,_,prop(_,_,_,_,_,Other),_), aggregation(Spec)) :-
+	member2(aggregation(Spec), Other).
+sym_type(sym(_,_,prop(_,_,_,_,_,Other),_), approximation(Spec)) :-
+	member2(approximation(Spec), Other).
+sym_type(sym(_,_,prop(_,_,_,_,_,Other),_), subsumption_modes(Modes)) :-
+	member2(subsumption_modes(Modes), Other). % Modes is an open-tailed list
 
 
 /*======================================================================*/
@@ -432,35 +446,41 @@ sym_pass_thru(sym(pass_thru,-1,prop(junk,internal,junk,used,junk,[]),-1)).
 /* 	Routines to handle clauses.					*/
 /*======================================================================*/
 
-add_new_clause(New,[X|L]) :- 
-	var(X)
-	 ->	X=New	% first element
-	 ;	add_new_clause1(New,L,0).
+add_new_clause(New,Clauses) :-
+	add_new_clause(New,Clauses,_).
 
-add_new_clause1(New,[_|L],N) :- 
+add_new_clause(New,[X|L],K) :- 
+	var(X)
+	 ->	X=New,K=1	% first element
+	 ;	add_new_clause1(New,L,0,K).
+
+add_new_clause1(New,[_|L],N,K) :- 
 	L = [Y|_], nonvar(Y), !,
-	N1 is N+1, add_new_clause1(New,L,N1).
-add_new_clause1(New,[X|L1],N) :-	% X is last bound on list
-	(add_tree(New,X,N)
-	 ->	true
+	N1 is N+1, add_new_clause1(New,L,N1,K).
+add_new_clause1(New,[X|L1],N,K) :-	% X is last bound on list
+	(add_tree(New,X,N,K2)
+	 ->	K is 2** (N+1)-1+K2
 	 ;	L1=[Y|_],
 		N1 is N+1,
-		add_tree(New,Y,N1)
+		add_tree(New,Y,N1,K2),
+		K is 2** (N+2)
 	).
 
-add_tree(New,[X|Y],N) :-
+add_tree(New,[X|Y],N,K) :-
 	(N =:= 0
 	 ->	(var(X)
-		 ->	X=New
-		 ;	var(Y),	Y=New
+		 ->	X=New, K=1
+		 ;	var(Y),	Y=New, K=2
 		)
 	 ;	N1 is N-1,
 		(var(Y)
-		 ->	(add_tree(New,X,N1)
-			 ->	true
-			 ;	add_tree(New,Y,N1)
+		 ->	(add_tree(New,X,N1,K1)
+			 ->	K = K1
+			 ;	add_tree(New,Y,N1,K1),
+				K is 2**N+1
 			)
-		 ;	add_tree(New,Y,N1)
+		 ;	add_tree(New,Y,N1,K1),
+			K is 2**N+K1
 		)
 	).
 
@@ -483,4 +503,3 @@ tree_listify(T,L0,L) :-
 			tree_listify(Y,L1,L)
 		 ;	L0 = [T|L]
 		).
-

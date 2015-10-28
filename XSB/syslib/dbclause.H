@@ -1,5 +1,5 @@
 /* File:      dbclause.H
-** Author(s): Kostis F. Sagonas, David S. Warren
+** Author(s): Kostis Sagonas, David S. Warren
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -18,25 +18,22 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: dbclause.H,v 1.1.1.1 1998/11/05 17:00:26 sbprolog Exp $
+** $Id: dbclause.H,v 1.17 2006/04/17 20:51:30 tswift Exp $
 ** 
 */
 
 	  
-:- export db_retract/3, db_retract_nr/3, db_reclaim_space/2.
-:- export db_clause/4.
-:- export db_retractall/2, db_abolish/2, '_$clause_int'/1.
+:- export db_retract/4, db_retract_nr/4, db_reclaim_space/2.
+:- export db_clause/4, db_retractall/3, db_abolish/1, '_$clause_int'/1.
 
-
-:- import asserti/2 from assert.
-:- import abort/1, atom/1,
-          call/1, repeat/0 from standard.
+:- import abort/1, atom/1, call_c/1, repeat/0, is_most_general_term/1
+     from standard.
 :- import set_inthandler/2, '_$load_undef'/1 from loader.
-:- import stat_set_flag/3, code_call/3, conname/2,
-          conpsc/2, term_arg/3, psc_arity/2, gen_retract_all/1,
-	  buff_set_byte/3,
-	  buff_set_cell/4, buff_set_var/4, buff_byte/3, 
-	  buff_word/3, buff_cell/3, buff_alloc/3, 
-          db_get_clause/8, db_retract0/2, db_remove_prref/1
+:- import log_ith/3 from basics.
+:- import stat_set_flag/2, code_call/3, conname/2,
+          gen_retract_all/2,dynamic_code_function/5,
+	  db_get_clause/11, db_retract0/3, db_abolish0/2, db_reclaim0/2,
+	  globalvar/1, term_set_arg/4, psc_ep/2,
+	  trie_assert_hdr_info/3
      from machine.
 

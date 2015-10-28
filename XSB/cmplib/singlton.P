@@ -1,5 +1,6 @@
 /* File:      singleton.P
-** Author(s): Kostis F. Sagonas
+** Author(s): Sagonas
+** Modified by Swift to support read_term.
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -18,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: singlton.P,v 1.1.1.1 1998-11-05 17:00:14 sbprolog Exp $
+** $Id: singlton.P,v 1.14 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
@@ -26,8 +27,9 @@
 
 /*======================================================================*/
 /*  singleton_check(+Clause, +VariableList).				*/
-/*======================================================================*/
+/*============================================================*/
 
+singleton_check(X, _) :- var(X), !.
 singleton_check([], _) :- !.
 singleton_check([Cl|Cls], VariableList) :- !,
 	singleton_check(Cl, VariableList),
@@ -50,34 +52,53 @@ singleton_check(Clause, VariableList) :-
 		% only underscores as variables), where VariableList is
 		% variable and no singleton test is needed.
 'singleton check'(Clause, VariableList) :-
-	singleton_warnings(Clause, VariableList),
+	once(singleton_warnings(Clause, VariableList)),
 	fail.	% Undo numbervars' side-effects and reclaim all space used.
 'singleton check'(_, _).
 
-
 singleton_warnings(Clause, VariableList) :-
-	numbervars(Clause, 1, NumberOfVars),
+	numbervars_cmplib(Clause, 1, NumberOfVars),
 	N is NumberOfVars - 1,
-	functor(Occurences, occ, N),
+	log_ith(0,Occurences,N),
 	calculate_occurences(Clause, Occurences),
 	Clause = (Head :- _),
 	hilog_functor(Head, P, A),
 	write_singleton_warnings(VariableList, Occurences, P, A).
 
+/* TLS: This is used for read_term */
+calculate_singleton(Clause,VarList,Occurences) :-
+	copy_term((Clause,VarList),(Clause1,VarList1)),
+	numbervars_cmplib(Clause1, 1, NumberOfVars),
+	N is NumberOfVars - 1,
+	log_ith(0,Occ,N),
+	calculate_occurences(Clause1, Occ),
+	process_raw_occurences(VarList,VarList1,Occ,Occurences).
+
+process_raw_occurences([],_, _, []):- !.
+%process_raw_occurences([_],_, _, []):- !.
+process_raw_occurences([vv(Name,Var)|R],[vv(Name,'_$cmplib_var'(N))|R1],Occ, Occurences) :-
+	atom_codes(Name, CharList),
+	( CharList = [95|_] ->	% variable Var begins with an "_"
+                Occurences = NewOccurences
+	  ; log_ith(N, Occ, OccCount),
+	    ( OccCount == found('at least twice') -> 
+  	        Occurences = NewOccurences
+	      ; Occurences = [Name = Var|NewOccurences] )
+	),
+	process_raw_occurences(R, R1, Occ, NewOccurences).
 
 calculate_occurences(Term, Occurences) :-
 	functor(Term, _, Arity),
 	'calculate occurences'(Term, 0, Arity, Occurences).
-
 
 'calculate occurences'(_, N, N, _) :- 
 	!.
 'calculate occurences'(Term, N, Arity, Occurences) :-
 	NewN is N + 1,
 	arg(NewN, Term, Arg),	% We cannot use ll_arg/3 here (Term may be a list)
-	( Arg = '$VAR'(Number) ->
+	( Arg = '_$cmplib_var'(Number) ->
 		( integer(Number) ->
-			ll_arg(Number, Occurences, OccCount),
+			log_ith(Number, Occurences, OccCount),
 			( var(OccCount) -> OccCount = found(_)
 			; OccCount = found(Times) -> 
 				( var(Times) -> Times = 'at least twice'
@@ -94,18 +115,22 @@ calculate_occurences(Term, Occurences) :-
 	),
 	'calculate occurences'(Term, NewN, Arity, Occurences).
 
+write_singleton_warnings(VariableList, Occurences, P, A):- 
+	(option(singleton_warnings_off) -> 
+	    true
+	  ; write_singleton_warnings_1(VariableList, Occurences, P, A) ).
 
-write_singleton_warnings([], _, _, _) :-
+write_singleton_warnings_1([], _, _, _) :-
 	!.	% This captures the open-end of VariableList.
-write_singleton_warnings([vv(VarName,'$VAR'(N))|Rest], Occurences, P, A) :-
-	atom_chars(VarName, CharList),
+write_singleton_warnings_1([vv(VarName,'_$cmplib_var'(N))|Rest],Occurences, P, A) :-
+	atom_codes(VarName, CharList),
 	( CharList = [95|_] ->	% variable Var begins with an "_"
 		true		% (underscore), so its OK, ignore it!.
-	; ll_arg(N, Occurences, OccCount),
+	; log_ith(N, Occurences, OccCount),
 	  ( OccCount == found('at least twice') -> true
-	  ; warning(('Singleton variable ', VarName,
+	  ; (warning(('Singleton variable ', VarName,
 		     ' in a clause of ', P, '/', A))
 	  )
-	),
-	write_singleton_warnings(Rest, Occurences, P, A).
+	) ),
+	write_singleton_warnings_1(Rest, Occurences, P, A).
 

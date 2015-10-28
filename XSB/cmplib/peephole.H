@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: peephole.H,v 1.1.1.1 1998-11-05 17:00:10 sbprolog Exp $
+** $Id: peephole.H,v 1.7 2010-08-19 15:03:35 spyrosh Exp $
 ** 
 */
 
@@ -27,5 +27,5 @@
 
 :- export force_peephole_loaded/0, compile_peephole_opt/2.
 
-:- import member1/2 from auxlry.
+:- import memberchk/2 from basics.
 :- import sym_name/3 from symtab.

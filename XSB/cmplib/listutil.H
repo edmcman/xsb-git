@@ -19,7 +19,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: listutil.H,v 1.1.1.1 1998-11-05 17:00:07 sbprolog Exp $
+** $Id: listutil.H,v 1.8 2011-09-06 17:33:46 dwarren Exp $
 ** 
 */
 
@@ -28,6 +28,9 @@
 :- export attach/2, merge/3, absmember/2, member2/2, length/2,
 	  closetail/1, insert/2, membercheck/2, nthmember/3,
 	  absmerge/3, delete/3, delete_ith/4, reverse/2.
+:- export build_bt/2,find_in_bt/2.
 
-:- import member/2 from prof_sbp.
+:- import member/2 from basics.
+
+:- import sort/2 from setof.
 

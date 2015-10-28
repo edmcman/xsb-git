@@ -19,57 +19,102 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.2 1998-11-15 02:56:15 kifer Exp $
+## $Id: Makefile,v 1.26 2011-03-28 12:47:32 dwarren Exp $
 ## 
 ##
 
+OBJEXT=.xwam
 
-CMP =	asm.O asm_inst.O asm_opt.O asmpass2.O auxlry.O builtin.O \
-	compile.O config.O cp_opt.O cutcheck.O flatten.O inprog.O \
-	listutil.O makemode.O modeinf.O modes.O parse.O peephole.O \
-	pre_cond.O preproc.O printres.O prof_sbp.O sanity.O \
-	singlton.O spec.O suppltab.O symtab.O tabdef.O ti_mod.O \
-	tp_comp.O tp_cond.O tp_eval.O tp_goal.O tp_index.O tp_var.O \
-	tpinline.O tprog.O useinfer.O varproc.O writeasm.O
+ALL =	asm${OBJEXT} asm_inst${OBJEXT} asm_opt${OBJEXT} asmpass2${OBJEXT} \
+	auxlry${OBJEXT} builtin${OBJEXT} \
+	ciao_directives${OBJEXT} \
+	compile${OBJEXT} config${OBJEXT} cp_opt${OBJEXT} cutcheck${OBJEXT} \
+	flatten${OBJEXT} inprog${OBJEXT} \
+	listutil${OBJEXT} makemode${OBJEXT} modeinf${OBJEXT} modes${OBJEXT} \
+	parse${OBJEXT} peephole${OBJEXT} \
+	pre_cond${OBJEXT} preproc${OBJEXT} printres${OBJEXT} \
+	prof_sbp${OBJEXT} sanity${OBJEXT} \
+	singlton${OBJEXT} spec${OBJEXT} suppltab${OBJEXT} symtab${OBJEXT} \
+	tabdef${OBJEXT} ti_mod${OBJEXT} \
+	tp_comp${OBJEXT} tp_cond${OBJEXT} tp_eval${OBJEXT} tp_goal${OBJEXT} \
+	tp_index${OBJEXT} tp_var${OBJEXT} \
+	tpinline${OBJEXT} tprog${OBJEXT} useinfer${OBJEXT} varproc${OBJEXT} \
+	writeasm${OBJEXT}
 
-Option = [sysmod,optimize,spec_repr]
+EMU_INCLUDES = ../emu/builtin.h ../emu/celltags_xsb.h ../emu/flag_defs_xsb.h \
+	../emu/io_defs_xsb.h ../emu/syscall_xsb.h ../emu/sig_xsb.h \
+	../emu/system_defs_xsb.h ../emu/socket_xsb.h 
+PROLOG_INCLUDES = ../prolog_includes/char_defs.h ../prolog_includes/standard.h
+
+Option = [sysmod,optimize,spec_repr,quit_on_error]
 
 #-------------------------------------------------------------------#
-### Please select ONE Prolog below to run this makefile.
-### At developement stage, an older version of XSB or PSB-Prolog is
-### suggested.
-###
-### Note: if you select self-make, be careful to save all the
-###       current *.O files, so that when the new files have
-###       errors, the old *.O can be re-installed.
-#
-# Self-make: Version 1.6.0
 #
 XSB=../bin/xsb
-Prolog = $(XSB) -i -s -m 1200 -c 2000
+Prolog = $(XSB) -e "segfault_handler(warn)."
 #
 #-------------------------------------------------------------------#
 
-# continue to the next when one error occurs
+# Make sure warnings are saved in a file.
+SVFILE = '../build/.xsb_cmplib_warn.tmp'
+STDWARN = 3
+HDRMSG = "While compiling XSB/cmplib:"
+CMDFILE = 'cmd...'
 
-.IGNORE:
+OBJFILESAVED = objfiles.saved
+
 
 # suffix rules
-.SUFFIXES: .P .O .H
+.SUFFIXES: .P ${OBJEXT} .H
 
+all: init  $(ALL) finish
+	@../build/touch.sh $(CMDFILE)
+	$(Prolog) < $(CMDFILE)
+	/bin/rm $(CMDFILE)
+	@cat $(SVFILE)
+
+%${OBJEXT}:   %.P  $(PROLOG_INCLUDES) $(EMU_INCLUDES)
+	@cp -f $*${OBJEXT} $(OBJFILESAVED) || echo ""
+	echo 'mc($*, $(Option)).' >> $(CMDFILE)
+# The following is done because of brain damage in some make utilities
+# (notably Sun's), which don't take %.P %.H in the same dependency list
+%.P:   %.H
+	../build/touch.sh $@
+
+# These targets are obsolete. They are here just in case some 
+# obscure make utility doesn't understand patterns
 .H.P:
-	echo 'mc($*, $(Option)).' >> cmd...
+	../build/touch.sh $@
+.P${OBJEXT}:
+	@cp -f $*${OBJEXT} $(OBJFILESAVED) || echo ""
+	echo 'mc($*, $(Option)).' >> $(CMDFILE)
 
-.P.O:
-	echo 'mc($*, $(Option)).' >> cmd...
+# Redirect warnings into a file so we would be able to display it later.
+# Assert the emu/prolog_includes into xpp_include_dir, to make sure that
+# the right include directories are used if we compile cmplib using an
+# older version of XSB
+init:
+	rm -f $(CMDFILE)
+	rm -f $(SVFILE)
+	@test -d $(OBJFILESAVED) || mkdir $(OBJFILESAVED)
+	@echo "import file_reopen/4, file_flush/2 from file_io." >> $(CMDFILE)
+	@echo "file_reopen($(SVFILE),w,$(STDWARN),_)." >> $(CMDFILE)
+	@echo "file_write($(STDWARN),'----------------- Warnings ------------------------'), file_nl($(STDWARN))." >> $(CMDFILE)
+	@echo "file_write($(STDWARN),'$(HDRMSG)'), file_nl($(STDWARN))." >> $(CMDFILE)
+	@echo "file_flush($(STDWARN),_)." >> $(CMDFILE)
+	@echo "import xpp_include_dir/1 from parse." >> $(CMDFILE)
+	@echo "assert(xpp_include_dir('../emu'))." >> $(CMDFILE)
+	@echo "assert(xpp_include_dir('../prolog_includes'))." >> $(CMDFILE)
 
-# Unfortunately, this needs to be commented on the NeXT.
-# %.O:	%.H
+finish:
+	@echo "file_write($(STDWARN),'-------------------- End --------------------------'), file_nl($(STDWARN))." >> $(CMDFILE)
 
-all: $(CMP)
-	@touch cmd...
-	$(Prolog) < cmd...
-	/bin/rm cmd...
+restore:
+	mv -f $(OBJFILESAVED)/*${OBJEXT} .
+
+clean:
+	rm -f core *~ *.bak .#*
+	rm -f objfiles.saved/*
 
 .DONE:
 	echo Done

@@ -1,4 +1,4 @@
-/* File:      modes.H
+/* File:      modeinf.H
 ** Author(s): C.R. Ramakrishnan
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: modeinf.H,v 1.1.1.1 1998-11-05 17:00:08 sbprolog Exp $
+** $Id: modeinf.H,v 1.14 2010-08-19 15:03:35 spyrosh Exp $
 ** 
 */
 
@@ -28,7 +28,7 @@
 
 :- export mode_subsumes_chk/2.
 
-:- import 
+:- import
 	trie_assert/1, trie_retract/1,
 	trie_retract_all/1, trie_dynamic/1,
 	abolish_table_pred/1, get_calls/3, get_returns/2
@@ -37,27 +37,27 @@
 :- import assert/1, clause/2, (dynamic)/1, retractall/1 from assert.
 
 :- import 
-	abort/0, atom_chars/2, cputime/1, call/1, file_exists/1, functor/3,
-	(index)/3, name/2, nl/0, read/1, repeat/0, statistics/0,
-	see/1, seeing/1, seen/0, (table)/1, tell/1, telling/1, told/0,
-	write/1, writeln/1, writeq/1, write_canonical/1, ('=..')/2
+	abort/0, atom_codes/2, cputime/1, call/1, file_exists/1, functor/3,
+	(index)/3, name/2, nl/1, read/1, repeat/0, statistics/0,
+	see/1, seeing/1, seen/0, (table)/1,
+	write/1, write/2, writeln/1, writeln/2, writeq/2, 
+	('=..')/2, write_canonical/2, open/3, close/1
    from standard.
 
-:- import file_time/2 from machine.
+:- import file_time/2 from file_io.
 
 :- import message/1, time_message/2, warning/1, option/1 from auxlry.
 
 :- import inline_predicate/2 from builtin.
 
 :- import findall/3 from setof.
-:- import decl_ext/1, hdr_ext/1 from curr_sym.
 :- import
 	append/3, copy_term/2, ith/3, length/2, member/2, memberchk/2,
 	select/3
    from basics.
 
 :- import str_cat/3 from string.
-:- import conset/2, conget/2 from prof_sbp.
+:- import conset/2, conget/2 from gensym.
 :- import libpath/1 from loader.
 
 :- import '_$call_user'/1 from usermod.
@@ -75,3 +75,5 @@
 
 %:- export prop_iff/2, prop_iff/1, prop_iff_list/2.
 %:- export prop_if_list/2, prop_if/3, prop_if/2.
+
+:- import apply/2, (:-)/2, (:-)/1 from usermod.

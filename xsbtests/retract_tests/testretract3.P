@@ -82,6 +82,8 @@ test5c :-
 	retractall(p(2,_,_)),retractall(q(2,_,_)),
 	cmp,
 	retractall(p(_,_,_)),retractall(q(_,_,_)),
+	cmp,
+	(retract(p(_,_,_)),fail;true),(retract(q(_,_,_)),fail;true),
 	cmp.
 
 cmp :- findall(p(X,Y,Z),p(X,Y,Z),L1),findall(p(X,Y,Z),q(X,Y,Z),L2),L1=L2.

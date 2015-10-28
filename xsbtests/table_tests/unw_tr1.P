@@ -1,3 +1,6 @@
+% Don't abstract -- no finite model.
+?- set_prolog_flag(max_table_subgoal_size,10).
+
 test :- sentence(_, _, _), fail.
 test :- nl.
 

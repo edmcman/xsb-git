@@ -18,13 +18,22 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: socket.H,v 1.1.1.1 1998-11-05 17:00:30 sbprolog Exp $
+** $Id: socket.H,v 1.9 2010-08-19 15:03:38 spyrosh Exp $
 ** 
 */
 
+%% Calls that don't return the error code
 :- export socket/1, socket_bind/2, socket_listen/2, socket_accept/2, 
-     socket_connect/4, socket_flush/1, socket_close/1, socket_recv/2,
-     socket_send/2, socket_send_eof/1, socket_send_asci/2.
+     socket_connect/3, socket_flush/1, socket_close/1, socket_recv/2,
+     socket_send/2, socket_put/2, socket_set_option/3.
 
-:- import socket_request/6 from machine.
+%% Calls that do return the error code
+:- export socket/2, socket_bind/3, socket_listen/3, socket_accept/3, 
+     socket_connect/4, socket_close/2, socket_recv/3,
+     socket_send/3, socket_get0/3, socket_put/3.
 
+:- export socket_set_select/4, socket_select/6, socket_select_destroy/1.
+
+:- import socket_request/7, file_function/7 from machine.
+
+:- import obsolete/2 from obsolete.

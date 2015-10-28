@@ -1,5 +1,5 @@
 /* File:      x_interp.H
-** Author(s): David Warren, Terrance Swift, Jiyang Xu
+** Author(s): David Warren, Terrance Swift, Jiyang Xu, Kostis Sagonas
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -19,38 +19,51 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: x_interp.H,v 1.2 1998/11/09 22:27:48 kifer Exp $
+** $Id: x_interp.H,v 1.44 2008/04/07 00:25:47 tswift Exp $
 ** 
 */
 
 
-:- export break/0, prompt/3.
+:- export break/0.
+:- export handle_timed_calls/0, reinvoke_timed_calls/0.
 
-
-
-:- import set_inthandler/2 from loader.
-
-:- import
-       abort/0, call_c/1, call_expose/1, goal_cut_trans/3, repeat/0,
-       see/1, seen/0, call/1, push_abort_cutpoint/0, pop_abort_cutpoint/0
-   from standard.
-
-:- import
-       psc_type/2, psc_set_type/3, psc_prop/2, psc_set_prop/3,
-       psc_arity/2, term_psc/2, term_arg/3, term_new/2,
-       term_type/2, conpsc/2, conname/2, file_get/2,
-       stat_flag/2, stat_set_flag/3, str_insert/2, is_xwammode/1,
-       close_open_tables/0, trimcore/0, 
-       file_read_line/2, slash/1, fmt_write_string/3,
-       file_open/3, file_close/1
-   from machine.
-
-:- import file_write/2, file_nl/1 from xsb_writ.
-:- import file_read/3, vv/2, file_read/2 from xsb_read.
-
-:- import numbervars/1 from num_vars.
-
-:- import xsb_configuration/2 from configuration.
-:- import [] / 0 from usermod.	       % just to make usermod typed "module"
-
+:- import [] / 0 from usermod.	% just to make usermod typed "module"
+:- import assert/1, retract/1 from assert.
 :- import xsb_flag/2 from curr_sym.
+:- import numbervars/1 from num_vars.
+:- import set_inthandler/2 from loader.
+:- import file_write/2, file_nl/1 from xsb_writ.
+:- import xsb_configuration/2 from xsb_configuration.
+:- import file_read/3, vv/2 from xsb_read.
+%% These are explicitly imported because they are used early on, 
+%% before XSB is fully bootstrapped.
+   :- import abort/0,call/1, call_c/1, call_expose/1, catch/3, call_goal_cut_trans/3,
+   atom_codes/2, seeing/1, telling/1, see/1, tell/1, seen/0, told/0,
+   gc_tables/1,gc_dynamic/1,
+   handle_interrupts/1
+     from standard.
+:- import '$$exception_ball'/2 from standard.
+:- import close_open_tables/1,
+          is_xwammode/1, 
+	  stat_flag/2, stat_set_flag/2,
+	  slash/1, trimcore/0,
+	  xwam_state/2,
+	  prompt/2, prompt/3
+     from machine.
+:- import start_sleeper_thread/1 from machine.
+:- import file_open/3, file_close/1, file_get/2, fmt_write_string/3,
+          file_flush/2, /*ioport2iostream/2,*/
+%	  fmt_write/3, 
+          file_getbuf_atom/4
+    from file_io.
+:- import push_stdin/2, pop_stdin/1 from push_io.
+:- import  retractall/1 from assert.
+:- import call_xsb_hook/2, xsb_exit_hook/1 from xsb_hook.
+%:- import verify_attributes/2 from usermod.
+
+:- import conset/2, conget/2 from gensym.
+
+:- import banner_control/1 from banner.
+
+:- import xsb_thread_self/1 from thread.
+

@@ -35,19 +35,16 @@
 
 tran(String) :-
 	abolish_table_info,
-	cputime(T0),
-        (	parse(s(M),String),
-        	(numbervars(M,0,_),     %write(' Direct: '),
-	         write('top level solution'),
-	                lwrite(M),nl,
-%	                write_canonical(M),nl,
-        	        fail;true),
-%       	lred(M,R),
-%       	(numbervars(R,0,_),write('Reduced: '),lwrite(R),nl,fail;true),
+        (	parse(s(_M),String),
+%        	(numbervars(_M,0,_),     %write(' Direct: '),
+%	         write('top level solution'),
+%	                lwrite(_M),nl,
+%%	                write_canonical(_M),nl,
+%        	        fail;true),
+%%       	lred(_M,R),
+%%       	(numbervars(R,0,_),write('Reduced: '),lwrite(R),nl,fail;true),
 	        fail
-	;
-		cputime(T1), Et is T1-T0,
-		write('CPU Time: '),write(Et),nl
+	;   true
 	).
 
 s(M) --> s(M,[],[]).

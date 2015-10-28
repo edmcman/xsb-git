@@ -20,7 +20,7 @@ e(2).
 
 %--------------------------------------------------------------
 
-:- import get_returns_for_call/2 from tables.
+:- import get_residual/2 from tables.
 
 test :- a, fail.
 test :-
@@ -30,10 +30,9 @@ test :-
 	; writeln('c is false')
 	),
 	( d -> writeln('d is true') ; writeln('d is false (OK)') ), fail.
-test :- get_returns_for_call(b(_), Return), write(Return),
-	( tnot(Return) ->  writeln(' is undefined')
-	; writeln(' is true (OK)')
-	), fail.
+test :- C = b(_), get_residual(C, L), write(C),
+	( L == [] -> writeln(' is true (OK)') ; writeln(' is undefined') ),
+	fail.
 test.
 
 %--------------------------------------------------------------

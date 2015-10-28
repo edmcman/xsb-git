@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: hilogsym.H,v 1.1.1.1 1998/11/05 16:59:50 sbprolog Exp $
+** $Id: hilogsym.H,v 1.2 1998/11/15 06:09:15 kifer Exp $
 ** 
 */
 
@@ -26,7 +26,7 @@
 :- export '_$hilog_symbol'/1, add_hilog_symbol/1. 
 
 
-:- import assertai/2 from assert.
+:- import assertai/2, (dynamic)/1 from assert.
 :- import atom/1, abort/1 from standard.
 
 

@@ -16,7 +16,7 @@
 :- import append/3 from basics.
 
 tokenise(String, Tokenised_List) :-
-	atom_chars(String, Chars),
+	atom_codes(String, Chars),
 	form_tokens(Chars, [], Tokenised_List).
 
 /*----------------------------------------------------------------------*/
@@ -35,7 +35,7 @@ form_tokens([Char|Rest_Chars], Current_ASCII_Token, Token_List) :-
 		make_token(Current_ASCII_Token, One_Token_List),
 		form_tokens(Rest_Chars, [], Rest_Token_List),
 		append(One_Token_List, Rest_Token_List, Token_List)
-	; ( atom_chars(Delimiter,[Char]), delimiter(Delimiter) ) ->
+	; ( atom_codes(Delimiter,[Char]), delimiter(Delimiter) ) ->
 		make_token(Current_ASCII_Token, One_Token_List),
 		form_tokens(Rest_Chars, [], Rest_Token_List),
 		append(One_Token_List, [Delimiter|Rest_Token_List], Token_List)

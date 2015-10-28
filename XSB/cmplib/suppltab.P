@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: suppltab.P,v 1.1.1.1 1998-11-05 17:00:16 sbprolog Exp $
+** $Id: suppltab.P,v 1.6 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
@@ -73,10 +73,10 @@ pred_edb_dependency(Pred, AllPreds) :-
 	Pred = pred(Sym,Cls,_Prag),
 	sym_name(Sym, Name, Arity),
 	( edb_dep(Name, Arity, _) -> true	% already computed
-	; sym_prop(tabled(_,_,_,_), Sym) -> assert(edb_dep(Name,Arity,1))
+	; sym_prop(tabled(_,_), Sym) -> assert(edb_dep(Name,Arity,1))
 	; sym_prop((edb), Sym) -> assert(edb_dep(Name,Arity,1))
 	; sym_prop(defined, Sym),
-	  ( nonvar(Cls) ; member1(Pred, AllPreds) ) ->
+	  ( nonvar(Cls) ; memberchk(Pred, AllPreds) ) ->
 		edb_dependencies(Cls, Sym, AllPreds, 0, MaxD, Deps),
 		conget('EDB Dep #', EDB_Dep),
 		( MaxD >= EDB_Dep -> table_it(Sym), Dep = 1 ; Dep = MaxD ),
@@ -194,7 +194,7 @@ new_preds([P1,P2|Ps], [GA|GAs], [Sym|Syms], Name,
 	  SymTab, [Pred|NPmid], NPout, NewBody) :-
 	new_pred(GA, HeadArgs, 0, Arity, P1, Body),
 	gensym_pred(Name, NewName),
-	Properties = [pred,defined,used,tabled(_,_)],
+	Properties = [pred,defined,used,tabled],
 	sym_insert(NewName, Arity, Properties, SymTab, Sym),
 	Pred = pred(Sym,[clause(HeadArgs,Body,_)],_Prag),
 	new_preds([P2|Ps], GAs, Syms, Name, SymTab, NPmid, NPout, NewBody).
@@ -310,7 +310,7 @@ cv1([], _).
 cv1([Arg|Args], CV) :- cv2(Arg, CV), cv1(Args, CV).
 
 cv2(Arg, CV):-
-	( Arg = varocc(_) -> member1(Arg, CV)
+	( Arg = varocc(_) -> memberchk(Arg, CV)
 	; Arg = structure(_,Args) -> cv1(Args, CV)
 	; true
 	).
@@ -333,7 +333,7 @@ args_of_new_goal([Var|Vars], Vs, CallVarList) :-
 	( needed(Var, Vs) -> CallVarList = [Var|CVL] ; CallVarList = CVL ),
 	args_of_new_goal(Vars, Vs, CVL).
 
-needed(Var, VL) :- member(VarList, VL), member1(Var, VarList).
+needed(Var, VL) :- member(VarList, VL), memberchk(Var, VarList).
 
 /*----------------------------------------------------------------------*/
 /* can_be_folded(+Body)							*/
@@ -381,5 +381,5 @@ end_of_file.
 
 :- import telling/1, tell/1, told/0, ttywrite/1, nl/0 from standard.
 
-typeout(M) :- telling(X), tell(user), ttywrite(M), nl, told, tell(X).
+typeout(M) :- telling(X), tell(userout), ttywrite(M), nl, told, tell(X).
 

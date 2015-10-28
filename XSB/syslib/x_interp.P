@@ -20,265 +20,478 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: x_interp.P,v 1.5 1998/11/25 22:53:37 warren Exp $
+** $Id: x_interp.P,v 1.65 2008/11/12 21:56:52 dwarren Exp $
 ** 
 */
 
+:- compiler_options([xpp_on,sysmod,optimize]).
+
+#include "sig_xsb.h"
+#include "flag_defs_xsb.h"
+#include "heap_defs_xsb.h"
+#include "standard.h"
+#include "char_defs.h"
 
 /*======================================================================*/
 /*  This file contains the main program of the interpreter.		*/
-/*======================================================================*/
-/*  WARNING: Should you change this file better consult the comment in	*/
-/*	     predicate hack_libpath_changed/0 first!			*/
 /*======================================================================*/
 
 :- interpreter.
 
 interpreter :-
-        set_inthandler('_$keyboard_int'(_), 1),         % MYSIG_KEYB
-        set_inthandler('_$calltonum'(_), 3),            % MYSIG_SPY
-        version_message,
+        set_inthandler('_$keyboard_int'(_,_), MYSIG_KEYB),
+	set_inthandler('_$attv_int'(_,_), MYSIG_ATTV),
+	set_inthandler('_$thread_int'(_,_), THREADSIG_CANCEL),
+	set_inthandler('_$timer_int'(_,_), TIMER_INTERRUPT),
+	set_inthandler('_$lazy_reeval_int'(_,_), LAZY_REEVAL_INTERRUPT),
+	( banner_control(nobanner)
+	->  true		% don't print banner
+	;   version_message
+	),
         prompt('| ?- ',[]),
         prompt('',[],'_$more_prompt'(_)),
         prompt(' ? ',[],'_$debug_prompt'(_)),
         fail.
-
 interpreter :-
-	push_abort_cutpoint,		% set abort cutpoint to this cp
+	xsb_thread_self(T),
+	retractall('$$exception_ball'(T,_)),
+	catch(interpreter_cmd_goal([]),Ball,default_error_handler(Ball)),
+	fail.
+interpreter :-
+	xsb_thread_self(T),
+	retractall('$$exception_ball'(T,_)),
+	get_base_io(Str),
+	x_interp_repeat,
+	catch(interpreter_readloop([]),Ball,(see(Str), %%file_write(STDMSG,'Caught it'),
+	                                     default_error_handler(Ball))),
+	fail.
+
+:- import get_stdin/2 from push_io.
+
+% TLS: if cmd_line_argument, then get whatever stream had been there
+% before.  Otherwise, just get current input.
+get_base_io(Str):- 
+	(get_stdin(cmd_line_argument,Stream) -> 
+%	  file_write(STDMSG,input_streams(cmd_line_argument,Stream)),
+          Stream = [Str|_]
+        ; stat_flag(CURRENT_INPUT,Str)).
+
+%% dummy arg to circumvent string flaw with module system, for catch
+interpreter_cmd_goal(_) :-
         %% Execute command line goal passed to XSB with the -e option
         xsb_flag(goal, CmdGoal),
-        (CmdGoal == 'true.' ->
+        (CmdGoal == '' ->
             true
-        ;   file_nl(1),
-            file_write(1, 'Evaluating command line goal:  '),
-            file_nl(1),
-            file_write(1, '| ?- '),
-            file_write(1, CmdGoal), file_nl(1),
-            file_open(CmdGoal, 3, FileDes),
-            file_read(FileDes, Goal),
-            file_close(FileDes),
-            call((Goal,!)),
-            file_nl(1)
+        ;
+	    ( banner_control(quietload)
+	    -> true
+	    ;  file_nl(STDMSG),
+	       file_write(STDMSG, 'Evaluating command line goal:  '),
+	       file_nl(STDMSG)
+	    ),
+	    %% Don't print prompt, if --noprompt specified on cmd line
+	    %% Useful when spawning xsb subprocesses, 
+	    %% so they won't send junk back to the parent.
+	    (	banner_control(noprompt)
+	    ->	true
+	    ;	file_write(STDFDBK, '| ?- ')
+	    ),
+	    (  banner_control(quietload)
+	    -> true
+	    ;  file_write(STDMSG, CmdGoal), file_nl(STDMSG)
+	    ),
+            file_open(CmdGoal, sr, CmdGoalStream),
+	    %% make CmdGoalStream the current input stream;
+	    %% push the old stream on cmd_line_argument stack
+	    push_stdin(cmd_line_argument, CmdGoalStream),
+	    (	banner_control(noprompt)
+	    ->	true
+            ; file_nl(STDMSG)
+	    )
         ),
         fail.
 
-interpreter :-
-	repeat,
-	pop_abort_cutpoint,
-	push_abort_cutpoint,    % reset abort cutpoint
+%% dummy arg to circumvent string flaw with module system, for catch
+interpreter_readloop(_) :-
+	%% don't set MYSIG_PSC earlier, because XSB will start calling 
+	%% the handler when it starts up, which will cause a lot of grief
+	x_interp_repeat,
 	trimcore,
-	stat_set_flag(5, 1, 1),	% hide call interceptions.
-	stat_set_flag(7, 0, 1),	% reset trace number
+	gc_tables(_),gc_dynamic(_),
+	stat_set_flag(HIDE_STATE, 1), %% hide call interceptions.
+	stat_set_flag(INVOKE_NUM, 0),
 	conset('_$break_level', 0),
 	print_debug_state,
 	prompt(Prompt,Prompt),
-	file_write(1, Prompt),
-	file_read(0, X, Vars),
-	(   nonvar(X), read_in_stop(X), halt, ! % end of top loop; halt
-	;   process_query(X, Vars)
+	%% Hide prompt, if --noprompt
+	(   banner_control(noprompt)
+	->  true
+	;   file_write(STDFDBK, Prompt), file_flush(STDFDBK, _)
+	),
+	stat_flag(CURRENT_INPUT, FileIn),
+	file_read(FileIn, X, Vars),
+	(nonvar(X), read_in_stop(X)
+	 ->	halt		% end of top loop; halt
+	 ;	file_get(FileIn,WS), % ignore ws after fullstop
+		(WS =:= CH_PERCENT
+		 ->	scan_thru_nl(FileIn)
+		 ;	true
+		),
+		process_query(X, Vars)
 	).
 
-read_in_stop(halt) :- halt.     % quit entire system, regardless of break level
-read_in_stop(end_of_file).	% pop a break level, out if at top
+read_in_stop(halt) :-          %% quit XSB, regardless of break level
+	call_xsb_hook(xsb_exit_hook(_),all),
+	halt.
+read_in_stop(end_of_file) :-   %% pop a break level, out if at top
+	%% if we previously pushed an input stream onto cmd_line_argument stack
+	%% then pop it back and make this stream current
+	(pop_stdin(cmd_line_argument) ->  fail
+	; call_xsb_hook(xsb_exit_hook(_),all)
+	).
 
-process_query(X, []) :-		% no variables appeared in the input
+
+process_query(end_of_file,_) :- !, file_nl(STDFDBK), fail.
+process_query(X, Vars) :-
+	exclude__(Vars,PrintableVars), process_query1(X,PrintableVars).
+
+process_query1(X, []) :-	%% no printable variables appeared in the input
 	!,
-	call_query(X), close_open_tables,
+	call_query(X),
+%	close_open_tables(non_memory_error),
 	!,
-	file_nl(1), file_write(1, yes), file_nl(1),
+	xwam_state(2,DelayReg),
+	(DelayReg =:= 0
+	 ->	Ans = yes
+	 ;	Ans = undefined
+	),
+	print_final_truth_value(Ans),
 	fail.
-process_query(X, Vars) :- 
+process_query1(X, Vars) :- 
 	prompt(MorePrompt,MorePrompt,'_$more_prompt'(_)),
 	call_query(X),
-	stat_flag(55, LetterVars),
+	xwam_state(2,DelayReg),
+	stat_flag(LETTER_VARS, LetterVars),
+	maybe_print_constraints(Vars),
 	( LetterVars =:= 0 -> print_answer(Vars)
 	; ( numbervars(Vars), print_answer(Vars), fail ; true )
 	),
-	file_write(1, MorePrompt),
+	(DelayReg =:= 0
+	 ->	true
+	 ;	file_write(STDFDBK, ' undefined')
+	),
+	file_write(STDFDBK, MorePrompt),
+	file_flush(STDFDBK, _),
 	no_more,
-	close_open_tables,
+	close_open_tables(non_memory_error),
 	!,
-	file_nl(1), file_write(1, yes), file_nl(1),
+	print_final_truth_value(yes),
 	fail.
 
-no_more :- file_get(0, X), ( X =:= -1 /* end_of_file */ ; X =:= 10 ), !.
+no_more :-
+	file_get(0, X),
+	( X =:= CH_EOF_P ; X =:= CH_NEWLINE ), !.
 no_more :- no_more, fail.
 
+scan_thru_nl(FileIn) :-
+	file_get(FileIn,C),
+	(C =:= CH_NEWLINE
+	 ->	true
+	 ; C =:= CH_EOF_P
+	 ->	true
+	 ;	scan_thru_nl(FileIn)
+	).
+
+
 call_query(X) :- 
-%%%	'_$savecp'(C),			% moved into call/1, affect trace?
-	func_trans(X, Y),
-	( stat_set_flag(5, 0, 1) 		% expose tracing
-	; stat_set_flag(5, 1, 1), fail		% hide again when backtrack
+%%	'_$savecp'(C),			%% moved into call/1, affect trace?
+	( stat_set_flag(HIDE_STATE, 0)         %% expose tracing
+	; stat_set_flag(HIDE_STATE, 1), fail   %% hide again when backtrack
 	),
-	'_$call'(Y), 
-	( stat_set_flag(5, 1, 1)		% hide tracing when succeed
-	; stat_set_flag(5, 0, 1), fail		% expose when backtrack to user
+	'_$call'(X), 
+	( stat_set_flag(HIDE_STATE, 1)	       %% hide tracing when succeed
+	; stat_set_flag(HIDE_STATE, 0), fail   %% expose when backtrack to user
 	).
 call_query(_) :- 
-	file_nl(1), file_write(1, no), file_nl(1), fail.
+	print_final_truth_value(no),
+	fail.
 
-% hidden version of call
+%% hidden version of call
 '_$call'(Y) :- 
 	'_$savecp'(C), 
-	goal_cut_trans(Y,X,C),
+	call_goal_cut_trans(Y,X,C),
 	call_expose(X).
 
-
+%% first argument is an open ended list
+exclude__([], []) :- !.
+exclude__([V|Vs], PVs) :-
+	V = vv(Name,_),
+	atom_codes(Name, [Code|_]),
+	( Code =:= CH_UNDERSCORE -> PVs = NPVs ; PVs = [V|NPVs] ),
+	exclude__(Vs, NPVs).
 
 print_answer([]) :- !.
-print_answer([vv(Name, Val)|Tail]) :-
-	file_nl(1), file_write(1, Name), 
-	file_write(1, ' = '), file_write(1, Val),
+print_answer([vv(Name,Val)|Tail]) :-
+	file_nl(STDFDBK), file_write(STDFDBK, Name), 
+	file_write(STDFDBK, ' = '), 
+	file_write(STDFDBK, Val),
+%	(is_attv(Val) -> portray_attributes(Val) ; true),
 	print_answer(Tail).
 
 
+/*********************
+% moved to xsb_writ.P
+
+:- import get_attributes/2 from machine.
+portray_attributes(Var):- 
+	get_attributes(Var,Atts),
+	portray_attributes_1(Atts).
+
+:- import attribute_portray_hook/3 from machine.
+portray_attributes_1([]).
+portray_attributes_1([Mod,Attr|T]):- 
+	(attribute_portray_hook(Mod,Attr,Handler) -> 
+	    file_write(STDFDBK,' { '),
+	    file_write(STDFDBK,Mod),
+	    file_write(STDFDBK,' : '),
+	    call(Handler),
+	    file_write(STDFDBK,' } ')
+	 ; true),
+	 portray_attributes_1(T).
+***********************/
+
+:- import constraint_portray_hook/4 from machine.
+maybe_print_constraints(VarList):- 
+	constraint_portray_hook(_Mod,ValList,NameList,Hook),
+	split_lists(VarList,ValList,NameList),
+	call(Hook),
+	fail.
+maybe_print_constraints(_VarList).
+
+split_lists([],[],[]).
+split_lists([vv(Name,Val)|R],[Val|R1],[Name|R2]):- 
+	split_lists(R,R1,R2).
+
 /* === break =========================================================== */
 
-break :- conval('_$break_level', Blevel),
+break :-
+	seeing(InpFile), telling(OutFile),
+	see(userin), tell(userout),
+	handle_timed_calls,
+	conget('_$break_level', Blevel),
 	Nblevel is Blevel+1, conset('_$break_level', Nblevel),
-	file_write(1, '[ Break (level '), file_write(1, Nblevel),
-	file_write(1, ') ]'),file_nl(1),
+	file_write(STDMSG, '[ Break (level '), file_write(STDMSG, Nblevel),
+	file_write(STDMSG, ') ]'), file_nl(STDMSG),
 	readl_brklp1,
 	conset('_$break_level', Blevel),
-	file_write(1, '[ End break (level '),file_write(1, Nblevel),
-	file_write(1, ') ]'),file_nl(1).
+	file_write(STDMSG, '[ End break (level '), file_write(STDMSG, Nblevel),
+	file_write(STDMSG, ') ]'), file_nl(STDMSG),
+	seen, told,
+	see(InpFile), tell(OutFile),
+        reinvoke_timed_calls.
 
-readl_brklp1 :- 
-	repeat, 
-		conval('_$break_level', Blevel),
-		file_write(1, Blevel), file_write(1, ': ?- '),
-		file_read(0, X, Vars),
-		( nonvar(X), read_in_stop(X), !
-			% end read loop; pop a break level, out if X=halt.
-		; process_query(X, Vars)
-		).
+:- import cancel_sleeper_thread/0,start_sleeper_thread/1 from machine.
+handle_timed_calls:- 
+      cancel_sleeper_thread,
+      machine:stat_walltime(NewWalltime),
+      get_timed_call_index(Index),
+%      writeln(index_is(Index)),
+      ('_$timed_call_rep_max_handler'(Index,_Rep_handler,_Rep_interval,_Max_handler,_Remaining,_Walltime) -> 
+         handle_timed_calls_rep_max(Index,NewWalltime)
+	 ; ( '_$timed_call_max_handler'(Index,_Max_handler,_Remaining,_Walltime) -> 
+	       handle_timed_calls_max(Index,NewWalltime)
+	     ; true  ) ), % nothing to do for rep
+      !.
+handle_timed_calls.
 
+handle_timed_calls_max(Index,NewWalltime):- 
+      retract('_$timed_call_max_handler'(Index,Max_handler,Remaining,Walltime)),
+      NewRemaining is Remaining - (NewWalltime - Walltime),
+%      writeln(stopping_sleeper_thread_max(Remaining,Walltime,NewWalltime,NewRemaining)),
+      assert('_$timed_call_max_handler'(Index,Max_handler,NewRemaining,Walltime)).
 
-/* === hide and expose ================================================= */
+handle_timed_calls_rep_max(Index,NewWalltime):- 
+      retract('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Remaining,Walltime)),
+      NewRemaining is Remaining - (NewWalltime - Walltime),
+%      writeln(stopping_sleeper_thread_rep_max(Remaining,Walltime,NewWalltime,NewRemaining)),
+      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,NewRemaining,Walltime)).
+% nothing to do for timed_call_rep_handler
 
-/*
- *  No longer used within the system.  To be taken out if no problems arise.
- *   	-EJJ  4/97
- *
-'_$hide'(N) :- stat_flag(5, N), NewN is N + 1, stat_set_flag(5, NewN, 1).
-			% N = hide_state++
-'_$hide'(N) :- stat_flag(5, N), NewN is N - 1, stat_set_flag(5, NewN, 1), fail.
-			% hide_state--
-'_$expose'(N) :- stat_set_flag(5, N, 1).
-			% hide_state = N
-'_$expose'(N) :- N1 is N + 1, stat_set_flag(5, N1, 1), fail.
-			% hide_state = N+1, fail
- *
- */
+reinvoke_timed_calls:- 
+      get_timed_call_index(Index),
+      ( '_$timed_call_rep_max_handler'(Index,_Rep_handler,_Rep_interval,_Max_handler,_Max_interval,_Walltime) -> 
+            reinvoke_timed_calls_rep_max(Index)
+        ; '_$timed_call_max_handler'(Index,_Max_handler,_Remaining,_Walltime) -> 
+            reinvoke_timed_calls_max(Index)
+	; '_$timed_call_rep_handler'(_Index,_Rep_handler,Rep_interval) ->
+%	    writeln(restarting_sleeper_thread_rep(Rep_interval)),
+            start_sleeper_thread(Rep_interval)
+	; true ).
+  
+reinvoke_timed_calls_max(Index):- 
+      retract('_$timed_call_max_handler'(Index,Max_handler,Remaining,_Walltime)),
+      machine:stat_walltime(NewWalltime),
+      assert('_$timed_call_max_handler'(Index,Max_handler,Remaining,NewWalltime)),
+%      writeln(restarting_sleeper_thread_max(Remaining)),
+      start_sleeper_thread(Remaining),!.
+reinvoke_timed_calls_rep_max(Index):- 
+      retract('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime)),
+      machine:stat_walltime(NewWalltime),
+      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,NewWalltime)),
+%      writeln(restarting_sleeper_thread_max_rep(Rep_interval)),
+      start_sleeper_thread(Rep_interval),!.
+
+readl_brklp1 :-
+	x_interp_repeat,
+	catch(readl_brklp1([]),Ball,(default_error_handler(Ball),fail)),
+	!.
+
+readl_brklp1(_) :- 
+	x_interp_repeat, 
+	conget('_$break_level', Blevel),
+	file_write(STDFDBK, Blevel),
+	file_write(STDFDBK, ': ?- '), file_flush(STDFDBK, _),
+	stat_flag(CURRENT_INPUT, FileIn),
+	file_read(FileIn, X, Vars),
+	(   nonvar(X), read_in_stop(X), !
+	%% end read loop; pop a break level, out if X=halt.
+	;   process_query(X, Vars)
+	).
 
 /* === interrupt handlers ============================================== */
 
-'_$keyboard_int'(Call) :- 
+'_$keyboard_int'(Call,_Code) :- 
 	is_xwammode(Flag),
 	( Flag =:= 1 -> abort ; break, call_c(Call) ).
 
+:- import thread_get_signal/1 from mutex_xsb.
+:- import thread_peek_signal/1 from mutex_xsb.
+:- import repeat/0 from standard.
 
-'_$calltonum'(_) :-
-	file_write(2, 'Illegal call: to a number!'), 
-	file_nl(2), abort.
+% Continuation is in first arg as opposed to second in attv_int 
+'_$thread_int'(One,_Two) :- 
+	execute_messages_on_signale_queue,
+%	writeln(One),
+	call_c(One).
 
+execute_messages_on_signale_queue:- 
+	repeat,
+	(thread_peek_signal(Message) -> 
+	    thread_get_signal(Message),
+	    call(Message),
+	    fail
+	 ;  true),!.
+
+%:- import writeln/1 from standard.
+:- import '_$timed_call_rep_handler'/3 from standard.
+:- import '_$timed_call_max_handler'/4 from standard.
+:- import '_$timed_call_rep_max_handler'/6 from standard.
+:- import get_timed_call_index/1 from standard.
+
+'_$timer_int'(One,_Two) :-
+%	writeln(timer_int),
+        get_timed_call_index(Index),
+        '_$timed_call_rep_handler'(Index,Handler,Interval),!,
+        call_handler(Handler),
+        (Interval > 0 ->
+            start_sleeper_thread(Interval)
+	 ; true),!,
+	 call_c(One).
+'_$timer_int'(_One,_Two) :-
+        get_timed_call_index(Index),
+        '_$timed_call_max_handler'(Index,Handler,_Max,_Walltime),!,
+%	writeln('_$timed_call_max_handler'(Index,Handler,_Max,_Walltime)),
+        call_handler(Handler).
+'_$timer_int'(One,_Two) :- 
+        get_timed_call_index(Index),
+	'_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime),
+%	writeln('_$timed_call_rep_max_handler'(Rep_handler,Rep_interval,Max_handler,Max_interval,Walltime)),
+	New_Max is Max_interval - Rep_interval,
+	(New_Max =< 0 -> 
+	      call_handler(Max_handler)
+	    ; 
+	      call_handler(Rep_handler),
+	      retract('_$timed_call_rep_max_handler'(Index,_Handler,_Interval,Max_handler,_Max_interval,_Walltime)),
+	      machine:stat_walltime(NewWalltime),
+	      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,New_Max,NewWalltime)),
+              start_sleeper_thread(Rep_interval)	
+	  ; true),!,
+	call_c(One).
+'_$timer_int'(_One,_Two):- 
+%	writeln((_One,_Two)),
+	call_c(_One).
+%'_$timer_int'(One,_Two) :- 
+%	call_c(One).
+
+:- import lazy_reeval_trap/1 from increval.
+'_$lazy_reeval_int'(One,_Two):- 
+	lazy_reeval_trap(One).
+
+call_handler(Handler):- call(Handler),!.
+%call_handler(_).
+
+'_$attv_int'(Intlist, Call) :-
+% 	file_write(1, '.... in _$attv_int/2'), file_nl(1),
+% 	file_write(1, '.... interrupt chain is : '),
+% 	file_write(1, Intlist), file_nl(1),
+	handle_interrupts(Intlist),
+%	file_write(1, '.... leaving _$attv_int/2'), file_nl(1),
+	call_c(Call).
 
 /* === version message ================================================= */
 
 version_message :-
-	file_nl(2),
+	file_nl(STDMSG),
 	slash(Slash),
+	%% Print the copyright notice
+	%%
+	%% xsb_configuration(etcdir, EtcDir),
+	%% fmt_write_string(CopyingMsg, '%s%scopying.msg', f(EtcDir,Slash)),
+	%% print_file_contents(CopyingMsg, STDMSG),
+	%% file_nl(STDMSG),
+	%%
+	%% Do the banner
 	xsb_configuration(config_dir, ConfigDir),
-	%% fmt_write_string(CopyingMsg, '%s%scopying.msg', f(ConfigDir,Slash)),
-	%% print_file_contents(CopyingMsg),
-	%% file_nl(2),
 	fmt_write_string(ConfMsg, '%s%sbanner.msg', f(ConfigDir,Slash)),
-	print_file_contents(ConfMsg).
+	stat_flag(GARBAGE_COLLECT, GarbageType),
+	( GarbageType == COPYING_GC
+	->  GC_string = 'copy'
+	; GarbageType == SLIDING_GC
+	->  GC_string = 'slide'
+	; GarbageType == INDIRECTION_SLIDE_GC
+	->  GC_string = 'indirection'
+	; GC_string = 'none'
+	),
+	%% Read the banner file
+	file_open(ConfMsg, r, Handle),
+	file_getbuf_atom(Handle, 500, Str, _),
+	file_close(Handle),
+	%% Print the banner
+%	fmt_write(STDMSG, Str, GC_string),
+%	fmt_write(STDMSG, Str,[]),
+	file_write(STDMSG,Str),
+	file_nl(STDMSG).
 
 /* === utilities ======================================================= */
 
-
-conset(Con, Val) :- conpsc(Con, PSC), psc_set_prop(PSC, Val, 1).
-conval(Con, Val) :- conpsc(Con, PSC), psc_prop(PSC, Val).
-
-
-prompt(New,Old) :- prompt(New,Old,'_$main_prompt'(_)).
-
-prompt(New,Old,Pstore) :- 
-	(Old == []
-	 ->	true
-	 ;	get_prompt(Pstore,Old)
-	),
-	(Old \== New
-	 ->	set_prompt(Pstore,New)
-	 ;	true
-	).
-
-get_prompt(Pstore,Prompt) :-
-	term_psc(Pstore, Psc),
-	psc_prop(Psc, Buff),	
-	str_insert(Buff, String),	% temp solution, since ALIAS not work
-	Prompt = String.		% for double word.
-
-set_prompt(Pstore,Prompt) :-
-	term_psc(Pstore, Psc),
-	psc_set_type(Psc, 8, 1),			% T_CSET
-	conname(Prompt, String),
-	psc_set_prop(Psc, String, 1).
+%% The interpreter NEEDS this repeat: do not use the one in standard.
+x_interp_repeat :- true ; x_interp_repeat.
 
 print_debug_state :-
-	stat_flag(6,Trace),
-	stat_flag(4,Debug),
-	stat_flag(9,QuasiSkip),
+	stat_flag(TRACE,Trace),
+	stat_flag(DEBUG_ON,Debug),
+	stat_flag(QUASI_SKIPPING,QuasiSkip),
 	( (Trace > 0, QuasiSkip =:= 0)
-	  ->	file_write(2,[trace]), file_nl(2)
+	  ->	file_write(STDFDBK,[trace]), file_nl(STDFDBK)
 	  ; (Debug > 0; (Trace > 0, QuasiSkip > 0))
-	  ->	file_write(2,[debug]), file_nl(2)
+	  ->	file_write(STDFDBK,[debug]), file_nl(STDFDBK)
 	; true
 	).
-		
-/*
-func_trans(X, X).
-*/
-
-% The following should be a syntactic transformation 
-% to handle functional syntax. dsw
-
-func_trans(X, Y) :- func_trans(X, Z, Z, Y).
-
-func_trans(X, Y, O, N) :- 
-	term_type(X, T),
-	( T =:= 0 -> Y = X, N = O
-	; T =:= 3 -> X = [X1|X2], Y = [Y1|Y2],
-		func_trans(X1, Y1, O, M), func_trans(X2, Y2, M, N)
-	; T =:= 1 ->
-		term_psc(X, Psc),
-		psc_type(Psc, Type),
-		( Type =:= 14, M = ((Y is Z), O)	% Y is free
-		; Type =\= 14, M = O, Z = Y
-		),
-		term_new(Psc, Z),
-		psc_arity(Psc, A),
-		func_transargs(A, X, Z, M, N)
-	; /* T=:=5; T=:=2; T=:=6 */ Y = X, N = O
-	).
-
-func_transargs(0, _, _, O, O) :- !.
-func_transargs(I, X, Y, O, N) :-
-	term_arg(X, I, X1),
-	term_arg(Y, I, Y1),
-	func_trans(X1, Y1, O, M),
-	I1 is I - 1,
-	func_transargs(I1, X, Y, M, N).
 
 
-print_file_contents(FileName) :-
-	see(FileName),
-	print_file_contents1,
-	seen.
-print_file_contents1 :-
-	(file_read_line(Line, _) -> file_write(2,Line)),
-	print_file_contents1,
-	fail.        	 %% so as to not leave choice points around
-print_file_contents1.
-
+%% prints yes, no, undefined at the very end
+print_final_truth_value(_Message) :-
+	banner_control(nofeedback),
+	!.
+print_final_truth_value(Message) :-
+	file_nl(STDMSG), file_write(STDFDBK, Message), file_nl(STDFDBK).

@@ -1,5 +1,5 @@
 /* File:      useinfer.H
-** Author(s): Kostis F. Sagonas, Jiyang Xu, David S. Warren
+** Author(s): Kostis Sagonas, Jiyang Xu, David S. Warren
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -19,19 +19,22 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: useinfer.H,v 1.1.1.1 1998-11-05 17:00:23 sbprolog Exp $
+** $Id: useinfer.H,v 1.9 2011-09-06 17:33:46 dwarren Exp $
 ** 
 */
 
 
 :- export useinfer/3.
 
-:- import member/2 from prof_sbp.
+:- import standard_metapredicate/3 from std_xsb.
+:- import member/2, ith/3 from basics.
 :- import warning/1, option/1 from auxlry.
-:- import standard_symbol/3 from std_sbp.
+:- import standard_symbol/3 from std_xsb.
 :- import sym_propin/2, sym_prop/2, sym_insert/5, sym_scan/3,
-	  extract_symlist/3, sym_env/2, sym_name/3
+          extract_symlist/3, sym_env/2, sym_name/3, sym_type/2
     from symtab.
-:- import '_$multifile'/1, '_$multifile2'/3 from parse.
-:- import retractall/1, clause/2 from assert.
+:- import find_in_bt/2, build_bt/2 from listutil.
+:- import sym_type/2 from symtab.
+:- import extract_aggr_spec/4 from cp_opt.
+:- import functor/3 from standard.
 

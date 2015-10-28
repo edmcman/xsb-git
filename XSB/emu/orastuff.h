@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: orastuff.h,v 1.1.1.1 1998-11-05 16:55:20 sbprolog Exp $
+** $Id: orastuff.h,v 1.11 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
@@ -55,41 +55,6 @@ EXEC SQL INCLUDE sqlca;
 #define IsExceptionStatus(Status)   (Status > SUCCESS)
 #define IsSuccessStatus(Status)     (Status == SUCCESS)
 #define IsFailureStatus(Status)     (Status < SUCCESS)
-
-
-/*
- *  Boolean data type and its values.
- */
-typedef enum Boolean {
-  FALSE = 0, TRUE = 1,
-  NO = 0, YES = 1
-} bool;
-
-
-#define IsNULL(Ptr)      (Ptr == NULL)
-#define IsNonNULL(Ptr)   (Ptr != NULL)
-
-
-/* ======================================================================== */
-
-/*
- *              X S B   F U N C T I O N   P R O T O T Y P E S
- *		=============================================
- */
-
-/* from builtin.c */
-int ptoc_int(int regnum);
-char *ptoc_string(int regnum);
-
-void ctop_int(int regnum, int value);
-void ctop_float(int regnum, float value);
-void ctop_string(int regnum, char *value);
-
-/* from psc.c */
-char* string_find(char *, int);
-
-/* from xsberror.c */
-void xsb_abort(char *);
 
 
 /* ======================================================================== */
@@ -282,8 +247,8 @@ typedef struct Select_List_Item_Specification {
 			      valid range: [0..(numSLIs-1)] */
   int cur_row_number;      /* RowID of next tuple to return to Prolog */
   uint total_rows_recvd;   /* total num rows received from Oracle so far */
-  bool end_of_active_set;  /* flag indicating whether the last of the active
-			      set has been returned from Oracle. */
+  xsbBool end_of_active_set;  /* flag indicating whether the last of the active
+				 set has been returned from Oracle. */
 } SLI_Spec;  
 
 

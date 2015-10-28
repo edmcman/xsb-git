@@ -1,4 +1,4 @@
-p is undefined
-q is undefined
+p is false (OK)
+q is false (OK)
 r is false (OK)
 s is true (OK)

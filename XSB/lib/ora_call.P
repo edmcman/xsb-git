@@ -18,43 +18,44 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: ora_call.P,v 1.2 1998-11-15 06:07:47 kifer Exp $
+** $Id: ora_call.P,v 1.12 2010-08-19 15:03:38 spyrosh Exp $
 ** 
 */
 
 
-:- dynamic attribute/4.
+:- dynamic (attribute)/4.
 :- dynamic '$inact_cursor_table$'/1.
-:- retractall('$inact_cursor_table$'(_)).
+%:- retractall('$inact_cursor_table$'(_)).
 :- dynamic '$act_cursor_table$'/1.
-:- retractall('$act_cursor_table$'(_)).
+%:- retractall('$act_cursor_table$'(_)).
 :- dynamic '$select_stack$'/1.
-:- retractall('$select_stack$'(_)).
+%:- retractall('$select_stack$'(_)).
 :- dynamic '$ora_err$'/1.
-:- retractall('$ora_err$'(_)).
+%:- retractall('$ora_err$'(_)).
 :- dynamic table_arity/2.
 :- dynamic '$show_query$'/1.
-:- retractall('$show_query$'(_)).
+%:- retractall('$show_query$'(_)).
+:- dynamic relation/3.
 
 db_open(oracle(Name,Passwd)) :- 
-			conset(count,1),init_gensym(table1),init_gensym(null),
-			assert('$ora_err$'(off)),
-			assert('$show_query$'(on)),
-			assert('$act_cursor_table$'([])),
-			assert('$inact_cursor_table$'([])),
-			assert('$select_stack$'([])),
-			oracle_connect(Name,Passwd,Status),
-                        (Status =:= 0,!;
-                        writeln('ERR - DB: Connection failed.'),fail).
+	conset(count,1),init_gensym(table1),init_gensym(null),
+	assert('$ora_err$'(off)),
+	assert('$show_query$'(on)),
+	assert('$act_cursor_table$'([])),
+	assert('$inact_cursor_table$'([])),
+	assert('$select_stack$'([])),
+	oracle_connect(Name,Passwd,Status),
+	(   Status =:= 0,!;
+	    writeln('ERR - DB: Connection failed.'),fail).
 
 db_close :- 
-	    retractall('$ora_err$'(_)), retractall('$show_query$'(_)), 
-	    ('$act_cursor_table$'(_) ->
-			retractall('$act_cursor_table$'(_)); true),
-	    ('$inact_cursor_table$'(_) ->
-			retractall('$inact_cursor_table$'(_)); true),
-	    ('$select_stack$'(_) ->retractall('$select_stack$'(_)); true),
-	    oracle_disconnect(_).
+	retractall('$ora_err$'(_)), retractall('$show_query$'(_)), 
+	( '$act_cursor_table$'(_) ->
+	    retractall('$act_cursor_table$'(_)); true),
+	( '$inact_cursor_table$'(_) ->
+	    retractall('$inact_cursor_table$'(_)); true),
+	( '$select_stack$'(_) ->retractall('$select_stack$'(_)); true),
+	oracle_disconnect(_).
 
 db_flag(fail_on_error,on,off) :-
 	retract('$ora_err$'(on)), assert('$ora_err$'(off)).
@@ -67,21 +68,6 @@ db_flag(show_query, off, on) :-
 
 db_flag(show_query, on, off) :- 
 	retract('$show_query$'(on)), assert('$show_query$'(off)).
-
-input_array_length(Length) :-
-	var(Length), stat_flag(58,Length).
-input_array_length(Length) :-
-	integer(Length), stat_set_flag(58,Length,_).
-
-input_array_width(Width) :-
-	var(Width), stat_flag(59,Width).
-input_array_width(Width) :-
-	integer(Width), stat_set_flag(59,Width,_).
-
-output_array_length(Length) :-
-	var(Length), stat_flag(60,Length).
-output_array_length(Length) :-
-	integer(Length), stat_set_flag(60,Length,_).
 
 db_link(ProjectionTerm, DatabaseGoal) :- 
 	translate(ProjectionTerm, DatabaseGoal,_, SQLAtom),!,
@@ -308,12 +294,14 @@ search_cursors([StmtNo '/' Index|_], StmtNo, Index).
 search_cursors([_|Rest], StmtNo, Index) :-
 	search_cursors(Rest, StmtNo, Index).
 
+/*
 free :-
 	flush,
 	retract('$act_cursor_table$'(List)),
 	deallocate_list(List),
 	assert('$act_cursor_table$'([])).
-
+ */
+ 
 flush :- 
 	'$act_cursor_table$'(List),
 	flush_list(List).
@@ -335,11 +323,13 @@ flush_list([_ '/' Index|Rest]):-
 	flush_cursor(Index,_),
 	flush_list(Rest).
 
+/*
 deallocate_list([]).
 deallocate_list([_ '/' Index|Rest]):-
 	flush_cursor(Index,_),
 	deallocate_cursor(Index,_),
 	deallocate_list(Rest).
+ */
 
 db_all(Call, SQLAtom, ProjectionTerm, StmtNo) :-
 	
@@ -355,7 +345,7 @@ db_all(Call, SQLAtom, ProjectionTerm, StmtNo) :-
 	    ((RetVal1 =:= 0,SQLType =:= 0),
 		( next(Row, Index),
 	  	  skip_bind(Row,ProjectionTermArgs,Row1),
-	 	  concat([SymbolicName],Row1,CallList),
+	 	  append([SymbolicName],Row1,CallList),
 	 	  Call =.. CallList;
 		deallocate_cursor_stack(Index), fail)
 	);
@@ -384,7 +374,7 @@ db_all_test(Call, SQLAtom, ProjectionTerm, StmtNo) :-
 	    ((RetVal1 =:= 0,SQLType =:= 0),
 		( next(Row, Index) ->
 	  	  	(skip_bind(Row,ProjectionTermArgs,Row1),
-	 	  	concat([SymbolicName],Row1,CallList),
+	 	  	append([SymbolicName],Row1,CallList),
 	 	  	Call =.. CallList,
 			deallocate_cursor(Index, _RetVal2));
 			deallocate_cursor(Index, _RetVal2),fail)
@@ -525,7 +515,7 @@ writelistln([H|T]) :-
 % -----------------------------------------------------------------------
 db_show_schema(tuples(Table)) :-
 	name(Table, Tlist),
-	concat([115,101,108,101,99,116,32,42,32,102,114,111,109,32],
+	append([115,101,108,101,99,116,32,42,32,102,114,111,109,32],
 		Tlist, L),
 	name(Sql, L),
 	db_sql_select(Sql, Row),
@@ -610,10 +600,10 @@ db_create_table(Table,Fields) :-
     nonvar(Table),
     name(Table,Tl),
     name(Fields,Fl),
-    concat([67,82,69,65,84,69,32,84,65,66,76,69,32],Tl,L1),
-    concat(L1,[32,40],L2),
-    concat(L2,Fl,L3),
-    concat(L3,[32,41],Res), name(Query,Res),
+    append([67,82,69,65,84,69,32,84,65,66,76,69,32],Tl,L1),
+    append(L1,[32,40],L2),
+    append(L2,Fl,L3),
+    append(L3,[32,41],Res), name(Query,Res),
     db_sql(Query).
 %--------------------------------
 db_create_index(Tname,Iname,index(_,Fields)) :-
@@ -623,38 +613,38 @@ db_create_index(Tname,Iname,index(_,Fields)) :-
 	name(Tname,Tlist),
 	name(Iname,Ilist),
 	name(Fields,Flist),
-	concat([67,82,69,65,84,69,32,73,78,68,69,88,32],Ilist,L1),
-	concat(L1,[32,79,78,32],L2),
-	concat(L2,Tlist,L3),
-	concat(L3, [32,40],L4),
-	concat(L4,Flist,L5),
-	concat(L5,[32,41],Res), name(Query,Res),
+	append([67,82,69,65,84,69,32,73,78,68,69,88,32],Ilist,L1),
+	append(L1,[32,79,78,32],L2),
+	append(L2,Tlist,L3),
+	append(L3, [32,40],L4),
+	append(L4,Flist,L5),
+	append(L5,[32,41],Res), name(Query,Res),
 	db_sql(Query).
 %--------------------------------
 db_delete_table(Table) :-
 	nonvar(Table),
 	name(Table, Tlist),
-	concat([68,82,79,80,32,84,65,66,76,69,32],Tlist,Res),name(Query,Res),
+	append([68,82,79,80,32,84,65,66,76,69,32],Tlist,Res),name(Query,Res),
 	db_sql(Query).
 
 %--------------------------------
 db_delete_view(View) :-
 	nonvar(View),
 	name(View, Vlist),
-	concat([68,82,79,80,32,86,73,69,87,32],Vlist,Res),name(Query,Res),
+	append([68,82,79,80,32,86,73,69,87,32],Vlist,Res),name(Query,Res),
 	db_sql(Query).
 %--------------------------------
 db_delete_index(Index) :-
 	nonvar(Index),
 	name(Index,Ilist),
-	concat([68,82,79,80,32,73,78,68,69,88,32],Ilist,Res),name(Query,Res),
+	append([68,82,79,80,32,73,78,68,69,88,32],Ilist,Res),name(Query,Res),
 	db_sql(Query).
 %--------------------------------
 db_add_record(Table,VList) :-
 	conset(col,1),
 	assert_attributes_info(Table),
 	conget(col,N), N1 is N - 1,
-	name(Table, Tl), concat(Tl,[95,105,110,115],Tl1), name(Table1,Tl1),
+	name(Table, Tl), append(Tl,[95,105,110,115],Tl1), name(Table1,Tl1),
 	assert(relation(Table,N1,Table)),
 	functor(Head1, Table1, N1),
 	Head1 =..[Table1|Tail],
@@ -668,7 +658,7 @@ delete_record(Table,VList) :-
 	conset(col,1),
 	assert_attributes_info(Table),
 	conget(col,N), N1 is N - 1,
-	name(Table, Tl), concat(Tl,[95,100,101,108],Tl1), name(Table1,Tl1),
+	name(Table, Tl), append(Tl,[95,100,101,108],Tl1), name(Table1,Tl1),
 	assert(relation(Table,N1,Table)),
 	functor(Head1, Table1, N1),
 	Head1 =..[Table1|Tail],
@@ -741,31 +731,20 @@ set_global_bind_table(Index, [H|T], [H1|T1]) :-
 set_global_bind_table(Index, [_H|T], [_H1|T1]) :-
 	set_global_bind_table(Index,T,T1).
 
-/* list concat */
-
-concat([],L,L).
-concat([H|T],L2,[H|L3]) :-
-			concat(T,L2,L3).
 
 
-
-
-
-%---------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
 % Modifications : Hasan Davulcu
 % Date : 19 February, 1994
 % 
 % The copiler has been extended to generate queries with bind variables.
 % assert_call_rule has been added to provide an interface for database calls.
 %
-%---------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
 
 
 
-
-
-
-% --------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------
 %
 % This Prolog to SQL compiler may be distributed free of charge provided that it is
 % not used in commercial applications without written consent of the author, and
@@ -801,8 +780,7 @@ concat([H|T],L2,[H|L3]) :-
 % ===================
 % Current version is v. 1.1 of Dec. 21st 1992.
 % Version 1.0 Sept. 3 1992
-% --------------------------------------------------------------------------------------
-
+% -----------------------------------------------------------------------------
  
 
 
@@ -1894,7 +1872,7 @@ queries_atom([Query],QueryList,Diff):-
 queries_atom([Query|Queries],QueryList,Diff):-
    Queries \= [],
    query_atom(Query,QueryList,X1),
-   column_atom('UNION',X1,X2),
+   column_atom('UNION ',X1,X2),
    queries_atom(Queries,X2,Diff).
 
 
@@ -2077,11 +2055,6 @@ column_atom(Atom,List,Diff):-
    name(Atom,X1),
    append(X1,Diff,List).
 
-  
-
-
-
-
 
 % --- gensym(Root,Symbol) ----------------------------------------------------
 %
@@ -2097,7 +2070,7 @@ gensym(Root,Symbol):-
    var(Symbol),
    conget(Root,Counter),
    NewCounter is Counter + 1,
-   name(NewCounter,L), atom_chars(Atom,L),
+   name(NewCounter,L), atom_codes(Atom,L),
    str_cat(Root,Atom,Symbol),
    conset(Root,NewCounter).
    
@@ -2108,34 +2081,8 @@ init_gensym(Root):-
 
 
 
-% --- auxiliary predicates (some of them may be built-in... --------------------
 
-append([],L,L).
-append([H1|L1],L2,[H1|L3]):-
-   append(L1,L2,L3).
-
-
-
-member(X,[X|_]).
-member(X,[_|T]):-
-   member(X,T).
-
-
-
-/*repeat_n(N):-
-   integer(N),
-   N > 0,
-   repeat_1(N).
-
-repeat_1(1):-!.
-repeat_1(_).
-repeat_1(N):-
-   N1 is N-1,
-   repeat_1(N1).*/
-
-
-
-% --- set_difference(SetA,SetB,Difference) --------------------------------------------
+% --- set_difference(SetA,SetB,Difference) -----------------------------------
 %
 % SetA - SetB = Difference
 
@@ -2154,7 +2101,7 @@ set_difference([Element|RestSet],Set,RestDifference):-
 
 
 
-% --- Meta Database for schema definition of SQL DB in Prolog --------------------------
+% --- Meta Database for schema definition of SQL DB in Prolog ----------------
 %
 % maps Prolog predicates to SQL table names, Prolog predicate argument positions to SQL
 % attributes, and Prolog operators to SQL operators. 
@@ -2208,7 +2155,7 @@ aggregate_functor(count,'COUNT').
 
 
 
-% --- type system --------------------------------------------------------------
+% --- type system -------------------------------------------------------------
 %
 % A rudimentary type system is provided for consistency checking during the
 % translation and for output formatting
@@ -2216,7 +2163,7 @@ aggregate_functor(count,'COUNT').
 % The basic types are string and number. number has the subtypes integer and
 % real.
 %
-% ------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------
 
 
 type_compatible(Type,Type):-
@@ -2383,7 +2330,7 @@ deallocate_cursor(CursorHandle,Status) :-
 close_cursor(CursorHandle,Status) :-
 	oracle_query(5,CursorHandle,Status).
 
-reclaim_cursors(Status) :- oracle_query(6,Status).
+% reclaim_cursors(Status) :- oracle_query(6,Status).
 
 set_input_value(CursHndl,BindVarName,BindVarVal,BindVarValType,Status) :-
 	oracle_query(7,CursHndl,BindVarName,BindVarVal,BindVarValType,Status).
@@ -2403,7 +2350,7 @@ get_output_value(CursorHandle,BindVarValue,Status) :-
 execute_immediate(StmtString,Status) :-
 	oracle_query(12,StmtString,Status).
 
-attribute('$','$','$','$').
+:- assert(attribute('$','$','$','$')).
 
 db_sqlcaid(Res) :- oracle_query(16,Res).
 db_sqlcabc(Res) :- oracle_query(17,Res).
@@ -2424,9 +2371,9 @@ db_sqlwarn4(Res) :- oracle_query(31,Res).
 db_sqlwarn5(Res) :- oracle_query(32,Res).
 db_sqlext(Res) :- oracle_query(33,Res).
 
-oracle_query(A) :- oracle_query(A,_,_,_,_,_,_).
+% oracle_query(A) :- oracle_query(A,_,_,_,_,_,_).
 oracle_query(A,B) :- oracle_query(A,B,_,_,_,_,_).
 oracle_query(A,B,C) :- oracle_query(A,B,C,_,_,_,_).
 oracle_query(A,B,C,D) :- oracle_query(A,B,C,D,_,_,_).
-oracle_query(A,B,C,D,E) :- oracle_query(A,B,C,D,E,_,_).
+% oracle_query(A,B,C,D,E) :- oracle_query(A,B,C,D,E,_,_).
 oracle_query(A,B,C,D,E,F) :- oracle_query(A,B,C,D,E,F,_).

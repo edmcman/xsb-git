@@ -1,5 +1,5 @@
 ## File:      packages/Makefile
-## Author(s): kifer (adapted from lib/Makefile)
+## Author(s): kifer
 ## Contact:   xsb-contact@cs.sunysb.edu
 ## 
 ## Copyright (C) The Research Foundation of SUNY, 1998
@@ -18,14 +18,26 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.3 1998-11-15 02:56:33 kifer Exp $
+## $Id: Makefile,v 1.39 2012-09-27 02:25:58 kifer Exp $
 ## 
 ##
 
+OBJEXT=.xwam
 
-ALL = 	flip.O slx.O perlmatch.O
+ALL = 	slx${OBJEXT} gap${OBJEXT} \
+	regmatch${OBJEXT} wildmatch${OBJEXT} \
+	xasp${OBJEXT} xsbdoc${OBJEXT} \
+	chr${OBJEXT} chr_d${OBJEXT} \
+	sgml${OBJEXT} \
+	wildmatch${OBJEXT} regmatch${OBJEXT} \
+	xmc${OBJEXT} justify${OBJEXT} clpr${OBJECT} curl${OBJECT} pcre${OBJECT}
+# Perlmatch, libwww - deprecated. Use PCRE, CURL
+#	perlmatch${OBJEXT} libwww${OBJEXT}
 
-SUBDIR = flip slx perlmatch
+SUBDIR = flora2 slx gap regmatch wildmatch xasp \
+	 xsbdoc xmc justify clpqr curl pcre
+# Deprecated
+#	perlmatch libwww
 
 Option = [optimize]
 
@@ -34,43 +46,104 @@ Option = [optimize]
 # Self-make: Version 1.4.1
 #
 XSB=../bin/xsb
-Prolog = $(XSB) -i -s -m 2000 -c 2000
+Prolog = $(XSB) -i -m 2000 -c 2000
 #
 #-----------------------------------------------------------------------#
+
+# Make sure warnings are saved in a file.
+SVFILE = '../build/.apkgs.tmp'
+STDWARN = 3
+STDERR = 2
+HDRMSG = "While compiling XSB/packages:"
+
 
 # continue to the next when one error occurs
 .IGNORE:
 
 # suffix rules
-.SUFFIXES: .P .O .H
+.SUFFIXES: .P ${OBJEXT} .H
 
-.H.P:
-	echo 'mc($*, $(Option)).' >> cmd...
-
-.P.O:
+.P${OBJEXT}:
 	echo 'mc($*, $(Option)).' >> cmd...
 
 
-all: $(ALL) $(SUBDIR)
-	@touch cmd...
+all:  init $(ALL) finish $(SUBDIR)
+	@../build/touch.sh cmd...
 	$(Prolog) < cmd...
-	/bin/rm cmd...
+	@rm cmd...
+	@cat $(SVFILE)
+
+clpr::
+	@echo ""
+	cd clpqr; make
 
 slx::
 	@echo ""
 	cd slx; make
 
-flip::
+flora2::
 	@echo ""
-	cd flip; make
 
-perlmatch::
+#Add interprolog
+iprolog::
 	@echo ""
-	cd perlmatch; make
+	cd iprolog; make
+
+# Deprecated
+#libwww::
+#	@echo ""
+#	cd libwww; make
+#
+#perlmatch::
+#	@echo ""
+#	cd perlmatch; make
+
+xasp::
+	@echo ""
+	cd xasp; make
+
+gap::
+	@echo ""
+	cd gap; make
+
+regmatch::
+	@echo ""
+	cd regmatch; make
+
+wildmatch::
+	@echo ""
+	cd wildmatch; make
+
+xmc::
+	@echo ""
+	cd xmc; make
+
+justify::
+	@echo ""
+	cd justify; make
+
+curl::
+	@echo ""
+	cd curl; make
+
+pcre::
+	@echo ""
+	cd pcre; make
+
+init:
+	/bin/rm -f $(SVFILE)
+	@echo "file_reopen($(SVFILE),w,$(STDWARN),_)." >> cmd...
+	@echo "file_clone($(STDWARN), $(STDERR),_)." >> cmd...
+	@echo 'fmt_write($(STDWARN),"-------------- Warnings/Errors --------------------\n",_).' >> cmd...
+	@echo 'fmt_write($(STDWARN),"%s\n",arg($(HDRMSG))).' >> cmd...
+	@echo "file_flush($(STDWARN), _)." >> cmd...
+
+finish:
+	@echo 'fmt_write($(STDWARN),"-------------------- End --------------------------\n",_).' >> cmd...
 
 
-# Unfortunately, this needs to be commented on the NeXT.
-# %.O:	%.H
+clean:
+	/bin/rm -f core *${OBJEXT} *.O *~ .*~ *.bak .#*
 
 .DONE:
 	@echo Done

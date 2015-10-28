@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: ora_call.H,v 1.2 1998-11-15 06:07:45 kifer Exp $
+** $Id: ora_call.H,v 1.11 2010-08-19 15:03:38 spyrosh Exp $
 ** 
 */
 
@@ -32,15 +32,13 @@
 :- export db_error_message/3, connect/0.
 :- export '$ora_err$'/1, '$show_query$'/1, '$cursor_table$'/1.
 
-:- import oracle_query/7 from machine.
-:- import str_cat/3 from machine.
-:- import conset/2, conget/2 from prof_sbp.
+:- import table_arity/2, ','/2, (:-)/2 from usermod.
+:- import str_cat/3, oracle_query/7 from machine.
+:- import conset/2, conget/2 from gensym.
 :- import (dynamic)/1, assert/1, asserta/1, retract/1,
    retractall/1 from assert.
-:- import write/1, writeln/1, (=..)/2, atom_chars/2 from standard.
+:- import write/1, writeln/1, (=..)/2, atom_codes/2 from standard.
 :- import name/2, atom/1, integer/1, (\=)/2, atomic/1 from standard.
-:- import nl/0, functor/3, number/1, call/1 from standard.
+:- import nl/0, functor/3, number/1, call/1, (not)/1 from standard.
 :- import findall/3, bagof/3 from setof.
-:- import copy_term/2 from basics.
-:- import (not)/1 from standard.
-:- import stat_flag/2, stat_set_flag/3 from machine.
+:- import copy_term/2, append/3, member/2 from basics.

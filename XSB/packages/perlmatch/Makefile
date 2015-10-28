@@ -1,8 +1,8 @@
 ## File:      packages/perlmatch/Makefile
-## Author(s): kifer (adapted from lib/Makefile)
+## Author(s): kifer
 ## Contact:   xsb-contact@cs.sunysb.edu
 ## 
-## Copyright (C) The Research Foundation of SUNY, 1998
+## Copyright (C) The Research Foundation of SUNY, 1998-1999
 ## 
 ## XSB is free software; you can redistribute it and/or modify it under the
 ## terms of the GNU Library General Public License as published by the Free
@@ -18,12 +18,16 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.3 1998-11-15 04:00:34 kifer Exp $
+## $Id: Makefile,v 1.16 2010-08-19 15:03:39 spyrosh Exp $
 ## 
 ##
 
+OBJEXT=.xwam
 
-ALL = 	plmchconfig.O plmchshell.O
+XSBDIR = ../..
+
+ALL = 	plmchconfig${OBJEXT} plmchshell${OBJEXT}
+
 
 Option = [optimize]
 
@@ -31,28 +35,50 @@ Option = [optimize]
 #
 # Self-make: Version 1.4.1
 #
-XSB=../../bin/xsb
-Prolog = $(XSB) -i -s -m 2000 -c 2000
+XSB=$(XSBDIR)/bin/xsb
+Prolog = $(XSB)
 #
 #-----------------------------------------------------------------------#
+
+# Make sure warnings are saved in a file.
+SVFILE = '$(XSBDIR)/build/.perlmatch_warn.tmp'
+OWRITE = w
+STDWARN = 3
+STDERR = 2
+HDRMSG = "While compiling XSB/packages/perlmatch:"
+
 
 # continue to the next when one error occurs
 .IGNORE:
 
 # suffix rules
-.SUFFIXES: .P .O .H
-.P.O:
-	echo 'mc($*, $(Option)).' >> cmd...
+.SUFFIXES: .P ${OBJEXT} .H
 
-all: $(ALL)
+all: init $(ALL) finish
 	@touch cmd...
 	$(Prolog) < cmd...
-	/bin/rm cmd...
+	@rm cmd...
+	@cat $(SVFILE)
 
+.P${OBJEXT}:
+	echo 'mc($*, $(Option)).' >> cmd...
 
+init:
+	/bin/rm -f $(SVFILE)
+	@echo "file_reopen($(SVFILE),$(OWRITE),$(STDWARN),_)." >> cmd...
+	@echo "file_clone($(STDWARN), $(STDERR),_)." >> cmd...
+	@echo "file_write($(STDWARN),'-------------- Warnings/Errors --------------------'), file_nl($(STDWARN))." >> cmd...
+	@echo "file_write($(STDWARN),'$(HDRMSG)'), file_nl($(STDWARN))." >> cmd...
+	@echo "file_flush($(STDWARN), _)." >> cmd...
 
-# Unfortunately, this needs to be commented on the NeXT.
-# %.O:	%.H
+finish:
+	@echo "file_write($(STDWARN),'-------------------- End --------------------------'), file_nl($(STDWARN))." >> cmd...
+
+.PHONY: clean
+
+clean:
+	/bin/rm -f *${OBJEXT} *.O *~ .*~ *.bak
+	/bin/rm -f cc/*${OBJEXT} cc/*.[Oo]  cc/*.so cc/*~ cc/.*~ cc/*.bak
 
 .DONE:
 	echo Done

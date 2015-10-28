@@ -19,11 +19,11 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: builtin.H,v 1.1.1.1 1998-11-05 17:00:03 sbprolog Exp $
+** $Id: builtin.H,v 1.5 2010-08-19 15:03:35 spyrosh Exp $
 ** 
 */
 
 
 
-:- export inline_predicate/2, inline_builtin/3, builtin_function/3.
+:- export inline_predicate/2, inline_builtin/3, inline_jumpcof_cond/3, builtin_function/3.
 

@@ -18,51 +18,45 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: trassert.h,v 1.2 1998-12-21 01:09:08 cbaoqiu Exp $
+** $Id: trassert.h,v 1.16 2010-08-19 15:03:37 spyrosh Exp $
 ** 
 */
 
+#include "context.h"
 
-extern int trie_assert(void);
-extern int trie_retract(void);
-extern int trie_retract_safe(void);
+extern int trie_assert(CTXTdecl);
+extern int trie_retract(CTXTdecl);
+extern int trie_retract_safe(CTXTdecl);
 
 
-extern NODEptr free_trie_nodes;
-extern NODEptr free_trie_space;
-extern NODEptr top_trie_space;
-extern NODEptr tra_free_trie_nodes;
-extern NODEptr tra_free_trie_space;
-extern NODEptr tra_top_trie_space; 
-extern NODEptr bak_free_trie_nodes;
-extern NODEptr bak_free_trie_space;
-extern NODEptr bak_top_trie_space;
-extern char *trie_node_chunk_ptr;
-extern char *tra_trie_node_chunk_ptr;
-extern char *bak_trie_node_chunk_ptr;
-extern struct HASHhdr HASHroot, *HASHrootptr, tra_HASHroot; 
-
-#define switch_to_trie_assert {\
-   bak_free_trie_nodes = free_trie_nodes;\
-   bak_free_trie_space = free_trie_space;\
-   bak_top_trie_space = top_trie_space;\
-   bak_trie_node_chunk_ptr = trie_node_chunk_ptr;\
-   free_trie_nodes = tra_free_trie_nodes;\
-   free_trie_space = tra_free_trie_space;\
-   top_trie_space = tra_top_trie_space;\
-   trie_node_chunk_ptr = tra_trie_node_chunk_ptr;\
-   HASHrootptr = &tra_HASHroot;\
+#ifdef MULTI_THREAD
+#define switch_to_shared_trie_assert(MUTEX_PTR) {	\
+    threads_current_sm = SHARED_SM;			\
+    smBTN = &smAssertBTN;				\
+    smBTHT = &smAssertBTHT;				\
+    pthread_mutex_lock( MUTEX_PTR ) ;			\
+}
+#define switch_from_shared_trie_assert(MUTEX_PTR) {	\
+    pthread_mutex_unlock( MUTEX_PTR ) ;			\
+    threads_current_sm = SHARED_SM;			\
+    smBTN = &smAssertBTN;				\
+    smBTHT = &smAssertBTHT;				\
+}
+#define switch_to_trie_assert {			\
+    threads_current_sm = PRIVATE_SM;		\
+    smBTN = private_smAssertBTN;			\
+    smBTHT = private_smAssertBTHT;			\
 }
 
-#define switch_from_trie_assert {\
-   tra_free_trie_nodes = free_trie_nodes;\
-   tra_free_trie_space = free_trie_space;\
-   tra_top_trie_space = top_trie_space;\
-   tra_trie_node_chunk_ptr = trie_node_chunk_ptr;\
-   free_trie_nodes = bak_free_trie_nodes;\
-   free_trie_space = bak_free_trie_space;\
-   top_trie_space = bak_top_trie_space;\
-   trie_node_chunk_ptr = bak_trie_node_chunk_ptr;\
-   HASHrootptr = &HASHroot;\
+#else
+#define switch_to_trie_assert {			\
+    smBTN = &smAssertBTN;			\
+    smBTHT = &smAssertBTHT;			\
 }
- 
+#endif
+
+#define switch_from_trie_assert {	    \
+    smBTN = &smTableBTN;		    \
+    smBTHT = &smTableBTHT;		    \
+}
+

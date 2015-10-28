@@ -18,41 +18,85 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: auxlry.c,v 1.1.1.1 1998-11-05 16:55:11 sbprolog Exp $
+** $Id: auxlry.c,v 1.24 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
 
-#include "configs/config.h"
+#include "xsb_config.h"
 
 #include <stdio.h>
 
-#if defined(WIN_NT)
-#include <time.h>
-#else
-#include <sys/time.h>
+/* take care of the time.h problems */
+#include "xsb_time.h"
+
+#ifndef WIN_NT
 #include <sys/resource.h>
+
 #ifdef SOLARIS
 /*--- Include the following to bypass header file inconcistencies ---*/
 extern int getrusage();
 extern int gettimeofday();
 #endif
+
+#ifdef HP700
+#include <sys/syscall.h>
+extern int syscall();
+#define getrusage(T, USAGE)	syscall(SYS_getrusage, T, USAGE);
 #endif
 
-#if (defined(HP300) || defined(HP700))
-#include <sys/syscall.h>
-#define getrusage(T, USAGE)	syscall(SYS_getrusage, T, USAGE);
+#endif
+
+#ifdef WIN_NT
+#include <windows.h>
+#include <winbase.h>
+#include "windows.h"
 #endif
 
 /*----------------------------------------------------------------------*/
 
 double cpu_time(void)
 {
-  float time_sec;
+  double time_sec;
 
 #if defined(WIN_NT)
+#ifndef _MSC_VER
+#define ULONGLONG unsigned long long
+#else
+#define ULONGLONG __int64
+#endif
 
-  time_sec = ((float) clock() / CLOCKS_PER_SEC);
+  static int win_version = -1;
+
+  if (win_version == -1) {
+    OSVERSIONINFO winv;
+    winv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx(&winv);
+    win_version = winv.dwPlatformId;
+  }
+
+  if (win_version == VER_PLATFORM_WIN32_NT) {
+    HANDLE thisproc;
+    FILETIME creation, exit, kernel, user;
+    ULONGLONG lkernel, luser;
+    double stime, utime;
+
+    thisproc = GetCurrentProcess();
+    GetProcessTimes(thisproc,&creation,&exit,&kernel,&user);
+
+    lkernel = ((ULONGLONG) kernel.dwHighDateTime << 32) + 
+      kernel.dwLowDateTime;
+    luser = ((ULONGLONG) user.dwHighDateTime << 32) + 
+      user.dwLowDateTime;
+
+    stime = lkernel / 1.0e7;
+    utime = luser / 1.0e7;
+
+    time_sec =  stime + utime;
+
+  } else {
+    time_sec = ( clock() / CLOCKS_PER_SEC);
+  }
 
 #else
   struct rusage usage;
@@ -67,19 +111,43 @@ double cpu_time(void)
 
 /*----------------------------------------------------------------------*/
 
-/** Note: this one is not used anywhere, but it would make a good builtin for
-    some applications!!! --mk */
-#ifdef HAVE_GETTIMEOFDAY
-int get_date(void)
+/* local = TRUE, if local time is requested */
+void get_date(int local, int *year, int *month, int *day,
+	     int *hour, int *minute, int *second)
 {
-  struct tm *value;
-  struct timeval tvs;
+#ifdef WIN_NT
+    SYSTEMTIME SystemTime;
+    if (local)
+      GetLocalTime(&SystemTime);
+    else
+      GetSystemTime(&SystemTime);
+    *year = SystemTime.wYear;
+    *month = SystemTime.wMonth;
+    *day = SystemTime.wDay;
+    *hour = SystemTime.wHour;
+    *minute = SystemTime.wMinute;
+    *second = SystemTime.wSecond;
+#else
+#ifdef HAVE_GETTIMEOFDAY
+    struct timeval tv;
+    struct tm *tm;
 
-  gettimeofday(&tvs, 0);
-  value = localtime(&(tvs.tv_sec));
-  return ((value->tm_year)<<16) + ((value->tm_mon+1)<<8) + value->tm_mday;
-}
+    gettimeofday(&tv,NULL);
+    if (local)
+      tm = localtime(&tv.tv_sec);
+    else
+      tm = gmtime(&tv.tv_sec);
+    *year = tm->tm_year;
+    if (*year < 1900)
+      *year += 1900;
+    *month = tm->tm_mon + 1;
+    *day = tm->tm_mday;
+    *hour = tm->tm_hour;
+    *minute = tm->tm_min;
+    *second = tm->tm_sec;
 #endif
+#endif
+}
 
 /*----------------------------------------------------------------------*/
 
@@ -98,3 +166,10 @@ double real_time(void)
 }
 
 /*----------------------------------------------------------------------*/
+
+/* My version of gdb gets confused when I set a breakpoint in include
+   files within emuloop.  Thus the use of gdb_dummy() */
+
+void gdb_dummy(void) 
+  {
+  }

@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: term_exp.H,v 1.1.1.1.12.1 2004/09/29 19:44:29 ruim Exp $
 ** 
 */
 

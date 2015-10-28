@@ -1,5 +1,5 @@
 /* File:      eval.H
-** Author(s): David S. Warren, Kostis F. Sagonas
+** Author(s): Warren, Xu, Sagonas, Swift
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -19,17 +19,14 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: eval.H,v 1.8 2008/02/04 19:32:26 dwarren Exp $
 ** 
 */
 
 
-:- export eval/2.
+:- export eval/2, pi/1, e/1.
 
-:- import load/1 from loader.
-:- import functor/3, arg/3, abort/1 from standard.
-:- import term_type/2, term_psc/2, psc_type/2, 
-	  psc_prop/2, code_call/3, psc_name/2
-     from machine.
-
-
+/**
+:- import number/1, throw/1 from standard.
+:- import term_type/2, pow/3 from machine.
+**/

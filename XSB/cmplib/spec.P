@@ -18,9 +18,12 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: spec.P,v 1.1.1.1 1998-11-05 17:00:15 sbprolog Exp $
+** $Id: spec.P,v 1.11 2012-05-21 20:44:44 dwarren Exp $
 ** 
 */
+
+:- compiler_options([xpp_on,optimize,sysmod]).
+#include "standard.h"
 
 
 /*======================================================================*/
@@ -47,7 +50,7 @@ spec(module(SymTab,DL,CL,QR), module(SymTab,DL,CL1,QR)) :-
 	collect_pi_calls(CL, DL, PI_Calls),
 	interesting_calls(PI_Calls, CL, InterestingCalls),
 	merge_calls(InterestingCalls, MergedCalls),
-%	telling(F), tell(user), pp(MergedCalls), told, tell(F),
+%	telling(F), tell(userout), pp(MergedCalls), told, tell(F),
 	specialise(MergedCalls, SymTab, CLmid, CL),
 	new_clause_list(MergedCalls, CLmid, CL1),
 	generate_table_decl(DL, MergedCalls).
@@ -91,7 +94,7 @@ chb(if(G1,G2), HB) :- chb(G1, HB), chb(G2, HB).
 chb(not(G), HB) :- chb(G, HB).
 chb(goal(Sym,Args), HB) :-
 	( filter_goal(Sym, Args) ->	% partially instantiated (HiLog) call
-		member1(pi_calls(Sym,Calls), HB),	% memberchk
+		memberchk(pi_calls(Sym,Calls), HB),	% memberchk
 		add_new_clause(body_call(Args), Calls)
 	; true
 	).
@@ -139,10 +142,12 @@ filter_goal(Sym, Args) :- sym_prop(defined, Sym), sth_bound(Args).
 interesting_calls([], _, []).
 interesting_calls([pi_calls(Sym,C)|Cs], Preds, ICL) :-
 	Pred = pred(Sym,_Clauses,_),
-	member1(Pred, Preds),
-	'interesting calls'(C, Pred, IC),
-	( IC == [] -> ICL = ICs ; ICL = [pi_calls(Sym,IC)|ICs] ),
-	interesting_calls(Cs, Preds, ICs).
+	(memberchk(Pred, Preds)  % may not be there if dynamic
+	 ->	'interesting calls'(C, Pred, IC),
+		( IC == [] -> ICL = ICs ; ICL = [pi_calls(Sym,IC)|ICs] ),
+		interesting_calls(Cs, Preds, ICs)
+	 ;	interesting_calls(Cs, Preds, ICL)
+	).
 
 :- mode 'interesting calls'(+,+,-).
 
@@ -223,8 +228,7 @@ umnl_chk(structure(Sym,Args), HeadArg) :-
 
 
 /*======================================================================*/
-/* merge_calls(+CallList, -MergedCallList)				*/
-/*	MergedList is a simplified version of CallList, where all calls	*/
+/* merge_calls(+CallList, -/*	MergedList is a simplified version of CallList, where all calls	*/
 /*	that select the same clauses are merged together.  This is done	*/
 /*	since all these calls can use the same specialisation of the	*/
 /*	predicate and the same representative.				*/
@@ -287,18 +291,23 @@ specialise([pi_calls(Sym,Calls,Representable)|PICs], SymTab, CLin, CLout) :-
 
 specialise_pred(Sym, Calls, Representable, SymTab, CLin, CLout) :-
 	sym_name(Sym, N, A),
-	( sym_type(Sym,tabled(_,_Chs,_Rhs,_)) -> Tabled = 1 ; Tabled = 0 ),
-	( ( \+ option(spec_repr), Representable = 0
-	  ; non_overlapping_selection(Calls), Representable = 1
+	( sym_type(Sym,tabled(_,_)) -> Tabled = 1 ; Tabled = 0 ),
+	( ( \+sym_type(Sym,aggregation(_)),
+	    ( \+ option(spec_repr), Representable = 0
+	    ; non_overlapping_selection(Calls), Representable = 1
+	    )
 	  ) ->
 		message(('% Specialising partially instantiated calls to ',
 			 N, '/', A)),
 		'specialise pred'(Calls, N, A, Tabled, SymTab, CLin, CLout)
 	; CLout = CLin, Representable = 0,
-	  warning(('Calls select overlapping clause blocks of predicate ',
-		   N, '/', A)),
-	  message(('           ',
-		   '(specialisation with representation cannot be performed!)'))
+	  (sym_type(Sym,aggregation(_))
+	   ->	  message(('% specialization of aggregate predicate not performed: ',N,'/',A))
+	   ;	  warning(('Calls select overlapping clause blocks of predicate ',
+			   N, '/', A)),
+	   	  message(('           ',
+		    '(specialisation with representation cannot be performed!)'))
+	  )
 	).
 
 :- mode 'specialise pred'(+,+,+,+,?,?,?).
@@ -322,7 +331,7 @@ specialise_pred(Sym, Calls, Representable, SymTab, CLin, CLout) :-
 
 specialise_calls(CallsMsg, SelClauses, Calls, N, A, Tabled,
 		 SymTab, NewCalls, Representative, NewPred) :- 
-	( singleton_sets_opt(SelClauses, HeadArgs, Body) ->
+	( singleton_sets_opt(SelClauses, Tabled, HeadArgs, Body) ->
 		singleton_special_calls(Calls, HeadArgs, Body, NewCalls)
 	; find_msg(CallsMsg, SelClauses, Msg),
 %	  typeout(('# Msg = ', Msg)),
@@ -334,14 +343,17 @@ specialise_calls(CallsMsg, SelClauses, Calls, N, A, Tabled,
 	).
 
 /*----------------------------------------------------------------------*/
-/* singleton_sets_opt(+SelectedClauses, -HeadArgs, -Body)		*/
+/* singleton_sets_opt(+SelectedClauses, +Tabled, -HeadArgs, -Body)	*/
 /*	Checks if the singleton clause selection optimisation is	*/
 /*	applicable and if so, returns the arguments of head and the	*/
 /*	goal of the body of the selected clause.  The optimisation is	*/
-/*	applicable iff the body contains just a single literal.		*/
+/*	applicable iff the body contains just a single literal provided	*/
+/*	that the termination characteristics of the program are not	*/
+/*	changed by bypassing calls to tabled predicates.		*/
 /*----------------------------------------------------------------------*/
 
-singleton_sets_opt([clause(HeadArgs,Body,_)], HeadArgs, Body) :-
+singleton_sets_opt([clause(HeadArgs,Body,_)], Tabled, HeadArgs, Body) :-
+	Tabled =:= 0,	%% do not bypass a call to a tabled predicate
 	fail_if(option(unfold_off)),
 	( Body = inlinegoal(_,_,_) -> true ; Body = goal(_,_) ).
 
@@ -392,10 +404,10 @@ represent(Msg, Name, Arity, Tabled, SymTab, NewSym, Representative) :-
 	msg_copy(Msg, MsgCopy, NewArgs, [], 0, NewArity),
 	Properties = [pred,defined,used|Prop],
 	( Tabled =:= 0 -> Prop = []
-	; Prop = [tabled(_,_)],
+	; Prop = [tabled],
 	  warning(('The specialisation of ', Name, '/', Arity,
 		   ' will cause double tabling !')),
-	  message('           (possible source of inefficiency)')
+	  ttywritenl('           (possible source of inefficiency)',STDWARN)
 	),
 	sym_insert(NewName, NewArity, Properties, SymTab, NewSym),
 	Representative = clause(MsgCopy,goal(NewSym,NewArgs),_NewPrag).
@@ -550,7 +562,7 @@ singleton_special_call([CArg|CArgs], [HArg|HArgs], Body, SpecCall) :-
 
 'arg unification'(CallArg, HeadArg, SpecCall, RestSpecCall) :-
 	( HeadArg = varocc(Id) ->
-		name(Id, L), NL = [0'_, 0'v|L], atom_chars(NewId, NL),
+		name(Id, L), NL = [0'_, 0'v|L], atom_codes(NewId, NL),
 		SpecCall = and(inlinegoal(=,2,[CallArg,varocc(NewId)]),
 			       RestSpecCall)
 	; ( CallArg = varocc(_) -> 
@@ -597,7 +609,7 @@ singleton_special_call([CArg|CArgs], [HArg|HArgs], Body, SpecCall) :-
 
 new_clause_list([], CL, CL).
 new_clause_list([pi_calls(Sym,Calls,Representable)|PICs], CLin, CLout) :-
-	( ( \+ option(spec_repr) ; Representable =:= 1 ) ->
+	( \+sym_type(Sym,aggregation(_)), ( \+ option(spec_repr) ; Representable =:= 1 ) ->
 		'new clause list'(Calls, Sym, Representable, CLin, CLmid)
 	; CLmid = CLin
 	),
@@ -689,7 +701,7 @@ occurs_in(A, [_|B], [_|C], D) :- occurs_in(A, B, C, D).
 
 name_vars_uniquely(G, Sym, NG) :-
 	sym_name(Sym, N, A),
-	atom_chars(N, NL), name(A, AL), append([0'_|NL], [0'_|AL], PredL), 
+	atom_codes(N, NL), name(A, AL), append([0'_|NL], [0'_|AL], PredL), 
 	conget('singleton call #', C), NewC is C+1, name(NewC, CL),
 	conset('singleton call #', NewC), append(PredL, [0'_|CL], IdL),
 	'name vars uniquely'(G, IdL, NG).
@@ -717,7 +729,7 @@ make_arg_vars_unique(varocc(Id), IdL, varocc(NewId)) :-
 	!,
 	name(Id, IdName),
 	( IdName = [0'_,0'v|_] ->
-		append(IdName, IdL, NewIdL), atom_chars(NewId, NewIdL)
+		append(IdName, IdL, NewIdL), atom_codes(NewId, NewIdL)
 	; NewId = Id
 	).
 make_arg_vars_unique(structure(Sym,Args), IdL, structure(Sym,NewArgs)) :-
@@ -741,14 +753,14 @@ generate_table_decl([goal(Sym,Args)|Goals], PICs) :-
 :- mode 'generate table decl'(+,+,+).
 
 'generate table decl'(Sym, PICs, Args) :-
-	( member1(pi_calls(Sym,CallList,_Representable), PICs) ->
+	( memberchk(pi_calls(Sym,CallList,_Representable), PICs) ->
 		'search for call'(CallList, Args)
 	; sym_name(Sym, N, A),
 	  warning(('Table specialisation declaration for ', N, '/', A,
 		   ' could not be ')),
-	  message(('           processed as intended... ',
-		   '(tabling the whole predicate instead)')),
-	  sym_propin(tabled(_,_), Sym)
+	  ttywritenl(('           processed as intended... ',
+		      '(tabling the whole predicate instead)'),STDWARN),
+	  sym_propin(tabled, Sym)
 	).
 
 :- mode 'search for call'(+,+).
@@ -756,12 +768,13 @@ generate_table_decl([goal(Sym,Args)|Goals], PICs) :-
 'search for call'([], _).
 'search for call'([C|CL], Args) :-
 	C = body_calls(_,_,Cs,NCs,Rep),
-	( member1(Args,Cs) ->
+	( memberchk(Args,Cs) ->
 	    ( nonvar(Rep) ->
 		NCs = [goal(NewSym,_)|_],
-		sym_propin(tabled(_,_), NewSym)
+		sym_propin(tabled, NewSym)
 	    ; error(('Singleton optimisations clash with table declaration')),
-	      message('         (please use compiler option "unfold_off")')
+	      ttywritenl('         (please use compiler option "unfold_off")',
+			 STDERR)
 	    )
 	; 'search for call'(CL, Args)
 	).
@@ -859,7 +872,7 @@ non_overlapping_selection([BC|BCs]) :-
 :- mode disjoint(+,+).
 
 disjoint([], _).
-disjoint([Cl|Cls], SCL) :- fail_if(member1(Cl, SCL)), disjoint(Cls, SCL).
+disjoint([Cl|Cls], SCL) :- fail_if(memberchk(Cl, SCL)), disjoint(Cls, SCL).
 
 end_of_file.
 
@@ -895,7 +908,7 @@ pp_calls([body_calls(CallMsg,SelectedClauses,Cs,_NCs,_Rep)|Calls]) :-
 	tab(4), write(Cs), nl, 
 	pp_calls(Calls).
 
-typeout(M) :- telling(X), tell(user), ttywrite(M), nl, told, tell(X).
+typeout(M) :- telling(X), tell(userout), ttywrite(M), nl, told, tell(X).
 
 
 /*----------------------- end of file spec.P ---------------------------*/

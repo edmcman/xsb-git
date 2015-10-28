@@ -19,16 +19,19 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: preproc.H,v 1.1.1.1 1998-11-05 17:00:11 sbprolog Exp $
+** $Id: preproc.H,v 1.9 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
 
 :- export force_preprocess_loaded/0. 
-:- export preprocess/3, gensym_pred/2, have_hardcut/2.
+:- export preprocess/3, cmp_gensym/2, gensym_pred/2, have_hardcut/2.
 
 :- import option/1 from auxlry.
-:- import inline_neg/2, compl_cond/5 from pre_cond.
+:- import compl_cond/5 from pre_cond.
 :- import sym_prop/2, sym_insert/5, sym_name/3 from symtab.
-:- import conget/2, name_append/3, gensym/2, append/3 from prof_sbp.
-
+:- import str_cat/3 from machine.
+:- import conget/2, coninc/2 from gensym.
+:- import append/3 from basics.
+:- import inline_jumpcof_cond/3 from builtin.
+:- import number_codes/2, atom_codes/2 from standard.

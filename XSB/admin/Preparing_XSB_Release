@@ -2,17 +2,18 @@
     Instructions for Preparing an XSB Release
     =========================================
 
+NOTE: Instructions for maintenance of the Web site are in
+      docs/homepage/SOURCEFORGE_SITE_MAINTENANCE
+
 NOTE: Autoconf must be installed. 
       Releases can only be created under a Unix system
 
-1. Windows NT/95/98 or DOS:
+1. Windows NT/95/98/2000
 
        cd build
        autoconf
    Windows:
        ./configure --with-os=windows
-   DOS:
-       ./configure --with-os=pcdos
 
    Note: you MUST run configure, or else certain important files
    (configs.h, configure.P, banner.msg)  won't be created!
@@ -25,8 +26,6 @@ NOTE: Autoconf must be installed.
        
        Windows:
 	   config/x86-pc-windows
-       DOS:
-	   config/x86-pc-pcdos
 
 
 2. Unix:

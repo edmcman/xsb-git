@@ -1,5 +1,5 @@
 /* File:      xsb_writ.P
-** Author(s): Kostis F. Sagonas
+** Author(s): Xu, Sagonas
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -18,272 +18,397 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id$
+** $Id: xsb_writ.P,v 1.32 2008/02/16 18:03:12 dwarren Exp $
 ** 
 */
 
+
+:- compiler_options([xpp_on,sysmod,optimize]).
+
+#include "celltags_xsb.h"
+#include "char_defs.h"
+#include "token_defs_xsb.h"
+#include "flag_defs_xsb.h"
+#include "thread_defs_xsb.h"
+#include "io_defs_xsb.h"
+#include "standard.h"
+
+/* TLS: Note that file_puttoken is NOT locked, so locking must appear
+   around it.  This is to avoid the need for recursive mutexes. */
 
 		/**************************/
 		/*	file_nl/1	  */
 		/**************************/
 
-file_nl(File) :- ( is_backslashing_os -> file_put(File, 13), file_put(File, 10)
-				      ; file_put(File, 10) ).
+% TLS: removed mutex as file_put is locked via file_function.
+file_nl(File) :- 
+	file_function(FILE_NL, File, _).
 
 		/**************************/
 		/*	file_write/2	  */
 		/**************************/
 
-file_write(File, Term) :- l_write(File, Term, 999), fail.
+file_write(File, Term) :- 
+	xsb_stream_lock(File),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	l_write(File, Term, 999), 
+%	xsb_sys_mutex_unlock(MUTEX_IO), 
+	xsb_stream_unlock(File),
+	fail.
 file_write(_, _).
 
-file_write0(File, Term) :- l_write(File, Term, 999), fail.
+file_write0(File, Term) :- 
+	xsb_stream_lock(File),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	l_write(File, Term, 999), 
+%	xsb_sys_mutex_unlock(MUTEX_IO),
+	xsb_stream_unlock(File),
+	fail.
 file_write0(_, _).
 
-	       /********************************/
-	       /*  fmt_write, fmt_write_string */
-	       /********************************/
-fmt_write(Fmt, Args) :-
-       stat_flag(11, File), 
-       ( atom(Fmt), callable(Args) -> fmt_write(File, Fmt, Args)
-         ;
-	 abort('Usage: fmt_write(+FmtString, args(+A1,+A2,...))')
-       ).
+    	    	/**********************************/
+    	        /* write_int/1-2, write_float/1-2 */
+    	    	/**********************************/
 
-fmt_write_string(Str, Fmt, Args) :-
-   ( var(Str), atom(Fmt), callable(Args) -> fmt_write_string(Str, Fmt, Args)
-     ;
-     abort('Usage: fmt_write(-OutputString, +FmtString, args(+A1,+A2,...))')
-   ).
+write_int(Num) :- 
+	stat_flag(CURRENT_OUTPUT, File),
+	xsb_stream_lock(File),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	file_puttoken(File, TK_INT_0, Num),
+%	xsb_sys_mutex_unlock(MUTEX_IO).
+	xsb_stream_unlock(File).
+	
+write_int(Str,Num) :-
+	xsb_stream_lock(Str),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	file_puttoken(Str,TK_INT_0,Num),
+%	xsb_sys_mutex_unlock(MUTEX_IO).
+	xsb_stream_unlock(Str).
+
+write_float(Num) :- 
+	stat_flag(CURRENT_OUTPUT, File),
+	xsb_stream_lock(File),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	file_puttoken(File, TK_FLOAT_0, Num),
+%	xsb_sys_mutex_unlock(MUTEX_IO).
+	xsb_stream_unlock(File).
+
+write_double(Num) :- 
+	stat_flag(CURRENT_OUTPUT, File),
+	xsb_stream_lock(File),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	file_puttoken(File, TK_DOUBLE_0, Num),
+%	xsb_sys_mutex_unlock(MUTEX_IO).
+	xsb_stream_unlock(File).
+
+write_float(Str,Num) :-
+	xsb_stream_lock(Str),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	file_puttoken(Str,TK_FLOAT_0,Num),
+%	xsb_sys_mutex_unlock(MUTEX_IO).
+	xsb_stream_unlock(Str).
+
+write_double(Str,Num) :-
+	xsb_stream_lock(Str),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	file_puttoken(Str,TK_DOUBLE_0,Num),
+%	xsb_sys_mutex_unlock(MUTEX_IO).
+	xsb_stream_unlock(Str).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-l_write(File, Var, _) :- 
+dot_attributes(Var,Str):- 
+	get_attributes(Var,Atts),
+	dot_attributes_1(Atts,Str).
+
+dot_attributes_1([],_).
+dot_attributes_1([Mod,_|T],Str):- 
+	file_write(Str,' { '),
+	file_write(Str,Mod),
+	file_write(Str,' : ...}'),
+	dot_attributes_1(T,Str).
+
+recurse_attributes(Var,Str):- 
+	get_attributes(Var,Atts),
+	recurse_attributes_1(Atts,Str).
+
+recurse_attributes_1([],_Str).
+recurse_attributes_1([Mod,Attr|T],Str):- 
+	file_write(STDFDBK,' { '),
+	file_write(STDFDBK,Mod),
+	file_write(Str,Attr),
+	file_write(STDFDBK,' }'),
+	recurse_attributes_1(T,Str).
+
+portray_attributes(Var,File):- 
+	get_attributes(Var,Atts),
+	portray_attributes_1(Atts,File).
+
+portray_attributes_1([],_).
+portray_attributes_1([Mod,Attr|T],File):- 
+	(attribute_portray_hook(Mod,Attr,Handler) -> 
+	    file_write(File,' { '),
+	    file_write(File,Mod),
+	    file_write(File,' : '),
+	    stat_flag(CURRENT_OUTPUT, Old),
+	    stat_set_flag(CURRENT_OUTPUT, File),
+	    call(Handler),
+	    stat_set_flag(CURRENT_OUTPUT, Old),
+	    file_write(File,' } ')
+	 ;  file_write(File,' { '),
+   	    file_write(File,Mod),
+	    file_write(File,' : ...unknown portray_attributes for this module}')),
+	 portray_attributes_1(T,File).
+
+l_write(File,T,Prec) :-
+        stat_flag(WRITE_DEPTH,Level),
+	stat_flag(WRITE_ATTRIBUTES,AttrAct),
+	l_write(File,T,Prec,Level,AttrAct).
+
+l_write(File,_,_,0,_) :-
+	!,
+	file_puttoken(File, XSB_STRING, '...').
+l_write(File, Var, _, _D,_) :- 
 	term_type(Var, Type), 
-	Type =:= 0,
+	Type =:= XSB_FREE,
 	!, 
-	file_puttoken(File, 0, Var).
-l_write(File, '$VAR'(N), _) :- 
+	file_puttoken(File, Type, Var).
+l_write(File, Var, _, _D,Flag) :- 
+	term_type(Var, Type), 
+	Type =:= XSB_ATTV,
 	!, 
-	l_writevar(File, N, 0).
-l_write(File, [X|Y], _) :- 
+	file_puttoken(File, Type, Var),
+	l_writeattrvar(File,Var,Flag).
+l_write(File, '$VAR'(N), _, D,Flag) :- 
+	!,
+	D1 is D - 1,
+	l_writevar(File, N, 0, D1,Flag).
+l_write(File, [X|Y], _, D,Flag) :- 
 	!, 
 	file_put(File, 91), 	% '['
-	l_write(File, X, 999), 
-	l_writetail(File, Y).
-l_write(File, T, Prec) :- 	% functor(T, OP, N),
+	D1 is D - 1,
+	l_write(File, X, 999, D1,Flag),
+	l_writetail(File, Y, D1,Flag).
+l_write(File, T, Prec, D,Flag) :- 	% functor(T, OP, N),
 	term_type(T, Type), 
-	Type =:= 1, !,		% CS
+	Type =:= XSB_STRUCT, !,		
 	term_psc(T, PSC), 
 	psc_arity(PSC, N),
 	psc_name(PSC, Name),
 	OP = Name,
-	( N=:=0 -> file_puttoken(File, 5, Name)
+	D1 is D - 1,
+	( N=:=0 -> file_puttoken(File, TK_ATOM, Name)
+		    ,file_put(File,CH_LPAREN),file_put(File,CH_RPAREN) % e.g. p()?
 	; N=:=1 ->
 		( '_$op'(Opprec, fx, OP) ->
 			Nprec is Opprec-1, 
-			l_writepreop(File, Name, T, Prec, Opprec, Nprec)
+			l_writepreop(File, Name, T, Prec, Opprec, Nprec, D,Flag)
 		; '_$op'(Opprec, fy, OP) ->
-			l_writepreop(File, Name, T, Prec, Opprec, Opprec)
+			l_writepreop(File, Name, T, Prec, Opprec, Opprec, D,Flag)
 		; '_$op'(Opprec, xf, OP) ->
 			Nprec is Opprec-1, 
-			l_writepostop(File, Name, T, Prec, Opprec, Nprec)
+			l_writepostop(File, Name, T, Prec, Opprec, Nprec, D,Flag)
 		; '_$op'(Opprec, yf, OP) ->
-			l_writepostop(File, Name, T, Prec, Opprec, Opprec)
-		; '_$op'(Opprec, hx, OP) ->
-			Nprec is Opprec-1,
-			l_hilog_writepreop(File, Name, T, Prec, Opprec, Nprec)
-		; '_$op'(Opprec, hy, OP) -> 
-			l_hilog_writepreop(File, Name, T, Prec, Opprec, Opprec)
+			l_writepostop(File, Name, T, Prec, Opprec, Opprec, D,Flag)
 		; Name == {} ->
-			l_write_curly(File, T)
-		; l_writestr(File, Name, N, T)
+			l_write_curly(File, T, D,Flag)
+		; l_writestr(File, Name, N, T, D1,Flag)
 		)
 	; N=:=2 ->
 		( '_$op'(Opprec, xfx, OP) ->
 			Nprec is Opprec-1,
-			l_writebinop(File, Name, T, Prec, Opprec, Nprec, Nprec)
+			l_writebinop(File, Name, T, Prec, Opprec, Nprec, Nprec, D,Flag)
 		; '_$op'(Opprec, xfy, OP) ->
 			Nprec is Opprec-1,
-			l_writebinop(File, Name, T, Prec, Opprec, Nprec, Opprec)
+			l_writebinop(File, Name, T, Prec, Opprec, Nprec, Opprec, D,Flag)
 		; '_$op'(Opprec, yfx, OP) ->
 			Nprec is Opprec-1,
-			l_writebinop(File, Name, T, Prec, Opprec, Opprec, Nprec)
+			l_writebinop(File, Name, T, Prec, Opprec, Opprec, Nprec, D,Flag)
 		; Name == apply ->
-			l_hilog_writestr(File, N, T) 
-		; l_writestr(File, Name, N, T)
+			l_hilog_writestr(File, N, T, D,Flag) 
+		; l_writestr(File, Name, N, T, D1,Flag)
 		)
 	; ( Name == apply -> 
-              l_hilog_writestr(File, N, T)
-	  ; l_writestr(File, Name, N, T)
+              l_hilog_writestr(File, N, T, D,Flag)
+	  ; l_writestr(File, Name, N, T, D1,Flag)
 	  )
 	).
-l_write(File, T, _) :- 
+l_write(File, T, _, _D,_Flag) :- 
 	term_type(T, Type),
 	file_puttoken(File, Type, T).
 
-l_writevar(File, N, Quoted) :-
-	( integer(N) ->
-		OrdLetter is N mod 26,
-		ChrLetter is 65 + OrdLetter,	% 0'A=65
-		file_put(File, ChrLetter),
-		Number is N // 26,
-		( Number =:= 0 -> true
-		; file_puttoken(File, 2, Number) 
-		)
-	; ( Quoted =:= 0 -> file_puttoken(File, 5, '$VAR')
-	  ; file_put(File, 0''),
-	    file_puttoken(File, 5, '$VAR'), 
-	    file_put(File, 0'')
-	  ),
-	  file_put(File, 40),
-	  l_write(File, N, 999),
-	  file_put(File, 41)
-	).
+l_writevar(File, N, Quoted, D,Flag) :-
+             (integer(N) ->
+	        (N < 0 -> 
+   	           file_put(File, CH_UNDERSCORE)
+	        ;  OrdLetter is N mod 26,
+	           ChrLetter is CH_A + OrdLetter,	% Char A
+	           file_put(File, ChrLetter),
+	           Number is N // 26,
+	           (Number =:= 0 -> 
+                         true
+	           ; file_puttoken(File, TK_VAR, Number) ) )
+   	     ; (Quoted =:= 0 -> 
+	            file_puttoken(File, TK_ATOM, '$VAR')
+	          ; file_put(File, CH_QUOTE),
+	             file_puttoken(File, TK_ATOM, '$VAR'), 
+	             file_put(File, CH_QUOTE) ),
+	        file_put(File, CH_LPAREN),
+	        l_write(File, N, 999, D,Flag),
+	        file_put(File, CH_RPAREN) ).
 
-l_writestr(File, Name, N, Term) :-
-	file_puttoken(File, 5, Name), 
-	file_put(File, 40), 		% '('
+l_writeattrvar(File,Var,Flag) :-
+	(Flag == WA_IGNORE -> 
+	    true
+	  ; Flag == WA_PORTRAY -> 
+	     stat_set_flag(WRITE_ATTRIBUTES,WA_IGNORE),
+	     portray_attributes(Var,File),
+	     stat_set_flag(WRITE_ATTRIBUTES,Flag)
+	  ; Flag == WA_WRITE -> 
+	     stat_set_flag(WRITE_ATTRIBUTES,WA_DOTS),
+	     recurse_attributes(Var,File),
+	     stat_set_flag(WRITE_ATTRIBUTES,Flag)
+	  ; Flag == WA_DOTS -> 
+	     dot_attributes(Var,File)).
+
+
+l_writestr(File, Name, N, Term, D,Flag) :-
+	file_puttoken(File, TK_ATOM, Name), 
+	file_put(File, CH_LPAREN),    % (
 	term_arg(Term, 1, X),
-	l_write(File, X, 999),
-        l_writearg(File, Term, N, 1), 
-	file_put(File, 41).		% ')'
+	l_write(File, X, 999, D,Flag),
+        l_writearg(File, Term, N, 1, D,Flag), 
+	file_put(File, CH_RPAREN).    % )
 
-l_write_curly(File, Term) :- 
-	file_put(File, 123),		% '{'
+l_write_curly(File, Term, D,Flag) :- 
+	file_put(File, CH_LBRACE),	% {
 	term_arg(Term, 1, Arg),
-	l_write(File, Arg, 999),
-	file_put(File, 125).		% '}'
+	l_write(File, Arg, 999, D,Flag),
+	file_put(File, CH_RBRACE).	% }
 
-l_hilog_writestr(File, N, Term) :-
+l_hilog_writestr(File, N, Term, D,Flag) :-
 	term_arg(Term, 1, HiLogFunctor),
-        l_write(File, HiLogFunctor, 999),
+        l_write(File, HiLogFunctor, 999, D,Flag),
+	D1 is D - 1,
 	term_arg(Term, 2, FirstArg),
-	( nonvar(HiLogFunctor), hilog_op(_, _, HiLogFunctor) -> 
-		( no_paren_needed(FirstArg) ->
-			l_write(File, FirstArg, 999)	% Term has only one arg
-		; file_put(File, 40),		% '('
-		  l_write(File, FirstArg, 999),
-		  file_put(File, 41)		% ')'
-		)
-	; file_put(File, 40),		% '('
-	  l_write(File, FirstArg, 999),	% write the first of the HiLog args
-	  l_writearg(File, Term, N, 2),	% write the rest  of the HiLog args
-          file_put(File, 41)		% ')'
-	).
+	file_put(File, CH_LPAREN),	% (
+	l_write(File, FirstArg, 999, D1,Flag), % write the first of the HiLog args
+	l_writearg(File, Term, N, 2, D1,Flag), % write the rest  of the HiLog args
+	file_put(File, CH_RPAREN).	% )
 
-l_writebinop(File, Op, Term, Oldp, Curp, Newlp, Newrp) :- 
+l_writebinop(File, Op, Term, Oldp, Curp, Newlp, Newrp, D,Flag) :- 
 	term_arg(Term, 1, Arg1),
 	term_arg(Term, 2, Arg2),
 	(Curp > Oldp -> 
-		file_put(File, 40),		% 0'(
-		'write binop'(File, Arg1, Op, Arg2, Newlp, Newrp),
-		file_put(File, 41)		% 0')
+		file_put(File, 40),		% '('
+		'write binop'(File, Arg1, Op, Arg2, Newlp, Newrp, D,Flag),
+		file_put(File, 41)		% ')'
 	;
-		'write binop'(File, Arg1, Op, Arg2, Newlp, Newrp)
+		'write binop'(File, Arg1, Op, Arg2, Newlp, Newrp, D,Flag)
 	).
 
-'write binop'(File, Arg1, Op, Arg2, Newlp, Newrp) :-
-	l_write(File, Arg1, Newlp),
-	file_put(File, 0' ),
-	file_puttoken(File, 19, Op),
-	file_put(File, 0' ),
-	l_write(File, Arg2, Newrp).
+% if Arg2 is a prefix op that binds tighter, need parens?
+'write binop'(File, Arg1, Op, Arg2, Newlp, Newrp, D,Flag) :-
+        D1 is D - 1,
+	l_write(File, Arg1, Newlp, D1,Flag),
+%	file_put(File, 0' ),	    	% '  to fool the C preprocessor
+	file_puttoken(File, TK_INOP, Op),
+%	file_put(File, 0' ),	    	% '  to fool the C preprocessor
+	l_write(File, Arg2, Newrp, D1,Flag).
 
-l_writepreop(File, Op, Term, Oldp, Curp, Newp) :- 
+l_writepreop(File, Op, Term, Oldp, Curp, Newp, D,Flag) :- 
 	term_arg(Term, 1, Arg),
+	D1 is D - 1,
 	(Curp > Oldp -> 
-		file_put(File, 40),		% 0'(
-		file_puttoken(File, 18, Op),
-		l_write(File, Arg, Newp),
-		file_put(File, 41)		% 0')
+		file_put(File, 40),		% '('
+		file_puttoken(File, TK_PREOP, Op),
+		l_write(File, Arg, Newp, D1,Flag),
+		file_put(File, 41)		% ')'
 	;
-		file_puttoken(File, 18, Op),
-		l_write(File, Arg, Newp)
+		file_puttoken(File, TK_PREOP, Op),
+		l_write(File, Arg, Newp, D1,Flag)
 	).
 
-l_writepostop(File, Op, Term, Oldp, Curp, Newp) :- 
+l_writepostop(File, Op, Term, Oldp, Curp, Newp, D,Flag) :- 
 	term_arg(Term, 1, Arg),
+	D1 is D - 1,
 	(Curp > Oldp -> 
-		file_put(File, 40),		% 0'(
-		l_write(File, Arg, Newp),
-		file_puttoken(File, 20, Op),
-		file_put(File, 41)		% 0')
+		file_put(File, 40),		% '('
+		l_write(File, Arg, Newp, D1,Flag),
+		file_puttoken(File, TK_POSTOP, Op),
+		file_put(File, 41)		% ')'
 	;
-		l_write(File, Arg, Newp),
-		file_puttoken(File, 20, Op)
+		l_write(File, Arg, Newp, D1,Flag),
+		file_puttoken(File, TK_POSTOP, Op)
 	).
 
-l_hilog_writepreop(File, Op, Term, Oldp, Curp, Newp) :-
-	term_arg(Term, 1, Arg),
-	(Curp > Oldp ->
-		file_put(File, 40),		% 0'(
-		file_puttoken(File, 18, Op),
-		( no_paren_needed(Arg) ->
-			l_write(File, Arg, Newp)
-		; file_put(File, 40),		% 0'(
-		  l_write(File, Arg, Newp),
-		  file_put(File, 41)		% 0')
-		),
-		file_put(File, 41) 		% 0')
-	;
-		file_puttoken(File, 18, Op),
-		( no_paren_needed(Arg) ->
-			l_write(File, Arg, Newp)
-		; file_put(File, 40),		% 0'(
-		  l_write(File, Arg, Newp),
-		  file_put(File, 41)		% 0')
-		)
-	).
 
-no_paren_needed(Arg) :- atom(Arg).
-no_paren_needed(Arg) :- \+ proper_hilog(Arg).
-
-l_writearg(_File, _T, N, N) :- !.
-l_writearg(File, T, N, M) :- 
+l_writearg(_File, _T, N, N, _D,_Flag) :- !.
+l_writearg(File, T, N, M, D,Flag) :- 
 	L is M + 1, 
-	file_put(File, 44), 		% 0',
+	file_put(File, 44), 		% ','
 	term_arg(T, L, X),
-        l_write(File, X, 999), 
-	l_writearg(File, T, N, L).
+        l_write(File, X, 999, D,Flag), 
+	l_writearg(File, T, N, L, D,Flag).
 
-l_writetail(File, Var) :- 
+l_writetail(File, _, 0,_Flag) :-
+	!,
+	file_put(File,124),
+	file_puttoken(File, XSB_STRING, '...'),
+	file_put(File,93).
+%TLS: need to change
+l_writetail(File, Var, _D,_Flag) :- 
 	term_type(Var, Type),
-	Type =:= 0,
+	Type =:= XSB_FREE,
 	!, 
-	file_put(File, 124), 		% 0'|
-	file_puttoken(File, 0, Var), 
-	file_put(File, 93).		% 0']
-l_writetail(File, [X|Y]) :- 
+	file_put(File, 124), 		% '|'
+	file_puttoken(File, Type, Var), 
+	file_put(File, 93).		% ']'
+l_writetail(File, Var, _D,Flag) :- 
+	term_type(Var, Type),
+	Type =:= XSB_ATTV,
 	!, 
-	file_put(File, 44), 		% 0',
-	l_write(File, X, 999), 
-	l_writetail(File, Y).
-l_writetail(File, []) :- 
+	file_put(File, 124), 		% '|'
+	file_puttoken(File,XSB_ATTV,Var),
+	l_writeattrvar(File,Var,Flag),
+	file_put(File, 93).		% ']'
+l_writetail(File, [X|Y], D,Flag) :- 
 	!, 
-	file_put(File, 93).		% 0']
-l_writetail(File, X) :- 
-	file_put(File, 124), 		% 0'|
-	l_write(File, X, 999), 
-	file_put(File, 93).		% 0']
+	file_put(File, 44), 		% ','
+	D1 is D - 1, %% TES
+	l_write(File, X, 999, D,Flag), 
+	l_writetail(File, Y, D1,Flag).
+l_writetail(File, [], _D,_Flag) :- 
+	!, 
+	file_put(File, 93).		% ']'
+l_writetail(File, X, D,Flag) :- 
+	file_put(File, 124), 		% '|'
+	l_write(File, X, 999, D,Flag), 
+	file_put(File, 93).		% ']'
 
 
 		/**********************************/
 		/*	file_write_prolog/2	  */
 		/**********************************/
 
-file_write_prolog(File, Term) :- l_write_prolog(File, Term, 999), fail.
+file_write_prolog(File, Term) :- 
+	xsb_stream_lock(File),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	l_write_prolog(File, Term, 999), 
+%	xsb_sys_mutex_unlock(MUTEX_IO),
+	xsb_stream_unlock(File),
+	fail.
 file_write_prolog(_, _).
 
 
 l_write_prolog(File, Var, _) :- 
-	term_type(Var, T), 
-	T=:=0, 
+	term_type(Var, Type), 
+	(Type =:= XSB_FREE; Type =:= XSB_ATTV),
 	!, 
-	file_puttoken(File, 0, Var).
+	file_puttoken(File, Type, Var).
 l_write_prolog(File, '$VAR'(N), _) :- 
 	!,
-	l_writevar(File, N, 0).
+	l_writevar_prolog(File, N, 0).
 l_write_prolog(File, [X|Y], _) :- 
 	!, 
 	file_put(File, 91), 	% '['
@@ -291,22 +416,17 @@ l_write_prolog(File, [X|Y], _) :-
 	l_writetail_prolog(File, Y).
 l_write_prolog(File, T, Prec) :- 	% functor(T, OP, N),
 	term_type(T, Type), 
-	Type =:= 1, !,		% CS
+	Type =:= XSB_STRUCT, !,		
 	term_psc(T, PSC), 
 	psc_arity(PSC, N),
 	psc_name(PSC, Name),
 	OP = Name,
-	( N=:=0 -> file_puttoken(File, 5, Name)
+	( N=:=0 -> file_puttoken(File, TK_ATOM, Name)
 	; N=:=1 ->
 		( '_$op'(Opprec, fx, OP) ->
 			Nprec is Opprec-1, 
 			l_writepreop_prolog(File, Name, T, Prec, Opprec, Nprec)
 		; '_$op'(Opprec, fy, OP) ->
-			l_writepreop_prolog(File, Name, T, Prec, Opprec, Opprec)
-		; '_$op'(Opprec, hx, OP) ->
-			Nprec is Opprec-1,
-			l_writepreop_prolog(File, Name, T, Prec, Opprec, Nprec)
-		; '_$op'(Opprec, hy, OP) ->
 			l_writepreop_prolog(File, Name, T, Prec, Opprec, Opprec)
 		; '_$op'(Opprec, xf, OP) ->
 			Nprec is Opprec-1, 
@@ -335,8 +455,26 @@ l_write_prolog(File, T, _) :-
 	term_type(T, Type),
 	file_puttoken(File, Type, T).
 
+l_writevar_prolog(File, N, Quoted) :-
+	( integer(N), N >= 0 ->
+		OrdLetter is N mod 26,
+		ChrLetter is CH_A + OrdLetter,	% Char A
+		file_put(File, ChrLetter),
+		Number is N // 26,
+		( Number =:= 0 -> true
+		; file_puttoken(File, TK_VAR, Number) 
+		)
+	; ( Quoted =:= 0 -> file_puttoken(File, TK_ATOM, '$VAR')
+	  ; file_put(File, CH_QUOTE),
+	    file_puttoken(File, TK_ATOM, '$VAR'), 
+	    file_put(File, CH_QUOTE)
+	  ),
+	  file_put(File, CH_LPAREN),
+	  l_write_prolog(File, N, 999),
+	  file_put(File, CH_RPAREN)
+	).
 l_writestr_prolog(File, Name, N, Term) :-
-	file_puttoken(File, 5, Name), 
+	file_puttoken(File, TK_ATOM, Name), 
 	file_put(File, 40), 		% '('
 	term_arg(Term, 1, X),
 	l_write_prolog(File, X, 999),
@@ -344,118 +482,130 @@ l_writestr_prolog(File, Name, N, Term) :-
 	file_put(File, 41).		% ')'
 
 l_write_curly_prolog(File, Term) :- 
-	file_put(File, 123),		% '{'
+	file_put(File, CH_LBRACE),	% {
 	term_arg(Term, 1, Arg),
 	l_write_prolog(File, Arg, 999),
-	file_put(File, 125).		% '}'
+	file_put(File, CH_RBRACE).	% }
 
 l_writebinop_prolog(File, Op, Term, Oldp, Curp, Newlp, Newrp) :- 
 	term_arg(Term, 1, Arg1),
 	term_arg(Term, 2, Arg2),
 	(Curp > Oldp -> 
-		file_put(File, 40),		% 0'(
-		'write binop prolog'(File, Arg1, Op, Arg2, Newlp, Newrp),
-		file_put(File, 41)		% 0')
-	;
-		'write binop prolog'(File, Arg1, Op, Arg2, Newlp, Newrp)
+	    file_put(File, CH_LPAREN),	% (
+	    'write binop prolog'(File, Arg1, Op, Arg2, Newlp, Newrp),
+	    file_put(File, CH_RPAREN)	% )
+	;   
+	    'write binop prolog'(File, Arg1, Op, Arg2, Newlp, Newrp)
 	).
 
 'write binop prolog'(File, Arg1, Op, Arg2, Newlp, Newrp) :-
 	l_write_prolog(File, Arg1, Newlp),
-	file_put(File, 0' ),
-	file_puttoken(File, 19, Op),
-	file_put(File, 0' ),
+%	file_put(File, CH_SPACE),    	
+	file_puttoken(File, TK_INOP, Op),
+%	file_put(File, CH_SPACE),
 	l_write_prolog(File, Arg2, Newrp).
 
 l_writepreop_prolog(File, Op, Term, Oldp, Curp, Newp) :- 
 	term_arg(Term, 1, Arg),
 	(Curp > Oldp -> 
-		file_put(File, 40),		% 0'(
-		file_puttoken(File, 18, Op),
-		l_write_prolog(File, Arg, Newp),
-		file_put(File, 41)		% 0')
-	;
-		file_puttoken(File, 18, Op),
-		l_write_prolog(File, Arg, Newp)
+	    file_put(File, CH_LPAREN),	    % (
+	    file_puttoken(File, TK_PREOP, Op),
+	    l_write_prolog(File, Arg, Newp),
+	    file_put(File, CH_RPAREN)	% )
+	;   
+	    file_puttoken(File, TK_PREOP, Op),
+	    l_write_prolog(File, Arg, Newp)
 	).
 
 l_writepostop_prolog(File, Op, Term, Oldp, Curp, Newp) :- 
 	term_arg(Term, 1, Arg),
 	(Curp > Oldp -> 
-		file_put(File, 40),		% 0'(
-		l_write_prolog(File, Arg, Newp),
-		file_puttoken(File, 20, Op),
-		file_put(File, 41)		% 0')
+	    file_put(File, CH_LPAREN),	% (
+	    l_write_prolog(File, Arg, Newp),
+	    file_puttoken(File, TK_POSTOP, Op),
+	    file_put(File, CH_RPAREN)	% )
 	;
-		l_write_prolog(File, Arg, Newp),
-		file_puttoken(File, 20, Op)
+	    l_write_prolog(File, Arg, Newp),
+	    file_puttoken(File, TK_POSTOP, Op)
 	).
 
 l_writearg_prolog(_File, _Term, N, N) :- !.
 l_writearg_prolog(File, Term, N, M) :- 
 	L is M + 1, 
-	file_put(File, 44), 		% 0',
+	file_put(File, CH_COMMA),	% ','
 	term_arg(Term, L, X),
         l_write_prolog(File, X, 999), 
 	l_writearg_prolog(File, Term, N, L).
 
 l_writetail_prolog(File, Var) :-
 	term_type(Var, Type),
-	Type =:= 0,
+	(Type =:= XSB_FREE; Type =:= XSB_ATTV),
 	!, 
-	file_put(File, 124), 		% 0'|
-	file_puttoken(File, 0, Var), 
-	file_put(File, 93).		% 0']
+	file_put(File, CH_BAR),		% |
+	file_puttoken(File, Type, Var), 
+	file_put(File, CH_RBRACKET).	% ]
 l_writetail_prolog(File, [X|Y]) :- !, 
-	file_put(File, 44), 		% 0',
+	file_put(File, CH_COMMA), 		% ','
 	l_write_prolog(File, X, 999), 
 	l_writetail_prolog(File, Y).
 l_writetail_prolog(File, []) :- 
-	!, file_put(File, 93).		% 0']
+	!, file_put(File, CH_RBRACKET).		% ]
 l_writetail_prolog(File, X) :- 
-	file_put(File, 124), 		% 0'|
+	file_put(File, CH_BAR), 	% |
 	l_write_prolog(File, X, 999), 
-	file_put(File, 93).		% 0']
+	file_put(File, CH_RBRACKET).	% ']'
 
 
 		/*********************************/
 		/*	file_write_quoted/2      */
 		/*********************************/
 
-file_write_quoted(File, Term) :- l_write_quoted(File, Term, 999), fail.
+file_write_quoted(File, Term) :- 
+	xsb_stream_lock(File),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	l_write_quoted(File, Term, 999), 
+%	xsb_sys_mutex_unlock(MUTEX_IO),
+	xsb_stream_unlock(File),
+	fail.
 file_write_quoted(_, _).
 
 
 l_write_quoted(File, Var, _) :-
 	term_type(Var, Type),
-	Type =:= 0,
+	(Type =:= XSB_FREE; Type =:= XSB_ATTV),
 	!,
-	file_puttoken(File, 0, Var).
+	file_puttoken(File, Type, Var).
 l_write_quoted(File, '$VAR'(N), _) :- 
 	!,
-	l_writevar(File, N, 1).
+	l_writevar_prolog(File, N, 1).
 l_write_quoted(File, [], _) :-
 	!,
-	file_put(File, 91),     % '['
-	file_put(File, 93).     % ']'
+	file_put(File, CH_LBRACKET),     % [
+	file_put(File, CH_RBRACKET).     % ]
 l_write_quoted(File, [X|Y], _) :-
 	!, 
-	file_put(File, 91), 	% '['
+	file_put(File, CH_LBRACKET), 	% [
 	l_write_quoted(File, X, 999), 
 	l_writetail_quoted(File, Y).
 l_write_quoted(File, Atom, _) :-	% This takes care of all atoms but []
 	term_type(Atom, Type),
-	Type =:= 5,
+	Type =:= TK_ATOM,
 	!,
-	l_writequotedname(File, Atom).
+	('_$op'(_,_,Atom)
+	 ->	file_put(File, CH_LPAREN),  
+		file_writequoted(File, Atom),
+		file_put(File, CH_RPAREN)
+	 ;	file_writequoted(File, Atom)
+	).
 l_write_quoted(File, T, Prec) :- 	% functor(T, OP, N),
 	term_type(T, Type), 
-	Type =:= 1, !,		% CS
+	Type =:= XSB_STRUCT, !,	
 	term_psc(T, PSC), 
 	psc_arity(PSC, N),
 	psc_name(PSC, Name),
 	OP = Name,
-	( N=:=0 -> l_writequotedname(File, Name)
+	( N=:=0 -> file_writequoted(File, Name)
+		   ,file_put(File,CH_LPAREN),file_put(File,CH_RPAREN) % e.g. p()?
 	; N=:=1 ->
 		( '_$op'(Opprec, fx, OP) ->
 			Nprec is Opprec-1, 
@@ -467,11 +617,6 @@ l_write_quoted(File, T, Prec) :- 	% functor(T, OP, N),
 			l_writeqpostop(File, Name, T, Prec, Opprec, Nprec)
 		; '_$op'(Opprec, yf, OP) ->
 			l_writeqpostop(File, Name, T, Prec, Opprec, Opprec)
-		; '_$op'(Opprec, hx, OP) ->
-			Nprec is Opprec-1,
-			l_hilog_writeqpreop(File, Name, T, Prec, Opprec, Nprec)
-		; '_$op'(Opprec, hy, OP) ->
-			l_hilog_writeqpreop(File, Name, T, Prec, Opprec, Opprec)
 		; Name == {} ->
 			l_write_curly_quoted(File, T)
 		; l_writestr_quoted(File, Name, N, T)
@@ -500,340 +645,222 @@ l_write_quoted(File, T, _) :-
 	file_puttoken(File, Type, T).
 
 l_writestr_quoted(File, Name, N, Term) :-
-	l_writequotedname(File, Name), 
-	file_put(File, 40), 			% '('
+	file_writequoted(File, Name), 
+	file_put(File, CH_LPAREN),		% (
 	term_arg(Term, 1, X),
 	l_write_quoted(File, X, 999),
         l_writearg_quoted(File, Term, N, 1), 
-	file_put(File, 41).			% ')'
+	file_put(File, CH_RPAREN).		% )
 
 l_write_curly_quoted(File, Term) :- 
-	file_put(File, 123),		% '{'
+	file_put(File, CH_LBRACE),	% {
 	term_arg(Term, 1, Arg),
 	l_write_quoted(File, Arg, 999),
-	file_put(File, 125).		% '}'
+	file_put(File, CH_RBRACE).	% }
 
 l_hilog_writestr_quoted(File, N, Term) :-
 	term_arg(Term, 1, HiLogFunctor),
         l_write_quoted(File, HiLogFunctor, 999),
 	term_arg(Term, 2, FirstArg),
-	( nonvar(HiLogFunctor), hilog_op(_, _, HiLogFunctor) -> 
-		( no_paren_needed(FirstArg) ->
-			l_write_quoted(File, FirstArg, 999)	% Term has only one arg
-		; file_put(File, 40),		% '('
-		  l_write_quoted(File, FirstArg, 999),
-		  file_put(File, 41)		% ')'
-		)
-	; file_put(File, 40),		% '('
-	  l_write_quoted(File, FirstArg, 999),	% write the first of the HiLog args
-	  l_writearg_quoted(File, Term, N, 2),	% write the rest  of the HiLog args
-          file_put(File, 41)		% ')'
-	).
+	file_put(File, CH_LPAREN),	% (
+	l_write_quoted(File, FirstArg,999), % write the first of the HiLog args
+	l_writearg_quoted(File, Term, N,2), % write the rest  of the HiLog args
+	file_put(File, CH_RPAREN).	% )
 
 l_writeqbinop(File, Op, Term, Oldp, Curp, Newlp, Newrp) :- 
 	term_arg(Term, 1, Arg1),
 	term_arg(Term, 2, Arg2),
 	(Curp > Oldp -> 
-		file_put(File, 40),		% 0'(
-		'write binop quoted'(File, Arg1, Op, Arg2, Newlp, Newrp),
-		file_put(File, 41)		% 0')
+	    file_put(File, CH_LPAREN),	% (
+	    'write binop quoted'(File, Arg1, Op, Arg2, Newlp, Newrp),
+	    file_put(File, CH_RPAREN)	% )
 	;
-		'write binop quoted'(File, Arg1, Op, Arg2, Newlp, Newrp)
+	    'write binop quoted'(File, Arg1, Op, Arg2, Newlp, Newrp)
 	).
 
 'write binop quoted'(File, Arg1, Op, Arg2, Newlp, Newrp) :-
 	l_write_quoted(File, Arg1, Newlp),
-	file_put(File, 0' ),
-	file_puttoken(File, 19, Op),
-	file_put(File, 0' ),
+%	file_put(File, CH_SPACE),
+	file_puttoken(File, TK_INOP, Op),
+%	file_put(File, CH_SPACE),
 	l_write_quoted(File, Arg2, Newrp).
 
 l_writeqpreop(File, Op, Term, Oldp, Curp, Newp) :- 
 	term_arg(Term, 1, Arg),
 	(Curp > Oldp -> 
-		file_put(File, 40),		% 0'(
-		file_puttoken(File, 18, Op),
-		l_write_quoted(File, Arg, Newp),
-		file_put(File, 41)		% 0')
+	    file_put(File, CH_LPAREN),	    % (
+	    file_puttoken(File, TK_PREOP, Op),
+	    l_write_quoted_chk_min(File, Arg, Newp, Op),
+	    file_put(File, CH_RPAREN)	    % )
 	;
-		file_puttoken(File, 18, Op),
+	    file_puttoken(File, TK_PREOP, Op),
+	    l_write_quoted_chk_min(File, Arg, Newp, Op)
+	).
+
+% special case for, e.g.,  - (111)
+l_write_quoted_chk_min(File, Arg, Newp, Op) :-
+	(Op == (-),number(Arg)
+	 ->	file_put(File, CH_LPAREN),
+		l_write_quoted(File, Arg, Newp),
+		file_put(File, CH_RPAREN)
+	 ;	%file_put(File, CH_SPACE),
 		l_write_quoted(File, Arg, Newp)
 	).
 
 l_writeqpostop(File, Op, Term, Oldp, Curp, Newp) :- 
 	term_arg(Term, 1, Arg),
 	(Curp > Oldp -> 
-		file_put(File, 40),		% 0'(
-		l_write_quoted(File, Arg, Newp),
-		file_puttoken(File, 20, Op),
-		file_put(File, 41)		% 0')
-	;
-		l_write_quoted(File, Arg, Newp),
-		file_puttoken(File, 20, Op)
+	    file_put(File, CH_LPAREN),	% (
+	    l_write_quoted(File, Arg, Newp),
+	    file_puttoken(File, TK_POSTOP, Op),
+	    file_put(File, CH_RPAREN)	% )
+	;   
+	    l_write_quoted(File, Arg, Newp),
+	    file_puttoken(File, TK_POSTOP, Op)
 	).
 
-l_hilog_writeqpreop(File, Op, Term, Oldp, Curp, Newp) :-
-	term_arg(Term, 1, Arg),
-	(Curp > Oldp ->
-		file_put(File, 40),		% 0'(
-		file_puttoken(File, 18, Op),
-		( no_paren_needed(Arg) ->
-			l_write_quoted(File, Arg, Newp)
-		; file_put(File, 40),		% 0'(
-		  l_write_quoted(File, Arg, Newp),
-		  file_put(File, 41)		% 0')
-		),
-		file_put(File, 41) 		% 0')
-	;
-		file_puttoken(File, 18, Op),
-		( no_paren_needed(Arg) ->
-			l_write_quoted(File, Arg, Newp)
-		; file_put(File, 40),		% 0'(
-		  l_write_quoted(File, Arg, Newp),
-		  file_put(File, 41)		% 0')
-		)
-	).
 
 l_writearg_quoted(_File, _T, N, N) :- !.
 l_writearg_quoted(File, T, N, M) :- 
 	L is M + 1, 
-	file_put(File, 44), 		% 0',
+	file_put(File, CH_COMMA),	% ','
 	term_arg(T, L, X),
         l_write_quoted(File, X, 999), 
 	l_writearg_quoted(File, T, N, L).
 
 l_writetail_quoted(File, Var) :-
 	term_type(Var, Type),
-	Type =:= 0,
+	(Type =:= XSB_FREE; Type =:= XSB_ATTV),
 	!, 
-	file_put(File, 124), 		% 0'|
-	file_puttoken(File, 0, Var), 
-	file_put(File, 93).		% 0']
+	file_put(File, CH_BAR),		% |
+	file_puttoken(File, Type, Var), 
+	file_put(File, CH_RBRACKET).	% ']'
 l_writetail_quoted(File, [X|Y]) :- !, 
-	file_put(File, 44), 		% 0',
+	file_put(File, CH_COMMA),	% ','
 	l_write_quoted(File, X, 999), 
 	l_writetail_quoted(File, Y).
 l_writetail_quoted(File, []) :- 
-	!, file_put(File, 93).		% 0']
+	!, file_put(File, CH_RBRACKET).		% ]
 l_writetail_quoted(File, X) :- 
-	file_put(File, 124), 		% 0'|
+	file_put(File, CH_BAR), 	% |
 	l_write_quoted(File, X, 999), 
-	file_put(File, 93).		% 0']
+	file_put(File, CH_RBRACKET).	% ]
 
 
 		/*************************************/
 		/*	file_write_canonical/2       */
 		/*************************************/
 
-file_write_canonical(File, Term) :- l_write_canonical(File, Term), fail.
+file_write_canonical(File,Term) :-
+	xsb_stream_lock(File),
+	file_puttoken(File,TK_TERM,Term),
+	xsb_stream_unlock(File).
+
+/******************** Leave in Prolog for awhile, till secure
+file_write_canonical(File, Term) :- 
+	xsb_stream_lock(File),
+%	xsb_sys_mutex_lock(MUTEX_IO),
+	l_write_canonical(File, Term), 
+%	xsb_sys_mutex_unlock(MUTEX_IO),
+	xsb_stream_lock(File),
+	fail.
 file_write_canonical(_, _).
-
-alt_file_write_canonical(File, Term):- alt_l_write_canonical(File, Term), fail.
-alt_file_write_canonical(_, _).
-
 
 l_write_canonical(File, Var) :-
 	term_type(Var, Type),
-	Type =:= 0,
+	(Type =:= XSB_FREE; Type =:= XSB_ATTV),
 	!,
-	file_puttoken(File, 0, Var).
+	file_puttoken(File, Type, Var).
 l_write_canonical(File, []) :-
 	!,
-	file_put(File, 91),	% '['
-	file_put(File, 93).	% ']'
-l_write_canonical(File, [X|Y]) :-
+	file_put(File, CH_LBRACKET),	% [
+	file_put(File, CH_RBRACKET).	% ]
+**l_write_canonical(File, [X|Y]) :-
 	!,
-	file_puttoken(File, 5, '''.''('),
+	file_puttoken(File, TK_ATOM, '''.''('),
 	l_write_canonical(File, X),
-	file_put(File, 44),		% ','
+	file_put(File, CH_COMMA),	% ','
 	l_write_canonical(File, Y),
-	file_put(File, 41).		% ')'
+	file_put(File, CH_RPAREN).	% )
+**
+l_write_canonical(File, [X|Y]) :- !,
+	file_put(File, CH_LBRACKET),
+	l_write_canonical(File, X),
+	l_writelisttail_canonical(File, Y),
+	file_put(File, CH_RBRACKET).
 l_write_canonical(File, Atom) :-
 	term_type(Atom, Type),
-	Type =:= 5,
+	Type =:= TK_ATOM,
 	!,
-	l_writequotedname(File, Atom).
+	file_writequoted(File, Atom).
 l_write_canonical(File, Term) :-	% functor(Term, Name, N)
 	term_type(Term, Type),
-	Type =:= 1, !,		% CS
+	Type =:= XSB_STRUCT, !,		
 	term_psc(Term, PSC),
 	psc_name(PSC, Name),
 	psc_arity(PSC, N),
-	( N =:= 0 -> l_writequotedname(File, Name)
+	( N =:= 0 -> file_writequoted(File, Name)
 	; l_writestr_canonical(File, Name, N, Term) ).
 l_write_canonical(File, Term) :-
 	term_type(Term, Type),
 	file_puttoken(File, Type, Term).
 
 l_writestr_canonical(File, Name, N, Term) :-
-	l_writequotedname(File, Name),
-	file_put(File, 40),		% '('
+	file_writequoted(File, Name),
+	file_put(File, CH_LPAREN),	% (
 	term_arg(Term, 1, X),
 	l_write_canonical(File, X),
 	l_writearg_canonical(File, Term, N, 1),
-	file_put(File, 41).		% ')'
+	file_put(File, CH_RPAREN).	% )
  
 l_writearg_canonical(_File, _Term, N, N) :- !.
 l_writearg_canonical(File, Term, N, M) :-
 	L is M + 1,
-	file_put(File, 44),	% 0',
+	file_put(File, CH_COMMA),	% ','
 	term_arg(Term, L, X),
 	l_write_canonical(File, X),
 	l_writearg_canonical(File, Term, N, L).
 
-alt_l_write_canonical(File, Var) :-
+l_writelisttail_canonical(File, Var) :-
 	term_type(Var, Type),
-	Type =:= 0,
+	(Type =:= XSB_FREE; Type =:= XSB_ATTV),
 	!,
-	file_puttoken(File, 0, Var).
-alt_l_write_canonical(File, '$VAR'(N)) :- 
+	file_put(File, CH_BAR),
+	file_puttoken(File, Type, Var).
+l_writelisttail_canonical(_File, []) :- !.
+l_writelisttail_canonical(File, [X|Y]) :-
 	!,
-	l_writevar(File, N, 0).
-alt_l_write_canonical(File, []) :-
-	!,
-	file_put(File, 91),	% '['
-	file_put(File, 93).	% ']'
-alt_l_write_canonical(File, [X|Y]) :-
-	!,
-	file_puttoken(File, 5, '''.''('),
-	alt_l_write_canonical(File, X),
-	file_put(File, 44),		% ','
-	alt_l_write_canonical(File, Y),
-	file_put(File, 41).		% ')'
-alt_l_write_canonical(File, Atom) :-
-	term_type(Atom, Type),
-	Type =:= 5,
-	!,
-	l_writequotedname(File, Atom).
-alt_l_write_canonical(File, Term) :-	% functor(Term, Name, N)
-	term_type(Term, Type),
-	Type =:= 1, !,		% CS
-	term_psc(Term, PSC),
-	psc_name(PSC, Name),
-	psc_arity(PSC, N),
-	( N =:= 0 -> l_writequotedname(File, Name)
-	; alt_l_writestr_canonical(File, Name, N, Term) ).
-alt_l_write_canonical(File, Term) :-
-	term_type(Term, Type),
-	file_puttoken(File, Type, Term).
+	file_put(File, CH_COMMA),
+	l_write_canonical(File, X),
+	l_writelisttail_canonical(File,Y).
+l_writelisttail_canonical(File, X) :-
+	file_put(File, CH_BAR),
+	l_write_canonical(File, X).
+********************/
 
-alt_l_writestr_canonical(File, Name, N, Term) :-
-	l_writequotedname(File, Name),
-	file_put(File, 40),		% '('
-	term_arg(Term, 1, X),
-	alt_l_write_canonical(File, X),
-	alt_l_writearg_canonical(File, Term, N, 1),
-	file_put(File, 41).		% ')'
+%----------------------------------------------------------------------
+% Added tls: 2/01
+% Does what write_canonical does, but outputs numbervarred variables as
+% A, B, C rather than '$VAR'(1)...
+% dsw moved it to C, 1/03
 
-alt_l_writearg_canonical(_File, _Term, N, N) :- !.
-alt_l_writearg_canonical(File, Term, N, M) :-
-	L is M + 1,
-	file_put(File, 44),	% 0',
-	term_arg(Term, L, X),
-	alt_l_write_canonical(File, X),
-	alt_l_writearg_canonical(File, Term, N, L).
+write_canonical_lettervar(T) :- 
+	stat_flag(CURRENT_OUTPUT,File), 
+	file_write_canonical_lettervar(File,T).
 
- 
-			/*******************************/
-			/*     l_writequotedname/2     */   
-			/*******************************/
-
-l_writequotedname(File, Atom) :-
-	file_writequoted(File, Atom).
+file_write_canonical_lettervar(File,Term) :-
+	xsb_stream_lock(File),
+%        xsb_sys_mutex_lock(MUTEX_IO),
+	file_puttoken(File,TK_TERML,Term),
+	xsb_stream_unlock(File).
+%        xsb_sys_mutex_unlock(MUTEX_IO).
 
 end_of_file.
 
 /* ------------------- end of file file_write.P ----------------------- */
 
 
-/************* Old version of l_writequotedname/2 ***********************/
-
-l_writequotedname(File, Atom) :-
-        name(Atom, [StartingChar|RestCharList]),  % An empty atom needs quotes.
-        !,
-        ( check_no_quotes_needed([StartingChar|RestCharList]) ->
-                file_puttoken(File, 5, Atom)
-        ; file_put(File, 39),           % ''''
-          double_the_quote(File, [StartingChar|RestCharList]),
-          file_put(File, 39)            % ''''
-        ).
-l_writequotedname(File, _Empty_Atom) :- 
-	file_put(File, 39),		% ''''
-%	file_puttoken(File, 5, Atom),
-	file_put(File, 39).		% ''''
-
-double_the_quote(_, []).
-double_the_quote(File, [Char|RestCharList]) :-
-        ( Char =:= 39 -> file_put(File, 39) ; true ),
-        file_put(File, Char),
-        double_the_quote(File, RestCharList).
-
-check_no_quotes_needed([StartingChar|RestCharList]) :-
-	StartingChar >= 97, StartingChar =< 122,     % 0'a=97, 0'z=122  
-        no_quotes_needed(RestCharList).
-check_no_quotes_needed(CharList) :-
-	all_char_operators(CharList).
-check_no_quotes_needed([Char]) :-
-	special_char(Char).
-
-no_quotes_needed([]).
-no_quotes_needed([Char|RestChars]) :- 
-	ok(Char),
-	no_quotes_needed(RestChars).
-
-ok(Char) :- Char >= 97, Char =< 122.	% 0'a=97, 0'z=122
-ok(Char) :- Char >= 48, Char =< 57.	% 0'0=48, 0'9=57
-ok(Char) :- Char >= 65, Char =< 90.	% 0'A=65, 0'Z=90
-ok(95).					% 0'_=95
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  The business of quoting special characters is very tricky (and messy):     %
-%									      %
-%  The following list of special characters (usually appearing as operators), %	
-%  which are: < = > ? @ : & # $ * + - \ ^ ` ~ /   			      %
-%  do not need to be quoted when written by writeq/1 or write_canonical/1.    %
-%									      %
-%  Also there are two special characters: ! and ; that can appear as atoms    %
-%  without being quoted. These characters however, cannot appear in           %
-%  combination with the charaters above.				      %
-% 									      %
-%  On the other hand characters that are puctuations:   , [ ] ( ) { } and |   %
-%  need to be quoted. The same happens with the following characters: % _     %
-%									      %
-%  Finally, the punctuation symbol . (period) whenever it appears on its own  %
-%  as a functor (in case of a list) must be quoted. (this is taken care when  %
-%  writing a list). On the other hand, when it appears in combination with    %
-%  operator characters, (like in =..) it doesn't need to be quoted.	      %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-all_char_operators([]).
-all_char_operators([Char|RestChars]) :-
-	char_operator(Char),
-	all_char_operators(RestChars).
-
-char_operator(Ch) :- Ch >= 60, Ch =< 64.	% <=>?@
-char_operator(58).				% :
-char_operator(38).				% &
-char_operator(35).				% #
-char_operator(36).				% $
-char_operator(42).				% *
-char_operator(43).				% +
-char_operator(45).				% -
-char_operator(92).				% \
-char_operator(94).				% ^
-char_operator(96).				% `
-char_operator(126).				% ~
-char_operator(46).				% .
-char_operator(47).				% /
-
-special_char(33).				% !
-special_char(59).				% ;
- 
-
-end_of_file.
-
-
-/************************************************************************/
+/***********************************************************************
    TEST CODE
  ************
 
@@ -857,3 +884,5 @@ yes
 | ?- write_canonical(a+b).
 +(a,b)
 yes
+
+ ***********************************************************************/

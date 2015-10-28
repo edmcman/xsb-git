@@ -1,4 +1,4 @@
-## File:      Makefile - recompiles all .O files in all directories
+## File:      Makefile - recompiles all object files in all directories
 ## Author(s): kifer
 ## Contact:   xsb-contact@cs.sunysb.edu
 ## 
@@ -18,32 +18,36 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.5 1998-12-22 21:32:30 kifer Exp $
+## $Id: Makefile,v 1.14 2012-09-27 02:25:57 kifer Exp $
 ## 
 ##
 
 
-SUBDIR = cmplib syslib lib packages
+SUBDIR = cmplib syslib lib
+XSB=./bin/xsb
 
 all: $(SUBDIR)
 
 force: touch all
+
+etags:
+	etags -l c `find . -name \*.[ch] | grep -v Base` -l prolog `find . -name \*.[PH] | grep -v Base`
 
 touch::
 	touch cmplib/*.P lib/*.P syslib/*.P packages/*.P packages/*/*.P packages/*/*/*.P
 
 syslib::
 	@echo ""
-	cd syslib; make
+	cd syslib; $(MAKE)
 
 lib::
 	@echo ""
-	cd lib; make
+	cd lib; $(MAKE)
 
 cmplib::
 	@echo ""
-	cd cmplib; make
+	cd cmplib; $(MAKE)
 
 packages::
 	@echo ""
-	cd packages; make
+	cd packages; $(MAKE)

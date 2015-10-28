@@ -3,7 +3,7 @@
 :- import query/5 from usermod.
 :- import str_cat/3 from machine.
 :- import numbervars/1 from num_vars.
-:- import load_dyn/1, member/2 from basics.
+:- import member/2 from basics.
 
 ?- load_dyn('wfsexs.P').
 

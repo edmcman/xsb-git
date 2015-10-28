@@ -19,20 +19,19 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: varproc.H,v 1.1.1.1 1998-11-05 17:00:23 sbprolog Exp $
+** $Id: varproc.H,v 1.10 2011-06-25 02:54:47 dwarren Exp $
 ** 
 */
 
 
 
 :- export force_varproc_loaded/0.
-:- export varproc/5, vprag_common/2, vprag_argno/2, vprag_level/2,
-	  vprag_context/2, vprag_loc/2, vprag_occ/2, vprag_type/2, 
+:- export varproc/3, vprag_common/2, vprag_argno/2, vprag_level/2,
+   vprag_context/2, vprag_loc/2, vprag_locnew/2, vprag_occ/2, vprag_type/2, 
 	  vprag_use/2, vprag_nouse/2, vprag_lastchunk/2, vprag_type1/2.
+:- export addkey/4, find/3, leaflist/2, updatevs/5.
 
-:- import nl/0 from standard.
-:- import sym_name/3 from symtab.
-:- import member/2, append/3 from prof_sbp.
-:- import closetail/1, length/2, member2/2 from listutil.
-:- import member1/2, option/1, message/1, warning/1, error/1 from auxlry.
+:- import append/3, member/2, memberchk/2 from basics.
+:- import closetail/1, member2/2 from listutil.
+:- import sort/2 from setof.
 

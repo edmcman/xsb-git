@@ -18,12 +18,14 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: Makefile,v 1.3 1998-11-15 04:00:42 kifer Exp $
+## $Id: Makefile,v 1.9 2012-09-27 02:25:58 kifer Exp $
 ## 
 ##
 
 
-ALL = 	slxshell.O
+OBJEXT=.xwam
+
+ALL = 	slxshell${OBJEXT}
 
 Option = [optimize]
 
@@ -32,7 +34,7 @@ Option = [optimize]
 # Self-make: Version 1.4.1
 #
 XSB=../../bin/xsb
-Prolog = $(XSB) -i -s -m 2000 -c 2000
+Prolog = $(XSB) -i -m 2000 -c 2000
 #
 #-----------------------------------------------------------------------#
 
@@ -40,8 +42,8 @@ Prolog = $(XSB) -i -s -m 2000 -c 2000
 .IGNORE:
 
 # suffix rules
-.SUFFIXES: .P .O .H
-.P.O:
+.SUFFIXES: .P ${OBJEXT} .H
+.P${OBJEXT}:
 	echo 'mc($*, $(Option)).' >> cmd...
 
 all: $(ALL)
@@ -50,9 +52,11 @@ all: $(ALL)
 	/bin/rm cmd...
 
 
+.PHONY: clean
 
-# Unfortunately, this needs to be commented on the NeXT.
-# %.O:	%.H
+clean:
+	/bin/rm -f *${OBJEXT} *.O *~ .*~ *.bak
+
 
 .DONE:
 	echo Done

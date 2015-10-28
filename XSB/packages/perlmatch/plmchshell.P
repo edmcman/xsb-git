@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: plmchshell.P,v 1.1.1.1 1998-11-05 17:01:23 sbprolog Exp $
+** $Id: plmchshell.P,v 1.4 2010-08-19 15:03:39 spyrosh Exp $
 ** 
 */
 
@@ -57,6 +57,7 @@ get_list(0,0,[]).
 get_list(NumOfMatches,0,[]) :-
         NumOfMatches > 0.
 get_list(NumOfMatches, Counter, [MatchVal | Rest]) :-
+	Counter > 0,
 	Counter1 is Counter - 1,
         MatchSeqNumber is NumOfMatches - Counter, 
 	%% we need to pass NumOfMatches so get_bulk_match_result__ will

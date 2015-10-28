@@ -1,5 +1,0 @@
-
-:- import set_pil_on/0 from tables.
-
-test:- set_pil_on,tran([john,talks,about,a,unicorn]).
-test1:- tran([john,talks,about,a,unicorn]).

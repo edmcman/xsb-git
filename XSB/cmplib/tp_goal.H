@@ -19,17 +19,17 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: tp_goal.H,v 1.1.1.1 1998-11-05 17:00:20 sbprolog Exp $
+** $Id: tp_goal.H,v 1.8 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
 
 
 :- export force_tp_goal_loaded/0.
-:- export tgoalargs/7, tgoalargs/6, tgetpar/6, tputpar/6, tputpar/7.
+:- export tgoalargs/7, tgetpar/6, tputpar/7.
 
-:- import alloc_reg1/4, release_if_done/6, alloc_reg/3, getreg/2,
-	getvarinst/5, putvarinst/5, univarinst/4, bldvarinst/4
+:- import alloc_reg1/4, release_if_done/6, getreg/2,
+	getvarinst/5, putvarinst/5, univarinst/5, bldvarinst/5
    from tp_var.
 :- import vprag_type/2, vprag_loc/2, vprag_context/2, vprag_nouse/2,
 	vprag_use/2, vprag_lastchunk/2, vprag_argno/2, vprag_level/2,

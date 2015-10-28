@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: ti_mod.P,v 1.1.1.1 1998-11-05 17:00:18 sbprolog Exp $
+** $Id: ti_mod.P,v 1.5 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
@@ -220,12 +220,12 @@ compare_args(Arg1,Arg2,Arg1,Name1,Arity1,SubArgs1,SubArgs2) :-
 
 make_name(ArgName,ArgArity,OutName) :-
 	( integer(ArgName) ->
-		name(ArgName,L), str_fromlist(OutName,L)
+		number_codes(ArgName,L), atom_codes(OutName,L)
 	; number(ArgName) ->
 		OutName = 'F'
 	; ArgArity > 0 ->
 		str_cat(ArgName,'/',Temp0),
-		name(ArgArity,L), str_fromlist(Temp1,L),
+		number_codes(ArgArity,L), atom_codes(Temp1,L),
 		str_cat(Temp0,Temp1,OutName)
 	;
 		OutName = ArgName
@@ -330,7 +330,7 @@ make_arg(X,_,X).
 
 goal_data(Sym,Args,goal(Sym,Args)).
 
-new_var(varocc(Varocc)) :- gensym('_', Prefix), cat_name(Prefix,(ti),Varocc).
+new_var(varocc(Varocc)) :- cmp_gensym('_', Prefix), cat_name(Prefix,(ti),Varocc).
 
 pass_thru_sym(constant(Sym)) :- sym_pass_thru(Sym).
 

@@ -18,7 +18,7 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: tabdef.H,v 1.1.1.1 1998-11-05 17:00:17 sbprolog Exp $
+** $Id: tabdef.H,v 1.7 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
@@ -26,7 +26,7 @@
 :- export perform_table_all/1, perform_auto_table/1,
 	  call_themselves/3, table_it/1.
 
-:- import ll_arg/3 from prof_sbp.
+:- import ll_arg/3 from auxlry.
 :- import message/1, error/1 from auxlry.
 :- import sym_prop/2, sym_propin/2, sym_gen/2, sym_name/3 from symtab.
 

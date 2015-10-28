@@ -24,7 +24,7 @@ test :- t(X),
 	( tnot(t(X)) -> stub1, write(t(X)), writeln(' is undefined')
 	; stub1, write(t(X)), writeln(' is true')
 	), fail.
-test :- ( ( t(1), \+ tnot(t(1)), not t(2), tnot(t(2)), t(3), \+ tnot(t(3)),
+test :- ( ( t(1), \+ tnot(t(1)), tnot(t(2)), t(3), \+ tnot(t(3)),
 	    t(4), tnot(t(4)), t(5), tnot(t(5)), t(6), tnot(t(6)) ) ->
 		stub1, writeln('Success')
 	; stub1, writeln('Failure')
@@ -34,7 +34,7 @@ test :- t(X),
 	( tnot(t(X)) -> stub2, write(t(X)), writeln(' is undefined')
 	; stub2, write(t(X)), writeln(' is true')
 	), fail.
-test :- ( ( t(1), \+ tnot(t(1)), not t(2), tnot(t(2)), t(3), \+ tnot(t(3)),
+test :- ( ( t(1), \+ tnot(t(1)), tnot(t(2)), t(3), \+ tnot(t(3)),
 	    t(4), tnot(t(4)), t(5), tnot(t(5)), t(6), tnot(t(6)) ) ->
 		stub2, writeln('Success')
 	; stub2, writeln('Failure')

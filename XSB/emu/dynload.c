@@ -19,39 +19,39 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: dynload.c,v 1.2 1998-11-19 05:24:21 kifer Exp $
+** $Id: dynload.c,v 1.14 2010-08-19 15:03:36 spyrosh Exp $
 ** 
 */
 
 
-#include "configs/config.h"	/* This should appear BEFORE the ifdef!	*/
+#include "xsb_config.h"  /* This should appear BEFORE the ifdef! */
 
-extern char executable[];        /* from self_orientation.c */
+extern char executable_path_gl[];         /* from orient_xsb.c */
 
 #ifdef FOREIGN
 
-#ifdef FOREIGN_COFF
-#include "dyncoff.i"
-#else
 #ifdef FOREIGN_ELF
-#include "dynelf.i"
+#include "dynelf_xsb_i.h"
 #else
 #ifdef FOREIGN_AOUT
-#include "dynaout.i"
+#include "dynaout_xsb_i.h"
+#else
+#ifdef FOREIGN_WIN32
+#include "dynwin32_xsb_i.h"
+#endif /* FOREIGN_WIN32 */
 #endif /* FOREIGN_AOUT */
 #endif /* FOREIGN_ELF */
-#endif /* FOREIGN_COFF */
 
 /*----------------------------------------------------------------------*/
 
-byte *load_obj(char *pofilename, Psc cur_mod, char *ld_option)
+byte *load_obj(CTXTdeclc char *pofilename, Psc cur_mod, char *ld_option)
 {
 /*
     if (static_foreign_libraries(get_name(cur_mod)))
         return load_obj_sta(cur_mod);
     else
  */
-        return load_obj_dyn(pofilename, cur_mod, ld_option);
+        return load_obj_dyn(CTXTc pofilename, cur_mod, ld_option);
 }
 
 /*----------------------------------------------------------------------*/

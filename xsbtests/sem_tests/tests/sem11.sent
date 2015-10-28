@@ -7,9 +7,10 @@ test(3, 'S'('S'('NP'('N'('Rita')),'VP'('V'(dauri))),ya,
 test(4, 'S'('S'('S'('NP'('N'('Ajayne')),'VP'('NP'('N'('Rita')),'V'(dehki))),aur,
 	       'S'('NP'('N'('Rita')),'VP'('V'(dauri)))),ya,
 	       'S'('NP'('N'('Ajayne')),'VP'('NP'('N'('Rita')),'V'(dehki))))).
-test(5, 'S'('S'('NP'('N'('Ajayne')),'VP'('NP'('N'('Rita')),'V'(dehki))),aur,
+/*test(5, 'S'('S'('NP'('N'('Ajayne')),'VP'('NP'('N'('Rita')),'V'(dehki))),aur,
 	    'S'('S'('NP'('N'('Rita')),'VP'('V'(dauri))),ya,
 	    'S'('NP'('N'('Ajayne')),'VP'('NP'('N'('Rita')),'V'(dehki)))))).
+*/
 test(6, 'S'(aisa_nahi_hai_ki,'S'(
 		'S'('NP'('N'('Ajayne')),'VP'('NP'('N'('Rita')),'V'(dehki))),
 		aur,

@@ -19,21 +19,22 @@
 ** along with XSB; if not, write to the Free Software Foundation,
 ** Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
-** $Id: tp_var.H,v 1.1.1.1 1998-11-05 17:00:21 sbprolog Exp $
+** $Id: tp_var.H,v 1.10 2011-06-25 02:54:47 dwarren Exp $
 ** 
 */
 
 
 
 :- export force_tp_var_loaded/0.
-:- export putvarinst/5, getvarinst/5, bldvarinst/4, univarinst/4,
+:- export putvarinst/5, getvarinst/5, bldvarinst/5, univarinst/5,
 	  release/3, alloc_reg/3, release_if_done/6, hold/3, getreg/2,
 	  reserve/3, alloc_reg1/4, release_if_done0/5.
 
 :- import abort/0 from standard.
-:- import append/3 from prof_sbp.
+:- import append/3, memberchk/2 from basics.
 :- import member2/2 from listutil.
-:- import member1/2, error/1, warning/1 from auxlry.
-:- import vprag_occ/2, vprag_loc/2, vprag_use/2, vprag_type/2,
+:- import sort/2 from setof.
+:- import error/1, warning/1 from auxlry.
+:- import vprag_occ/2, vprag_loc/2, vprag_locnew/2, vprag_use/2, vprag_type/2,
 	  vprag_nouse/2, vprag_type1/2
      from varproc.
