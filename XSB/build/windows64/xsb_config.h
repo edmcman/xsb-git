@@ -1,7 +1,7 @@
 /* windows64/xsb_config.h.  Generated from def_config.in by configure.  */
 /*  @configure_input@
 **
-**   This file contains definitions for Windows 64
+**   This file contains definitions for Windows 64 bit
 **
 **   Some variable may have to be changed manually.
 */
@@ -87,6 +87,11 @@
 
 /* Define if you have the mkdir function.  */
 #define HAVE_MKDIR 1
+
+#if defined(_MSC_VER) && _MSC_VER >= 1900
+/* Define if you have the snprintf function.  */
+#define HAVE_SNPRINTF 1
+#endif
 
 /* Define if you have the strdup function.  */
 #define HAVE_STRDUP 1

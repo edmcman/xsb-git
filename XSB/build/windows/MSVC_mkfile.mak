@@ -69,6 +69,7 @@ OUTDIR=$(CONFIGDIR)\bin
 #!ENDIF
 
 OBJDIR=$(CONFIGDIR)\saved.o
+LIBDIR=$(CONFIGDIR)\lib
 
 INTDIR=.
 
@@ -324,6 +325,7 @@ DLL_LINK_FLAGS=\
 
 CLEAN :
 	-@if exist "$(OBJDIR)\*.obj" erase "$(OBJDIR)\*.obj"
+	-@if exist "$(LIBDIR)\*.xwam" erase "$(LIBDIR)\*.xwam"
 	-@if exist "$(OUTDIR)\*.exe" erase "$(OUTDIR)\*.exe"
 	-@if exist "$(OUTDIR)\*.lib" erase "$(OUTDIR)\*.lib"
 	-@if exist "$(OUTDIR)\*.dll" erase "$(OUTDIR)\*.dll"
