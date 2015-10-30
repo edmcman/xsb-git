@@ -88,6 +88,7 @@
 /* Define if you have the mkdir function.  */
 #define HAVE_MKDIR 1
 
+/* VC++ defined snprintf and friends in VC 2015 (ver 1900) */
 #if defined(_MSC_VER) && _MSC_VER >= 1900
 /* Define if you have the snprintf function.  */
 #define HAVE_SNPRINTF 1
