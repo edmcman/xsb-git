@@ -54,6 +54,7 @@
 #define GET_CALL_FROM_SF                         30
 #define GET_POS_AFFECTS                          31
 #define GET_NEG_AFFECTS                          32
+#define PSC_IMMUTABLE                            33
 
 /* added by Bart Demoen & Kostis Sagonas for debugging and convenience */
 #define PRINT_LS                240

@@ -720,13 +720,13 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
 	      cur_mod->nameptr, XSB_OBJ_EXTENSION_STRING);
 
   dummy = get_obj_byte(&t_type);
-  t_defined = t_type & T_DEFI; t_type = t_type & ~T_DEFI;
-  t_definedas = t_type & T_DEFA; t_type = t_type & ~T_DEFA;
+  t_defined = t_type & T_DEFI; t_type = t_type & ~T_DEFI;    /* first check if symbol has clauses */
+  t_definedas = t_type & T_DEFA; t_type = t_type & ~T_DEFA;  /* next check if its a defined-as */
   dummy = get_obj_byte(&t_arity);
   get_obj_atom(fd, &str);
   if (t_type == T_MODU)
     temp_pair = insert_module(0, str.string);
-  else {
+  else {  
     if ((t_env&0x7) == T_IMPORTED || t_definedas) {
       byte t_modlen;
       char modname[MAXFILENAME+1];
@@ -750,7 +750,8 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
 	}
 	mod = cur_mod;  /* mod of this symbol is cur_mod */
       }
-    } else if ((t_env&0x7) == T_GLOBAL) 
+    }  /* ((t_env&0x7) == T_IMPORTED || t_definedas) */
+    else if ((t_env&0x7) == T_GLOBAL) 
       mod = global_mod;
     else 
       mod = cur_mod;
@@ -760,6 +761,7 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
       set_psc_ep_to_psc(CTXTc temp_pair->psc_ptr,defas_pair->psc_ptr);
       t_type = T_PRED;
     }
+   
 
     /* make sure all data fields of predicates PSCs point to 
        their corresponding module */
@@ -775,12 +777,12 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
       if (!(get_ep(temp_pair->psc_ptr)) && (*(pb)get_ep(temp_pair->psc_ptr) == switchonthread))
 	xsb_warn(CTXTc "Shared declaration ignored for %s/%d\n",
 		get_name(temp_pair->psc_ptr),get_arity(temp_pair->psc_ptr));
-      else { 
+      else {   /* 1 (for emacs scoping) */
 	if (flags[PRIVSHAR_DEFAULT] == DEFAULT_PRIVATE) {
 	  if (t_env&T_SHARED_DET) 
 	    set_shared(temp_pair->psc_ptr, (t_env&T_SHARED));
 	}
-	else { 
+	else { /* 2 (for emacs scoping) */
 	  /* Default shared: if the compiled code has a thead_xxx
 	     declaration (as found in t_env) set the shared bit to
 	     whatever they should be; otherwise set it shared by
@@ -795,8 +797,8 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
 	    set_shared(temp_pair->psc_ptr, (T_SHARED));
 	  }
 	}
-      }
-    }
+      } 
+    } /* is_new || !get_shared(temp_pair->psc_ptr) */
 
     if (t_env&T_TABLED_SUB_LOADFILE) 
       set_tabled(temp_pair->psc_ptr,((t_env&T_TABLED_VAR) | T_TABLED_SUB));
@@ -816,7 +818,8 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
       }
       link_sym(CTXTc temp_pair->psc_ptr, (Psc)flags[CURRENT_MODULE]);
     }
-  }
+  } 
+
   if (!temp_pair) return FALSE;
   
   reloc_table[count] = (pw)temp_pair;
@@ -938,7 +941,7 @@ int has_generated_prefix(char *name) {
 
 
 /************************************************************************/
-static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp)
+static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
 {
   char name[FOREIGN_NAMELEN], arity;
   byte name_len;
@@ -962,6 +965,12 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp)
   if (name_len==0) cur_mod = global_mod;
   else {
     ptr = insert_module(T_MODU, name);
+    if (immutable) {
+      if (get_ep(ptr->psc_ptr) == 0) {
+	printf("DEBUG Immutable: Immutable file: first load\n");
+      } else { printf("DEBUG Immutable file: re-load prohibited\n");xsb_exit("");}
+      set_immutable(ptr->psc_ptr,1);
+    }
     cur_mod = ptr->psc_ptr;
     set_ep(ptr->psc_ptr,(byte *)makestring(filename)); //!!!DSWDSW filename for module goes here?
   }
@@ -972,6 +981,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp)
   do {
     /*		xsb_dbgmsg(("Seg count: %d",seg_count)); */
     if (read_magic(fd) != 0x11121306) break;
+
     seg_count++;
     /*		xsb_dbgmsg(("Seg count: %d",seg_count)); */
     /* get the header of the segment */
@@ -1143,7 +1153,7 @@ byte *loader(CTXTdeclc char *file, int exp)
 {
   FILE *fd;	      /* file descriptor */
   unsigned int magic_num;
-  byte *first_inst = NULL;
+  byte *first_inst = NULL; int is_immutable;
 
   fd = fopen(file, "rb"); /* "b" needed for DOS. -smd */
   //  fprintf(logfile,"opening: %s (%s)\n",file,"rb");
@@ -1182,11 +1192,16 @@ byte *loader(CTXTdeclc char *file, int exp)
     }
   }
 
-  if (magic_num == 0x11121307 || magic_num == 0x11121305) {
+  if (magic_num == 0x11121309) {
+    printf("found an immutable file\n");
+    is_immutable = 1;
+  } else is_immutable = 0;
+      
+  if (magic_num == 0x11121307 || magic_num == 0x11121305 || magic_num == 0x11121309) {
     char *efilename = expand_filename(file);
     char *filename = string_find(efilename,1);
     mem_dealloc(efilename,MAXPATHLEN,OTHER_SPACE);
-    first_inst = loader1(CTXTc fd,filename,exp);
+    first_inst = loader1(CTXTc fd,filename,exp,is_immutable);
   } else if (magic_num == 0x11121308 || magic_num == 0x11121309) {
 #ifdef FOREIGN
     first_inst = loader_foreign(CTXTc file, fd, exp);
