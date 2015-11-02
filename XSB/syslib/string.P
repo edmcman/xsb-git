@@ -538,7 +538,18 @@ read_atom_to_term(Atom,Term,Vars) :-
 	 ;	file_close(FileDes),
 		fail
 	).
-		  
+
+read_atom_to_term_print_on_error(Atom,Term,Vars) :-
+	file_open([Atom,'.'],sr,FileDes),
+	(standard:catch(file_read(FileDes,Term,Vars),E,read_handler(E))
+	 ->	file_close(FileDes)
+	 ;	file_close(FileDes),
+		fail
+	).
+
+read_handler(error(_,context(Message,_Trace))) :-
+        error_writeln(Message),
+        fail.
 
 /* ---------------------- end of file string.P ------------------------ */
 

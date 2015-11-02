@@ -2098,9 +2098,9 @@ console_writeln(X):-
 	messageln(X,STDFDBK).
 
 error_write(X):- 
-	message(X,STDERR).
+	message(['++Error[XSB]: ',X],STDERR).
 error_writeln(X):- 
-	messageln(X,STDERR).
+	messageln(['++Error[XSB]: ',X],STDERR).
 
 warning(Message) :- 
 	warning(Message,'Runtime/P').
