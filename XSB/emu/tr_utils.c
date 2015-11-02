@@ -3298,7 +3298,7 @@ static int find_subgoal_forward_dependencies(CTXTdeclc VariantSF subgoal) {
 
     while (answer_stack_current_pos < trans_abol_answer_stack_top) {
       as_leaf = answer_stack[answer_stack_current_pos];
-      if (asi_subgoal((ASI) Child(as_leaf)) != last_subgoal) {
+      //      if (asi_subgoal((ASI) Child(as_leaf)) != last_subgoal) {
 	last_subgoal = asi_subgoal((ASI) Child(as_leaf));
       }
       delayList = asi_dl_list((ASI) Child(as_leaf));
@@ -6258,6 +6258,11 @@ case CALL_SUBS_SLG_NOT: {
     else
       reg[4] = makenil;
     return unify(CTXTc reg_term(CTXTc 3),reg_term(CTXTc 4));
+  }
+  case PSC_IMMUTABLE: {
+    Psc psc = (Psc)ptoc_int(CTXTc 2);
+    ctop_int(CTXTc 3, (Integer)get_immutable(psc));
+    return TRUE;
   }
   case PRINT_LS: print_ls(CTXTc 1) ; return TRUE ;
   case PRINT_TR: print_tr(CTXTc 1) ; return TRUE ;
