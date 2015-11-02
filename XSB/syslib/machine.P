@@ -37,6 +37,7 @@
 #include "psc_defs.h"
 #include "heap_defs_xsb.h"
 #include "incr_xsb_defs.h"
+#include "table_inspection_defs.h"
 
 /*======================================================================*/
 /* This file contains definitions for predicates implemented by the	*/
@@ -68,6 +69,11 @@ psc_ep(PSC, Term) :- psc_ep(PSC, Term).
 psc_set_ep(PSC, Term) :- psc_set_ep(PSC, Term).
 psc_data(PSC, Data) :- psc_data(PSC, Data).
 psc_init_info(_PSC) :- '_$builtin'(PSC_INIT_INFO).
+
+:- export psc_immutable/2.
+psc_immutable(Psc,Immutable):- 
+	table_inspection_function(PSC_IMMUTABLE,Psc,Immutable,_Three,_Four).
+
 
 psc_set_shared(PSC, Bool) :-
 	psc_get_env(PSC, Det, T_SHARED_DET),

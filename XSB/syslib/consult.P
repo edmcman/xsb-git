@@ -286,6 +286,8 @@ object_file_magic_mismatch(Obj):-
 
 engine_mode_magic_num('slg-wam',8).
 engine_mode_magic_num('multi-threading',9).
+engine_mode_magic_num(immutable_st,11).
+engine_mode_magic_num(immutable_mt,12).
 
 get_magic_num(ObjFile,[One,Two,Three,Four]) :- 
 	file_open(ObjFile,r,Istr),

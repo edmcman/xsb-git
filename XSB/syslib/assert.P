@@ -759,7 +759,7 @@ abolish(Spec) :-
 		functor(Nspec,Pred,Arity)
 	),
 	(	standard_symbol(Pred,Arity,_Prop) ->
-		permission_error(modify,static_procedure,Pred/Arity,abolish/1)
+		permission_error(modify,standard_predicate,Pred/Arity,abolish/1)
 	;	call_xsb_hook(xsb_retract_hook(_),[Nspec,true],all),
 		abolish1(Nspec)
 	).
@@ -776,12 +776,17 @@ abolish(Pred,Arity) :-
 	functor(Spec,Pred,Arity),
 	abolish1(Spec).
 
+:- import writeln/1 from standard.
 abolish1(Term) :-
 	retract_index(Term),
 	retract_trie_index(Term),
 	retract_table(Term),
 	conpsc(Term,Psc),
 	psc_type(Psc, Type),
+	immutable_predicate_psc(Psc,Immutable),
+	(Immutable == 1 -> 
+	    writeln('Debug immutable: can''t abolish immutable'(Term)) 
+	  ; true),  % writeln(abolish_ok(Term))),
 	(Type =:= T_DYNA	    % DYNA
 	 ->	db_abolish(Psc)
 	 ; Type =:= T_PRED	    % normal compiled predicate
@@ -796,7 +801,21 @@ abolish1(Term) :-
 	 ;	Type =:= T_ORDI	 /* need to check imported !!!! */
 	).
 
+immutable_predicate_psc(Psc,Immutable):- 
+     psc_data(Psc, ModulePsc),
+     (ModulePsc == 0 -> 
+        Immutable = 0
+      ; psc_immutable(ModulePsc,Immutable)).
 
+/* for testing
+:- export immutable_predicate/2.
+immutable_predicate(Term,Immutable):- 
+     conpsc(Term,Psc),
+     psc_data(Psc, ModulePsc),
+     (ModulePsc == 0 -> 
+        Immutable = 0
+      ; psc_immutable(ModulePsc,Immutable)).
+*/
 /*======================================================================*/
 /* clause(+Head, ?Body)							*/
 /*	Predicate clause/2 searches the database for a clause whose	*/
