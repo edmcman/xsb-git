@@ -660,8 +660,6 @@ transform_slash_to_skel(Spec,ModName,SymTab,Skel) :-
 	 ;	Skel = Skel0
 	).
 
-%:- import console_writeln/1 from standard.
-
 /*======================================================================*/
 /* parse_directive(+Directive, #Symbol_Table,ModName)			*/
 /*	Processes the given directive and updates the symbol table	*/
@@ -690,7 +688,6 @@ parse_directive(else, QrList,SymTab,ModName,ModStruct):- !,
 parse_directive(endif, _QrList,_SymTab,_ModName,_ModStruct):- !,
 	conset(conditional_compile,0).
 parse_directive(module(ModIn,X,_Dialect), _QrList,SymTab,ModName,_ModStruct) :- !, 	
-	console_writeln(module(ModIn,X,_Dialect)),
 	parse_directive(module(ModIn,X), _QrList,SymTab,ModName,_ModStruct).
 parse_directive(module(ModIn,X), _QrList,SymTab,ModName,_ModStruct) :- !, 	
 	(ModIn == ModName -> 
@@ -798,6 +795,8 @@ parse_directive(ti(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	parse_ti(X, (ti), SymTab).
 parse_directive(ti_all, _QrList,_SymTab,_ModName,_ModStruct) :- !,
 	conset(ti_all, 1).
+parse_directive(immutable, _QrList,_SymTab,_ModName,_ModStruct) :- !,
+	conset(immutable, 1).
 parse_directive(ti_off(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	parse_ti(X, (ti_off), SymTab).
 parse_directive(ti_off_all, _QrList,_SymTab,_ModName,_ModStruct) :- !,
