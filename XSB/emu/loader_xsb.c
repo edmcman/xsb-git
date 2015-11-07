@@ -967,8 +967,8 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
     ptr = insert_module(T_MODU, name);
     if (immutable) {
       if (get_ep(ptr->psc_ptr) == 0) {
-	printf("DEBUG Immutable: Immutable file: first load\n");
-      } else { printf("DEBUG Immutable file: re-load prohibited\n");xsb_exit("");}
+	printf("DEBUG Immutable: first load of module: %s\n",name);
+      } else { printf("DEBUG Immutable: re-load of module prohibited: %s\n",name); return(NULL);}
       set_immutable(ptr->psc_ptr,1);
     }
     cur_mod = ptr->psc_ptr;
@@ -1107,7 +1107,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
 
 /* ldoption is specified in .H file and indicates library files, etc
    that need to be loaded. */
-static byte *loader_foreign(CTXTdeclc char *filename, FILE *fd, int exp)
+static byte *loader_foreign(CTXTdeclc char *filename, FILE *fd, int exp,int immutable)
 {
   byte name_len, *instr;
   char name[FOREIGN_NAMELEN];
@@ -1126,6 +1126,15 @@ static byte *loader_foreign(CTXTdeclc char *filename, FILE *fd, int exp)
   name[name_len] = 0;
   get_obj_atom(fd, &ldoption);
   ptr = insert_module(T_MODU, name);
+  if (immutable) {
+    if (get_immutable(ptr->psc_ptr) == 0) {
+      printf("DEBUG Immutable: Immutable foreign file: first load\n");
+    } else { 
+      printf("DEBUG Immutable foreign file: re-load prohibited\n");
+      return(NULL);
+    }
+    set_immutable(ptr->psc_ptr,1);
+    }
   cur_mod = ptr->psc_ptr;
   get_obj_word_bb(&psc_count);
   if (!load_syms(CTXTc fd, (int)psc_count, 0, cur_mod, exp)) return FALSE;
@@ -1192,21 +1201,23 @@ byte *loader(CTXTdeclc char *file, int exp)
     }
   }
 
-  if (magic_num == 0x11121309) {
+  if (magic_num == 0x1112130a || magic_num == 0x1112130b || magic_num == 0x1112130c) {
     printf("found an immutable file\n");
     is_immutable = 1;
   } else is_immutable = 0;
       
-  if (magic_num == 0x11121307 || magic_num == 0x11121305 || magic_num == 0x11121309) {
+    if (magic_num == 0x11121307 || magic_num == 0x11121305 || magic_num == 0x1112130a) {
+      //      printf("Prolog magic num 0x%x\n",magic_num);
     char *efilename = expand_filename(file);
     char *filename = string_find(efilename,1);
     mem_dealloc(efilename,MAXPATHLEN,OTHER_SPACE);
     first_inst = loader1(CTXTc fd,filename,exp,is_immutable);
-  } else if (magic_num == 0x11121308 || magic_num == 0x11121309) {
+  } else if (magic_num == 0x11121308 || magic_num == 0x11121309 || magic_num == 0x1112130b || magic_num == 0x1112130c) {
 #ifdef FOREIGN
-    first_inst = loader_foreign(CTXTc file, fd, exp);
+      //      printf("foreign magic num 0x%x\n",magic_num);
+    first_inst = loader_foreign(CTXTc file, fd, exp,is_immutable);
 #else
-    xsb_abort("Loading a foreign file: %s", file);
+    xsb_abort("Loading a foreign file: %s prohibited in this configuration", file);
 #endif
   } else {
     xsb_abort("File: %s does not have proper byte code format...\n%s",
