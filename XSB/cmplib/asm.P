@@ -76,7 +76,7 @@ asm_genheader(_OStr, _ModName, _SymTab, _IsModule).
 
 :- import conget/2 from gensym.
 asm_genheader0(OStr, ModName, SymTab, IsModule) :-
-	(conget(immutable,1) -> asm_magic(OStr,9) ; asm_magic(OStr,7)),	/* use magic number 17-18-19-X */
+	(conget(immutable,1) -> asm_magic(OStr,10) ; asm_magic(OStr,7)),	/* use magic number 17-18-19-X */
 	( IsModule =:= 0 -> file_put(OStr,0)
 	; str_len(ModName, L), file_put(OStr,L), write(OStr,ModName)
 	),
