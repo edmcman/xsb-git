@@ -583,7 +583,7 @@ get_p_mod(P, ModName, P_Mod) :-
 /* parse_clause(+Clause,						*/
 /*		#module(#SymTab,#DcList,#ClList,#QrList),ModName)	*/
 /*======================================================================*/
-:- import console_writeln/1 from standard.
+:- import console_writeln/1,console_write/1 from standard.
 
 parse_clause([], _,_) :- !.
 parse_clause([Cl|Cls], Module,ModName) :- !,
@@ -796,7 +796,10 @@ parse_directive(ti(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
 parse_directive(ti_all, _QrList,_SymTab,_ModName,_ModStruct) :- !,
 	conset(ti_all, 1).
 parse_directive(immutable, _QrList,_SymTab,_ModName,_ModStruct) :- !,
-	conset(immutable, 1).
+	   conget(immutable,Prior),
+	   console_write('compiling as immutable '(_ModName)),
+	   console_writeln(' setting immutable to one from '(Prior)),
+	   conset(immutable, 1).
 parse_directive(ti_off(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	parse_ti(X, (ti_off), SymTab).
 parse_directive(ti_off_all, _QrList,_SymTab,_ModName,_ModStruct) :- !,
