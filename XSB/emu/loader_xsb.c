@@ -962,7 +962,12 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
 
   dummy = get_obj_string(name, name_len);
   name[(int)name_len] = 0;
-  if (name_len==0) cur_mod = global_mod;
+  if (name_len==0) {
+    cur_mod = global_mod;
+    if (immutable) {
+      printf("Warning: non-module loading as immutable: %s\n",name);
+    }
+  }
   else {
     ptr = insert_module(T_MODU, name);
     if (immutable) {
@@ -1202,7 +1207,7 @@ byte *loader(CTXTdeclc char *file, int exp)
   }
 
   if (magic_num == 0x1112130a || magic_num == 0x1112130b || magic_num == 0x1112130c) {
-    printf("found an immutable file\n");
+    printf("found an immutable file %s magic_num: %x\n",file,magic_num);
     is_immutable = 1;
   } else is_immutable = 0;
       
