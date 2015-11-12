@@ -995,13 +995,13 @@ DllExport int call_conv pl_sgml_parse()
 
 	  if (ateof) {
 	      eof = TRUE;
-	      if ( c == LF )                  /* file ends in LF */ {
-		c = CR;
-	      } else if ( c != CR )  {        /* file ends in normal char */
+	      if ( c == LINEFEED )  {        /* file ends in LINEFEED */
+		c = CARRIAGERETURN;
+	      } else if ( c != CARRIAGERETURN )  {        /* file ends in normal char */
 		putchar_dtd_parser(p, c);
 		if ( pd->stopped )
 		  goto stopped;
-		c = CR;
+		c = CARRIAGERETURN;
 	      }
 	  }
 	  putchar_dtd_parser( p, c);

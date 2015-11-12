@@ -477,8 +477,8 @@ load_sgml_file_to_charp(const char *file, int normalise_rsre, size_t *length)
 	    for(s=r, t=r2; *s; s++) {
 	      if ( *s == '\n' ) {
 		if ( s>r && s[-1] != '\r' ) {
-		  *t++ = CR;
-		  *t++ = LF;
+		  *t++ = CARRIAGERETURN;
+		  *t++ = LINEFEED;
 		} else {
 		  *t++ = *s;
 		}
@@ -491,7 +491,7 @@ load_sgml_file_to_charp(const char *file, int normalise_rsre, size_t *length)
 	  }
 	  
 	  if ( last_is_lf )
-	    r[--len] = '\0';		/* delete last LF */
+	    r[--len] = '\0';		/* delete last LINEFEED */
 	}
 	
 	if ( length )

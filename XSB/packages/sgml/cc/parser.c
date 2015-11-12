@@ -630,12 +630,12 @@ add_cdata(dtd_parser *p, int chr)
 		
 	} 
 
-      if ( chr == '\n' )                  /* insert missing CR */
+      if ( chr == '\n' )                  /* insert missing CARRIAGERETURN */
 	{ 
 	  Integer sz;
                                                                                
-	  if ( (sz=buf->size) == 0 || buf->data[sz-1] != CR )
-	    add_cdata(p, CR);
+	  if ( (sz=buf->size) == 0 || buf->data[sz-1] != CARRIAGERETURN )
+	    add_cdata(p, CARRIAGERETURN);
 	}
 
       add_ocharbuf(buf, chr);
@@ -649,10 +649,10 @@ add_cdata(dtd_parser *p, int chr)
 	{
 	  Integer sz;                           /* here or in space-handling? */
 	  if ( (sz=buf->size) > 1 &&
-	       buf->data[sz-1] == LF &&
-	       buf->data[sz-2] == CR )
+	       buf->data[sz-1] == LINEFEED &&
+	       buf->data[sz-2] == CARRIAGERETURN )
 	    { 
-	      buf->data[sz-2] = LF;
+	      buf->data[sz-2] = LINEFEED;
 	      buf->size--;
 	    }
 	                                                               
@@ -1399,7 +1399,7 @@ putchar_dtd_parser(dtd_parser *p, int chr)
       	 
     empty_icharbuf(p->buffer);
     
-    if ( chr == CR ) {
+    if ( chr == CARRIAGERETURN ) {
       p->state = S_ENTCR;
       break;
     } else if ( f[CF_ERC] != chr && chr != '\n' ) {
@@ -1409,9 +1409,9 @@ putchar_dtd_parser(dtd_parser *p, int chr)
     break;
   }
 
-  case S_ENTCR: {                     /* seen &entCR, eat the LF */
+  case S_ENTCR: {                     /* seen &entCR, eat the LINEFEED */
     p->state = p->cdata_state;
-    if ( chr != LF )
+    if ( chr != LINEFEED )
       goto reprocess;
     break;
   }
@@ -2146,10 +2146,10 @@ sgml_process_stream(dtd_parser *p, char *buf, unsigned flags, size_t source_len)
                                                                                
       if ( p2 == EOF || p2 == '\0')
 	{ putchar_dtd_parser(p, p0);
-	  if ( p1 != LF )
+	  if ( p1 != LINEFEED )
 	    putchar_dtd_parser(p, p1);
-	  else if ( p0 != CR )
-	    putchar_dtd_parser(p, CR);
+	  else if ( p0 != CARRIAGERETURN )
+	    putchar_dtd_parser(p, CARRIAGERETURN);
                                                                                
 	  if ( flags & SGML_SUB_DOCUMENT )
 	    return TRUE;
@@ -6009,7 +6009,7 @@ get_attribute_value(dtd_parser *p, ichar const *decl, sgml_attribute *att)
 	  
 	  for (d = q = tmp; *d; *q++ = *d++)
 	    { 
-	      if ( d[0] == CR && d[1] == LF )
+	      if ( d[0] == CARRIAGERETURN && d[1] == LINEFEED )
 		d++;
 	      if (HasClass(dtd, *d, CH_BLANK))
 		{ 
