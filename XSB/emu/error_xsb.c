@@ -1514,7 +1514,7 @@ void err_handle(CTXTdeclc int description, int arg, char *f,
   case ZERO_DIVIDE:
     snprintf(message,ERRMSGLEN,
 	    "! %s error in %s\n! %s expected, but %lx found",
-	    err_msg_table[description], f, expected, found);
+             err_msg_table[description], f, expected, (unsigned long) found);
     break;
   default:
     snprintf(message,ERRMSGLEN,

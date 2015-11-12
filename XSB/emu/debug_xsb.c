@@ -1638,9 +1638,9 @@ void debug_print_completion_stack(CTXTdecl)
       subg = (VariantSF) *temp;
       print_subg_header(CTXTc stddbg, subg);
     }
-    if ((i % COMPLFRAMESIZE) == 0) { fprintf(stddbg,"Completion Stack %p: %lx\t(subgoal_ptr)",temp, *temp);}
-    if ((i % COMPLFRAMESIZE) == 1) { fprintf(stddbg,"Completion Stack %p: %lx\t(del_ret_list)",temp, *temp);}
-    if ((i % COMPLFRAMESIZE) == 2) { fprintf(stddbg,"Completion Stack %p: %lu/%lu\t(level_num/visited)",temp, (*temp)&0xffffffff,(*temp)>>16);}
+    if ((i % COMPLFRAMESIZE) == 0) { fprintf(stddbg,"Completion Stack %p: %lx\t(subgoal_ptr)",temp, (unsigned long) *temp);}
+    if ((i % COMPLFRAMESIZE) == 1) { fprintf(stddbg,"Completion Stack %p: %lx\t(del_ret_list)",temp, (unsigned long) *temp);}
+    if ((i % COMPLFRAMESIZE) == 2) { fprintf(stddbg,"Completion Stack %p: %lu/%lu\t(level_num/visited)",temp, (unsigned long) (*temp)&0xffffffff,(unsigned long) (*temp)>>16);}
 #ifndef LOCAL_EVAL
     EPtr eptr;
     if ((i % COMPLFRAMESIZE) >= COMPLFRAMESIZE-2) {
@@ -1922,7 +1922,7 @@ static void print_cell(char *addrtype, CPtr addr, Cell term, char *more_info)
     break;
   case XSB_FLOAT:
     printf( "%s %p: XSB_FLOAT, value=%f, hexval=0x%lx",
-	    addrtype, addr, float_val(term), dec_addr(term));
+	    addrtype, addr, float_val(term), (unsigned long) dec_addr(term));
     break;
   case XSB_LIST:
     printf( "%s %p: XSB_LIST, clref=%p, hex=%p",
@@ -2024,7 +2024,7 @@ static void fprint_cp_cell(FILE * output,char *addrtype, CPtr addr, Cell term)
       break;
     case XSB_FLOAT:
       fprintf(output, "%s %p: XSB_FLOAT, value=%f, hexval=0x%lx\n",
-	      addrtype, addr, float_val(term), dec_addr(term));
+	      addrtype, addr, float_val(term), (unsigned long) dec_addr(term));
       break;
     case XSB_LIST:
       fprintf(output, "%s %p: XSB_LIST, value=%p\n",

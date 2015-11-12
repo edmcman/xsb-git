@@ -2995,7 +2995,7 @@ argument positions.
 #ifndef JUMPTABLE_EMULOOP
   default: {
     char message[80];
-    sprintf(message, "Illegal opcode hex %x (& %x)", *lpcreg,lpcreg); 
+    sprintf(message, "Illegal opcode hex %x (& %x)", (unsigned int) *lpcreg,(unsigned int) lpcreg); 
     xsb_exit(CTXTc message);
   }
 } /* end of switch */

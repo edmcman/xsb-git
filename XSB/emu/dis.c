@@ -175,7 +175,7 @@ CPtr print_inst(FILE *fd, CPtr inst_ptr)
 	   fprintf(fd, ", r%d", cell_operandn(&instr,a++));
 	   break;
 	 case T:
-	   fprintf(fd, ", 0x%lx", cell(loc_pcreg++));
+	   fprintf(fd, ", 0x%lx", (unsigned long) cell(loc_pcreg++));
 	   break;
 	 case P:
 	   a++;
@@ -183,12 +183,12 @@ CPtr print_inst(FILE *fd, CPtr inst_ptr)
 	 case S:
 	   if (cell_opcode(&instr) == (byte) call ||
 	       cell_opcode(&instr) == (byte) xsb_execute) {
-	     fprintf(fd, ", 0x%lx", *loc_pcreg);
+	     fprintf(fd, ", 0x%lx", (unsigned long) *loc_pcreg);
 	     psc = (Psc) cell(loc_pcreg++);
 	     fprintf(fd,", /('%s',%d)", get_name(psc), get_arity(psc));
 	   }
 	   else
-	     fprintf(fd, ", 0x%lx", cell(loc_pcreg++));
+	     fprintf(fd, ", 0x%lx", (unsigned long) cell(loc_pcreg++));
 	   break;
 	 case H:
 	   fprintf(fd, ", ");
@@ -197,11 +197,11 @@ CPtr print_inst(FILE *fd, CPtr inst_ptr)
 	 case C:
 	 case L:
 	 case G:
-	   fprintf(fd, ", 0x%lx", cell(loc_pcreg++));
+	   fprintf(fd, ", 0x%lx", (unsigned long) cell(loc_pcreg++));
 	   break;
 	 case I:
 	 case N:
-	   fprintf(fd, ", %ld", cell(loc_pcreg++));
+	   fprintf(fd, ", %ld", (unsigned long) cell(loc_pcreg++));
 	   break;
 	 case B:
 	   fprintf(fd, ", %" Intfmt, (Integer) int_val(cell(loc_pcreg)));
@@ -286,7 +286,7 @@ void dis_text(FILE * filedes)
 	    fprintf(filedes, 
 		    "          hash_entry(0x%p,0x%lx)", 
 		    inst_addr2, 
-		    cell(inst_addr2));
+		    (unsigned long) cell(inst_addr2));
 	    inst_addr2 ++;
 	  }
 	  fprintf(filedes, "])");
@@ -297,3 +297,4 @@ void dis_text(FILE * filedes)
       this_seg = seg_next(this_seg);
    }  
 }
+

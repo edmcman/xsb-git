@@ -148,7 +148,7 @@ char *stringNodeType(byte fieldNodeType) {
 void printTrieSymbol(FILE *fp, Cell symbol) {
 
   if ( symbol == ESCAPE_NODE_SYMBOL )
-    fprintf(fp, "%lu [ESCAPE_NODE_SYMBOL]", ESCAPE_NODE_SYMBOL);
+    fprintf(fp, "%lu [ESCAPE_NODE_SYMBOL]", (unsigned long) ESCAPE_NODE_SYMBOL);
   else {
     switch(TrieSymbolType(symbol)) {
     case XSB_INT:
@@ -189,7 +189,7 @@ int sprintTrieSymbol(char * buffer, Cell symbol) {
   int ctr;
 
   if ( symbol == ESCAPE_NODE_SYMBOL )
-    return sprintf(buffer, "%lu [ESCAPE_NODE_SYMBOL]", ESCAPE_NODE_SYMBOL);
+    return sprintf(buffer, "%lu [ESCAPE_NODE_SYMBOL]", (unsigned long) ESCAPE_NODE_SYMBOL);
   else {
     switch(TrieSymbolType(symbol)) {
     case XSB_INT:
