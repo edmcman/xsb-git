@@ -897,8 +897,9 @@ check_type_dl_head(Head,Context) :-
 		    [Head, ' does not have proper sorts and cannot be added.']),
 	fail.
 	
-dl_type_table(exists(R,C),check_ind_types(_,exists(R,C),[[rid],[cid]])).
-dl_type_table(exists_immed(R,C),check_ind_types(_,exists_immed(R,C),[[rid],[cid]])).
+%%dl_type_table(exists(R,C),check_ind_types(_,exists(R,C),[[rid],[cid]])).
+dl_type_table(exists(R,_C),check_ind_types(_,exists(R,_),[[rid],[cid]])).  %hack for now till figure out how to handle nested exists...
+dl_type_table(exists_immed(R,C),check_ind_types(_,exists_immed(R,_C),[[rid],[cid]])).
 dl_type_table(all(R,C),check_ind_types(_,all(R,C),[[rid],[cid]])).
 dl_type_table(atLeast(N,R,C),check_ind_types(_,atLeast(N,R,C),[posint,[rid],[cid]])).
 dl_type_table(atMost(N,R,C),check_ind_types(_,atMost(N,R,C),[posint,[rid],[cid]])).

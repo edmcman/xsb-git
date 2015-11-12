@@ -181,7 +181,6 @@ write_component_intensional(Comp):-
 	fail.
 write_component_intensional(Comp):- 
 	compdlrule(Comp,DLHead,DLBody),
-	writeln(userout,write_can_rule),
 	(ground((DLHead,DLBody)) -> true ; numbervars((DLHead,DLBody))),
 	write_canonical_lettervar('<='(DLHead,DLBody)), writeln('.'),
 	fail.
