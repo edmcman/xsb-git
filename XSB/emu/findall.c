@@ -334,6 +334,7 @@ copy_again : /* for tail recursion optimisation */
 
       {
 	Cell tr1;
+        UNUSED(tr1);
 
 	tr1 = *to = makelist(*h) ;
 	to = (*h) ;
@@ -570,6 +571,7 @@ static int findall_copy_template_to_chunk(CTXTdeclc Cell from, CPtr to, CPtr *h)
 
 	  {
 	    Cell tr1;
+            UNUSED(tr1);
 
 	    tr1 = *to = makelist(*h) ;
 	    to = (*h) ;
@@ -960,6 +962,7 @@ copy_again : /* for tail recursion optimisation */
 
 	{
 	  Cell tr1;
+          UNUSED(tr1);
 
 	  tr1 = *to = makelist(*h) ;
 	  to = (*h) ;

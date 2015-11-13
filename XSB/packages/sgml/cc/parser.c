@@ -1175,7 +1175,7 @@ putchar_dtd_parser(dtd_parser *p, int chr)
       p->cdata_state = p->state = S_PCDATA;
     } else { 
       add_verbatim_cdata(p, dtd->charmap->map[chr]);
-      if ( p->etaglen < p->buffer->size || !HasClass(dtd, chr, CH_NAME)) { 
+      if ( (p->etaglen) < ((size_t) (p->buffer->size)) || !HasClass(dtd, chr, CH_NAME)) { 
 	empty_icharbuf(p->buffer);    /* mismatch */
 	p->state = p->cdata_state;
       } else
@@ -2141,7 +2141,7 @@ sgml_process_stream(dtd_parser *p, char *buf, unsigned flags, size_t source_len)
       return end_document_dtd_parser(p);
     }
   i++;                                             
-  for( ; i<=source_len ; i++)
+  for( ; (size_t) i<=source_len ; i++)
     { int p2 = buf[i];
                                                                                
       if ( p2 == EOF || p2 == '\0')
@@ -5181,19 +5181,18 @@ load_dtd_from_file(dtd_parser *p, const char *file)
     }
 
   /*Parse the downloaded dtd*/
-  if ( buf )
-    { 	
-      int chr,i;
-
-      for( i=0;i<n;i++){
-	chr=buf[i];
-	putchar_dtd_parser(p, chr);
-      }
+  if ( buf ) { 	
+    int chr,i;
+    
+    for( i=0;(size_t) i<n;i++){
+      chr=buf[i];
+      putchar_dtd_parser(p, chr);
+    }
 	
                                                                        
-      p->dtd->implicit = FALSE;
-      rval = TRUE;
-    } 
+    p->dtd->implicit = FALSE;
+    rval = TRUE;
+  } 
   else
     rval = FALSE;
 									

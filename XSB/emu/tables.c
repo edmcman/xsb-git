@@ -314,6 +314,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
     CPtr tmplt_component, tmplt_var_addr, hrg_addr;
 #ifdef CALL_ABSTRACTION
     int size, j,attv_num,abstr_size;  /* call abstraction */
+    UNUSED(attv_num);
 #else
     int size, j;
 #endif

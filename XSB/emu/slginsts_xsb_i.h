@@ -183,13 +183,16 @@ XSB_Start_Instr(tabletrysingle,_tabletrysingle)
   VariantSF producer_sf, consumer_sf;
   CPtr answer_template_cps, answer_template_heap;
   int template_size, attv_num, is_neg_call; Integer tmp;
-#ifdef CALL_ABSTRACTION
-  int abstr_size;
-#endif
   TIFptr tip;
   int ret;
   int parent_table_is_incr = 0; /* for incremental evaluation */
   VariantSF parent_table_sf=NULL; /* used for creating call graph */
+#ifdef CALL_ABSTRACTION
+  int abstr_size;
+  UNUSED(abstr_size);
+#endif
+
+  UNUSED(op1);
 
   //  printf("starting breg is %x %x\n",breg,((pb)tcpstack.high - (pb)breg));
 
@@ -727,6 +730,9 @@ XSB_Start_Instr(tabletrysinglenoanswers,_tabletrysinglenoanswers)
   TIFptr tip;
   callnodeptr cn;
 
+    UNUSED(op1);
+    UNUSED(op3);
+
     //#ifdef MULTI_THREAD
     //  xsb_abort("Incremental Maintenance of tables is not available for multithreaded engine.\n");
     //#endif  
@@ -982,12 +988,16 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
   Def2ops
   CPtr producer_cpf, producer_csf, answer_template;
   int template_size, attv_num; Integer tmp;
-#ifdef CALL_ABSTRACTION
-  int abstr_size;
-#endif
   VariantSF producer_sf;
   xsbBool isNewAnswer = FALSE;
   BTNptr answer_leaf;
+#ifdef CALL_ABSTRACTION
+  int abstr_size;
+  UNUSED(abstr_size);
+#endif
+
+  UNUSED(op1);
+  UNUSED(producer_csf);
 
   ARITY = get_xax;
   Yn = get_xxa; /* we want the # of the register, not a pointer to it */

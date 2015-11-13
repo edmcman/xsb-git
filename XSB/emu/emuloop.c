@@ -1587,7 +1587,7 @@ argument positions.
 	      op1 = (Cell)string_val(op1);
 	      break;
             }
-	    j += j + ihash(op1, (int)op3);
+	    j += j + ihash(op1, (Integer)op3);
           }
       } else {
 	op1 = opa[i];
@@ -1616,12 +1616,12 @@ argument positions.
 	  xsb_error("Illegal operand in switchon3bound");
 	  break;
         }
-	j += j + (int)ihash(op1, (int)op3);
+	j += j + (int)ihash(op1, (Integer)op3);
 	}
       }
     }
     if (j < 0) j = -j;
-    lpcreg = *(byte **)((byte *)op2 + ((j % (int)op3) * sizeof(Cell)));
+    lpcreg = *(byte **)((byte *)op2 + ((j % (Integer)op3) * sizeof(Cell)));
   XSB_End_Instr()
 
   XSB_Start_Instr(switchonthread,_switchonthread) /* PPP-L */
@@ -2359,6 +2359,8 @@ argument positions.
    */
   XSB_Start_Instr(check_interrupt,_check_interrupt)  /* PPA-S */
     Def1op
+
+    UNUSED(op1);
     
     Op1(get_xxxs);
     ADVANCE_PC(size_xxxX);

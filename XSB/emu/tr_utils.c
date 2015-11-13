@@ -1483,8 +1483,10 @@ void breg_retskel(CTXTdecl)
     Cell    term;
     VariantSF sg_frame;
     CPtr    tcp, cptr, where;
-    int     i, template_size,attv_num,abstr_size;
     Integer breg_offset;
+    int     i, template_size,attv_num,abstr_size;
+    UNUSED(attv_num);
+    UNUSED(abstr_size);
 
     breg_offset = ptoc_int(CTXTc 1);
     tcp = (CPtr)((Integer)(tcpstack.high) - breg_offset);

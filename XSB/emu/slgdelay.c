@@ -1439,10 +1439,11 @@ void simplify_neg_fails(CTXTdeclc VariantSF subgoal)
 static void simplify_neg_succeeds(CTXTdeclc VariantSF subgoal)
 {
   PNDE nde;
-  DL dl, tmp_dl;
   DE de, tmp_de;
   ASI used_asi, de_asi;
   NODEptr used_as_leaf;
+  DL dl, tmp_dl;
+  UNUSED(tmp_dl);
 
   //  printf("in simplify neg succeeds: ");print_subgoal(stddbg,subgoal);printf("\n");
   answer_complete_subg(subgoal);

@@ -72,7 +72,9 @@ extern size_t last_assert_space_size;
 
 DllExport char* call_conv string_find(const char *str, int insert) {
 
-  char **ptr, *str0, **sptr;
+  char **ptr, *str0;
+  char **sptr;
+  UNUSED(sptr);
 
   //  printf("interning %s\n",str);
   SYS_MUTEX_LOCK_NOERROR( MUTEX_STRING ) ;

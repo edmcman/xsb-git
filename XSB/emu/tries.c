@@ -2836,7 +2836,7 @@ byte * trie_get_calls(CTXTdecl)
  */
 Cell get_lastnode_cs_retskel(CTXTdeclc Cell callTerm) {
 
-  int arity;
+  Integer arity;
   Cell *vectr;
 
   arity = global_trieinstr_vars_num + 1;
@@ -2850,7 +2850,7 @@ Cell get_lastnode_cs_retskel(CTXTdeclc Cell callTerm) {
     if ( IsProperlySubsumed(sf) ) {
       construct_answer_template(CTXTc callTerm, conssf_producer(sf),
 				(Cell *)trieinstr_vars);
-      arity = (int)trieinstr_vars[0];
+      arity = (Integer)trieinstr_vars[0];
       vectr = (Cell *)&trieinstr_vars[1];
     }
   }

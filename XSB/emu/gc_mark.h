@@ -781,7 +781,10 @@ static int mark_hreg_from_choicepoints(CTXTdecl)
   /* actually there is no need to do this for a copying collector */
 
   b = (bfreg < breg ? bfreg : breg);
+
   bprev = 0;
+  UNUSED(bprev);
+
   m = 0;
     while(1)
      {

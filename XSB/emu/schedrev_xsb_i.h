@@ -71,6 +71,7 @@ static CPtr sched_answers(CTXTdeclc VariantSF producer_sf, CPtr *last_consumer)
 	SubConsSF consumer_sf;
 	ALNptr answer_continuation;
 	BTNptr next_answer;
+        UNUSED(next_answer);
 
 	consumer_sf = (SubConsSF)nlcp_subgoal_ptr(consumer_cpf);
 
