@@ -3105,7 +3105,7 @@ extern pthread_mutexattr_t attr_rec_gl ;
 	}
 	magic_num = read_magic(fd);
 	fclose(fd);
-	if (magic_num == 0x11121307 || magic_num == 0x11121305) {
+	if (magic_num == 0x11121307  || magic_num == 0x11121305 || magic_num == 0x1112130a) {
 	  inst_begin_gl = loader(CTXTc startup_file,0);
 	}
 	else 
@@ -3115,6 +3115,9 @@ extern pthread_mutexattr_t attr_rec_gl ;
 	  xsb_initialization_exit("Error in loading startup file");
 
 	if (xsb_mode == DISASSEMBLE) {
+	  if (magic_num == 0x1112130a) {
+	    exit(0);
+	  }
 	  dis(1);
 	  exit(0);  /* This raw exit ok -- wont be called by C_CALLING_XSB */
 	}

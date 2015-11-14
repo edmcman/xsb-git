@@ -964,7 +964,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
   name[(int)name_len] = 0;
   if (name_len==0) {
     cur_mod = global_mod;
-    if (immutable) {
+    if (immutable && pflags[VERBOSENESS_LEVEL]) {
       printf("Warning: non-module loading as immutable: %s\n",name);
     }
   }
@@ -972,9 +972,12 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
     ptr = insert_module(T_MODU, name);
     if (immutable) {
       if (get_ep(ptr->psc_ptr) == 0) {
-	printf("DEBUG Immutable: first load of module: %s\n",name);
-      } else { printf("DEBUG Immutable: re-load of module prohibited: %s\n",name); return(NULL);}
-      set_immutable(ptr->psc_ptr,1);
+	if (pflags[VERBOSENESS_LEVEL]) { printf("Immutable: first load of module: %s\n",name);}
+	set_immutable(ptr->psc_ptr,1);
+      } else { 
+	if (pflags[VERBOSENESS_LEVEL]) { printf("Immutable: re-load of module prohibited: %s\n",name);}
+	return(NULL); 
+      }
     }
     cur_mod = ptr->psc_ptr;
     set_ep(ptr->psc_ptr,(byte *)makestring(filename)); //!!!DSWDSW filename for module goes here?
@@ -1133,13 +1136,13 @@ static byte *loader_foreign(CTXTdeclc char *filename, FILE *fd, int exp,int immu
   ptr = insert_module(T_MODU, name);
   if (immutable) {
     if (get_immutable(ptr->psc_ptr) == 0) {
-      printf("DEBUG Immutable: Immutable foreign file: first load\n");
+      if (pflags[VERBOSENESS_LEVEL]) {printf("DEBUG Immutable: Immutable foreign file: first load\n");}
+      set_immutable(ptr->psc_ptr,1);
     } else { 
-      printf("DEBUG Immutable foreign file: re-load prohibited\n");
+      if (pflags[VERBOSENESS_LEVEL]) {printf("DeBUG Immutable foreign file: re-load prohibited\n");}
       return(NULL);
     }
-    set_immutable(ptr->psc_ptr,1);
-    }
+  }
   cur_mod = ptr->psc_ptr;
   get_obj_word_bb(&psc_count);
   if (!load_syms(CTXTc fd, (int)psc_count, 0, cur_mod, exp)) return FALSE;
@@ -1207,7 +1210,7 @@ byte *loader(CTXTdeclc char *file, int exp)
   }
 
   if (magic_num == 0x1112130a || magic_num == 0x1112130b || magic_num == 0x1112130c) {
-    printf("found an immutable file %s magic_num: %x\n",file,magic_num);
+    if (pflags[VERBOSENESS_LEVEL]) {printf("found an immutable file %s magic_num: %x\n",file,magic_num);}
     is_immutable = 1;
   } else is_immutable = 0;
       
