@@ -583,7 +583,7 @@ get_p_mod(P, ModName, P_Mod) :-
 /* parse_clause(+Clause,						*/
 /*		#module(#SymTab,#DcList,#ClList,#QrList),ModName)	*/
 /*======================================================================*/
-:- import console_writeln/1,console_write/1 from standard.
+:- import console_writeln/1 from standard.
 
 parse_clause([], _,_) :- !.
 parse_clause([Cl|Cls], Module,ModName) :- !,
@@ -734,6 +734,11 @@ parse_directive(document_import(from(X, Mod)), _QrList,SymTab,_ModName,_ModStruc
 	 ->	error(('Module cannot be a variable. Document_importing: ',X))
 	 ;	parse_comma_list(X, SymTab, [docim(Mod)], (document_import))
 	).
+
+:- import current_prolog_flag/2 from curr_sym.
+verbose_writeln(Term):- current_prolog_flag(verboseness,X),X > 0,!,console_writeln(Term).
+verbose_writeln(_Term).
+
 % not worrying about .h files
 % not worrying about resetting hash table size
 % not worrying about redefining file extensions
@@ -796,10 +801,8 @@ parse_directive(ti(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
 parse_directive(ti_all, _QrList,_SymTab,_ModName,_ModStruct) :- !,
 	conset(ti_all, 1).
 parse_directive(immutable, _QrList,_SymTab,_ModName,_ModStruct) :- !,
-	   conget(immutable,Prior),
-	   console_write('compiling as immutable '(_ModName)),
-	   console_writeln(' setting immutable to one from '(Prior)),
-	   conset(immutable, 1).
+	   verbose_writeln('compiling as immutable '(_ModName)),	
+           conset(immutable, 1).
 parse_directive(ti_off(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	parse_ti(X, (ti_off), SymTab).
 parse_directive(ti_off_all, _QrList,_SymTab,_ModName,_ModStruct) :- !,
