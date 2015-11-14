@@ -776,6 +776,10 @@ abolish(Pred,Arity) :-
 	functor(Spec,Pred,Arity),
 	abolish1(Spec).
 
+:- import current_prolog_flag/2 from curr_sym.
+verbose_writeln(Term):- current_prolog_flag(verboseness,X),X > 0,!,writeln(Term).
+verbose_writeln(_Term).
+
 :- import writeln/1 from standard.
 abolish1(Term) :-
 	retract_index(Term),
@@ -785,8 +789,8 @@ abolish1(Term) :-
 	psc_type(Psc, Type),
 	immutable_predicate_psc(Psc,Immutable),
 	(Immutable == 1 -> 
-	    writeln('Debug immutable: can''t abolish immutable'(Term)) 
-	  ; true),  % writeln(abolish_ok(Term))),
+	    verbose_writeln('Debug immutable: can''t abolish immutable'(Term)) ,fail
+	  ; true),
 	(Type =:= T_DYNA	    % DYNA
 	 ->	db_abolish(Psc)
 	 ; Type =:= T_PRED	    % normal compiled predicate

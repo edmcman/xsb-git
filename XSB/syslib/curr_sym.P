@@ -813,9 +813,9 @@ xsb_flag(tracing, Trace) :-
 xsb_flag(verboseness,Level) :-
 	var(Level),
 	stat_flag(VERBOSENESS_LEVEL,Level).
-xsb_flag(verboseness,Level) :-
-	number(Level),
-	stat_set_flag(VERBOSENESS_LEVEL,Level).
+%xsb_flag(verboseness,Level) :-
+%	number(Level),
+%	stat_set_flag(VERBOSENESS_LEVEL,Level).
 %% Goal passed on cmd line
 xsb_flag(goal, Goal) :-
 	stat_flag(CMD_LINE_GOAL, GoalUninterned),
