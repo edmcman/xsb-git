@@ -375,6 +375,7 @@ Pair insert_module(int type, char *name)
 	set_data(new_pair->psc_ptr,0);
 	set_ep(new_pair->psc_ptr,0);
 	new_pair->psc_ptr->this_psc = 0;
+	set_immutable(new_pair->psc_ptr,0);
     } else {	/* set loading bit: T_MODU - loaded; 0 - unloaded */
       set_type(new_pair->psc_ptr, get_type(new_pair->psc_ptr) | type);
     }
