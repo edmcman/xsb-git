@@ -1144,7 +1144,7 @@ int term_depth(CTXTdeclc Cell Term) {
 
   int maxsofar = 0;
   int cur_depth = 0;
-  int term_traversal_stack_top = -1;
+  int term_traversal_stack_top = 0;
   int term_traversal_stack_size = TERM_TRAVERSAL_STACK_INIT;
 
   TTFptr term_traversal_stack = (TTFptr) mem_alloc(term_traversal_stack_size*sizeof(Term_Traversal_Frame),OTHER_SPACE);
@@ -1158,7 +1158,7 @@ int term_depth(CTXTdeclc Cell Term) {
 	
   push_term(Term);   cur_depth++;		
 
-  while (term_traversal_stack_top >= 0) {
+  while (term_traversal_stack_top > 0) {
 
     if (term_traversal_stack[term_traversal_stack_top].arg_num > term_traversal_stack[term_traversal_stack_top].arity) {
       pop_term(Term);cur_depth--;
@@ -1185,7 +1185,7 @@ int term_depth(CTXTdeclc Cell Term) {
 int term_sizew(CTXTdeclc Cell Term) { 
 
   int cur_size= 0;
-  int term_traversal_stack_top = -1;
+  int term_traversal_stack_top = 0;
   int term_traversal_stack_size = TERM_TRAVERSAL_STACK_INIT;
 
   TTFptr term_traversal_stack = (TTFptr) mem_alloc(term_traversal_stack_size*sizeof(Term_Traversal_Frame),OTHER_SPACE);
@@ -1206,8 +1206,8 @@ int term_sizew(CTXTdeclc Cell Term) {
      };   
   cur_size++;  /* add the current functor or attributed variable to the count	*/	
 
-  while (term_traversal_stack_top >= 0) {
-
+  while (term_traversal_stack_top > 0) {
+    //    printf("term_traversal_stack_top %d\n");
     if (term_traversal_stack[term_traversal_stack_top].arg_num > term_traversal_stack[term_traversal_stack_top].arity) {
       pop_term(Term);
     }
