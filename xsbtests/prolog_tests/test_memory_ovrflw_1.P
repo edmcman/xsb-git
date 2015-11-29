@@ -1,11 +1,21 @@
 % Checks mem_calloc for structure manager expansion
 
-first_test:- catch(test_1,error(resource_error(memory),context(E,_)),writeln(E)).
+first_test:- 
+    (xsb_configuration(engine_mode,'multi-threading') ->
+       writeln(skipping_first_test)
+    ;
+        catch(test_1,error(resource_error(memory),context(E,_)),writeln(E)) ).
 
-second_test:- catch(test_4,error(resource_error(memory),E,_),writeln(E)),fail.
-second_test:- catch(test_3,error(_,E,_),writeln(E)),fail.
-second_test:- catch(test_2,error(resource_error(memory),E,_),writeln(E)),fail.
-second_test.
+second_test:- 
+    (xsb_configuration(engine_mode,'multi-threading') ->
+       writeln(skipping_second_test)
+    ;
+       second_test_1).
+
+second_test_1:- catch(test_4,error(resource_error(memory),E,_),writeln(E)),fail.
+second_test_1:- catch(test_3,error(_,E,_),writeln(E)),fail.
+second_test_1:- catch(test_2,error(resource_error(memory),E,_),writeln(E)),fail.
+second_test_1.
 
 :- index(p/3,trie).
 
@@ -13,6 +23,7 @@ test_1(0):- !.
 test_1(N):- 
 	  assert(p(N,N,N)),
 	  N1 is N - 1,
+%	  (N1 mod 1000 =:= 0 -> writeln(N) ; true),
 	  test_1(N1).
 
 test_1:- 
