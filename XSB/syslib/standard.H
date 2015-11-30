@@ -89,6 +89,8 @@
 :- export handle_interrupts/1.
 %:- export timed_call/3.
 %:- export timed_call/4.
+:- export get_timed_call_index/1.
+:- export timer_interrupt_trap/2.
 :- export timed_call/2.
 :- export memory_bounded_call/3.
 
@@ -110,9 +112,16 @@
 	set_timer/1,
    (import)/1,	(multifile)/1, '_$multifile'/1.
 :- export cleanup_handler/2.
+:- export statistics/2.
+:- export use_module/3.
+:- export  '_$timed_call_rep_handler'/3.
+:- export  '_$timed_call_max_handler'/4.
+:- export  '_$timed_call_rep_max_handler'/6.
+:- export bounded_call/4.
+:- export bounded_call/3.
 
-:- import (dynamic)/1, asserta/1, assert0/4 from assert.
-	  :- import member/2,append/3,comma_member/2,memberchk/2 from basics.
+:- import (dynamic)/1, asserta/1, assert0/4, retract/1 from assert.
+:- import member/2,append/3,comma_member/2,memberchk/2 from basics.
 :- import consult/1, reconsult/1 from consult.
 :- import predicate_property/2, current_op/3 from curr_sym.
 :- import dcg/2 from dcg.
@@ -153,6 +162,7 @@
    verify_attribute_handler/4, conget/2
 	  from machine.
 :- import calln/3,calln/4,calln/5,calln/6,calln/7,calln/8,calln/9,calln/10,calln/11,calln/12 from machine.
+:- import sys_syscall/5,sys_syscall/9 from machine.
 
 :- import '$$set_scope_marker'/0, '$$unwind_stack'/0, 
 	  '$$clean_up_block'/1, xwam_state/2

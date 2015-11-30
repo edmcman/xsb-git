@@ -41,7 +41,8 @@
 interpreter :-
         set_inthandler('_$keyboard_int'(_,_), MYSIG_KEYB),
 	set_inthandler('_$attv_int'(_,_), MYSIG_ATTV),
-	set_inthandler('_$thread_int'(_,_), THREADSIG_CANCEL),
+	set_thread_interrupt,
+%	set_inthandler('_$thread_int'(_,_), THREADSIG_CANCEL),
 	set_inthandler('_$timer_int'(_,_), TIMER_INTERRUPT),
 	set_inthandler('_$lazy_reeval_int'(_,_), LAZY_REEVAL_INTERRUPT),
 	( banner_control(nobanner)
@@ -67,6 +68,12 @@ interpreter :-
 	fail.
 
 :- import get_stdin/2 from push_io.
+
+set_thread_interrupt:- 
+	xsb_configuration(engine_mode,'slg-wam'),!,
+	set_inthandler('_$goal_int'(_,_), THREADSIG_CANCEL).
+set_thread_interrupt:- 
+	set_inthandler('_$thread_int'(_,_), THREADSIG_CANCEL).
 
 % TLS: if cmd_line_argument, then get whatever stream had been there
 % before.  Otherwise, just get current input.
@@ -370,11 +377,11 @@ readl_brklp1(_) :-
 
 % Continuation is in first arg as opposed to second in attv_int 
 '_$thread_int'(One,_Two) :- 
-	execute_messages_on_signale_queue,
+	execute_messages_on_signal_queue,
 %	writeln(One),
 	call_c(One).
 
-execute_messages_on_signale_queue:- 
+execute_messages_on_signal_queue:- 
 	repeat,
 	(thread_peek_signal(Message) -> 
 	    thread_get_signal(Message),
@@ -382,53 +389,20 @@ execute_messages_on_signale_queue:-
 	    fail
 	 ;  true),!.
 
-%:- import writeln/1 from standard.
-:- import '_$timed_call_rep_handler'/3 from standard.
-:- import '_$timed_call_max_handler'/4 from standard.
-:- import '_$timed_call_rep_max_handler'/6 from standard.
-:- import get_timed_call_index/1 from standard.
-
-'_$timer_int'(One,_Two) :-
-%	writeln(timer_int),
-        get_timed_call_index(Index),
-        '_$timed_call_rep_handler'(Index,Handler,Interval),!,
-        call_handler(Handler),
-        (Interval > 0 ->
-            start_sleeper_thread(Interval)
-	 ; true),!,
-	 call_c(One).
-'_$timer_int'(_One,_Two) :-
-        get_timed_call_index(Index),
-        '_$timed_call_max_handler'(Index,Handler,_Max,_Walltime),!,
-%	writeln('_$timed_call_max_handler'(Index,Handler,_Max,_Walltime)),
-        call_handler(Handler).
-'_$timer_int'(One,_Two) :- 
-        get_timed_call_index(Index),
-	'_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime),
-%	writeln('_$timed_call_rep_max_handler'(Rep_handler,Rep_interval,Max_handler,Max_interval,Walltime)),
-	New_Max is Max_interval - Rep_interval,
-	(New_Max =< 0 -> 
-	      call_handler(Max_handler)
-	    ; 
-	      call_handler(Rep_handler),
-	      retract('_$timed_call_rep_max_handler'(Index,_Handler,_Interval,Max_handler,_Max_interval,_Walltime)),
-	      machine:stat_walltime(NewWalltime),
-	      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,New_Max,NewWalltime)),
-              start_sleeper_thread(Rep_interval)	
-	  ; true),!,
+'_$goal_int'(One,_Two) :- 
+	handle_goal_interrupt(Message),
+%	writeln(call(Message)),
+	call(Message),
 	call_c(One).
-'_$timer_int'(_One,_Two):- 
-%	writeln((_One,_Two)),
-	call_c(_One).
-%'_$timer_int'(One,_Two) :- 
-%	call_c(One).
+
 
 :- import lazy_reeval_trap/1 from increval.
 '_$lazy_reeval_int'(One,_Two):- 
 	lazy_reeval_trap(One).
 
-call_handler(Handler):- call(Handler),!.
-%call_handler(_).
+:- import timer_interrupt_trap/2 from standard.
+'_$timer_int'(One,Two):- 
+	timer_interrupt_trap(One,Two).
 
 '_$attv_int'(Intlist, Call) :-
 % 	file_write(1, '.... in _$attv_int/2'), file_nl(1),

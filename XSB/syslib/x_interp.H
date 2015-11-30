@@ -35,6 +35,7 @@
 :- import file_write/2, file_nl/1 from xsb_writ.
 :- import xsb_configuration/2 from xsb_configuration.
 :- import file_read/3, vv/2 from xsb_read.
+:- import handle_goal_interrupt/1 from mutex_xsb.
 %% These are explicitly imported because they are used early on, 
 %% before XSB is fully bootstrapped.
    :- import abort/0,call/1, call_c/1, call_expose/1, catch/3, call_goal_cut_trans/3,
@@ -42,6 +43,10 @@
    gc_tables/1,gc_dynamic/1,
    handle_interrupts/1
      from standard.
+:- import '_$timed_call_rep_handler'/3 from standard.
+:- import '_$timed_call_max_handler'/4 from standard.
+:- import '_$timed_call_rep_max_handler'/6 from standard.
+:- import get_timed_call_index/1 from standard.
 :- import '$$exception_ball'/2 from standard.
 :- import close_open_tables/1,
           is_xwammode/1, 

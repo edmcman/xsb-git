@@ -937,13 +937,15 @@ xsb_flag(max_table_answer_action, Action) :-
          ; (A == XSB_BRAT -> Action = bounded_rationality 
 	   ; (A == XSB_FAILURE -> Action = failure 
               ; A == XSB_WARNING, Action = warning)) ).
-xsb_flag(max_table_answer_list_depth,Action):- 
-	stat_flag(MAX_TABLE_ANSWER_LIST_DEPTH,Action).
+xsb_flag(max_table_answer_list_depth,Depth):- 
+	stat_flag(MAX_TABLE_ANSWER_LIST_DEPTH,Depth).
 xsb_flag(max_table_answer_list_action, Action) :-
 	stat_flag(MAX_TABLE_ANSWER_LIST_ACTION, A),
 	(A == XSB_ERROR -> Action = error 
 	; (A == XSB_FAILURE -> Action = failure 
             ; A == XSB_WARNING, Action = warning)).
+xsb_flag(max_incomplete_subgoals, Max) :-
+	stat_flag(MAX_INCOMPLETE_SUBGOALS,Max).
 xsb_flag(unify_with_occurs_check, Mode) :-
 	stat_flag(UNIFY_WITH_OCCURS_CHECK_FLAG, Flag),
 	( Flag =:= 0 -> Mode = off ; Mode = on ).
@@ -1142,6 +1144,8 @@ set_xsb_flag_1(max_table_answer_list_action, Action) :-!,
 	    stat_set_flag(MAX_TABLE_ANSWER_LIST_ACTION, XSB_FAILURE)
             ; domain_error([error,', ',warning,', ',failure],
                         Action,set_prolog_flag/2,2,'max_table_answer_list_action clause') ) ) ).
+set_xsb_flag_1(max_incomplete_subgoals, Max) :-!,
+	stat_set_flag(MAX_INCOMPLETE_SUBGOALS, Max).
 set_xsb_flag_1(ctrace, OnOff) :-!,
 	((OnOff == on ; OnOff == full) -> stat_set_flag(CTRACE_CALLS, 2)
      ; 	OnOff == partial -> stat_set_flag(CTRACE_CALLS, 1)

@@ -1870,9 +1870,6 @@ check_statistics_input(atom,STAT_ATOM):- !.
 check_statistics_input(X,_):-
 	domain_error(statisticsInputDomain,X,statistics/1,1).
 
-:- export statistics/2.
-:- import sys_syscall/5,sys_syscall/9 from machine.
-
 statistics_2_trans(runtime,RUNTIME):- !.
 statistics_2_trans(walltime,WALLTIME):- !.
 statistics_2_trans(total_memory,TOTALMEMORY):- !.
@@ -2207,7 +2204,6 @@ multifile([P/A, _T1, T2]) :-	% T1 is not used
 use_module(Mod,Syms):- 
 	import(from(Syms, Mod)).
 
-:- export use_module/3.
 use_module(Mod,Syms,_):- 
 	import(from(Syms, Mod)).
 
@@ -2438,9 +2434,6 @@ call_attribute_handlers(Rest,Value).
 :- dynamic '_$timed_call_rep_handler'/3.
 :- dynamic '_$timed_call_max_handler'/4.
 :- dynamic '_$timed_call_rep_max_handler'/6.
-:- export  '_$timed_call_rep_handler'/3.
-:- export  '_$timed_call_max_handler'/4.
-:- export  '_$timed_call_rep_max_handler'/6.
 :- import timed_call_index_hook/1 from usermod.
 :- dynamic timed_call_index_hook/1.
 
@@ -2503,7 +2496,6 @@ timed_call_rep_max(Call,Rep_interval,Rep_handler,Max_interval,Max_handler,Nestin
 	    start_sleeper_thread(Rep_interval),
 	    call_cleanup(Call,retractall('_$timed_call_rep_max_handler'(Index,_Handler,_Interval,_Max_handler,_Max_interval,_Walltime))) ).
 
-:- export get_timed_call_index/1.
 get_timed_call_index(Index) :-  %% for apps that have their own command loop
         timed_call_index_hook(Hook),
 	arg(1,Hook,Index),
@@ -2515,14 +2507,51 @@ timed_call_handler_is_active(Index):- 	'_$timed_call_rep_max_handler'(Index,_,_,
 timed_call_handler_is_active(Index):- 	'_$timed_call_rep_handler'(Index,_,_),!.
 timed_call_handler_is_active(Index):- 	'_$timed_call_max_handler'(Index,_,_,_),!.
 
-:- export bounded_call/4.
+%:- import writeln/1 from standard.
+timer_interrupt_trap(One,_Two) :-
+%	writeln(timer_int),
+        get_timed_call_index(Index),
+        '_$timed_call_rep_handler'(Index,Handler,Interval),!,
+        timed_call_handler(Handler),
+        (Interval > 0 ->
+            start_sleeper_thread(Interval)
+	 ; true),!,
+	 call_c(One).
+timer_interrupt_trap(_One,_Two) :-
+        get_timed_call_index(Index),
+        '_$timed_call_max_handler'(Index,Handler,_Max,_Walltime),!,
+%	writeln('_$timed_call_max_handler'(Index,Handler,_Max,_Walltime)),
+        timed_call_handler(Handler).
+timer_interrupt_trap(One,_Two) :- 
+        get_timed_call_index(Index),
+	'_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime),
+%	writeln('_$timed_call_rep_max_handler'(Rep_handler,Rep_interval,Max_handler,Max_interval,Walltime)),
+	New_Max is Max_interval - Rep_interval,
+	(New_Max =< 0 -> 
+	      timed_call_handler(Max_handler)
+	    ; 
+	      timed_call_handler(Rep_handler),
+	      retract('_$timed_call_rep_max_handler'(Index,_Handler,_Interval,Max_handler,_Max_interval,_Walltime)),
+	      machine:stat_walltime(NewWalltime),
+	      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,New_Max,NewWalltime)),
+              start_sleeper_thread(Rep_interval)	
+	  ; true),!,
+	call_c(One).
+timer_interrupt_trap(_One,_Two):- 
+%	writeln((_One,_Two)),
+	call_c(_One).
+%timer_interrupt_trap(One,_Two) :- 
+%	call_c(One).
+
+timed_call_handler(Handler):- call(Handler),!.
+%call_handler(_).
+
 bounded_call(Goal,MaxMemory,MaxTime,Handler):-
 	check_pos_integer(MaxMemory,bounded_call/4,2),
 	check_pos_integer(MaxTime,bounded_call/4,3),
 	cputime(Before),
 	timed_call(Goal,[repeating(1000,bounded_call_handler(MaxMemory,Before,MaxTime,Handler))]).
 
-:- export bounded_call/3.
 bounded_call(Goal,MaxMemory,MaxTime):-
 	check_pos_integer(MaxMemory,bounded_call/3,2),
 	check_pos_integer(MaxTime,bounded_call/3,3),
