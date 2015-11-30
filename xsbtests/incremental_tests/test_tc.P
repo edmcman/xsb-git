@@ -45,10 +45,8 @@ tc_rep_max_break:- timed_call(loop,[repeating(200,myrep_3),max(5000,mymax_3)]).
 myrep_3:- writeln('tc_3 heres an interrupt').
 mymax_3:- abort('tc_3 phew!').
 
-tc_nest:- timed_call(
-	            timed_call(writeln(nested_call),1000,writeln(nested_handler)),
-		    1000,
-		    writeln(outer_call)).
+tc_nest:- timed_call(timed_call(writeln(nested_call),[repeating(1000,writeln(nested_handler))]),
+		     [repeating(1000,writeln(outer_call))]).
 
 tc_4:- 
        timed_call(loop,200,backtrace).
