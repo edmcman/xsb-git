@@ -3128,10 +3128,8 @@ extern pthread_mutexattr_t attr_rec_gl ;
 
 	current_inst = inst_begin_gl;   // current_inst is thread-specific.
 
-#ifdef MULTI_THREAD
 	init_message_queue(&mq_table[0], MQ_CHECK_FLAGS);
 	init_message_queue(&mq_table[max_threads_glc], MQ_CHECK_FLAGS);
-#endif
 
 	return(0);
 

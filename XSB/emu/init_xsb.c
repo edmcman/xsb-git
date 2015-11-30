@@ -139,7 +139,6 @@ pdl = {NULL, NULL, 0,
 #endif
 
 Exec_Mode xsb_mode;     /* How XSB is run: interp, disassem, user spec, etc. */
-//int max_threads_glc;
 
 int xsb_profiling_enabled = 0;
 
@@ -255,6 +254,8 @@ static void init_flags(CTXTdecl)
   flags[THREAD_GLSIZE] = GLSTACK_DEFAULT_SIZE;
   flags[THREAD_TCPSIZE] = TCPSTACK_DEFAULT_SIZE;
   flags[THREAD_COMPLSIZE] = COMPLSTACK_DEFAULT_SIZE;
+
+  flags[VERBOSENESS_LEVEL] = 0;
 
   /* Tripwires */
   flags[MAX_TABLE_SUBGOAL_SIZE] = MY_MAXINT;
@@ -599,7 +600,11 @@ char *init_para(CTXTdeclc int flag, int argc, char *argv[]) {
 #ifdef MULTI_THREAD
   max_threads_glc = MAX_THREADS; 
   max_mqueues_glc = MAX_MQUEUES; 
+#else 
+  max_threads_glc = 1;   // max number of first-class XSB threads
+  max_mqueues_glc = 1; 
 #endif
+
   pflags[STACK_REALLOC] = TRUE;
 #ifdef GC
   pflags[GARBAGE_COLLECT] = INDIRECTION_SLIDE_GC;
@@ -1480,6 +1485,8 @@ void init_machine(CTXTdeclc int glsize, int tcpsize,
   slide_buf_size = 0;
 
   SL_header = NULL;  // init skiplist header...
+#else
+  nonmt_init_mq_table();
 #endif
 
 } /* init_machine() */
