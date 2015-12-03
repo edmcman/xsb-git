@@ -66,6 +66,11 @@
 #include "memory_xsb.h"
 #include "heap_xsb.h"
 
+#ifndef WINDOWS_NT
+pthread_mutexattr_t attr_errorcheck_gl;
+#endif
+
+
 #ifndef MULTI_THREAD
 extern struct asrtBuff_t * asrtBuff;
 static  MQ_Cell_Ptr current_mq_cell_seq;
@@ -76,7 +81,6 @@ static XSB_MQ_Ptr  mq_first_free, mq_last_free, mq_first_queue;
 
 int max_mqueues_glc;
 int max_threads_glc;
-pthread_mutexattr_t attr_errorcheck_gl;
 #define PUBLIC_MQ(mq)		( (mq) >= (mq_table+2*max_threads_glc) )
 
 #ifdef MULTI_THREAD
@@ -1981,13 +1985,16 @@ case INTERRUPT_DEALLOC: {
 
 void nonmt_init_mq_table(void)
 {
-  int i, status;
+  int i;
 
+#ifndef WINDOWS_NT
+  int status;
   pthread_mutexattr_init( &attr_errorcheck_gl );
   status = pthread_mutexattr_settype( &attr_errorcheck_gl,PTHREAD_MUTEX_ERRORCHECK_NP );
   if ( status )
     xsb_initialization_exit("Error (%s) initializing errorcheck mutex attr -- exiting\n",
   			    strerror(status));
+#endif
 
   mq_table = mem_calloc(2*max_threads_glc+max_mqueues_glc, 
 				sizeof(XSB_MQ), BUFF_SPACE);
@@ -2007,7 +2014,9 @@ void nonmt_init_mq_table(void)
 void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
   
   int reuse = xsb_mq->initted;
+#ifndef WINDOWS_NT
   int status;
+#endif
 
   if( reuse ) {
     //      printf("reusing queue %d\n",xsb_mq - mq_table);
@@ -2026,13 +2035,15 @@ void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
 
   if ( !reuse ) {
 
-  #ifdef NON_OPT_COMPILE
-     status = pthread_mutex_init(&xsb_mq->mq_mutex, &attr_errorcheck_gl );
-     if (status) printf("Error queue initialization: queue %"Intfmt"\n",xsb_mq-mq_table);
-  #else
+#ifndef WINDOWS_NT
+#ifdef NON_OPT_COMPILE
+    status = pthread_mutex_init(&xsb_mq->mq_mutex, &attr_errorcheck_gl );
+    if (status) printf("Error queue initialization: queue %"Intfmt"\n",xsb_mq-mq_table);
+#else 
       status = pthread_mutex_init(&xsb_mq->mq_mutex, NULL );
       if (status) printf("Error queue initialization: queue %"Intfmt"\n",xsb_mq-mq_table);
-  #endif
+#endif
+#endif
 
     pthread_cond_init( &xsb_mq->mq_has_free_cells, NULL );
     pthread_cond_init( &xsb_mq->mq_has_messages, NULL );
