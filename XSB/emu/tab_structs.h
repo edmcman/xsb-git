@@ -207,15 +207,13 @@ typedef struct {
 
 /* Can't use CTXTdeclc here because its included early in context.h */
 #ifdef MULTI_THREAD
-extern xsbBool assert_buff_to_clref_p(struct th_context *, prolog_term, byte, 
-				      PrRef, int, prolog_term, int, ClRef *);
+extern xsbBool assert_buff_to_clref_p(struct th_context *, prolog_term, byte, PrRef, int, prolog_term, int, ClRef *);
+extern void c_assert_code_to_buff(struct th_context *, prolog_term);
 
-extern int assert_code_to_buff_p(struct th_context *, prolog_term);
 #else
-extern xsbBool assert_buff_to_clref_p(prolog_term, byte, PrRef, int,
-			       prolog_term, int, ClRef *);
+extern xsbBool assert_buff_to_clref_p(prolog_term, byte, PrRef, int, prolog_term, int, ClRef *);
 
-extern int assert_code_to_buff_p(prolog_term);
+extern void c_assert_code_to_buff(prolog_term);
 #endif
 
 
@@ -557,7 +555,23 @@ struct completion_stack_frame {
  *  solution to not leaving any dangling pointers to the old area.
  */
 
+#define check_incomplete_subgoals_tripwire {	    \
+    if (level_num > flags[MAX_INCOMPLETE_SUBGOALS]) {	    \
+      if (flags[MAX_INCOMPLETE_SUBGOALS_ACTION] == XSB_ERROR)		\
+	xsb_abort("Tripwire max_incomplete_subgoals hit.  The user-set limit of %d incomplete subgoals within a derivation" \
+		  " has been exceeded\n",				\
+		  flags[MAX_INCOMPLETE_SUBGOALS]);			\
+      else { /* flags[MAX_INCOMPLETE_SUBGOALS_ACTION] == XSB_SUSPEND */	\
+	printf("suspending on max_incomplete_subgoals\n");		\
+      }									\
+    }									\
+  }
+
+
+
+
 #define push_completion_frame_common(subgoal) \
+  check_incomplete_subgoals_tripwire; \
   level_num++; \
   openreg -= COMPLFRAMESIZE; \
   compl_subgoal_ptr(openreg) = subgoal; \

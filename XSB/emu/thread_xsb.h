@@ -33,11 +33,14 @@ xsbBool xsb_thread_request( CTXTdecl ) ;
 xsbBool mt_random_request( CTXTdecl ) ;
 int xsb_thread_self() ;
 
-#include <pthread.h>
 #define INC_MASK_RIGHT			0x3ff
 
 extern int max_mqueues_glc ;
 extern int max_threads_glc ;
+
+#if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
+#include <pthread.h>
+#endif
 
 #ifdef MULTI_THREAD
 
@@ -152,9 +155,11 @@ extern void nonmt_init_mq_table(void);
 #endif /* MULTI_THREAD */
 
 typedef struct XSB_Message_Queue {
+#if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
   pthread_mutex_t              mq_mutex;
   pthread_cond_t               mq_has_free_cells;
   pthread_cond_t               mq_has_messages;
+#endif
   MQ_Cell_Ptr                  first_message;
   MQ_Cell_Ptr                  last_message;
   int                          size;		/* number of messages in the queue */

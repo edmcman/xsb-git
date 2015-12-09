@@ -66,7 +66,7 @@
 #include "memory_xsb.h"
 #include "heap_xsb.h"
 
-#ifndef WINDOWS_NT
+#if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
 pthread_mutexattr_t attr_errorcheck_gl;
 #endif
 
@@ -600,9 +600,9 @@ static Integer xsb_thread_setup(th_context *th, int is_detached, int is_aliased)
   }
   /* initialize the thread's private message queue */
   init_message_queue(&mq_table[pos], MQ_CHECK_FLAGS);
-  printf("thread init_mq_mutex %p %d\n",&mq_table[pos],pos);
+  //  printf("thread init_mq_mutex %p %d\n",&mq_table[pos],pos);
   init_message_queue(&mq_table[pos+max_threads_glc], MQ_CHECK_FLAGS);
-  printf("thread init_mq_mutex %p %d\n",&mq_table[pos+max_threads_glc],pos+max_threads_glc);
+  //  printf("thread init_mq_mutex %p %d\n",&mq_table[pos+max_threads_glc],pos+max_threads_glc);
   increment_thread_nums;
   pthread_mutex_unlock( &th_mutex );
 
@@ -1040,7 +1040,7 @@ int wait_on_queue( th_context *th, XSB_MQ_Ptr q, op_type send )
 
 #endif
 
-#if defined(WIN_NT) && defined(MULTI_THREAD)
+#if defined(WIN_NT)
 
 int gettimeofday(struct timeval * tp, struct timezone * tzp)
 {
@@ -1987,7 +1987,7 @@ void nonmt_init_mq_table(void)
 {
   int i;
 
-#ifndef WINDOWS_NT
+#if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
   int status;
   pthread_mutexattr_init( &attr_errorcheck_gl );
   status = pthread_mutexattr_settype( &attr_errorcheck_gl,PTHREAD_MUTEX_ERRORCHECK_NP );
@@ -2014,14 +2014,16 @@ void nonmt_init_mq_table(void)
 void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
   
   int reuse = xsb_mq->initted;
-#ifndef WINDOWS_NT
+#if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
   int status;
 #endif
 
+#if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
   if( reuse ) {
     //      printf("reusing queue %d\n",xsb_mq - mq_table);
       pthread_mutex_lock( &xsb_mq->mq_mutex );
   }
+#endif
 
   xsb_mq->first_message = 0;
   xsb_mq->last_message = 0;
@@ -2035,7 +2037,7 @@ void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
 
   if ( !reuse ) {
 
-#ifndef WINDOWS_NT
+#if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
 #ifdef NON_OPT_COMPILE
     status = pthread_mutex_init(&xsb_mq->mq_mutex, &attr_errorcheck_gl );
     if (status) printf("Error queue initialization: queue %"Intfmt"\n",xsb_mq-mq_table);
@@ -2043,10 +2045,11 @@ void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
       status = pthread_mutex_init(&xsb_mq->mq_mutex, NULL );
       if (status) printf("Error queue initialization: queue %"Intfmt"\n",xsb_mq-mq_table);
 #endif
-#endif
 
     pthread_cond_init( &xsb_mq->mq_has_free_cells, NULL );
     pthread_cond_init( &xsb_mq->mq_has_messages, NULL );
+#endif
+
     xsb_mq->initted = TRUE;
   }
 
@@ -2069,8 +2072,10 @@ void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
   	SET_THREAD_INCARN(xsb_mq->id, th_vec[pos].incarn );
   }
 
+#if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
   if( reuse )
 	pthread_mutex_unlock( &xsb_mq->mq_mutex );
+#endif
 }
 
 xsbBool mt_random_request( CTXTdecl )

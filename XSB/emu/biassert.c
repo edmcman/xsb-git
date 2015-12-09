@@ -62,6 +62,7 @@
 #include "ptoc_tag_xsb_i.h"
 #include "cell_xsb_i.h"
 #include "table_inspection_defs.h"
+#include "cut_xsb.h"
 
 /* --- routines used from other files ---------------------------------	*/
 
@@ -717,14 +718,14 @@ static void db_genaput(CTXTdeclc prolog_term, int, struct instruction_q *, RegSt
 /*  literal on the right-hand-side as a call to the predicate ,/2.	*/
 /*======================================================================*/
 
-int assert_code_to_buff_p(CTXTdeclc prolog_term);
+static int assert_code_to_buff_p(CTXTdeclc prolog_term);
 
 int assert_code_to_buff( CTXTdecl /* Clause */)
 {
   return assert_code_to_buff_p(CTXTc reg_term(CTXTc 1));
 }
 
-int assert_code_to_buff_p(CTXTdeclc prolog_term Clause)
+static int assert_code_to_buff_p(CTXTdeclc prolog_term Clause)
 {
   prolog_term Head, Body;
   int Location;
@@ -786,6 +787,17 @@ int assert_code_to_buff_p(CTXTdeclc prolog_term Clause)
   write_word(asrtBuff->Buff,&Loc_size,(512+2*asrtBuff->Size/sizeof(Cell)));
 
   return TRUE;
+}
+
+void c_assert_code_to_buff(CTXTdeclc prolog_term term_to_assert) {
+  CPtr *start_trreg;
+
+  start_trreg = trreg;  /* following binds vars, so must untrail */
+  assert_code_to_buff_p(CTXTc term_to_assert);
+  while (start_trreg != trreg) {
+    untrail2(trreg, (Cell) trail_variable(trreg));
+    trreg = trail_parent(trreg);
+  }
 }
 
 static void db_gentopinst(CTXTdeclc prolog_term T0, int Argno, RegStat Reg)
