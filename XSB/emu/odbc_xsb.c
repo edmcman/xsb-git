@@ -121,13 +121,13 @@ char *term_string[MAX_BIND_VALS] = {0};
 
 /* for debugging: just dumps memory... */
 void print_hdbc(char *msg, HDBC hdbc) {
-  int *ptr;
+  Integer *ptr;
   int wds = 48;
 
   printf("\n%s\nhdbc: %p",msg,hdbc);
-  for(ptr = (int *)(((int)hdbc / 32) * 32); ptr < (int *)hdbc+wds ; ptr++) {
-    if (((int)ptr % 32) == 0) printf("\n%p: ",ptr);
-    printf(" %08x",*ptr);
+  for(ptr = (Integer *)(((Integer)hdbc / 32) * 32); ptr < (Integer *)hdbc+wds ; ptr++) {
+    if (((Integer)ptr % 32) == 0) printf("\n%p: ",ptr);
+    printf(" %"Intxfmt,*ptr);
   }
   printf("\n\n");
 }

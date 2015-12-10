@@ -5411,7 +5411,7 @@ void answer_completion(CTXTdeclc CPtr cs_ptr) {
 /*****************************************************************************/
 static unsigned int hashid(void *ky)
 {
-    return (long int)ky;
+  return (unsigned int)(UInteger)ky;
 }
 
 static int equalkeys(void *k1, void *k2)
@@ -5421,7 +5421,7 @@ static int equalkeys(void *k1, void *k2)
 
 static Cell cell_array1[500];
 
-int return_ans_depends_scc_list(CTXTdeclc SCCNode * nodes, int num_nodes){
+int return_ans_depends_scc_list(CTXTdeclc SCCNode * nodes, Integer num_nodes){
  
   VariantSF subgoal;
   TIFptr tif;
@@ -5534,7 +5534,7 @@ void xsb_compute_ans_depends_scc(SCCNode * nodes,int * dfn_stack,int node_from,
 
 int  get_residual_sccs(CTXTdeclc Cell listterm) {
   Cell orig_listterm, node, intterm;
-    long int node_num=0;
+    UInteger node_num=0;
     int i = 0, dfn, component = 1;     int * dfn_stack; int dfn_top = 0, ret;
     SCCNode * nodes;
     struct hashtable* hasht; 
@@ -5597,7 +5597,7 @@ int  get_residual_sccs(CTXTdeclc Cell listterm) {
 	  XSB_Deref(listterm);
        }
     dfn = 1;
-    for (i = 0; i < node_num; i++) {
+    for (i = 0; i < (Integer)node_num; i++) {
       if (nodes[i].dfn == 0) 
 	xsb_compute_ans_depends_scc(nodes,dfn_stack,i,&dfn_top,hasht,&dfn,&component);
       //      printf("++component for node %d is %d (high %d)\n",i,nodes[i].component,component);

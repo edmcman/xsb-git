@@ -122,19 +122,19 @@ char *p_charlist_to_c_string(CTXTdeclc prolog_term, VarString*, char*, char*);
         switch (current_fmt_spec->size) {	\
 	/* the 1st snprintf in each case finds the #bytes to be formatted */ \
         case 1: bytes_formatted=snprintf(NULL,0,current_fmt_spec->fmt,arg); \
-		XSB_StrEnsureSize(&OutString,OutString.length+bytes_formatted+1);\
+	  XSB_StrEnsureSize(&OutString,OutString.length+(int)bytes_formatted+1); \
 	        bytes_formatted=snprintf(OutString.string+OutString.length, \
 					 bytes_formatted+1, \
 					 current_fmt_spec->fmt, arg); \
 	        break; \
 	case 2: bytes_formatted=snprintf(NULL,0,current_fmt_spec->fmt,width,arg); \
-		XSB_StrEnsureSize(&OutString,OutString.length+bytes_formatted+1);\
+	  XSB_StrEnsureSize(&OutString,OutString.length+(int)bytes_formatted+1); \
 	        bytes_formatted=snprintf(OutString.string+OutString.length,\
 					 bytes_formatted+1, \
 					 current_fmt_spec->fmt, width, arg); \
 	        break; \
 	case 3: bytes_formatted=snprintf(NULL,0,current_fmt_spec->fmt,width,precision,arg); \
-		XSB_StrEnsureSize(&OutString,OutString.length+bytes_formatted+1);\
+	  XSB_StrEnsureSize(&OutString,OutString.length+(int)bytes_formatted+1); \
                 bytes_formatted=snprintf(OutString.string+OutString.length, \
 					 bytes_formatted+1, \
 					 current_fmt_spec->fmt, \

@@ -80,7 +80,7 @@ static void concat_array(CTXTdeclc char *array[], char *separator,
 			 char *result_str, size_t maxsize);
 static int get_free_process_cell(void);
 static void init_process_table(void);
-static int process_status(int pid);
+static int process_status(Integer pid);
 static void split_command_arguments(char *string, char *params[], char *callname);
 static char *get_next_command_argument(char **buffptr, char **cmdlineprt);
 static int file_copy(CTXTdeclc char *, char *, char *);
@@ -239,7 +239,8 @@ int sys_syscall(CTXTdeclc int callno)
 */
 xsbBool sys_system(CTXTdeclc int callno)
 {
-  int pid;
+  //  int pid;
+  Integer pid;
 
   switch (callno) {
   case PLAIN_SYSTEM_CALL: /* dumb system call: no communication with XSB */
@@ -875,7 +876,7 @@ static void init_process_table(void)
 
 
 /* check process status */
-int process_status(int pid)
+int process_status(Integer pid)
 {
 #ifdef WIN_NT
   unsigned long status;  // what a DWORD is... and LPDWORD is a pointer to one

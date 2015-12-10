@@ -538,7 +538,7 @@ inline static size_t mark_trail_section(CTXTdeclc CPtr begintr, CPtr endtr)
 
       trailed_cell = (CPtr) *(a-2);
 #ifdef PRE_IMAGE_TRAIL
-      if ((long) trailed_cell & PRE_IMAGE_MARK) {
+      if (((UInteger)trailed_cell) & PRE_IMAGE_MARK) {
 	trailed_cell = (CPtr) ((Cell) trailed_cell & ~PRE_IMAGE_MARK);
 	pre_value = (CPtr) *(a-3);
 	tr_mark_pre((a-tr_bot)-2); /* mark somewhere else */

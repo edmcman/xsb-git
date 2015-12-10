@@ -318,7 +318,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
     sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL);
     //    printf("sf1 %p\n",sf);
     if (IsNonNULL(sf)) {
-      ctop_int(CTXTc 3, (long) sf);
+      ctop_int(CTXTc 3, (Integer) sf);
       return TRUE;
     }
     else return FALSE;

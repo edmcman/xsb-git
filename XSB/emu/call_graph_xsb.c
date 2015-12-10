@@ -158,7 +158,7 @@ void call_list_length(CTXTdeclc calllistptr affected_ptr,char * string) {
 /*****************************************************************************/
 static unsigned int hashid(void *ky)
 {
-    return (long int)ky;
+  return (unsigned int)(UInteger)ky;
 }
 
 static unsigned int hashfromkey(void *ky)
@@ -1353,11 +1353,11 @@ void free_incr_hashtables(TIFptr tif) {
 extern void *hashtable1_iterator_key(struct hashtable_itr *);
 
 void xsb_compute_scc(SCCNode * ,int * ,int,int *,struct hashtable*,int *,int * );
-int return_scc_list(CTXTdeclc SCCNode *, int);
+int return_scc_list(CTXTdeclc SCCNode *, Integer);
 
 int  get_incr_sccs(CTXTdeclc Cell listterm) {
   Cell orig_listterm, intterm, node;
-    long int node_num=0;
+    Integer node_num=0;
     int i = 0, dfn, component = 1;     int * dfn_stack; int dfn_top = 0, ret;
     SCCNode * nodes;
     struct hashtable_itr *itr;     struct hashtable* hasht; 
@@ -1477,7 +1477,7 @@ void xsb_compute_scc(SCCNode * nodes,int * dfn_stack,int node_from, int * dfn_to
 }
 
 
-int return_scc_list(CTXTdeclc SCCNode * nodes, int num_nodes){
+int return_scc_list(CTXTdeclc SCCNode * nodes, Integer num_nodes){
  
   VariantSF subgoal;
   TIFptr tif;

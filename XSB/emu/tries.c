@@ -2854,7 +2854,7 @@ Cell get_lastnode_cs_retskel(CTXTdeclc Cell callTerm) {
       vectr = (Cell *)&trieinstr_vars[1];
     }
   }
-  return ( build_ret_term(CTXTc arity, vectr) );
+  return ( build_ret_term(CTXTc (int)arity, vectr) );
 }
 
 /*----------------------------------------------------------------------*/
