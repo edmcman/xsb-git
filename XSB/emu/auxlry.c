@@ -50,6 +50,7 @@ extern int syscall();
 #ifdef WIN_NT
 #include <windows.h>
 #include <winbase.h>
+#include <versionhelpers.h>
 #include "windows.h"
 #endif
 
@@ -66,16 +67,17 @@ double cpu_time(void)
 #define ULONGLONG __int64
 #endif
 
-  static int win_version = -1;
+  /**  static int win_version = -1;
 
   if (win_version == -1) {
     OSVERSIONINFO winv;
     winv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&winv);
     win_version = winv.dwPlatformId;
-  }
+    } ***/
 
-  if (win_version == VER_PLATFORM_WIN32_NT) {
+  //  if (win_version == VER_PLATFORM_WIN32_NT) {
+  if (IsWindowsXPOrGreater()) {
     HANDLE thisproc;
     FILETIME creation, exit, kernel, user;
     ULONGLONG lkernel, luser;
