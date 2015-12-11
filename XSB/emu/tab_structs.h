@@ -556,7 +556,7 @@ struct completion_stack_frame {
  */
 
 #define check_incomplete_subgoals_tripwire {	    \
-    if (level_num > flags[MAX_INCOMPLETE_SUBGOALS]) {	    \
+    if (level_num > (int)flags[MAX_INCOMPLETE_SUBGOALS]) {		\
       if (flags[MAX_INCOMPLETE_SUBGOALS_ACTION] == XSB_ERROR)		\
 	xsb_abort("Tripwire max_incomplete_subgoals hit.  The user-set limit of %d incomplete subgoals within a derivation" \
 		  " has been exceeded\n",				\

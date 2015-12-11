@@ -2032,7 +2032,7 @@ void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
   xsb_mq->deleted = FALSE;
   xsb_mq->mutex_owner = -1;
   if (declared_size == MQ_CHECK_FLAGS)
-    xsb_mq->max_size = flags[MAX_QUEUE_TERMS];
+    xsb_mq->max_size = (int)flags[MAX_QUEUE_TERMS];
   else xsb_mq->max_size = declared_size;
 
   if ( !reuse ) {
@@ -2057,7 +2057,7 @@ void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
   {
 	xsb_mq->incarn = (xsb_mq->incarn+1) & INC_MASK_RIGHT;
 
-	xsb_mq->id = xsb_mq - mq_table;
+	xsb_mq->id = (int)(xsb_mq - mq_table);
   	SET_THREAD_INCARN(xsb_mq->id, xsb_mq->incarn );
   }
   else
@@ -2068,7 +2068,7 @@ void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
          */
 	pos = (xsb_mq - mq_table ) % max_threads_glc;
 
-	xsb_mq->id = xsb_mq - mq_table;
+	xsb_mq->id = (int)(xsb_mq - mq_table);
   	SET_THREAD_INCARN(xsb_mq->id, th_vec[pos].incarn );
   }
 
