@@ -843,6 +843,10 @@ parse_directive(use_subsumptive_tabling(PredCList),_QrList,SymTab,_ModName,_ModS
 parse_directive(use_variant_tabling(PredCList),_QrList,SymTab,_ModName,_ModStruct) :- !,
 	parse_comma_list_table(PredCList,SymTab,variant),  % implies tabled
 	parse_comma_list(PredCList,SymTab,[(use_variant_tabling)],(use_variant_tabling)).
+parse_directive(table_index(PredCList,IndexSpec),QrList,SymTab,_ModName,_ModStruct) :- !,
+	parse_table_index(PredCList,IndexSpec,SymTab),
+	mpa_to_skel_cl(PredCList,SPredCList),
+	parse_query(table_index(SPredCList,IndexSpec),QrList,SymTab).	
 parse_directive(dynamic(as(PredCList,Options)),QrList,SymTab,_ModName,_ModStruct) :- !,
 	parse_comma_list_dyn(PredCList,SymTab),
 %	copy_term(PredCList,PredCListVars),
@@ -1149,6 +1153,31 @@ is_mode_list([M|Ms]) :- is_a_mode(M), !, is_mode_list(Ms).
 
 is_a_mode('-').
 is_a_mode('+').
+
+parse_table_index(PredSpec,IndexSpec,SymTab) :-
+	(PredSpec = Pred/Arity
+	  ->	 true
+	  ;	 functor(PredSpec,Pred,Arity)
+	),
+	(valid_index_spec(IndexSpec,Arity)
+	 ->	sym_insert(Pred,Arity,[table_index(IndexSpec)],SymTab,_)
+	 ;	warning(('Illegal index specification: ',IndexSpec,
+			 ' in table_index declaration for ',PredSpec))
+	).
+
+valid_index_spec([],_Arity) :- !.
+valid_index_spec([Ind|Inds],Arity) :- !,
+	valid_index_spec(Ind,Arity),
+	valid_index_spec(Inds,Arity).
+valid_index_spec(Ind,Arity) :-
+	valid_single_index_spec(Ind,Arity).
+
+valid_single_index_spec(Ind1+Ind2,Arity) :- !,
+	valid_single_index_spec(Ind1,Arity),
+	valid_single_index_spec(Ind2,Arity).
+valid_single_index_spec(Ind,Arity) :-
+	integer(Ind), !,
+	Ind >= 0, Ind =< Arity.
 
 parse_comma_list_dyn((Spec,Specs),SymTab) :- !,
 	parse_comma_list_dyn(Spec,SymTab),

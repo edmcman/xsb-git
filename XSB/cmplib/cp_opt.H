@@ -26,6 +26,9 @@
 :- export cp_opt/2.
 :- export perform_tabling_transforms/2.
 :- export extract_aggr_spec/4.
+:- export get_return_w_tv/4.
+:- export call_join_op/6.
+:- export collect_orders_from_indexes/4.
 
 :- import nthmember/3 from listutil.
 :- import have_hardcut/2 from preproc.
@@ -40,3 +43,9 @@
 :- import trans_head/5, trans_goals/5 from parse.
 :- import memberchk/2 from basics.
 :- import '\='/2 from standard.
+:- import xwam_state/2 from machine.
+:- import parsort/4 from machine.
+:- import findall/3, sort/2 from setof.
+:- import concat_atom/3 from string.
+:- import ith/3, member/2 from basics.
+:- import ','/2 from standard.
