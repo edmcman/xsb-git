@@ -60,6 +60,8 @@ standard_metapredicate_template(abolish_table_subgoal,2,(:,*)).
 
 standard_symbol(abolish_table_pred, 1, tables).		
 standard_symbol(abolish_table_pred, 2, tables).		
+standard_symbol(abolish_table_index_pred, 1, standard).
+standard_symbol(table_index, 2, standard).
 standard_symbol(abort, 0, standard).
 standard_symbol(abort, 1, standard).
 standard_symbol(abort_on_thread_cancel,0,error_handler).

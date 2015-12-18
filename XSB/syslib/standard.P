@@ -1167,6 +1167,41 @@ table_1(Ps):-
 table_1(Pred):- 
 	domain_error(comma_list_or_predicate_indicator,Pred,(table)/1,1).
 
+:- import mpa_to_skel/2 from file_op.
+:- import collect_orders_from_indexes/4 from cp_opt.
+:- import module_of_term/2 from machine.
+:- import concat_atom/3 from string.
+:- import abolish_table_pred/1 from tables.
+:- export table_index/2, abolish_table_index_pred/1.
+
+:- dynamic table_index_predicates/2.
+
+%% handle table_index declarations for abolish_table_index_pred.
+table_index(PredSpecs,IndexSpec) :-
+	comma_member(PSpec,PredSpecs),
+	functor(PSpec,Pred,Arity),
+	collect_orders_from_indexes(IndexSpec,Arity,_,IndexOrds),
+	module_of_term(PSpec,Module),
+	member(IndexOrd,IndexOrds),
+	concat_atom([Pred,'$'],PredD),
+	concat_atom([PredD|IndexOrd],'_',NPredName),
+	functor(NTermU,NPredName,Arity),
+	term_new_mod(Module,NTermU,NTerm),
+	(table_index_predicates(PSpec,NTerm)
+	 ->	true
+	 ;	assert(table_index_predicates(PSpec,NTerm))
+	),
+	fail.
+table_index(_PredSpecs,_IndexSpec).
+		       
+abolish_table_index_pred(PredSpec) :-
+	mpa_to_skel(PredSpec,RPredSpec),
+	table_index_predicates(RPredSpec,TPredSpec),
+	abolish_table_pred(TPredSpec),
+	fail.
+abolish_table_index_pred(_PredSpec).
+ 
+
 exec_table_options(Options,PredList) :- !,
 	check_ground(Options,(table)/1,1),
 	exec_table_options_1(Options,PredList).
