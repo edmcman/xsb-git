@@ -2075,6 +2075,54 @@ implementation and semantic perspective.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+\subsection{Indexing using Tables}
+
+\index{table\_index}
+
+Tables are implemented in XSB using Tries, which provide powerful
+indexing cabailities.  By default every table has a trie-index based
+on the left-to-roght ordering of its arguments.  This means that any
+lookup to a table which is bound on an initial sequence of the tabled
+predicate's arguments is fully indexed.  But if an initial sequence of
+a table lookup is unbound and only a later argument is bound, indexing
+can be very poor.  XSB allows the user to provide {\tt table\_index}
+declarations to improve indexed access to tables.  In fact a {\tt
+  table\_index} can be used to provide very powerful and general
+indexed access to any predicate.
+
+\ourstandarditem{table\_index(+PredSpec,+IndexSpec)}{table\_index/2}{Tabling}
+%
+{\tt table\_index} is a compiler directive that causes the compiler to
+generate code to create tables to provide the requested indexing.
+{\tt PredSpec}, of the form {\tt PredName/Arity}, specifies the
+predicate to be indexed (and tabled.)  {\tt IndexSpec} is a list of
+index secifications.  Each index specification is a $+$-term that
+indicates a set of argument positions for which an index is required.
+For example, [1$+$2$+$3, 1, 2$+$3, 2] indicates that four indexes are
+desired; a multiple argument index on arguments 1, 2, and 3; a single
+argument index on argument 1; a multi-argument index on 2 and 3, and a
+single argument index on argument 2.  In this case, for a call to the
+indicated predicate, if arguments 1, 2, and 3 are bound, that index
+will be used; if not, but argument 1 is bound, then that index will be
+used; if not but arguments 2 and 3 are bound, then that index will be
+used, and finally if argument 2 is bound, then that index will be
+used.  If none of these situations obtain, then a table\_error will be
+thrown.
+
+Normally a predicate indicated as {\tt table\_index}-ed should {\bf
+  not} be declared as tabled.  The indexes are created using
+subsumptive tables.  An attempt is made to use the minimum number of
+tables as possible, but each index does take (perhaps significant)
+memory.  To abolish an {\tt table\_index}-ed predicate, one must use
+{\tt abolish\_table\_index\_pred/1}.
+
+\ourstandarditem{abolish\_table\_index\_pred(+PredSpec)}{table\_index/2}{Tabling}
+%
+{\tt abolish\_table\_index\_pred} is used to abolish all the tables
+used internally to implement a {\tt table\_index}-ed predicate.  Its
+argument is a most general term indicated the {\tt table\_index}-ed
+predicate to be abolished.
+
 \comment{TLS: does not appear needed or used.
   Cf. invaludate_table_call.
 
