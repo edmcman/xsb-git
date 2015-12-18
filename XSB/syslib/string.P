@@ -131,6 +131,8 @@ safe_atom_codes_all([],[]).
 safe_atom_codes_all([X|R],[Y|S]) :-
 	(var(X),var(Y)
 	 ->	true
+	 ; integer(X)
+	 ->	number_codes(X,Y)
 	 ;	atom_codes(X,Y)
 	),
 	safe_atom_codes_all(R,S).
