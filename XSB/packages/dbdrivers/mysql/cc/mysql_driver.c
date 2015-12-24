@@ -369,7 +369,7 @@ struct xsb_data** driverMySQL_execPrepareStmt(struct xsb_data** bindValues, stru
 	
   numOfParams = rs->handle->numParams;
   bind = (MYSQL_BIND *)calloc( numOfParams, sizeof(MYSQL_BIND));
-  memset(bind, 0, sizeof(bind));
+  memset(bind, 0, sizeof(*bind));
   for (i = 0 ; i < numOfParams ; i++)
     {
       if (bindValues[i]->type == INT_TYPE)
@@ -421,7 +421,7 @@ struct xsb_data** driverMySQL_execPrepareStmt(struct xsb_data** bindValues, stru
     }
 
   bindResult = (MYSQL_BIND *)malloc(rs->returnFields * sizeof(MYSQL_BIND));
-  memset(bindResult, 0, sizeof(bindResult));
+  memset(bindResult, 0, sizeof(*bindResult));
   for (i = 0 ; i < rs->returnFields ; i++)
     {
       switch (rs->metaInfo[i]->type)

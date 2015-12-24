@@ -310,7 +310,7 @@ for a given advisor is accomplished by the call:
 
 \begin{verbatim}
 | ?- X = adv,
-     db_query(ha, qa, ['select T.name from student T where T.advisor = ',X], [P]),
+     db_query(ha,qa,['select T.name from student T where T.advisor=',X],[P]),
      fail.
 \end{verbatim}
 
@@ -336,7 +336,7 @@ For example, to prepare a query for selecting the advisor name for a student
 name using our student database:
 
 \begin{verbatim}
-| ?- db_prepare(ha, qa, ['select T.advisor from student T where T.name = ?']).
+| ?- db_prepare(ha,qa,['select T.advisor from student T where T.name = ?']).
 \end{verbatim}
 
 A prepared statement is executed using the predicate:
@@ -347,7 +347,12 @@ A prepared statement is executed using the predicate:
 
 The BindList contains the ground values corresponding to the `?' in
 the prepared statement. The ReturnList is a list of variables for
-each argument in a tuple of the result set.
+each argument in a tuple of the result set. For instance,
+%% 
+\begin{verbatim}
+| ?- db_prepare_execute(qa,['Bob'],[?Advisor]).
+\end{verbatim}
+%% 
 
 For direct querying, the query handle is closed automatically when
 all the tuples in the result set have been retrieved. In order to explicitly
@@ -368,7 +373,7 @@ by passing the term as a separate element in the query list and making sure
 that it is enclosed in quotes in the concatenated result. For instance,
 %% 
 \begin{verbatim}
-?- db_query(handle,qh,['insert into mytbl values(11,22,',p(a),');'],[]).
+?- db_query(handle,qh,['insert into mytbl values(11,22,',p(a),')'],[]).
 \end{verbatim}
 %% 
 The above statement inserts \texttt{p(a)} \emph{as a term}
@@ -387,8 +392,8 @@ null value, you can use either the above special term or just place \texttt{NULL
 INSERT statement. For instance,
 %% 
 \begin{verbatim}
-?- db_query(handle,qh1,['insert into mytbl values(11,22,NULL);'],[]).
-?- db_query(handle,qh2,['insert into mytbl values(111,222,','NULL'(),');'],[]).
+?- db_query(handle,qh1,['insert into mytbl values(11,22,NULL)'],[]).
+?- db_query(handle,qh2,['insert into mytbl values(111,222,','NULL'(),')'],[]).
 \end{verbatim}
 %% 
 However, when retrieved from a database, a \texttt{NULL} is always
@@ -402,7 +407,7 @@ represented by the term \texttt{'NULL'()} (and not by the atom
 Each predicate in the XSB-DB interface throws an exception with the functor 
 %%
 \begin{verbatim}
-   xsb_error(database(Number), Message) 
+   dbdrivers_error(Number, Message) 
 \end{verbatim}
 %%
 where Number is a string with the 
@@ -415,7 +420,7 @@ a handle {\tt (ha}) which does not exist:
 
 \begin{verbatim}
 | ?- catch(db_disconnect(ha),
-     xsb_error(database(Number), Message), handler(Number, Message)).
+     dbdrivers_error(Number, Message), handler(Number, Message)).
 \end{verbatim}
 
 It is the user's responsibility to define the handler predicate which can be as simple
@@ -427,70 +432,70 @@ is given below:
 
 \begin{itemize}
 
-\item {\bf XSB\_DBI\_001: XSB\_DBI ERROR: Driver already registered}\\
+\item {\bf XSB\_DBI\_001: Driver already registered}\\
 This error is thrown when the user tries to load a driver, using the {\tt load\_driver} 
 predicate, which has already been loaded previously.
 
-\item {\bf XSB\_DBI\_002: XSB\_DBI ERROR: Driver does not exist}\\
+\item {\bf XSB\_DBI\_002: Driver does not exist}\\
 This error is thrown when the user tries to connect to a database, using
 {\tt db\_connect}, with a driver which has not been loaded.
 
-\item {\bf XSB\_DBI\_003: XSB\_DBI ERROR: Function does not exist in this driver}\\
+\item {\bf XSB\_DBI\_003: Function does not exist in this driver}\\
 This error is thrown when the user tries to use a function support 
 for which does not exist in the corresponding driver. For example, 
 this error is generated if the user
 tries to use {\tt db\_prepare} for a connection established with the
 mysql driver.
 
-\item {\bf XSB\_DBI\_004: XSB\_DBI ERROR: No such connection handle}\\
+\item {\bf XSB\_DBI\_004: No such connection handle}\\
 This error is thrown when the user tries to use a connection handle
 which has not been created.
 
-\item {\bf XSB\_DBI\_005: XSB\_DBI ERROR: No such query handle}\\
+\item {\bf XSB\_DBI\_005: No such query handle}\\
 This error is thrown when the user tries to use a query handle which has 
 not been created.
 
-\item {\bf XSB\_DBI\_006: XSB\_DBI ERROR: Connection handle already exists}\\
+\item {\bf XSB\_DBI\_006: Connection handle already exists}\\
 This error is thrown when the user tries to create a connection handle in
 {\tt db\_connect} using a name which already exists as a connection handle.
 
-\item {\bf XSB\_DBI\_007: XSB\_DBI ERROR: Query handle already exists}\\
+\item {\bf XSB\_DBI\_007: Query handle already exists}\\
 This error is thrown when the user tries to create a query handle, in
 {\tt db\_query} or {\tt db\_prepare}, using a name which already exists as
 a query handle for a different query.
 
-\item {\bf XSB\_DBI\_008: XSB\_DBI ERROR: Not all parameters supplied}\\
+\item {\bf XSB\_DBI\_008: Not all parameters supplied}\\
 This error is thrown when the user tries to execute a prepared statement,
 using {\tt db\_prepare\_execute}, without supplying values for all the
 parameters in the statement.
 
-\item {\bf XSB\_DBI\_009: XSB\_DBI ERROR: Unbound variable in parameter list}\\
+\item {\bf XSB\_DBI\_009: Unbound variable in parameter list}\\
 This error is thrown when the user tries to execute a prepared statement,
 using {\tt db\_prepare\_execute}, without binding all the parameters of the
 statement.
 
-\item {\bf XSB\_DBI\_010: XSB\_DBI ERROR: Same query handle used for
+\item {\bf XSB\_DBI\_010: Same query handle used for
     different queries}\\
   This error is thrown when the user issues a prepare statement ({\tt
     db\_prepare})  using a query
   handle that has been in use by another prepared statement and which has
   not been closed. Query handles must be closed before reuse.
-\item {\bf XSB\_DBI\_011: XSB\_DBI ERROR: Number of requested columns exceeds the number of columns in the query}\\
+\item {\bf XSB\_DBI\_011: Number of requested columns exceeds the number of columns in the query}\\
   This error is thrown when the user {\tt db\_query}  specifies more items to be
   returned in the last argument than the number of items in the {\tt
     SELECT} statement in the corresponding query.
-\item {\bf XSB\_DBI\_012: XSB\_DBI ERROR: Number of requested columns is less than the number of columns in the query}\\
+\item {\bf XSB\_DBI\_012: Number of requested columns is less than the number of columns in the query}\\
   This error is thrown when the user {\tt db\_query}  specifies fewer items to be
   returned in the last argument than the number of items in the {\tt
     SELECT} statement in the corresponding query.
-\item {\bf XSB\_DBI\_013: XSB\_DBI ERROR: Invalid return list in query}\\
+\item {\bf XSB\_DBI\_013: Invalid return list in query}\\
   Something else is wrong with the return list of the query.
-\item {\bf XSB\_DBI\_014: XSB\_DBI ERROR: Too many open connections}\\
+\item {\bf XSB\_DBI\_014: Too many open connections}\\
   There is a limit (200) on the number of open connections.
-\item {\bf XSB\_DBI\_015: XSB\_DBI ERROR: Too many registered drivers}\\
+\item {\bf XSB\_DBI\_015: Too many registered drivers}\\
   There is a limit (100) on the number of database drivers that can be
   registered at the same time.
-\item {\bf XSB\_DBI\_016: XSB\_DBI ERROR: Too many active queries}\\
+\item {\bf XSB\_DBI\_016: Too many active queries}\\
   There is a limit (2000) on the number of queries that can remain
   open at any given time.
 \end{itemize}
