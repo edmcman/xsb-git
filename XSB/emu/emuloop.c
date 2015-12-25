@@ -2759,7 +2759,7 @@ argument positions.
       jump_cond_fail(isatomic(op2) || isboxedinteger(op2) || isboxedfloat(op2));
       break;
     case COMPOUND_TEST:
-      jump_cond_fail(((isconstr(op2) && get_arity(get_str_psc(op2)) && (get_str_psc(op2) != box_psc)) ||
+      jump_cond_fail(((isconstr(op2) && (get_str_psc(op2) != box_psc)) ||
 		      (islist(op2))));
       break;
     case CALLABLE_TEST:

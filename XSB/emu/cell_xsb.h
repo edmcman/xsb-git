@@ -252,10 +252,8 @@ extern unsigned long enc[], dec[];
 
 #define xsb_isnumber(dcell)	((isinteger(dcell)) || (isfloat(dcell)))
 #define isconstant(dcell)  ( isstring(dcell) || xsb_isnumber(dcell) )
-#define isatom(dcell)	((isstring(dcell)) || \
-			 (isconstr(dcell) && get_arity(get_str_psc(dcell))==0))
-#define isatomic(dcell)	((isstring(dcell)) || (xsb_isnumber(dcell)) || \
-			 (isconstr(dcell) && get_arity(get_str_psc(dcell))==0))
+#define isatom(dcell)	(isstring(dcell))
+#define isatomic(dcell)	((isstring(dcell)) || (xsb_isnumber(dcell)))
 
 #define isnil(dcell) (isstring(dcell) && (char *)string_val(dcell) == nil_string)
 #define isboxed(term) (isconstr(term) && get_str_psc(term) == box_psc )
