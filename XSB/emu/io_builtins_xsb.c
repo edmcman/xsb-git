@@ -1016,7 +1016,7 @@ Integer read_canonical_term(CTXTdeclc int stream, int return_location_code)
 		  CPtr this_term, prev_tail;
 		  funtop--;
 		  if (funstk[funtop].funtyp == FUNFUN || funstk[funtop].funtyp == FUNCOMMALIST)
-			return read_can_error(CTXTc stream,prevchar,prologvar,findall_chunk_index);
+		    return read_can_error(CTXTc stream,prevchar,prologvar,findall_chunk_index);
 		  ensure_term_space(h,2);
 		  this_term = h;
 		  op1 = funstk[funtop].funop;
@@ -1064,8 +1064,8 @@ Integer read_canonical_term(CTXTdeclc int stream, int return_location_code)
 		  postopreq = FALSE;
 		} else if (*token->value == '|') {
 		  postopreq = FALSE;
-		  if (funstk[funtop-1].funtyp != FUNLIST) 
-			return read_can_error(CTXTc stream,prevchar,prologvar,findall_chunk_index);
+		  if (funstk[funtop-1].funtyp != FUNLIST)
+		    return read_can_error(CTXTc stream,prevchar,prologvar,findall_chunk_index);
 		  funstk[funtop-1].funtyp = FUNDTLIST;
 		} else return read_can_error(CTXTc stream,prevchar,prologvar,findall_chunk_index);
 	    } else {  /* check for neg numbers and backpatch if so */
@@ -1123,7 +1123,7 @@ Integer read_canonical_term(CTXTdeclc int stream, int return_location_code)
 		  funtop++;
 		  break;
 		}
-	  /* let a punctuation mark be a functor symbol */
+	  /* fall through to let a punctuation mark be a functor symbol */
       case TK_FUNC:
 	        if (funtop >= funstk_size) expand_funstk;
 		funstk[funtop].fun = (char *)string_find(token->value,1);
@@ -1132,8 +1132,9 @@ Integer read_canonical_term(CTXTdeclc int stream, int return_location_code)
 		funtop++;
 
 		if (token->nextch != '(')
-			return read_can_error(CTXTc stream,prevchar,prologvar,findall_chunk_index);
-		token = GetToken(CTXTc stream,prevchar);
+		  return read_can_error(CTXTc stream,prevchar,prologvar,findall_chunk_index);
+		token = GetToken(CTXTc stream,prevchar); /* eat open par */
+		if (token->nextch == ')') postopreq = TRUE; /* handle f() form */
 		//print_token(token->type,token->value);
 		prevchar = token->nextch;
 		break;
@@ -1914,7 +1915,7 @@ int call_conv write_canonical_term_rec(CTXTdeclc Cell prologterm, int letter_fla
 	  sprintf(wcan_buff->string,"%d",ival);
 	  XSB_StrAppend(wcan_string,wcan_buff->string);
 	}
-      } else {
+      } else { /* regular ole structured term */
 	int i; 
 	char *fnname = get_name(get_str_psc(prologterm));
 	if (quotes_are_needed(fnname)) {
@@ -1926,16 +1927,18 @@ int call_conv write_canonical_term_rec(CTXTdeclc Cell prologterm, int letter_fla
 	  XSB_StrAppendC(wcan_string,'\'');
 	} else XSB_StrAppend(wcan_string,fnname);
 	XSB_StrAppendC(wcan_string,'(');
-	for (i = 1; i < get_arity(get_str_psc(prologterm)); i++) {
-	  if (!write_canonical_term_rec(CTXTc get_str_arg(prologterm,i),letter_flag)) {
-	    XSB_StrAppend(wcan_string,"?ERROR?");
-	    return FALSE;
+	if (get_arity(get_str_psc(prologterm))) {
+	  for (i = 1; i < get_arity(get_str_psc(prologterm)); i++) {
+	    if (!write_canonical_term_rec(CTXTc get_str_arg(prologterm,i),letter_flag)) {
+	      XSB_StrAppend(wcan_string,"?ERROR?");
+	      return FALSE;
+	    }
+	    XSB_StrAppendC(wcan_string,',');
 	  }
-	  XSB_StrAppendC(wcan_string,',');
-	}
-	close_paren_count++; /* count parens so can do tail recursion */
-	prologterm = get_str_arg(prologterm,i);
-	goto write_canonical_term_rec_begin;
+	  close_paren_count++; /* count parens so can do tail recursion */
+	  prologterm = get_str_arg(prologterm,i);
+	  goto write_canonical_term_rec_begin;
+	} else XSB_StrAppendC(wcan_string,')');
       }
       break;
     case XSB_LIST:
