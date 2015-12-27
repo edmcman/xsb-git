@@ -1965,16 +1965,19 @@ int builtin_call(CTXTdeclc byte number)
 			   R4: +String, module to be inserted */
     /* inserts or finds a symbol in a given module.	*/
     /* When the given module is 0 (null string), current module is used. */
-    Psc  psc;
-    Pair sym;
-    int  value;
+    Psc  psc, sym;
+    int  value = 0;
     char *addr = ptoc_string(CTXTc 4);
     if (addr)
       psc = pair_psc(insert_module(0, addr));
     else
       psc = (Psc)flags[CURRENT_MODULE];
-    sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), psc, &value);
-    ctop_addr(3, pair_psc(sym));
+    sym = pair_psc(insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), psc, &value));
+    if (value) {
+      set_data(sym, psc);
+      env_type_set(CTXTc sym, T_GLOBAL, T_ORDI, (xsbBool)value);
+    }
+    ctop_addr(3, sym);
     break;
   }
 
