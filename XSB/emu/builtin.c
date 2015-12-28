@@ -1975,7 +1975,7 @@ int builtin_call(CTXTdeclc byte number)
     sym = pair_psc(insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), psc, &value));
     if (value) {
       set_data(sym, psc);
-      env_type_set(CTXTc sym, T_GLOBAL, T_ORDI, (xsbBool)value);
+      env_type_set(CTXTc sym, (addr?T_IMPORTED:T_GLOBAL) , T_ORDI, (xsbBool)value);
     }
     ctop_addr(3, sym);
     break;
