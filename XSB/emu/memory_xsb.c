@@ -364,7 +364,14 @@ void mem_dealloc(void *addr, size_t size, int category)
     mem_dbg(("dealloc %p,%d\n",addr,size));
     pspace_tot_gl -= size;
 
-    free(addr);
+    if (addr != NULL) {
+      free(addr);
+      addr = NULL;
+    } else {
+#ifdef DEBUG
+      xsb_warn("attempt to double-free memory in mem_dealloc (memory_xsb.c)");
+#endif
+    }
 #ifdef NON_OPT_COMPILE
     SYS_MUTEX_UNLOCK_NOERROR(MUTEX_MEM);
 #endif

@@ -3616,6 +3616,12 @@ void retractall_prref(CTXTdeclc PrRef prref) {
     PrRef_FirstClRef(prref) = NULL;
     cell_opcode((CPtr)prref) = fail;
   }
+  else {
+    if (prref != NULL) {
+      PrRef_FirstClRef(prref) = NULL;
+      PrRef_DelCF(prref) = NULL;
+    }
+  }
 }
 
 /* Like retractall_prref() but used from access is from a DelFC, so we
