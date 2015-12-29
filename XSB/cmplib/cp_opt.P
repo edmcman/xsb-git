@@ -383,7 +383,7 @@ generate_agg_clauses(fold(OpSpec,Id),Sym,PredTerm,Var1,ExistVarList,Pred1Term,Va
 	ensure_imported(early_complete_on_nth/2,tables,SymTab),
 	ensure_imported(early_complete_on_delta/4,tables,SymTab).
 ***/
-%% restore Original, before changes of Sept 2014
+%% new with wfs
 generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClList2,SymTab) :-
 	(AggrSpec = fold(OpSpec,Id)
 	 ;
@@ -410,13 +410,40 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 		(nonvar(Var) -> instantiation_error(Pred/Arity,Arity,var) ; true),
 		excess_vars(Skel,[Var|ExistVarList],[],Vars),
 		copy_term(t(Vars,Skel,Var),t(Vars,OSkel,OVar)),
+		DefTerm = ifUndef(0), % if seen undefined
 		Pred1Term,
-		('_$$get_returns'(Cs,OSkel,Leaf)
-		 ->	OpSpec1,
-			Var \== OVar,
-%			delete_return(Cs,Leaf)
-			Actions
-		 ;	Init
+		xwam_state(2,DelayReg),
+		(DelayReg =:= 0, DefTerm == ifUndef(0) % opt for all defined
+		 ->	('_$$get_returns'(Cs,OSkel,Leaf)
+			 ->	OpSpec1,
+				Var \== OVar,
+				Actions
+			 ;	Init
+			)
+		 ;	term_set_arg(DefTerm,1,1,1), % undef, must handle from now on
+			findall(t(OSkel,Leaf1,TV1,Var),
+				('_$$get_returns_and_tvs'(Cs,OSkel,Leaf1,TV1),
+				 OpSpec1),
+				RetList),
+			(DelayReg =:= 0, % all deletion before returning any ans, otw bug
+			 '_$member'(t(OSkel,Leaf,_,Var),RetList),
+			 Var \== OVar,
+			 Actions,
+			 fail
+			 ;	
+			 \+ '_$member'(t(_,_,t,_),RetList),
+			 Init
+			 ;	
+			 '_$member'(t(OSkel,Leaf,TV1,Var),RetList),
+			 Var \== OVar,
+			 (DelayReg =:= 0
+			  ->	 (TV1 == t
+				  ->	 true
+				  ;	 undefined
+				 )
+			  ;	 true
+			 )
+			)
 		)
 	       ),
 	parse_preddef_closed(PredTerm,Body,ClList2,SymTab),
@@ -426,11 +453,14 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	ensure_imported(excess_vars/4,setof,SymTab),
 	ensure_imported(copy_term/2,basics,SymTab),
 	ensure_imported(instantiation_error/3,error_handler,SymTab),
+	ensure_imported('_$$get_returns_and_tvs'/4,tables,SymTab),
 	ensure_imported('_$$get_returns'/3,tables,SymTab),
 	ensure_imported(delete_return/2,tables,SymTab),
+	ensure_imported(xwam_state/2,machine,SymTab),
 	ensure_imported('_$member'/2,basics,SymTab),
 	% TLS: for approximations (whether or not used)
 	ensure_imported(early_complete_on_nth/2,tables,SymTab),
+	ensure_imported(term_set_arg/4,machine,SymTab),
 	ensure_imported(early_complete_on_delta/4,tables,SymTab).
 
 generate_agg_clauses(termset,_Sym,PredTerm,Var1,[],Pred1Term,Var,ClList2,SymTab) :- !,
@@ -941,4 +971,107 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	ensure_imported(early_complete_on_nth/2,tables,SymTab),
 	ensure_imported(early_complete_on_delta/4,tables,SymTab).
 
+Following is a template for doing lattice and fold in WFS (including
+undefineds).
 
+:- import breg_retskel/4 from machine.
+:- import excess_vars/4 from setof.
+:- import copy_term/2 from basics.
+:- import instantiation_error/3 from error_handler.
+:- import '_$$get_returns'/3 from tables.
+:- import '_$$get_returns_and_tvs'/4 from tables.
+:- import delete_return/2 from tables.
+:- import member/2 from basics.
+:- import xwam_state/2 from machine.
+
+:- table p/2.
+p(X,Var) :-
+	'_$savecp'(Breg),
+	breg_retskel(Breg,2,Skel,Cs),
+	excess_vars(Skel,[Var],[],Vars),
+	copy_term(t(Vars,Skel,Var),t(Vars,OSkel,OVar)),
+	p1(X,Var1),
+	xwam_state(2,DelayReg),
+	writeln(newans(Var1,DelayReg)),
+	findall(t(OSkel,Leaf1,TV1),'_$$get_returns_and_tvs'(Cs,OSkel,Leaf1,TV1),RetList),
+	writeln(findall(RetList)),
+	(DelayReg =:= 0,  % all deletion before returning any ans, otw bug
+	 member(t(OSkel,Leaf1,_),RetList),
+	 Var \== OVar,
+	 delete_return(Cs,Leaf1),
+	 fail
+	 ;
+	 \+member(t(OSkel,Leaf1,t),RetList),
+	 Var = Var1
+	 ;
+	 member(t(OSkel,Leaf1,TV1),RetList),
+	 sum(OVar,Var1,Var),
+	 Var \== OVar,
+	 (DelayReg =:= 0
+	  ->	 (TV1 == t
+		  ->	 true
+		  ;	 undefined
+		 )
+	  ;	 true
+	 )
+	), xwam_state(2,NDel),writeln(ans(Var,NDel)).
+
+
+sum(X,Y,Z) :- Z is X+Y.
+
+p1(1,4) :- undefined.
+p1(1,5) :- undefined.
+p1(1,1).
+p1(1,2).
+p1(1,4).
+
+
+%% restore Original, before changes of Sept 2014
+generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClList2,SymTab) :-
+	(AggrSpec = fold(OpSpec,Id)
+	 ;
+	 AggrSpec = lattice(OpSpec), Id = no_identity
+	),
+	!,
+	functor(PredTerm,Pred,Arity),
+	(spec_skel(OpSpec,OpSpec1,3)
+	 ->	true
+	 ;	syntax_error(['Improper join specification in tabling declaration for ',Pred,'/',Arity])
+	),
+	(Id = F/1
+	 ->	GetID =.. [F,OVar],
+		Init = (GetID, OpSpec1)
+	 ; Id == no_identity
+	 ->	Init = (Var1 = Var)
+	 ;	Init = (OVar = Id, OpSpec1)
+	),
+	sym_propin(tabled,Sym),
+	arg(1,OpSpec1,OVar), arg(2,OpSpec1,Var1), arg(3,OpSpec1,Var),
+	get_actions_for_lattice_aggr_success(Sym,[Cs,Leaf,Var,OVar,Breg],Actions),
+	Body = ('_$savecp'(Breg),
+		breg_retskel(Breg,Arity,Skel,Cs),
+		(nonvar(Var) -> instantiation_error(Pred/Arity,Arity,var) ; true),
+		excess_vars(Skel,[Var|ExistVarList],[],Vars),
+		copy_term(t(Vars,Skel,Var),t(Vars,OSkel,OVar)),
+		Pred1Term,
+		('_$$get_returns'(Cs,OSkel,Leaf)
+		 ->	OpSpec1,
+			Var \== OVar,
+%			delete_return(Cs,Leaf)
+			Actions
+		 ;	Init
+		)
+	       ),
+	parse_preddef_closed(PredTerm,Body,ClList2,SymTab),
+	globalize('/',2,SymTab),
+	globalize(var,0,SymTab),
+	ensure_imported(breg_retskel/4,machine,SymTab),
+	ensure_imported(excess_vars/4,setof,SymTab),
+	ensure_imported(copy_term/2,basics,SymTab),
+	ensure_imported(instantiation_error/3,error_handler,SymTab),
+	ensure_imported('_$$get_returns'/3,tables,SymTab),
+	ensure_imported(delete_return/2,tables,SymTab),
+	ensure_imported('_$member'/2,basics,SymTab),
+	% TLS: for approximations (whether or not used)
+	ensure_imported(early_complete_on_nth/2,tables,SymTab),
+	ensure_imported(early_complete_on_delta/4,tables,SymTab).
