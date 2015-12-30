@@ -410,10 +410,11 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 		(nonvar(Var) -> instantiation_error(Pred/Arity,Arity,var) ; true),
 		excess_vars(Skel,[Var|ExistVarList],[],Vars),
 		copy_term(t(Vars,Skel,Var),t(Vars,OSkel,OVar)),
-		DefTerm = ifUndef(0), % if seen undefined
+		DefTerm = ifUndef(XX), % if seen undefined
+		XX = 0,
 		Pred1Term,
 		xwam_state(2,DelayReg),
-		(DelayReg =:= 0, DefTerm == ifUndef(0) % opt for all defined
+		(DelayReg =:= 0, XX =:= 0 % opt for all defined
 		 ->	('_$$get_returns'(Cs,OSkel,Leaf)
 			 ->	OpSpec1,
 				Var \== OVar,
