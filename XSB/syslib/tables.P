@@ -1276,6 +1276,8 @@ get_functor(T,F/Arg):-
 get_sdg_info(List):- 
 	get_sdg_info(0,List).
 
+:- import writeln/1 from standard.
+
 get_sdg_info(CSF,Rest):- 
 	table_inspection_function(INCOMPLETE_SUBGOAL_INFO,CSF,NewCSF,Level,SF,CallsTo,Answers,IsNegCall,GenParent),
 	(SF == 0 -> 
@@ -1289,10 +1291,12 @@ get_sdg_info(CSF,Rest):-
 	    sort(PosSFList_2,PosSFList),
 	    table_inspection_function(GET_NEG_AFFECTS,SF,NegSFList_1,_,_,_,_,_),
 	    sort(NegSFList_1,NegSFList) ),
-	   (NewCSF = 0 -> 
-	       Rest = [subgoal(Subgoal,Level,SF,CallsTo,Answers,PosSFList,NegSFList)]
-	     ; Rest = [subgoal(Subgoal,Level,SF,CallsTo,Answers,PosSFList,NegSFList)|Rest1],
-	       get_sdg_info(NewCSF,Rest1) ).
+	    (var(Rest) -> 
+	       (NewCSF = 0 -> 
+	          Rest = [subgoal(Subgoal,Level,SF,CallsTo,Answers,PosSFList,NegSFList)]
+	        ; Rest = [subgoal(Subgoal,Level,SF,CallsTo,Answers,PosSFList,NegSFList)|Rest1],
+	          get_sdg_info(NewCSF,Rest1) )
+	      ; true).
 
 remove_gencon_cp([],_Genparent,[]).
 remove_gencon_cp([SF|Rest],SF,Rest):- !.
@@ -1571,16 +1575,85 @@ subgoal_scc_member([ret(S,_,Index)|_],Subgoal,Index):-
 subgoal_scc_member([_|R],Subgoal,Index):- 
 	subgoal_scc_member(R,Subgoal,Index).
 
-/* Deprecated (but maintained for backwards compatability) */
-
-abolish_table_call(Term,Options) :-
-	abolish_table_subgoals(Term,Options).
-abolish_table_call(Term) :-
-	abolish_table_subgoals(Term).
-
-%------------------------------------------------------------------------------
 /*======================================================================*/
+% TRIPWIRE HANDLERS
+/*======================================================================*/
+:- import break_for_tripwires/1 from x_interp.
+:- import format/2 from format.
 
+%----
+
+:- export max_incomplete_subgoals_handler/0.
+:- import max_incomplete_subgoals_user_handler/0 from usermod.
+:- dynamic max_incomplete_subgoals_user_handler/0.
+
+max_incomplete_subgoals_handler:- 
+     max_incomplete_subgoals_user_handler,!.
+max_incomplete_subgoals_handler:- 
+    max_incomplete_subgoals_default_handler.
+
+max_incomplete_subgoals_default_handler:- 
+	      break_for_tripwires([tables:max_incomplete_subgoals_header]).
+
+max_incomplete_subgoals_header:- 
+  inc_subg_analysis_info(SubgNum,SCCNumber),
+  format("There are currently ~d incomplete tabled subgoals, which exceeds the limit set by the flag~n",
+         [SubgNum]),
+  format("'max_incomplete_subgoals'.  These subgoals are in ~d separate recursive components.~n",[SCCNumber]),
+  format("~n"),
+  format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
+  format("  * To abort, enter the command 'abort/0'~n",[]),
+  format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]),
+  format("  * Type 'explain(Term)' to get a textual explanation of the terminology used. ~n",[]).
+
+inc_subg_analysis_info(SubgNum,SCCNum):- 
+	get_sdg_info(SDG), %writeln(G),
+	length(SDG,SubgNum),
+	sdg_scc_info(SDG,SCCs), %writeln(S),
+	length(SCCs,SCCNum).
+
+%----
+
+:- export max_scc_subgoals_handler/0.
+:- import max_scc_subgoals_user_handler/0 from usermod.
+:- dynamic max_scc_subgoals_user_handler/0.
+
+max_scc_subgoals_handler:- 
+     max_scc_subgoals_user_handler,!.
+max_scc_subgoals_handler:- 
+    max_scc_subgoals_default_handler.
+
+max_scc_subgoals_default_handler:- 
+	      break_for_tripwires([tables:max_scc_subgoals_header]).
+
+max_scc_subgoals_header:- 
+  current_prolog_flag(max_scc_subgoals,Max),
+  format("~n          WARNING!! XSB-oriented math-talk to follow.~n~n~n",[]),
+  scc_subg_analysis_info(NumSubgoals,TotEdges,NumAnswers),
+  format("A recursive component containing ~d incomplete tabled subgoals is currently under evaluation.~n",
+	 [NumSubgoals]), 
+  format("The size of this recursive component exceeds the limit of ~d set by the flag 'max_scc_subgoals'.~n",[Max]),
+  format("Together, the total number of dependency edges among all subgoals in this recursive component is ~d~n",[TotEdges]),
+  format("and the total number of answers for all subgoals in this component is ~d~n",[NumAnswers]),
+  format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
+  format("  * To abort, enter the command 'abort/0'~n",[]),
+  format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]).
+
+scc_subg_analysis_info(NumSubgoals,TotEdges,NumAnswers):- 
+	get_sdg_info(SDG), %writeln(SDG),
+	sdg_scc_info(SDG,SCCs), %writeln(SCCs),
+        get_last(SCCs,ThisSCC),
+	ThisSCC =  scc(_Level,NumSubgoals,NumAnswers,NumPosEdges,NumNegEdges),
+	TotEdges is NumPosEdges + NumNegEdges + NumSubgoals -1.  % not counting generator nodes
+
+get_last([Elt],Elt):- !.
+get_last([_A|B],Elt):- get_last(B,Elt).
+
+format(Msg):- format(Msg,[]).
+
+/*======================================================================*/
+% ANSWER COMPLETION CODE
+/*======================================================================*/
 
 /* Conditionally called after check_complete and in table_try, when
 answers are returned from a completed table and the subgoal may need
@@ -1737,7 +1810,16 @@ print_clause((Head:-Body)) :- !,
 print_clause(Head) :-
 	writeq(userout,Head),
 	writeln(userout,'.').
-*************/
+
+/*======================================================================*/
+/* Deprecated (but maintained for backwards compatability) */
+
+abolish_table_call(Term,Options) :-
+	abolish_table_subgoals(Term,Options).
+abolish_table_call(Term) :-
+	abolish_table_subgoals(Term).
+
+/*======================================================================*/
 end_of_file.
 
 :- export explain_u_val/4.
@@ -1819,3 +1901,4 @@ table_state(Call, State) :-
 	     ;  State = AnsSetStatus )
 	 ; PredType == undefined -> State = undef
         )
+

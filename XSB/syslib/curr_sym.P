@@ -123,7 +123,6 @@ psc_scan_in_bucket(PSC_Pair, Next_PSC) :-
 %	psc_scan(PSC), psc_arity(PSC, N0), psc_name(PSC, Name),
 %	psc_insert(Name, 0, PSC0), term_new(PSC0, F0), F0 = F, N0 = N.
 
-
 /* ===== current_functor/2 ===================================== */
 
 %   current_functor(?Name, ?Term_Indicator)
@@ -946,6 +945,18 @@ xsb_flag(max_table_answer_list_action, Action) :-
             ; A == XSB_WARNING, Action = warning)).
 xsb_flag(max_incomplete_subgoals, Max) :-
 	stat_flag(MAX_INCOMPLETE_SUBGOALS,Max).
+xsb_flag(max_incomplete_subgoals_action, Action) :-
+	stat_flag(MAX_INCOMPLETE_SUBGOALS_ACTION,A),
+	(A == XSB_ERROR -> Action = error 
+	; (A == XSB_SUSPEND -> Action = suspend 
+            ; A == XSB_WARNING, Action = warning)).
+xsb_flag(max_scc_subgoals, Max) :-
+	stat_flag(MAX_SCC_SUBGOALS,Max).
+xsb_flag(max_scc_subgoals_action, Action) :-
+	stat_flag(MAX_SCC_SUBGOALS_ACTION,A),
+	(A == XSB_ERROR -> Action = error 
+	; (A == XSB_SUSPEND -> Action = suspend 
+            ; A == XSB_WARNING, Action = warning)).
 xsb_flag(unify_with_occurs_check, Mode) :-
 	stat_flag(UNIFY_WITH_OCCURS_CHECK_FLAG, Flag),
 	( Flag =:= 0 -> Mode = off ; Mode = on ).
@@ -1146,6 +1157,26 @@ set_xsb_flag_1(max_table_answer_list_action, Action) :-!,
                         Action,set_prolog_flag/2,2,'max_table_answer_list_action clause') ) ) ).
 set_xsb_flag_1(max_incomplete_subgoals, Max) :-!,
 	stat_set_flag(MAX_INCOMPLETE_SUBGOALS, Max).
+set_xsb_flag_1(max_incomplete_subgoals_action, Action) :-!,
+	(Action == error -> 
+	    stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_ERROR)
+          ; (Action == warning ->  
+	    stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_WARNING)
+          ; (Action == suspend ->  
+	    stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_SUSPEND)
+            ; domain_error([error,', ',warning,', ',suspend],
+                        Action,set_prolog_flag/2,2,'max_incomplete_subgoals_action clause') ) ) ).
+set_xsb_flag_1(max_scc_subgoals, Max) :-!,
+	stat_set_flag(MAX_SCC_SUBGOALS, Max).
+set_xsb_flag_1(max_scc_subgoals_action, Action) :-!,
+	(Action == error -> 
+	    stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_ERROR)
+          ; (Action == warning ->  
+	    stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_WARNING)
+          ; (Action == suspend ->  
+	    stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_SUSPEND)
+            ; domain_error([error,', ',warning,', ',suspend],
+                        Action,set_prolog_flag/2,2,'max_scc_subgoals_action clause') ) ) ).
 set_xsb_flag_1(ctrace, OnOff) :-!,
 	((OnOff == on ; OnOff == full) -> stat_set_flag(CTRACE_CALLS, 2)
      ; 	OnOff == partial -> stat_set_flag(CTRACE_CALLS, 1)
