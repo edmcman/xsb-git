@@ -1,4 +1,4 @@
-/* File:      initm_xsb.c
+/* File:      init_xsb.c
 ** Author(s): Warren, Swift, Xu, Sagonas, Johnson, Rao
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
@@ -262,6 +262,8 @@ static void init_flags(CTXTdecl)
   flags[MAX_TABLE_SUBGOAL_ACTION] = XSB_ERROR;
   flags[MAX_INCOMPLETE_SUBGOALS] = MY_MAXINT;
   flags[MAX_INCOMPLETE_SUBGOALS_ACTION] = XSB_ERROR;
+  flags[MAX_SCC_SUBGOALS] = MY_MAXINT;
+  flags[MAX_SCC_SUBGOALS_ACTION] = XSB_ERROR;
   flags[MAX_TABLE_ANSWER_DEPTH] = MY_MAXINT;
   flags[MAX_TABLE_ANSWER_ACTION] = XSB_ERROR;
   flags[MAX_TABLE_ANSWER_LIST_DEPTH] = MY_MAXINT;

@@ -364,12 +364,12 @@ void mem_dealloc(void *addr, size_t size, int category)
     mem_dbg(("dealloc %p,%d\n",addr,size));
     pspace_tot_gl -= size;
 
-    if (addr != NULL) {
+    if (addr != NULL && size > 0) {
       free(addr);
       addr = NULL;
     } else {
 #ifdef DEBUG
-      xsb_warn("attempt to double-free memory in mem_dealloc (memory_xsb.c)");
+      if (size > 0) xsb_warn("attempt to double-free memory in mem_dealloc (category: %s; size %d) ",pspace_cat[category],size);
 #endif
     }
 #ifdef NON_OPT_COMPILE

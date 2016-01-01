@@ -1329,7 +1329,7 @@ void print_completion_stack(CTXTdeclc FILE *fptr)
   int SCCnum = 1; int lastSCCnum;
   VariantSF subg;
   CPtr temp = COMPLSTACKBOTTOM-COMPLFRAMESIZE;
-  printf("----------- scc -----------");
+  printf("----------- scc -----------\n");
   lastSCCnum = compl_level(temp);
 
  while (temp >= openreg) {

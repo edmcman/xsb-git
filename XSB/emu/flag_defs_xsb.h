@@ -156,6 +156,8 @@ interrupt flag
 #define SIMPLIFICATION_DONE	 103  /* set when simplification done during completion.*/
 #define MAX_INCOMPLETE_SUBGOALS  104
 #define MAX_INCOMPLETE_SUBGOALS_ACTION  105
+#define MAX_SCC_SUBGOALS  106
+#define MAX_SCC_SUBGOALS_ACTION  107
 
 #define MAX_FLAGS		 120
 

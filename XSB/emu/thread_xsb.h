@@ -37,6 +37,7 @@ int xsb_thread_self() ;
 
 extern int max_mqueues_glc ;
 extern int max_threads_glc ;
+extern void tripwire_interrupt(char *);
 
 #if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
 #include <pthread.h>

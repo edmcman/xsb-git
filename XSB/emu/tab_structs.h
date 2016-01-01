@@ -520,6 +520,7 @@ struct completion_stack_frame {
 } ;
 
 #define COMPLFRAMESIZE	(sizeof(struct completion_stack_frame)/sizeof(CPtr))
+#define COMPLSTACKSIZE (COMPLSTACKBOTTOM - openreg)/COMPLFRAMESIZE
 
 #define compl_subgoal_ptr(b)	((ComplStackFrame)(b))->subgoal_ptr
 #define compl_level(b)		((ComplStackFrame)(b))->_level_num
@@ -536,16 +537,40 @@ struct completion_stack_frame {
 #define prev_compl_frame(b)	(((CPtr)(b))+COMPLFRAMESIZE)
 #define next_compl_frame(b)	(((CPtr)(b))-COMPLFRAMESIZE)
 
-#define adjust_level(CS_FRAME) {					\
-  int new_level = compl_level(CS_FRAME);				\
-  if ( new_level < compl_level(openreg) ) {				\
-    CPtr csf = CS_FRAME;						\
-    while ( (csf >= openreg) && (compl_level(csf) >= new_level) ) {	\
-      compl_level(csf) = new_level;					\
-      csf = next_compl_frame(csf);					\
+#define check_scc_subgoals_tripwire {					\
+    if (subgoals_in_scc > flags[MAX_SCC_SUBGOALS]) { /* account for 0-index */ \
+      if (flags[MAX_SCC_SUBGOALS_ACTION] == XSB_ERROR)			\
+	xsb_abort("Tripwire max_scc_subgoals hit.  The user-set limit of %d incomplete subgoals within a single SCC" \
+		  " has been exceeded\n",				\
+		  flags[MAX_SCC_SUBGOALS]);				\
+      else { /* flags[MAX_SCC_SUBGOALS_ACTION] == XSB_SUSPEND */	\
+	printf("Debug: suspending on max_scc_subgoals\n");		\
+	tripwire_interrupt("max_scc_subgoals_handler");			\
+      }									\
     }									\
-  }									\
-}
+  }
+
+#define adjust_level(CS_FRAME) {					\
+    int new_level = compl_level(CS_FRAME);				\
+    UInteger subgoals_in_scc = 0;					\
+    if ( new_level < compl_level(openreg) ) {				\
+      CPtr csf = CS_FRAME;						\
+      while ( (csf >= openreg) && (compl_level(csf) >= new_level) ) {	\
+	compl_level(csf) = new_level;					\
+	csf = next_compl_frame(csf);					\
+      }									\
+      /* if flag is turned on, and complstacksize is "big" need to find leader */\
+      if (COMPLSTACKSIZE > flags[MAX_SCC_SUBGOALS]) {   \
+	csf = CS_FRAME;							\
+	while (csf < COMPLSTACKBOTTOM && compl_level(csf) == new_level) { \
+	  csf = prev_compl_frame(csf);					\
+	} /* finding frame right before leader */			\
+	subgoals_in_scc = (csf-openreg)/COMPLFRAMESIZE;			\
+	/*	printf("subgoals in SCC: %d\n",subgoals_in_scc);*/	\
+	check_scc_subgoals_tripwire;					\
+      }									\
+    }									\
+  }									
 
 /*
  *  The overflow test MUST be placed after the initialization of the
@@ -556,13 +581,14 @@ struct completion_stack_frame {
  */
 
 #define check_incomplete_subgoals_tripwire {	    \
-  if ((UInteger)level_num > flags[MAX_INCOMPLETE_SUBGOALS]) {		\
+    if ((UInteger)level_num > flags[MAX_INCOMPLETE_SUBGOALS] -1) { /* account for 0-index */ \
       if (flags[MAX_INCOMPLETE_SUBGOALS_ACTION] == XSB_ERROR)		\
 	xsb_abort("Tripwire max_incomplete_subgoals hit.  The user-set limit of %d incomplete subgoals within a derivation" \
 		  " has been exceeded\n",				\
 		  flags[MAX_INCOMPLETE_SUBGOALS]);			\
       else { /* flags[MAX_INCOMPLETE_SUBGOALS_ACTION] == XSB_SUSPEND */	\
-	printf("suspending on max_incomplete_subgoals\n");		\
+	printf("Debug: suspending on max_incomplete_subgoals\n");	\
+	tripwire_interrupt("max_incomplete_subgoals_handler");		\
       }									\
     }									\
   }

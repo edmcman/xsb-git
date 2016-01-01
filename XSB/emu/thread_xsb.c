@@ -1,5 +1,5 @@
 /* File:      thread_xsb.c
-** Author(s): Marques
+** Author(s): Marques, Swift
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -915,6 +915,7 @@ void close_str(CTXTdecl)
 
 
 #else /* Not MULTI_THREAD */
+void interrupt_with_goal(void);
 
 void print_mutex_use() {
   xsb_abort("[THREAD] This engine is not configured for mutex profiling.");
@@ -1228,38 +1229,6 @@ xsbBool xsb_thread_request( CTXTdecl )
 	  ctop_int(CTXTc 2, (prolog_int) create_new_dynMutFrame());
 	  break;
 
- /* TLS: obsolete old form
-| 	case XSB_MUTEX_INIT:		{
-| 	  Integer arg = ptoc_int(CTXTc 2);
-| 	  pthread_mutexattr_t attr;
-| 	  id = (Integer) mem_alloc( sizeof(pthread_mutex_t),THREAD_SPACE );
-| 	  pthread_mutexattr_init( &attr );
-| 	  switch(arg)
-| 	    {
-| 	    case XSB_FAST_MUTEX:
-| 	      pthread_mutexattr_settype( &attr, 
-| 					 PTHREAD_MUTEX_FAST_NP );
-| 	      break;
-| 	    case XSB_RECURSIVE_MUTEX:
-| 	      pthread_mutexattr_settype( &attr, 
-| 					 PTHREAD_MUTEX_RECURSIVE_NP );
-| 	      break;
-| 	    case XSB_ERRORCHECK_MUTEX:
-| 	      pthread_mutexattr_settype( &attr, 
-| 					 PTHREAD_MUTEX_ERRORCHECK_NP );
-| 	      break;
-| 	    default:
-| 	      pthread_mutexattr_settype( &attr, 
-| 					 PTHREAD_MUTEX_FAST_NP );
-| 	      break;
-| 	    }
-| 	  rc = pthread_mutex_init( (pthread_mutex_t *)id, &attr );
-| 	  if (rc == ENOMEM) {
-| 	    xsb_resource_error(th,"memory","xsb_mutex_init",2);
-| 	  }
-| 	  break;
-| 	}
-	  */
 	case XSB_MUTEX_LOCK: {
 	  DynMutPtr id = (DynMutPtr) ptoc_int(CTXTc 2);
 	  rc = pthread_mutex_lock( &(id->th_mutex) );
@@ -1884,40 +1853,12 @@ case THREAD_ACCEPT_MESSAGE: {
 	}
 	//	ctop_int( CTXTc 5, rc );
 	return success;
-#else
+#else   /* Not MULTI_THREAD */
         switch( request_num )
         {
                 
 	case INTERRUPT_WITH_GOAL: {
-          int index = THREAD_ENTRY(id);
-	  XSB_MQ_Ptr message_queue;
-	  MQ_Cell_Ptr this_cell;
-	  message_queue = &mq_table[index];   // actually, only queue for seq engine 
-
-	  while (message_queue->max_size != MQ_UNBOUNDED && message_queue->size >= message_queue->max_size) {
-	    xsb_misc_error(CTXTc "exceeded size of message queue","thread_send_message",1);
-	   }
-
-	  this_cell = mem_calloc(asrtBuff->Size+sizeof(MQ_Cell),1,BUFF_SPACE);
-	  this_cell->prev = message_queue->last_message;
-	  //	  printf("about to copy (last %p prev %p)\n",message_queue->last_message,this_cell->prev);
-	  this_cell->next = 0;
-	  this_cell->size = asrtBuff->Size+sizeof(MQ_Cell);
-	  /* Moves assert buffer to word just after MQ_Cell */
-	  memmove(this_cell+1,asrtBuff->Buff,asrtBuff->Size); 
-	  //	  printf("just moved %d\n",asrtBuff->Size);
-	  
-	  if (message_queue->last_message) (message_queue->last_message)->next = this_cell;
-	  message_queue->last_message = this_cell;
-	  message_queue->size++;
-	  
-	  //	  printf("There are now %d messages in queue\n",message_queue->size);
-	  if (!message_queue->first_message) {
-	    message_queue->first_message = this_cell;
-	    //	    printf("set this message as first\n");
-	  }
-	  asynint_val |= THREADINT_MARK;
-	  //	  printf("Interrupt with goal finished\n");
+	  interrupt_with_goal();
 	  break;
 	}
 
@@ -1980,11 +1921,11 @@ case INTERRUPT_DEALLOC: {
 	
 	ctop_int( CTXTc 5, 0 );
 	return TRUE;
-#endif /* MULTI_THREAD */
+#endif /* ELSE NOT MULTI_THREAD */
 }
 
-void nonmt_init_mq_table(void)
-{
+
+void nonmt_init_mq_table(void) {
   int i;
 
 #if !defined(WIN_NT) || defined(MULTI_THREAD)  //TES mq ifdef
@@ -2011,6 +1952,9 @@ void nonmt_init_mq_table(void)
 
 }
 
+/* This does not yet properly init the queue lock for Windows
+   sequential mode (where this routine is used for interrupt w. goal
+*/
 void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
   
   int reuse = xsb_mq->initted;
@@ -2076,6 +2020,67 @@ void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
   if( reuse )
 	pthread_mutex_unlock( &xsb_mq->mq_mutex );
 #endif
+}
+
+extern void c_assert_code_to_buff(prolog_term);
+
+void tripwire_interrupt(char * tripwire_call) {
+  int isnew;
+  Psc tripwire_psc,call_psc;
+  prolog_term term_to_assert;
+  Cell* start_hreg;
+
+  tripwire_psc = pair_psc((Pair)insert(tripwire_call, (byte)0, 
+					pair_psc(insert_module(0,"tables")), 
+					&isnew));
+  call_psc = pair_psc((Pair)insert("call", (byte)3, 
+					pair_psc(insert_module(0,"standard")), 
+					&isnew));
+  start_hreg = hreg;
+  term_to_assert = makecs(hreg);
+  bld_functor(hreg, call_psc); 
+  hreg = hreg + 1;bld_free(hreg);
+  hreg = hreg + 1;bld_free(hreg);
+  hreg = hreg + 1;bld_cs(hreg,hreg+1),
+  hreg = hreg + 1;bld_functor(hreg,tripwire_psc);
+  hreg = hreg + 1;
+  //  printf("***\n");printterm(stdout,term_to_assert,7);  printf("***\n");
+  c_assert_code_to_buff(CTXTc term_to_assert);
+  hreg = start_hreg;
+  interrupt_with_goal();
+}
+
+
+void interrupt_with_goal() {
+          int index = THREAD_ENTRY(id);
+	  XSB_MQ_Ptr message_queue;
+	  MQ_Cell_Ptr this_cell;
+	  message_queue = &mq_table[index];   // actually, only on thread/queue for seq engine 
+
+	  while (message_queue->max_size != MQ_UNBOUNDED && message_queue->size >= message_queue->max_size) {
+	    xsb_misc_error(CTXTc "exceeded size of message queue","thread_send_message",1);
+	   }
+
+	  this_cell = mem_calloc(asrtBuff->Size+sizeof(MQ_Cell),1,BUFF_SPACE);
+	  this_cell->prev = message_queue->last_message;
+	  //	  printf("about to copy (last %p prev %p)\n",message_queue->last_message,this_cell->prev);
+	  this_cell->next = 0;
+	  this_cell->size = asrtBuff->Size+sizeof(MQ_Cell);
+	  /* Moves assert buffer to word just after MQ_Cell */
+	  memmove(this_cell+1,asrtBuff->Buff,asrtBuff->Size); 
+	  //	  printf("just moved %d\n",asrtBuff->Size);
+	  
+	  if (message_queue->last_message) (message_queue->last_message)->next = this_cell;
+	  message_queue->last_message = this_cell;
+	  message_queue->size++;
+	  
+	  //	    printf("There are now %d messages in queue\n",message_queue->size);
+	  if (!message_queue->first_message) {
+	    message_queue->first_message = this_cell;
+	    //	    printf("set this message as first\n");
+	  }
+	  asynint_val |= THREADINT_MARK;
+	  //	  printf("Interrupt with goal finished\n");
 }
 
 xsbBool mt_random_request( CTXTdecl )
