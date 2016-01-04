@@ -293,10 +293,10 @@ t_not(Subgoal,PredType,PTCP) :-
 */
 
 /*
-:- import writeln/1 from standard.
-writeit(0).
+%%:- import writeln/1 from standard.
+%%writeit(0).
 %writeit(1).
-mywriteln(Term):- writeit(If),(If =:= 1 -> writeln(Term); true).
+%%mywriteln(Term):- writeit(If),(If =:= 1 -> writeln(Term); true).
 */
 
 u_not(Goal) :-
@@ -1276,7 +1276,7 @@ get_functor(T,F/Arg):-
 get_sdg_info(List):- 
 	get_sdg_info(0,List).
 
-:- import writeln/1 from standard.
+%:- import writeln/1 from standard.
 
 get_sdg_info(CSF,Rest):- 
 	table_inspection_function(INCOMPLETE_SUBGOAL_INFO,CSF,NewCSF,Level,SF,CallsTo,Answers,IsNegCall,GenParent),
@@ -1305,50 +1305,50 @@ remove_gencon_cp([H|T],Genparent,[H|T1]):-
 
 %-------------
 
-morph_sdg(SdgIn,Abstr,SdgOut):-	
-	check_atom(Abstr,morph_sdg/3,1),
-	check_var(SdgOut,morph_sdg/3,3),
+morph_dep_graph(SdgIn,Abstr,SdgOut):-	
+	check_atom(Abstr,morph_dep_graph/3,1),
+	check_var(SdgOut,morph_dep_graph/3,3),
 	new_trie(SFMapSubg),new_trie(AbsMapSF),
-	morph_sdg_1(SdgIn,Abstr,SFMapSubg,AbsMapSF,SdgOut).
+	morph_dep_graph_1(SdgIn,Abstr,SFMapSubg,AbsMapSF,SdgOut).
 
-morph_sdg_1(SdgIn,Abstr,SFMapSubg,AbsMapSF,SdgOut):- 
-	morph_sdg_init_tries(SdgIn,Abstr,SFMapSubg,AbsMapSF),
-	morph_sdg_nodes(SdgIn,SFMapSubg,AbsMapSF,Sdg1),
+morph_dep_graph_1(SdgIn,Abstr,SFMapSubg,AbsMapSF,SdgOut):- 
+	morph_dep_graph_init_tries(SdgIn,Abstr,SFMapSubg,AbsMapSF),
+	morph_dep_graph_nodes(SdgIn,SFMapSubg,AbsMapSF,Sdg1),
 	sort(Sdg1,Sdg2),
 	merge_sdg_nodes(Sdg2,SdgOut),
 	delete_trie(SFMapSubg),
 	delete_trie(AbsMapSF),
 	!.
-morph_sdg_1(SdgIn,_Abstr,SFMapSubg,AbsMapSF,_SdgOut):- 
+morph_dep_graph_1(SdgIn,_Abstr,SFMapSubg,AbsMapSF,_SdgOut):- 
 	delete_trie(SFMapSubg),delete_trie(AbsMapSF),
 	misc_error(['Improper form for input SDG: ',SdgIn]).
 
-morph_sdg_init_tries([],_Abstr,_SFMapSubg,_AbsMapSF).
-morph_sdg_init_tries([subgoal(Subgoal,_Level,SF,_CallsTo,_Answers,_PosSFList,_NegSFList)|Rest],Abstr,SFMapAbs,AbsMapSF):- 
+morph_dep_graph_init_tries([],_Abstr,_SFMapSubg,_AbsMapSF).
+morph_dep_graph_init_tries([subgoal(Subgoal,_Level,SF,_CallsTo,_Answers,_PosSFList,_NegSFList)|Rest],Abstr,SFMapAbs,AbsMapSF):- 
 	call(Abstr,Subgoal,AbsSubg),
 	trie_intern(p(SF,AbsSubg),SFMapAbs),
 	gensym(Abstr,Sym),
         trie_intern(p(AbsSubg,Sym),AbsMapSF),
-	morph_sdg_init_tries(Rest,Abstr,SFMapAbs,AbsMapSF).
+	morph_dep_graph_init_tries(Rest,Abstr,SFMapAbs,AbsMapSF).
 %	(trie_interned(p(AbsSubg,_,_),AbsMapSF) -> 
 %	    writeln(trie_interned(p(AbsSubg,SF),AbsMapSF))
 %	  ; gensym(abs,Sym),
 %	    trie_intern(p(AbsSubg,Sym),AbsMapSF) ),
 
-morph_sdg_nodes([],_SFMapAbs,_AbsMapSF,[]).
-morph_sdg_nodes([subgoal(_Subgoal,_Level,SF,_CallsTo,_Answers,PosSFList,NegSFList)|RestIn],SFMapAbs,AbsMapSF,
+morph_dep_graph_nodes([],_SFMapAbs,_AbsMapSF,[]).
+morph_dep_graph_nodes([subgoal(_Subgoal,_Level,SF,_CallsTo,_Answers,PosSFList,NegSFList)|RestIn],SFMapAbs,AbsMapSF,
 	    [subgoal(AbsSubg,none,Key,_CallsTo,_Answers,PosKeyList,NegKeyList)|RestOut]):- 
 	cut_trie_interned(p(SF,AbsSubg),SFMapAbs),
 	cut_trie_interned(p(AbsSubg,Key),AbsMapSF),
 	rename_affects_edges(PosSFList,SFMapAbs,AbsMapSF,PosKeyList),
 	rename_affects_edges(NegSFList,SFMapAbs,AbsMapSF,NegKeyList),
-	morph_sdg_nodes(RestIn,SFMapAbs,AbsMapSF,RestOut).
+	morph_dep_graph_nodes(RestIn,SFMapAbs,AbsMapSF,RestOut).
 
 /*
-debug_trie_interned(Goal,Trie):- 
-	findall(Goal,trie_interned(Goal,Trie),List),
-	(List = [_] -> true ; writeln(List)),
-	trie_interned(Goal,Trie).
+%%debug_trie_interned(Goal,Trie):- 
+%%	findall(Goal,trie_interned(Goal,Trie),List),
+%%	(List = [_] -> true ; writeln(List)),
+%%	trie_interned(Goal,Trie).
 */
 cut_trie_interned(Goal,Trie):- 
 	trie_interned(Goal,Trie),!.
@@ -1363,7 +1363,8 @@ rename_affects_edges([SF|Rest],SFMapAbs,AbsMapSF,[Key|Rest1]):-
 merge_sdg_nodes([],[]).
 merge_sdg_nodes([subgoal(AbsSubg,none,Key,CallsTo,Answers,PosKeyList,NegKeyList)|RestIn],
    	        [subgoal(AbsSubg,none,Key,CallsToOut,AnswersOut,PosKeyListOut,NegKeyListOut)|RestOut]):- 
-	get_next_set(RestIn,Key,Set,RestMid),
+%	get_next_set(RestIn,Key,Set,RestMid),
+	get_next_set([subgoal(AbsSubg,none,Key,CallsTo,Answers,PosKeyList,NegKeyList)|RestIn],Key,Set,RestMid),
 	merge(Set,CallsTo,CallsToOut,Answers,AnswersOut,PosKeyList,PosKeyListOut,NegKeyList,NegKeyListOut),
 	merge_sdg_nodes(RestMid,RestOut).
 
@@ -1383,6 +1384,72 @@ get_next_set([subgoal(AbsSubg,none,Key,CallsTo,Answers,KeyList,Neglist)|RestIn],
 	     [subgoal(AbsSubg,none,Key,CallsTo,Answers,KeyList,Neglist)|RestSet],RestOut):- !,
 	get_next_set(RestIn,Key,RestSet,RestOut).
 get_next_set(List,_Key,[],List).
+
+%----------------
+:- ensure_loaded(term_abstract).
+
+:- export print_sdg_info/0,print_sdg_info_modes/0, print_sdg_info_functor/0, print_sdg_info/1.
+:- import reverse/2 from basics.
+:- import writeq/1 from standard.
+:- import list_to_assoc/2,get_assoc/3 from assoc_xsb.
+
+print_sdg_info:- 
+	get_sdg_info(SDG),
+	print_sdg_info(SDG).
+
+print_sdg_info_modes:- 
+	get_sdg_info(SDG),
+	morph_dep_graph(SDG,abstract_modes,SDGOut),
+%	writeln(SDGOut),
+	print_sdg_info(SDGOut).
+
+print_sdg_info_functor:- 
+	get_sdg_info(SDG),
+	morph_dep_graph(SDG,abstract_functor,SDGOut),
+	print_sdg_info(SDGOut).
+
+print_sdg_info(SDG):- 
+	reverse(SDG,SDG1),
+        get_base_level(SDG1,Base),
+	get_subgoal_avl(SDG1,AVL), % writeln(avl(AVL)),
+	print_each_subgoal(SDG1,Base,AVL).
+
+print_each_subgoal([],_Base,_AVL).
+print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegSFList)|R],Base,AVL):- 
+        format("Subgoal: ~q~n",Subgoal),
+	(integer(Level) -> 
+	   Index is Level - Base,
+	   format("        SCC: ~d; Number of calls to this subgoal ~d; Number of answers ~d~n",[Index,CallsTo,Answers])
+         ; format("        Number of calls to this subgoal ~d; Number of answers ~d~n",[CallsTo,Answers]) ),
+	(PosSFList == [] -> true 
+          ; get_subgoal_list(PosSFList,AVL,PosSubgList),
+	    format("        Affects positively ",[]),
+	    print_subgoal_list(PosSubgList),nl),
+	(NegSFList == [] -> true 
+          ; get_subgoal_list(NegSFList,AVL,NegSubgList),
+	    format("        Affects negatively ",[]),
+	    print_subgoal_list(NegSubgList),nl),
+	print_each_subgoal(R,Base,AVL).
+
+get_subgoal_list([],_AVL,[]).
+get_subgoal_list([Key|KR],AVL,[Subg|SR]):- 
+	get_assoc(Key,AVL,Subg),
+	get_subgoal_list(KR,AVL,SR).
+
+print_subgoal_list([Subg]):- !,writeq(Subg).
+print_subgoal_list([Subg|R]):- !,writeq(Subg),write(' ; '),print_subgoal_list(R).
+
+get_base_level(SDG,Base):- 
+	SDG = [subgoal(_Subgoal,Level,_SF,_CallsTo,_Answers,_PosSFList,_NegSFList)|_],
+	(integer(Level) -> Base is Level - 1 ; Base = Level).
+
+get_subgoal_avl(SDG1,AVL):- 
+	get_kvs(SDG1,List),
+	list_to_assoc(List,AVL).
+
+get_kvs([],[]).
+get_kvs([subgoal(Subgoal,_Level,SF,_CallsTo,_Answers,_PosSFList,_NegSFList)|R],[SF-Subgoal|R1]):- 
+	get_kvs(R,R1).
 
 %----------------
 

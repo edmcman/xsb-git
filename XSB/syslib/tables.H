@@ -58,7 +58,7 @@
    log_all_forest_start/0, log_all_forest_start/1,
    log_all_forest_end/0, 
    log_forest/1, log_forest/2,
-   morph_sdg/3,
+   morph_dep_graph/3,
    print_incomplete_tables/0,print_incomplete_tables/1,
 print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks/0, 
            retract_table/1,          /* abolish/1 */

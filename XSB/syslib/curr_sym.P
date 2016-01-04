@@ -661,15 +661,20 @@ current_prolog_flag(Flag, Value) :-
 		true
 	;	\+ atom(Flag),\+ (Flag = tripwire(_)) ->
 		type_error(atom,Flag,current_prolog_flag/2,1)
-	;	\+ iso_flag(Flag),
-		\+ xsb_flag(Flag),
-		\+ prolog_commons_flag(Flag) ->
+	;	\+ iso_flag(Flag),\+ (Flag = tripwire(_)),\+ xsb_flag(Flag),\+ prolog_commons_flag(Flag) ->
 		domain_error(prolog_flag,Flag,current_prolog_flag/2,1)
 	;	true
 	),
 	(	iso_flag(Flag,Value) 
-	;	xsb_flag(Flag,Value)
-	;	prolog_commons_flag(Flag,Value)
+	;	Flag = tripwire(F),
+	        tripwire_1(F),
+    	        (  Value = action(A),
+   	           tripwire_action(F,FA),
+  	           xsb_flag(FA,A)
+  	         ; Value = parameter(P),
+  	           xsb_flag(F,P) )
+         ;      atom(Flag),\+ compound(Value),xsb_flag(Flag,Value)
+  	 ;	prolog_commons_flag(Flag,Value)
 	).
 
 settable_flag(unknown).
@@ -690,23 +695,19 @@ set_prolog_flag(Flag,Value) :-
 		instantiation_error(set_prolog_flag/2,1,bound)
 	;	var(Value) ->
 		instantiation_error(set_prolog_flag/2,2,bound)
-	;	atom(Flag) ->
-		true
-	;	type_error(atom,Flag,set_prolog_flag/2,1)
-	),
+	; true),
+% Don't check here -- want tripwires
+%	;	atom(Flag) ->
+%		true
+%	;	type_error(atom,Flag,set_prolog_flag/2,1)
+%	),
 	(	settable_flag(Flag) ->
 		(	settable_flag_value(Flag,Value) ->
 			retractall(settable_prolog_flag(Flag,_)),
 			asserta(settable_prolog_flag(Flag,Value))
-% old code for non-compliant exception term commented out
-%		;	findall(Val,settable_flag_value(Flag,Val),Vals),
-%			make_set_tail(Vals,SetVals),
-%			domain_error(['{'|SetVals],Value,set_prolog_flag/2,2)
 		;	domain_error(flag_value,Value,set_prolog_flag/2,2)
 		)
 	;	set_xsb_flag(Flag,Value)
-% error handled in xsb_flag
-%	 ;	permission_error(modify,flag,Flag,set_prolog_flag/2,1)
 	).
 
 %make_set_tail([Val],[Val,'}']) :- !.
@@ -784,13 +785,15 @@ xsb_flag(Flag):- xsb_flag(Flag,_),!.
 tripwire_1(max_table_subgoal_size).
 tripwire_1(max_table_answer_depth).
 tripwire_1(max_table_answer_list_depth).
-tripwire_1(max_answers_for_subgoal).
 tripwire_1(max_incomplete_subgoals).
 tripwire_1(max_scc_subgoals).
+% tripwire_1(max_answers_for_subgoal). << next to implement
 
-xsb_flag(tripwire(F),V):- 
-	tripwire_1(F),
-	xsb_flag(F,V).
+tripwire_action(max_table_subgoal_size,max_table_subgoal_action).
+tripwire_action(max_table_answer_depth,max_table_answer_action).
+tripwire_action(max_table_answer_list_depth,max_table_answer_list_action).
+tripwire_action(max_incomplete_subgoals,max_incomplete_subgoals_action).
+tripwire_action(max_scc_subgoals,max_scc_subgoals_action).
 
 xsb_flag(write_attributes,Value):- 
 	stat_flag(WRITE_ATTRIBUTES, V), 
@@ -992,11 +995,23 @@ xsb_flag(errors_with_position,Mode):-
 	stat_flag(ERRORS_WITH_POSITION, Flag),
 	( Flag =:= 0 -> Mode = off ; Mode = on ).
 
+%:- import writeln/1 from standard.
 set_xsb_flag(Type,Val):- 
-	check_nonvar(Type,set_xsb_flag/2,1),
-	check_nonvar(Val,set_xsb_flag/2,2),
+%	writeln(set_xsb_flag(Type,Val)),
+	check_ground(Type,set_xsb_flag/2,1),
+	check_ground(Val,set_xsb_flag/2,2),
 	set_xsb_flag_1(Type,Val).
 
+set_xsb_flag_1(tripwire(F),V):- 
+	tripwire_1(F),
+	(  V = action(A),
+	   tripwire_action(F,FA),
+  	   set_xsb_flag_1(FA,A)
+	 ; V = parameter(P),
+	   set_xsb_flag_1(F,P) ),!.
+%set_xsb_flag(tripwire(F),V):- 
+%	tripwire_1(F),
+%	set_xsb_flag_1(F,V).
 set_xsb_flag_1(write_depth, Depth) :- !, 
 	(integer(Depth) -> 
 	    stat_set_flag(WRITE_DEPTH, Depth)
