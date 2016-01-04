@@ -166,6 +166,8 @@ rm test_ec.xwam
 #--------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_sdg_preds "test."
 #--------------------------------------------------
+../gentest.sh "$XEMU -l $options" test_sdg_print "test."
+#--------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_trip "test."
 
 #VALGRIND

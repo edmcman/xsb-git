@@ -1,6 +1,6 @@
 :- compiler_options([spec_off]).
 
-:- import get_sdg_info/1, morph_sdg/3, sdg_scc_info/2 from tables.
+:- import get_sdg_info/1, morph_dep_graph/3, sdg_scc_info/2 from tables.
 :- import between/3 from basics.
 :- import break/0 from x_interp.
 :- import xsb_error_get_tag/2 from error_handler.
@@ -8,9 +8,9 @@
 :- ensure_loaded(term_abstract).
 
 test:- prepare(400),fail.
-test:- catch(morph_sdg([],1,_),E,(xsb_error_get_tag(E,Tag),writeln(test_1(Tag)))),fail.
-test:- catch(morph_sdg([],morph_2,foo),E,(xsb_error_get_tag(E,Tag),writeln(test_2(Tag)))),fail.
-test:- catch(morph_sdg([foo],morph_2,_),E,(xsb_error_get_tag(E,Tag),writeln(test_3(Tag)))),fail.
+test:- catch(morph_dep_graph([],1,_),E,(xsb_error_get_tag(E,Tag),writeln(test_1(Tag)))),fail.
+test:- catch(morph_dep_graph([],morph_2,foo),E,(xsb_error_get_tag(E,Tag),writeln(test_2(Tag)))),fail.
+test:- catch(morph_dep_graph([foo],morph_2,_),E,(xsb_error_get_tag(E,Tag),writeln(test_3(Tag)))),fail.
 test:- q_1(3,3),fail.  % simplest, w. id morph
 test:- q_2(3,3),fail.  % non-id morph
 test:- q_3(3,3),fail.  % morph composition
@@ -70,7 +70,7 @@ write_it(Morph):-
 	writeln('---------------'),
 	get_sdg_info(List),
 %	writeln(List),
-	morph_sdg(List,Morph,Listout),
+	morph_dep_graph(List,Morph,Listout),
 	writeln(Listout).
 
 write_scc:- 
@@ -84,8 +84,8 @@ double_morph:-
 	writeln('---------------'),
 	get_sdg_info(List),
 %	writeln(List),
-	morph_sdg(List,id_morph,List_1),
-	morph_sdg(List_1,morph_2_,Listout),
+	morph_dep_graph(List,id_morph,List_1),
+	morph_dep_graph(List_1,morph_2_,Listout),
 	writeln(Listout).
 
 :- table q/2 as incremental.
