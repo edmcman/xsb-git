@@ -729,34 +729,34 @@ to {\tt bounded\_rationality} (this ordering is not guaranteed).
 \subsubsection{Filtering, Manipulating, and Summarizing Dependency Graphs} \label{sec:dependency-graph-manipulation}
 
 \begin{description}
-\item  \ourmoditem{morph\_dep\_graph(+DGIn,+Morph,-DGOut)}{morph\_dep\_graph/3}{tables}
+\ourmoditem{morph\_dep\_graph(+DG\_In,+Morph,-DG\_Out)}{morph\_dep\_graph/3}{tables}
 %
-This predicate takes as input {\tt DGIn}, a dependency graph in
-adjacency list format and returns its image, {\tt DGOut}, under the
+This predicate takes as input {\tt DG\_In}, a dependency graph in
+adjacency list format and returns its image, {\tt DG\_Out}, under the
 graph homomorphism {\tt Morph}.  {\tt Morph} is a predicate symbol
 that identifies a 2-ary predicate, {\tt Morph(+In,-Out)} that is
 functional on {\tt In} and that maps the Herbrand Base of the current
-program into itself.  The syntax of {\tt DGIn} and {\tt DGOut} is
+program into itself.  The syntax of {\tt DG\_In} and {\tt DG\_Out} is
 described at the beginning of Section~\ref{sec: adjacency-lists}.
 
 To recall the definition of a graph homomorphism (cf. e.g.,
 ~\cite{Hara69}) a functional notation is used for {\tt Morph/2}.  {\tt
-  DGOut} is a graph such that the vertices of {\tt DGOut},
-$vertices({\tt DGOut})$ is the set:
+  DG\_Out} is a graph such that the vertices of {\tt DG\_Out},
+$vertices({\tt DG\_Out})$ is the set:
 \[
-\{ morph(V) | V \in vertices({\tt DGIn}) \}
+\{ morph(V) | V \in vertices({\tt DG\_In}) \}
 \]
-while the edges of {\tt DGOut}, $edges({\tt DGOut})$ are the sets
+while the edges of {\tt DG\_Out}, $edges({\tt DG\_Out})$ are the sets
 \[
-\{ \langle morph(V_1),morph(V_2) \rangle | \langle V_1,V_2 \rangle \in edges({\tt DGIn}) \}
+\{ \langle morph(V_1),morph(V_2) \rangle | \langle V_1,V_2 \rangle \in edges({\tt DG\_In}) \}
 \]
 We adapt this definition to signed dependency graphs by mapping all
 positive adjacenct edges into a positive set, and negative adjacent
 edges into a negative set.
 
 The power of {\tt morph\_dep\_graph/3} arises when the numbers of
-vertices and edges of {\tt DGIn} is large, and {\tt morph/2} ensures
-that numbers for {\tt DGOut} are much smaller -- thus allowing
+vertices and edges of {\tt DG\_In} is large, and {\tt morph/2} ensures
+that numbers for {\tt DG\_Out} are much smaller -- thus allowing
 recognizable patterns to emerge.
 
 For efficiency reasons, a special condition, ${\cal C}_1$, is assumed
@@ -773,8 +773,8 @@ For efficiency reasons, a special condition, ${\cal C}_1$, is assumed
   morphisms may also be useful as demonstrated in
   Example~\ref{ex:morph-sdg} below.
 
-While the syntax of {\tt SdgOut} is the same as that of {\tt SDGIn},
-the meaning of the arguments differs slightly.  {\tt SdgOut} is a
+While the syntax of {\tt SDG\_Out} is the same as that of {\tt SDG\_In},
+the meaning of the arguments differs slightly.  {\tt SDG\_Out} is a
 list of terms of the form:
 
 {\tt subgoal(MorphSubg,null,Key,CallsTo,Answers,PosKeyList,NegKeyList)} 
@@ -783,22 +783,22 @@ such that
 
 \bi
 \item {\tt MorphVert} is $morph({\tt Vertex})$ for one or more
-  subgoals that are vertices of {\tt DGIn}
+  subgoals that are vertices of {\tt DG\_In}
 \item The second argument, which represents SCC information in the
   original dependency graph, is the atom {\tt null} when a morphism is
   applied, since SCC information is not preserved in general.
 \item {\tt Key} is an atom identifying {\tt MorphVert}.  Note that
-  while each subgoal in {\tt DGIn} corresponds to e.g., a tabled
-  subgoal, a given subgoal image in {\tt DGOut} may not correspond to
+  while each subgoal in {\tt DG\_In} corresponds to e.g., a tabled
+  subgoal, a given subgoal image in {\tt DG\_Out} may not correspond to
   a tabled subgoal in the current state.  Thus a table entry handle
-  may not be available, so generated keys are used in {\tt DGOut}.
-\item {\tt CallsTo} If {\tt DGIn} originated from an SDG or IDG, {\tt
+  may not be available, so generated keys are used in {\tt DG\_Out}.
+\item {\tt CallsTo} If {\tt DG\_In} originated from an SDG or IDG, {\tt
   CallsTo} is the sum of the number of calls to every subgoal $S \in$
-  {\tt DGIn} such that $morph(S) = {\tt MorphVert}$.  Otherwise, {\tt
+  {\tt DG\_In} such that $morph(S) = {\tt MorphVert}$.  Otherwise, {\tt
     CallsTo} is 0.
-\item {\tt Answers} If {\tt DGIn} originated from an SDG or IDG, {\tt
+\item {\tt Answers} If {\tt DG\_In} originated from an SDG or IDG, {\tt
   Answers} is the sum of the number of answers for every subgoal $S
-  \in$ {\tt DGIn} such that $morph(S) = {\tt MorphVert}$.  Otherwise,
+  \in$ {\tt DG\_In} such that $morph(S) = {\tt MorphVert}$.  Otherwise,
      {\tt Answers} is 0.
 \item {\tt PosKeyList} is a list of the keys to those vertices adjacent
   to {\tt MorphSubg} with positive sign as described above.
@@ -820,12 +820,12 @@ map_arg_1(2,1):- !.
 map_arg_1(X,X).
 \end{verbatim}
 Thus {\tt mymorph/2} maps {\tt q(2,1)} to {\tt q(1,1)} and maps
-both {\tt q(1,1)} and {\tt q(3,1)} to themselves.  Then if {\tt DGIn}
+both {\tt q(1,1)} and {\tt q(3,1)} to themselves.  Then if {\tt DG\_In}
 is instantiated to the SDG produced in Example~\ref{ex:get-sdg}, the
-goal {\tt ?- morph\_dep\_graph(DGIn,mymorph,DGOut)} would produce:
+goal {\tt ?- morph\_dep\_graph(DG\_In,mymorph,DG\_Out)} would produce:
 
 \begin{verbatim}
-SdgOut = [subgoal(morph80,q(1,3),6,0,[morph80,morph81],[]),
+SDG\_Out = [subgoal(morph80,q(1,3),6,0,[morph80,morph81],[]),
           subgoal(morph81,q(3,3),3,0,[morph80],[])
 \end{verbatim}
 \end{example}
@@ -837,18 +837,18 @@ SdgOut = [subgoal(morph80,q(1,3),6,0,[morph80,morph81],[]),
 \item 	{\tt type\_error}
 \ei
 %
-\item 	{\tt DGOut} is not a variable
+\item 	{\tt DG\_Out} is not a variable
 \bi
 \item 	{\tt type\_error}
 \ei
 %
-\item 	{\tt DGIn} is not an adjacency list as described above
+\item 	{\tt DG\_In} is not an adjacency list as described above
 \bi
 \item 	{\tt misc\_error}
 \ei
 \ei
 %
-\item \ourmoditem{dep\_graph\_scc\_info(+SDG,-ListOut)}{dep\_graph\_scc\_info/2}{tables}
+\ourmoditem{dep\_graph\_scc\_info(+SDG,-ListOut)}{dep\_graph\_scc\_info/2}{tables}
 %
 Given an SDG representation in the adjacency list format described
 above, this predicate returns information about the SCCs that are
@@ -866,9 +866,37 @@ for each SCC under evaluation, such that:
 \item {\tt NumPosEdges} is the total number of positive edges within the SCC.
 \item {\tt NumNegEdges} is the total number of negative edges within the SCC.
   \ei
-\end{description}
 
-{\bf {\em TES: Add here or elsewhere sorting predicates for IDG}}
+\ourmoditem{print\_dep\_graph(+DG)}{print\_dep\_graph/1}{tables}
+%
+Prints the dependency graph {\tt DG} {\tt stdout} in a simple, but
+readable manner.
+%
+\begin{example}
+Continuing from Example~\ref{ex:morph-sdg}, if 
+
+\begin{verbatim}
+SDG = [subgoal(morph80,q(1,3),6,0,[morph80,morph81],[]),
+          subgoal(morph81,q(3,3),3,0,[morph80],[])
+\end{verbatim}
+
+then {\tt print\_dep\_graph(SDG)} would output
+
+\begin{verbatim}
+Subgoal: q(1,3)
+        Number of calls to this subgoal 6; Number of answers 0
+        Affects positively q(1,3) ; q(3,3)
+Subgoal: q(3,3)
+        Number of calls to this subgoal 3; Number of answers 0
+        Affects positively q(1,3) 
+\end{verbatim}
+\end{example}
+
+\ourmoditem{print\_sdg\_info}{print\_sdg\_info/0}{tables}
+%
+Prints the current SDG to {\tt stdout} in a readable manner.
+
+\end{description}
 
 \subsection{Summary: Inspection Predicates}
 
@@ -930,7 +958,7 @@ inspection predicates available in XSB are:
 All of these predicates, except for {\tt get\_sdg\_info/1}, can be
 used to retrospecitively analyze any completed derivation, as long as
 the derivations tables have not been abolished.  In addition, all of
-the predicates can be used to analyze an onkoging derivation by
+the predicates can be used to analyze an onoging derivation by
 suspending the derivation and then examining the computation from a
 subsidiary command-line interpreter.  This can be especially important
 for long-running computaiotions or those that take a lot of space.
@@ -980,8 +1008,8 @@ restraint.
 Tripwires may be set in various ways: most can be set and viewed as
 Prolog flags, others can also be set via the {\tt table/1}
 declaration, while still others can only be set by explicit
-programming.  Tripwires thus represent a unified way of setting bounds
-on a tabled derivation, rather than a unified API.
+programming.  Tripwires thus represent a unified way of understanding
+bounds on a tabled derivation, rather than a unified API.
 
 For a tripwire {\tt T} that can be set and viewed as a Prolog flag,
 the flag name has the form {\tt tripwire(T)}, and this flag has two or
