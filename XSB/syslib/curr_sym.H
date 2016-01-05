@@ -52,7 +52,7 @@
 :- import xsb_configuration/2 from xsb_configuration.
 :- import sys_main_memory/1 from shell.
 :- import fmt_write_string/3, is_valid_stream/2 from file_io.
-:- import check_nonvar/3, 
+:- import check_nonvar/3, check_ground/3,
    %check_number/3,
           domain_error/5, type_error/4, permission_error/4,
           instantiation_error/3, domain_error/4 from error_handler.
