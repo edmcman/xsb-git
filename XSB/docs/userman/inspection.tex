@@ -265,7 +265,7 @@ dependency graphs may be too large for humans to productively read, we
 also present predicates that allow filtering, manipulation and summary
 of these graphs.
 
-\subsubsection{A Prolog Format for Dependency Graphs} \label{sec: adjacency-lists}
+\subsubsection{A Prolog Format for Dependency Graphs} \label{sec:adjacency-lists}
 
 Several of the inspection predicates produce a dependency graph in Prolog
 in the format of adjacency lists.  This format also annotates
@@ -334,7 +334,7 @@ The main predicate for accessing information about the SDG is {\tt
 %
 For a suspended derivation, returns information about the {\em
   Subgoal Dependency Graph} (SDG) as an adjacency list whose form is
-described in Section~\ref{sec: adjacency-lists}.
+described in Section~\ref{sec:adjacency-lists}.
 %
 If there are no incomplete tables in the current state, an empty list
 is returned.
@@ -417,8 +417,7 @@ to be updated or not.
 {\bf {\em Warning: this predicate is not yet implemented}}
 
 Returns information about the {\em Incremental Dependency Graph} (IDG)
-as an adjacency list whose form is described in Section~\ref{sec:
-  adjacency-lists}.
+as an adjacency list whose form is described in Section~\ref{sec:adjacency-lists}.
 %
 If there is an empty IDG in the current state, an empty list
 is returned.
@@ -557,8 +556,7 @@ obtained through predicates such as {\tt get\_residual/2} and {\tt
 {\bf {\em Warning: this predicate is not yet implemented}}
 
 Returns information about the {\em Residual Dependency Graph} (RDG) as
-an adjacency list whose form is described in Section~\ref{sec:
-  adjacency-lists}.
+an adjacency list whose form is described in Section~\ref{sec:adjacency-lists}.
 %
 If there is an empty RDG in the current state, an empty list
 is returned.
@@ -737,7 +735,7 @@ graph homomorphism {\tt Morph}.  {\tt Morph} is a predicate symbol
 that identifies a 2-ary predicate, {\tt Morph(+In,-Out)} that is
 functional on {\tt In} and that maps the Herbrand Base of the current
 program into itself.  The syntax of {\tt DG\_In} and {\tt DG\_Out} is
-described at the beginning of Section~\ref{sec: adjacency-lists}.
+described at the beginning of Section~\ref{sec:adjacency-lists}.
 
 To recall the definition of a graph homomorphism (cf. e.g.,
 ~\cite{Hara69}) a functional notation is used for {\tt Morph/2}.  {\tt
