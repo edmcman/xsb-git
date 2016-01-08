@@ -403,7 +403,8 @@ codes_to_term_d([0'[|Rest0],Rest,ST0,ST,Term) :- !,
 codes_to_term_d(Rest0,Rest,ST0,ST,Term) :-
 	next_token(Rest0,Rest1,ST0,ST1,Tok0),
 	(Rest1 = [0'(|Rest2]
-	 ->	codes_to_term(Rest2,Rest3,ST1,ST2,Tok1),
+	 ->	nonvar(Tok0),
+		codes_to_term(Rest2,Rest3,ST1,ST2,Tok1),
 		codes_to_term_list(Rest3,[0')|Rest4],Terms,[],ST2,ST),
 		scan_blanks(Rest4,Rest),
 		Term =.. [Tok0,Tok1|Terms]
