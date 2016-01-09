@@ -788,6 +788,7 @@ abolish1(Term) :-
 	conpsc(Term,Psc),
 	psc_type(Psc, Type),
 	immutable_predicate_psc(Psc,Immutable),
+%	writeln(immutable_predicate_psc(Psc,Immutable)),
 	(Immutable == 1 -> 
 	    verbose_writeln('Debug immutable: can''t abolish immutable'(Term)) ,fail
 	  ; true),
@@ -798,7 +799,7 @@ abolish1(Term) :-
 		unload_seg(Ep),	    % free the space
 		psc_init_info(Psc)
 	 /**
-		psc_set_type(Psc, T_ORDI),
+                psc_set_type(Psc, T_ORDI),
 		NewEP is Psc+4*8, %WORDSIZE,
 		psc_set_ep(Psc, NewEP) **/
 		/*,psc_set_env(Psc, T_UNLOADED)*/
@@ -807,7 +808,7 @@ abolish1(Term) :-
 
 immutable_predicate_psc(Psc,Immutable):- 
      psc_data(Psc, ModulePsc),
-     (ModulePsc == 0 -> 
+     (( atom(ModulePsc) ; ModulePsc == 0)-> 
         Immutable = 0
       ; psc_immutable(ModulePsc,Immutable)).
 
