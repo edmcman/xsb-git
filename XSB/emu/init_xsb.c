@@ -269,7 +269,7 @@ static void init_flags(CTXTdecl)
   flags[MAX_TABLE_ANSWER_LIST_DEPTH] = MY_MAXINT;
   flags[MAX_TABLE_ANSWER_LIST_ACTION] = XSB_ERROR;
 
-
+  flags[CYCLIC_CHECK_SIZE] = 1000;
   flags[MAXTOINDEX_FLAG] = 5;
 #ifdef MULTI_THREAD
   flags[MAX_QUEUE_TERMS] = DEFAULT_MQ_SIZE; 

@@ -1,6 +1,6 @@
 /* File:      tries.c
 ** Author(s): Prasad Rao, David S. Warren, Kostis Sagonas,
-**    	      Juliana Freire, Baoqiu Cui
+**    	      Juliana Freire, Baoqiu Cui, Teri Swift
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -1860,76 +1860,112 @@ int can_abstract;
 int vcs_tnot_call = 0;
 #endif
 
-#define CHECK_CALL_TERM_DEPTH(xtemp1)					\
-  if (--depth_ctr <= 0) {                                               \
-    /*printf("ent CHECK_CALL_TERM_DEPTH\n");*/				\
-    if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE \
-	&& !vcs_tnot_call) {								\
-      Cell newElement;                                                  \
-      CPtr pElement = xtemp1;                                           \
-      /*      printf("begin abs reg1 dc %d ",depth_ctr);printterm(stddbg,reg[1],8);printf("\n"); */ \
-      /*      printf("abstracting %p @ %p\n",pElement,*pElement);		*/ \
-      XSB_Deref(*pElement);						\
-      newElement = (Cell) hreg;new_heap_free(hreg);                     \
-      hbreg = hreg;                                                     \
-      /*      printf("1) newElement %p @newElement %x\n",newElement,*(CPtr)newElement);	*/ \
-      push_AbsStk(*pElement,newElement);				\
-      /*                 CPtr tempElement = (CPtr) *pElement;		*/ \
-		 /*          printterm(stddbg,tempElement,8);printf("-3\n"); */	\
-		 /*           printf("trailing %p/%p\n",tempElement, newElement);	*/ \
-      push_pre_image_trail0(pElement, newElement);			 \
-      /*            printf("2) newElement %p @newElement %x\n",newElement,*(CPtr)newElement); */ \
-      *pElement = newElement;                                           \
-      /*            printterm(stddbg,pElement,8);printf("-4\n");	*/ \
-      *(--SubsFactReg) = (Cell) newElement;                             \
-      StandardizeVariable(newElement,ctr);                              \
-      /*            printf("3) newElement %p @newElement %x\n",newElement,*(CPtr)newElement); */ \
-      one_btn_chk_ins(flag,EncodeNewTrieVar(ctr),CZero,CALL_TRIE_TT);	\
-      ctr++;                                                            \
-      /*            printf("end abs reg1 ");printterm(stddbg,reg[1],8);printf("\n"); */	\
-      /*            print_AbsStack();						*/ \
-    }                                                                   \
-    else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_FAILURE) {          \
-      /*      char buffer[2*MAXTERMBUFSIZE];				*/ \
-      /*      sprintCyclicTerm(CTXTc buffer,(Cell) (call_arg), MAXTERMBUFSIZE);	*/ \
-      /*      printf("...Cyclic term in arg %d of tabled subgoal %s\n",i+1,buffer);*/ \
-      resetpdl;                                                         \
-      return XSB_FAILURE;                                               \
-    }                                                                   \
-    else /* if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) */ {	\
-      safe_delete_branch(Paren);					\
-      resetpdl;								\
-      while (--tSubsFactReg > SubsFactReg) {				\
-	/*    printf("vc untrail %p/%p\n",tSubsFactReg,*tSubsFactReg);	*/ \
-	if (isref(*tSubsFactReg))	/* a regular variable */	\
-	  ResetStandardizedVariable(*tSubsFactReg);			\
-	else			/* an XSB_ATTV */			\
-	  ResetStandardizedVariable(clref_val(*tSubsFactReg));		\
-      }									\
-      if (vcs_tnot_call) {						\
-	vcs_tnot_call = 0;						\
-	if (is_cyclic(CTXTc (Cell)call_arg)) {				\
-	  sprintCyclicRegisters(CTXTc forest_log_buffer_1, TIF_PSC(CallInfo_TableInfo(*call_info))); \
-	  xsb_abort("Cyclic term in arg %d of tabled subgoal tnot(%s)\n",i+1,forest_log_buffer_1->fl_buffer); \
-	}                            					\
-	else {								\
-	  sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
-	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,"Exceeded max table subgoal depth of %d in arg %i in tnot(%s)\n", \
-		    (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer);	\
-	}								\
-      }									\
-      else {								\
-	if (is_cyclic(CTXTc (Cell) call_arg)) {				\
-	  sprintCyclicRegisters(CTXTc forest_log_buffer_1, TIF_PSC(CallInfo_TableInfo(*call_info))); \
-	  xsb_abort("Cyclic term in arg %d of tabled subgoal %s\n",i+1,forest_log_buffer_1->fl_buffer);	\
-	}								\
-	else {								\
-	  sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
-	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,"Exceeded max table subgoal depth of %d in arg %i in %s\n", \
-		  (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer);	\
-	}								\
-      }									\
+#define abort_on_cyclic_subgoal   {					\
+    if (vcs_tnot_call) {						\
+      vcs_tnot_call = 0;						\
+      sprintCyclicRegisters(CTXTc forest_log_buffer_1, TIF_PSC(CallInfo_TableInfo(*call_info))); \
+      xsb_abort("Cyclic term in arg %d of tabled subgoal tnot(%s)\n",i+1,forest_log_buffer_1->fl_buffer); \
     }									\
+    else {								\
+      sprintCyclicRegisters(CTXTc forest_log_buffer_1, TIF_PSC(CallInfo_TableInfo(*call_info))); \
+      xsb_abort("Cyclic term in arg %d of tabled subgoal %s\n",i+1,forest_log_buffer_1->fl_buffer); \
+    }									\
+  }
+
+#define	clean_up_table_structures_for_throw {				\
+	safe_delete_branch(Paren);					\
+	resetpdl;							\
+	while (--tSubsFactReg > SubsFactReg) {				\
+	  /*    printf("vc untrail %p/%p\n",tSubsFactReg,*tSubsFactReg);	*/ \
+	  if (isref(*tSubsFactReg))	/* a regular variable */	\
+	    ResetStandardizedVariable(*tSubsFactReg);			\
+	  else			/* an XSB_ATTV */			\
+	    ResetStandardizedVariable(clref_val(*tSubsFactReg));	\
+	}								\
+  }
+
+
+#define subgoal_cyclic_term_check(xtemp1) {					\
+    if (second_checking_phase == FALSE && pred_depth > flags[CYCLIC_CHECK_SIZE])	{ \
+      if (is_cyclic(CTXTc (Cell)call_arg)) {				\
+		clean_up_table_structures_for_throw;			\
+	abort_on_cyclic_subgoal;					\
+      }									\
+      second_checking_phase = TRUE;					\
+      depth_ctr = depth_ctr + pred_depth - flags[CYCLIC_CHECK_SIZE];	\
+      /*      printf("new depth counter is %lu\n",depth_ctr);	*/	\
+    }									\
+  }
+
+#define handle_call_term_depth(xtemp1) {				\
+    /* At this point, we've already performed the cycle check:  need to do the full check. */ \
+      if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE && !vcs_tnot_call) { \
+	Cell newElement;						\
+	CPtr pElement = xtemp1;						\
+	/*      printf("begin abs reg1 dc %d ",depth_ctr);printterm(stddbg,reg[1],8);printf("\n"); */ \
+	/*      printf("abstracting %p @ %p\n",pElement,*pElement);		*/ \
+	XSB_Deref(*pElement);						\
+	newElement = (Cell) hreg;new_heap_free(hreg);			\
+	hbreg = hreg;							\
+	/*      printf("1) newElement %p @newElement %x\n",newElement,*(CPtr)newElement);	*/ \
+	push_AbsStk(*pElement,newElement);				\
+	/*                 CPtr tempElement = (CPtr) *pElement;		*/ \
+	/*          printterm(stddbg,tempElement,8);printf("-3\n"); */	\
+	/*           printf("trailing %p/%p\n",tempElement, newElement);	*/ \
+	push_pre_image_trail0(pElement, newElement);			\
+	/*            printf("2) newElement %p @newElement %x\n",newElement,*(CPtr)newElement); */ \
+	*pElement = newElement;						\
+	/*            printterm(stddbg,pElement,8);printf("-4\n");	*/ \
+	*(--SubsFactReg) = (Cell) newElement;				\
+	StandardizeVariable(newElement,ctr);				\
+	/*            printf("3) newElement %p @newElement %x\n",newElement,*(CPtr)newElement); */ \
+	one_btn_chk_ins(flag,EncodeNewTrieVar(ctr),CZero,CALL_TRIE_TT);	\
+	ctr++;								\
+	/*            printf("end abs reg1 ");printterm(stddbg,reg[1],8);printf("\n"); */ \
+	/*            print_AbsStack();						*/ \
+      }									\
+      else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_FAILURE) {	\
+	/*      char buffer[2*MAXTERMBUFSIZE];				*/ \
+	/*      sprintCyclicTerm(CTXTc buffer,(Cell) (call_arg), MAXTERMBUFSIZE);	*/ \
+	/*      printf("...Cyclic term in arg %d of tabled subgoal %s\n",i+1,buffer);*/ \
+	/*	resetpdl;						*/ \
+	clean_up_table_structures_for_throw;				\
+	return XSB_FAILURE;						\
+      }									\
+      else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {	\
+	printf("Debug: suspending on max_scc_subgoals\n");		\
+	tripwire_interrupt("max_table_subgoal_handler");		\
+      }									\
+      else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{	\
+	clean_up_table_structures_for_throw;				\
+	if (is_cyclic(CTXTc (Cell)call_arg)) {				\
+	  abort_on_cyclic_subgoal;					\
+	}								\
+	else {								\
+	  if (vcs_tnot_call) {						\
+	    vcs_tnot_call = 0;						\
+	    sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
+	    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
+				  "Exceeded max table subgoal depth of %d in arg %i in tnot(%s)\n", \
+				  (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
+	  }								\
+	  else {							\
+	    sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
+	    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
+				  "Exceeded max table subgoal depth of %d in arg %i in %s\n", \
+				  (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
+	  }								\
+	}								\
+      }									\
+  }									
+
+/* Cycle check will usually (not always) be done sooner than term depth/size check.  */
+#define CHECK_CALL_TERM_DEPTH(xtemp1)					\
+  if (--depth_ctr <= 0) {						\
+    subgoal_cyclic_term_check(xtemp1);						\
+  }									\
+  if (depth_ctr <= 0) {							\
+    handle_call_term_depth(xtemp1);					\
   } else
 
 /* xtemp1 is a register */
@@ -2085,6 +2121,7 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
   BTNptr Paren, *ChildPtrOfParen;
   byte interning_terms;
   Integer termsize;
+  int second_checking_phase = FALSE;
 
 #if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
   subg_chk_ins++;
@@ -2123,10 +2160,13 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
 	      get_name(TIF_PSC(CallInfo_TableInfo(*call_info))),
 	      get_arity(TIF_PSC(CallInfo_TableInfo(*call_info))));
 
+
   for (i = 0; i < arity; i++) {
     can_abstract = TRUE;
 
-    depth_ctr = pred_depth;
+    if (flags[CYCLIC_CHECK_SIZE] < pred_depth) depth_ctr = flags[CYCLIC_CHECK_SIZE];
+    else depth_ctr = pred_depth;
+
     call_arg = (CPtr) (cptr + i);            /* Note! start with reg[1] */
     XSB_CptrDeref(call_arg);
     tag = cell_tag(call_arg);
