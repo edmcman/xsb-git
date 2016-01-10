@@ -1386,7 +1386,7 @@ get_next_set([subgoal(AbsSubg,none,Key,CallsTo,Answers,KeyList,Neglist)|RestIn],
 get_next_set(List,_Key,[],List).
 
 %----------------
-:- ensure_loaded(term_abstract).
+%:- ensure_loaded(term_abstract).
 
 :- export print_sdg_info/0,print_sdg_info_modes/0, print_sdg_info_functor/0, print_sdg_info/1.
 :- import reverse/2 from basics.
