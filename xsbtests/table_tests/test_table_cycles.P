@@ -1,0 +1,27 @@
+:- import xsb_error_get_message/2 from error_handler.
+
+init:- 
+	set_prolog_flag(cyclic_check_size,15),
+	set_prolog_flag(max_table_subgoal_size,30).
+
+:- table p/1.
+p(_).
+
+test:- catch(t1,E,(xsb_error_get_message(E,M),writeln(M))),fail.
+test:- catch(t2,E,(xsb_error_get_message(E,M),writeln(M))),fail.
+test.
+
+t1:- X = p(X), call(X).
+
+t2:- init,makelist(100,X),p(X).
+
+makelist(0,[]):-!.
+makelist(N,[N|R]):-	
+   N1 is N - 1,
+   makelist(N1,R).
+
+
+:- table t_i/1 as intern.
+t_i(X):- p(X,X).
+
+p(a,a).

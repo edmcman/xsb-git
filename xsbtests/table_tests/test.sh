@@ -169,6 +169,8 @@ rm test_ec.xwam
 ../gentest.sh "$XEMU -l $options" test_sdg_print "test."
 #--------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_trip "test."
+#--------------------------------------------------
+../gentest.sh "$XEMU -l $options" test_table_cycles "test."
 
 #VALGRIND
 if test "$valgrind" = "true"; then
