@@ -924,8 +924,10 @@ xsb_flag(warning_action,Action):-
 	  ; (A == SILENT_WARNING -> 
 	      Action = silent_warning
 	     ; A == ERROR_WARNING,Action = error_warning) ).
-xsb_flag(max_table_subgoal_size,Action):- 
-	stat_flag(MAX_TABLE_SUBGOAL_SIZE,Action).
+xsb_flag(max_table_subgoal_size,Size):- 
+	stat_flag(MAX_TABLE_SUBGOAL_SIZE,Size).
+xsb_flag(cyclic_check_size,Size):- 
+	stat_flag(CYCLIC_CHECK_SIZE,Size).
 xsb_flag(max_table_subgoal_action, Action) :-
 	stat_flag(MAX_TABLE_SUBGOAL_ACTION, A),
 	(A == XSB_ERROR -> Action = error 
@@ -1134,6 +1136,8 @@ set_xsb_flag_1(warning_action,Action):- !,
 	        ; domain_error([print_warning,', ',silent_warning,', ',error_warning],
 	                        Action,set_xsb_flag/2,2,'warning_action clause') ) ) ),
 	 stat_set_flag(WARNING_ACTION,A).
+set_xsb_flag_1(cyclic_check_size, Size) :-!,
+	stat_set_flag(CYCLIC_CHECK_SIZE,Size).
 set_xsb_flag_1(max_table_subgoal_size, Size) :-!,
 	stat_set_flag(MAX_TABLE_SUBGOAL_SIZE, Size).
 set_xsb_flag_1(max_table_subgoal_action, Action) :-!,
