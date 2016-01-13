@@ -76,3 +76,5 @@ options=$2
 #--------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_table_errors "test."
 #--------------------------------------------------
+../gentest.sh "$XEMU -l $options" test_goal_interrupt "test."
+#--------------------------------------------------

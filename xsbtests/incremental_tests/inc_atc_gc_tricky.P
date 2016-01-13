@@ -153,8 +153,8 @@ a10(b,0)
 Delaying abolish of table in use: p/2
 Skipping: p/2
 a11(c,1)
+a11(b,1)
 Garbage Collecting Predicate: p/2
-a11(b,0)
 0
 ---------------
 
