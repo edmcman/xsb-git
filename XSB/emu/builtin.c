@@ -1783,6 +1783,7 @@ int builtin_call(CTXTdeclc byte number)
       char *goalname;
       CPtr addr;
       if (psc == colon_psc) {
+	//printf("found colon_psc\n");
 	Cell modstring = get_str_arg(goal,1);
 	XSB_Deref(modstring);
 	if (!isstring(modstring)) {
@@ -1790,18 +1791,26 @@ int builtin_call(CTXTdeclc byte number)
 	  return FALSE;
 	}
 	modpsc = pair_psc(insert_module(0,string_val(modstring)));
+	//printf("modpsc1 %s\n",get_name(modpsc));
 	goal = get_str_arg(goal,2);
 	XSB_Deref(goal);
 	if (!isstring(goal)) {
 	  psc = get_str_psc(goal);
+	  //printf("here00 %s/%d\n",get_name(psc),get_arity(psc));
+	} else {
+	  //printf("isstring\n");
+	  psc = pair_psc(insert(string_val(goal),(byte)k,modpsc,&new));
 	}
       } else {
+	//printf("string\n");
 	modpsc = get_mod_for_psc(psc);
       }
+      //printf("here0 %s/%d\n",get_name(psc),get_arity(psc));
       if (isstring(goal)) {
 	for (i = 1; i <= k; i++) {
 	  bld_copy(reg+i,cell(reg+i+1));
 	}
+	//printf("inserting\n");  
 	newpsc = pair_psc(insert(string_val(goal),(byte)k,modpsc,&new));
 	pcreg = get_ep(newpsc);
 	if (asynint_val) intercept(CTXTc newpsc);
@@ -1824,6 +1833,7 @@ int builtin_call(CTXTdeclc byte number)
       goalname = get_name(psc);
       if (!modpsc) modpsc = (Psc)flags[CURRENT_MODULE];
       if (!modpsc) modpsc = global_mod;
+      //printf("inserting %s/%d into modpsc %s\n",goalname,get_arity(psc),get_name(modpsc));
       newpsc = pair_psc(insert(goalname,(byte)(arity+k),modpsc,&new));
       if (new) {
 	set_data(newpsc, modpsc);
