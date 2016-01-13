@@ -5,7 +5,7 @@
 :- import break/0 from x_interp.
 :- import xsb_error_get_tag/2 from error_handler.
 :- import prepare/1 from gensym.
-:- ensure_loaded(term_abstract).
+%:- ensure_loaded(term_abstract).
 
 test:- prepare(400),fail.
 test:- catch(morph_dep_graph([],1,_),E,(xsb_error_get_tag(E,Tag),writeln(test_1(Tag)))),fail.
@@ -50,7 +50,7 @@ q_6(M,N):- between(1,N,X),
 
 :- table q_7/2.
 q_7(M,N):- between(1,N,X),
-         (M = N,N = X -> write_it(abstract_modes) ; true),q_7(X,N).
+         (M = N,N = X -> write_it(tables:abstract_modes) ; true),q_7(X,N).
 
 :- table q_8/2.
 q_8(M,N):- between(1,N,X),
