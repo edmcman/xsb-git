@@ -119,7 +119,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 
 :- import
    domain_error/4, domain_error/5, check_nonvar/3, type_error/4, table_error/1, 
-   check_atom/3,check_var/3,
+   check_atom/3,check_var/3,check_ground/3,
    permission_error/4, check_cyclic/3, misc_error/1
    from error_handler.
 
@@ -143,7 +143,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
  :- import bagof/3, findall/3, setof/3, sort/2, excess_vars/4 from setof.
 
 :- import
-	(=..)/2, abort/1, call/1,
+   (=..)/2, abort/1, call/1,arg/3,
 	functor/3, is_attv/1, tcall/1,
 	(index)/2, (==)/2
    from standard.
@@ -155,7 +155,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 :- import variant/2 from subsumes.
 :- import invalidate_table_for/2 from usermod.
 
-   :- import trie_interned/2,trie_intern/2,new_trie/1,delete_trie/1 from intern.
+:- import trie_interned/2,trie_intern/2,new_trie/1,delete_trie/1 from intern.
 :- import gensym/2 from gensym.
 
 /* ------------------- end of file tables.H --------------------------- */

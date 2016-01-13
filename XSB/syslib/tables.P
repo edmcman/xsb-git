@@ -1120,7 +1120,11 @@ scc_has_delay(Scc):-
 	del(_Called,Caller,_Ctr),
 	check_variant(cmp(Caller,Scc,_Ctr1),1).
 
-analyze_an_scc(Scc,File,Abstraction):-
+analyze_an_scc(Scc,File,Abstraction_in):-
+	functor(Abstraction_in,F,A),
+	(F = ':',A = 2 -> 
+	    arg(1,Abstraction_in,Module),arg(2,Abstraction_in,Abstraction) 
+	  ; Module = usermod,Abstraction = Abstraction_in),
 	count_subgoals_in_scc(Scc,Subgoals),
 	count_backlinks_in_scc(Scc,Links,Ninks),
 	Density is (Subgoals+Links)/Subgoals,
@@ -1128,8 +1132,8 @@ analyze_an_scc(Scc,File,Abstraction):-
 		[Subgoals,Links,Density]),
 	format("There are ~1D negative edges resulting in 0 delays and 0 simplifications~n",
 		[Ninks]),
-	nl,count_preds(Scc,Abstraction),
-	nl,report_links(Scc,File,Abstraction).
+	nl,count_preds(Scc,Module,Abstraction),
+	nl,report_links(Scc,File,Module,Abstraction).
 
 count_subgoals_in_scc(Scc,Num):-
 	findall(1,cmp(_T,Scc,_),Ones),
@@ -1158,12 +1162,12 @@ count_preds(S):-
 	fail.
 count_preds(_).
 
-count_preds(S,Abstraction):- 
-	setof(pred(C,P),count_preds_1(S,P,C,Abstraction),Preds),
+count_preds(S,Module,Abstraction):- 
+	setof(pred(C,P),count_preds_1(S,P,C,Module,Abstraction),Preds),
 	member(pred(C,P),Preds),
 	format("There are ~1D subgoals in the SCC for the predicate ~q~n",[C,P]),
 	fail.
-count_preds(_,_).
+count_preds(_,_,_).
 
 count_preds_1(S,F/A,C):- 
 	bagof(F1/A1,Term^Ctr^(cmp(Term,S,Ctr), 
@@ -1172,19 +1176,27 @@ count_preds_1(S,F/A,C):-
 	        Fs),
 	length(Fs,C).
 
-count_preds_1(S,New,C,Abstraction):- 
+:- import '='/2 from standard.
+count_preds_1(S,New,C,Module,Abstraction):- 
 	bagof(New1,Term^Ctr^(cmp(Term,S,Ctr), 
-	                     abstract_term(Term,New,Abstraction),
+	                     abstract_term(Term,New,Module,Abstraction),
 	                     New = New1),
 	      As),
 	length(As,C).
 
+abstract_term(Term,Abs,Module,Abstraction):-
+	copy_term(Abstraction,Abstraction1),
+	arg(1,Abstraction1,Term),
+	call_c(Module:Abstraction1),
+	arg(2,Abstraction1,Abs).
+
+/*
 abstract_term(Term,Abs,Abstraction):-
 	copy_term(Abstraction,Abstraction1),
 	arg(1,Abstraction1,Term),
 	call_c(usermod:Abstraction1),
 	arg(2,Abstraction1,Abs).
-
+*/
 %----------------
 
 report_links(S,File):-
@@ -1193,8 +1205,8 @@ report_links(S,File):-
 	count_occs(List1,Occs),
 	report_links_1(Occs,File).
 
-report_links(S,File,Abstraction):-
-	bagof(Link,count_links_1(S,Link,Abstraction),List),
+report_links(S,File,Module,Abstraction):-
+	bagof(Link,count_links_1(S,Link,Module,Abstraction),List),
 	parsort(List,[asc(1),asc(2)],0,List1),
 	count_occs(List1,Occs),
 	report_links_1(Occs,File).
@@ -1216,14 +1228,14 @@ count_links_1(S,(F1/A1,F2/A2)):-
 	get_functor(T1,F1/A1),
 	get_functor(T2,F2/A2).
 
-count_links_1(S,(Abstr1,Abstr2),Abstraction):- 
+count_links_1(S,(Abstr1,Abstr2),Module,Abstraction):- 
 	(tc(T1,T2,State,_Ctr),State \= cmp ; nc(T1,T2,State,_Ctr),State \= cmp),
 	check_variant(cmp(T1,S,_),1),
 	check_variant(cmp(T2,S,_),1),
 	copy_term(Abstraction,Abstraction1),
 	copy_term(Abstraction,Abstraction2),
-	abstract_term(T1,Abstr1,Abstraction1),
-	abstract_term(T2,Abstr2,Abstraction2).
+	abstract_term(T1,Abstr1,Module,Abstraction1),
+	abstract_term(T2,Abstr2,Module,Abstraction2).
 /*
 	arg(1,Abstraction1,T1),
 	call_c(usermod:Abstraction1),
@@ -1306,30 +1318,38 @@ remove_gencon_cp([H|T],Genparent,[H|T1]):-
 %-------------
 
 morph_dep_graph(SdgIn,Abstr,SdgOut):-	
-	check_atom(Abstr,morph_dep_graph/3,1),
+	check_ground(Abstr,morph_dep_graph/3,2),
+	(Abstr = Module:Call -> 
+	   check_atom(Module,morph_dep_graph/3,2),
+	   check_atom(Call,morph_dep_graph/3,2)
+	 ; check_atom(Abstr,morph_dep_graph/3,2),Module = usermod,Call = Abstr ),
 	check_var(SdgOut,morph_dep_graph/3,3),
 	new_trie(SFMapSubg),new_trie(AbsMapSF),
-	morph_dep_graph_1(SdgIn,Abstr,SFMapSubg,AbsMapSF,SdgOut).
+	morph_dep_graph_1(SdgIn,Module,Call,SFMapSubg,AbsMapSF,SdgOut).
 
-morph_dep_graph_1(SdgIn,Abstr,SFMapSubg,AbsMapSF,SdgOut):- 
-	morph_dep_graph_init_tries(SdgIn,Abstr,SFMapSubg,AbsMapSF),
+morph_dep_graph_1(SdgIn,Module,Call,SFMapSubg,AbsMapSF,SdgOut):- 
+	morph_dep_graph_init_tries(SdgIn,Module,Call,SFMapSubg,AbsMapSF),
 	morph_dep_graph_nodes(SdgIn,SFMapSubg,AbsMapSF,Sdg1),
 	sort(Sdg1,Sdg2),
 	merge_sdg_nodes(Sdg2,SdgOut),
 	delete_trie(SFMapSubg),
 	delete_trie(AbsMapSF),
 	!.
-morph_dep_graph_1(SdgIn,_Abstr,SFMapSubg,AbsMapSF,_SdgOut):- 
+morph_dep_graph_1(SdgIn,_AbsMod,_AbsCall,SFMapSubg,AbsMapSF,_SdgOut):- 
 	delete_trie(SFMapSubg),delete_trie(AbsMapSF),
 	misc_error(['Improper form for input SDG: ',SdgIn]).
 
-morph_dep_graph_init_tries([],_Abstr,_SFMapSubg,_AbsMapSF).
-morph_dep_graph_init_tries([subgoal(Subgoal,_Level,SF,_CallsTo,_Answers,_PosSFList,_NegSFList)|Rest],Abstr,SFMapAbs,AbsMapSF):- 
-	call(Abstr,Subgoal,AbsSubg),
+:- import ':'/2 from standard.
+morph_dep_graph_init_tries([],_AbsMod,_AbsCall,_SFMapSubg,_AbsMapSF).
+morph_dep_graph_init_tries([subgoal(Subgoal,_Level,SF,_CallsTo,_Answers,_PosSFList,_NegSFList)|Rest],
+	                    AbsMod,AbsCall,SFMapAbs,AbsMapSF):- 
+%	writeln(call(AbsMod:AbsCall,Subgoal,AbsSubg)),
+	call((AbsMod:AbsCall),Subgoal,AbsSubg),
+%	writeln(called(AbsMod:AbsCall,Subgoal,AbsSubg)),
 	trie_intern(p(SF,AbsSubg),SFMapAbs),
-	gensym(Abstr,Sym),
+	gensym(AbsCall,Sym),
         trie_intern(p(AbsSubg,Sym),AbsMapSF),
-	morph_dep_graph_init_tries(Rest,Abstr,SFMapAbs,AbsMapSF).
+	morph_dep_graph_init_tries(Rest,AbsMod,AbsCall,SFMapAbs,AbsMapSF).
 %	(trie_interned(p(AbsSubg,_,_),AbsMapSF) -> 
 %	    writeln(trie_interned(p(AbsSubg,SF),AbsMapSF))
 %	  ; gensym(abs,Sym),
@@ -1399,13 +1419,13 @@ print_sdg_info:-
 
 print_sdg_info_modes:- 
 	get_sdg_info(SDG),
-	morph_dep_graph(SDG,abstract_modes,SDGOut),
+	morph_dep_graph(SDG,tables:abstract_modes,SDGOut),
 %	writeln(SDGOut),
 	print_sdg_info(SDGOut).
 
 print_sdg_info_functor:- 
 	get_sdg_info(SDG),
-	morph_dep_graph(SDG,abstract_functor,SDGOut),
+	morph_dep_graph(SDG,tables:abstract_functor,SDGOut),
 	print_sdg_info(SDGOut).
 
 print_sdg_info(SDG):- 
@@ -1476,6 +1496,25 @@ sdg_scc_info_1([subgoal(Subgoal,Level,SF,CallsTo,Answers,PosList,NegList)|Rest],
 
 %incr_eval_builtin(_BuiltinNo, _A, _B, _C) :-
 %	'_$builtin'(INCR_EVAL_BUILTIN).
+
+:- export abstract_modes/2,abstract_functor/2.
+
+abstract_functor(Term,F/A):- functor(Term,F,A).
+
+abstract_modes(Term,Moded):-
+	compound(Term),!,
+	Term =.. [F|Args],
+	abstract_modes_args(Args,NewArgs),
+	Moded =.. [F|NewArgs].
+abstract_modes(Term,Term).
+
+abstract_modes_args([],[]).
+abstract_modes_args([H|T],[M|TM]):-
+	(var(H) -> 
+	    M = v
+	  ; (ground(H) -> 
+	      M = g ; M = m) ),
+	abstract_modes_args(T,TM).
 
 %--------------------------------------------------------------------------------
 
