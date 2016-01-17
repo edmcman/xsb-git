@@ -821,7 +821,7 @@ BTNptr get_next_trie_solution(ALNptr *NextPtrPtr)
    different routine).
 */
 
-#define recvariant_trie(flag,TrieType) {				\
+#define recvariant_trie_no_ans_subsf(flag,TrieType) {				\
   int  j;								\
 									\
   while (!pdlempty ) {							\
@@ -877,7 +877,7 @@ BTNptr get_next_trie_solution(ALNptr *NextPtrPtr)
       pdlpush(cell(xtemp1+1));	/* the ATTR part of the attv */		\
       break;								\
     default:								\
-      xsb_abort("Bad type tag in recvariant_trie...\n");		\
+      xsb_abort("Bad type tag in recvariant_trie_no_ans_subsf()...\n");	\
     }									\
   }									\
   resetpdl;								\
@@ -886,9 +886,8 @@ BTNptr get_next_trie_solution(ALNptr *NextPtrPtr)
 /*----------------------------------------------------------------------*/
 
 /*
- * This is a special version of recvariant_trie(), and it is only used
- * by variant_answer_search().  The only difference between this and
- * recvariant_trie() is that this version ensures that all variabes
+ * The only difference between recvariant_trie_no_ans_subsf() and
+ * recvariant_trie_ans_subsf() is that this version ensures that all variabes
  * point into the heap.  The reason for this is that the substitution
  * factor is in the heap and the copy avoids pointers from the heap
  * into the local stack.  The differing lines are:
@@ -1398,7 +1397,7 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
       attv_ctr++; ctr++;
       pdlpush(cell(xtemp1+1));	/* the ATTR part of the attv */
       recvariant_trie_ans_subsf(found_flag, BASIC_ANSWER_TRIE_TT);
-      //recvariant_trie(found_flag, BASIC_ANSWER_TRIE_TT);
+      //recvariant_trie_no_ans_subsf(found_flag, BASIC_ANSWER_TRIE_TT);
       break;
     default:
       xsb_abort("Bad type tag in variant_answer_search()");
@@ -1552,14 +1551,14 @@ BTNptr delay_chk_insert(CTXTdeclc int arity, CPtr cptr, CPtr *hook)
         one_btn_chk_ins(flag, EncodeTrieList(xtemp1), CZero, DELAY_TRIE_TT);
         pdlpush(get_list_tail(xtemp1));
         pdlpush(get_list_head(xtemp1));
-        recvariant_trie(flag,DELAY_TRIE_TT);
+        recvariant_trie_no_ans_subsf(flag,DELAY_TRIE_TT);
         break;
       case XSB_STRUCT:
         one_btn_chk_ins(flag, makecs(get_str_psc(xtemp1)), CZero,DELAY_TRIE_TT);
         for (j = get_arity(get_str_psc(xtemp1)); j >= 1 ; j--) {
           pdlpush(get_str_arg(xtemp1,j));
         }
-        recvariant_trie(flag,DELAY_TRIE_TT);
+        recvariant_trie_no_ans_subsf(flag,DELAY_TRIE_TT);
         break;
       case XSB_ATTV:
 	//	/* Now xtemp1 can only be the first occurrence of an attv */
@@ -1581,7 +1580,7 @@ BTNptr delay_chk_insert(CTXTdeclc int arity, CPtr cptr, CPtr *hook)
 			   DELAY_TRIE_TT);
         }
 	pdlpush(cell(xtemp1+1));	/* the ATTR part of the attv */
-	recvariant_trie(flag, DELAY_TRIE_TT);
+	recvariant_trie_no_ans_subsf(flag, DELAY_TRIE_TT);
 	break;
       default:
           xsb_abort("Bad type tag in delay_chk_insert()\n");
@@ -1872,7 +1871,7 @@ int vcs_tnot_call = 0;
     }									\
   }
 
-#define	clean_up_table_structures_for_throw {				\
+#define	clean_up_subgoal_table_structures_for_throw {				\
 	safe_delete_branch(Paren);					\
 	resetpdl;							\
 	while (--tSubsFactReg > SubsFactReg) {				\
@@ -1888,7 +1887,7 @@ int vcs_tnot_call = 0;
 #define subgoal_cyclic_term_check(xtemp1) {					\
     if (second_checking_phase == FALSE && pred_depth > flags[CYCLIC_CHECK_SIZE])	{ \
       if (is_cyclic(CTXTc (Cell)call_arg)) {				\
-		clean_up_table_structures_for_throw;			\
+		clean_up_subgoal_table_structures_for_throw;			\
 	abort_on_cyclic_subgoal;					\
       }									\
       second_checking_phase = TRUE;					\
@@ -1929,7 +1928,7 @@ int vcs_tnot_call = 0;
 	/*      sprintCyclicTerm(CTXTc buffer,(Cell) (call_arg), MAXTERMBUFSIZE);	*/ \
 	/*      printf("...Cyclic term in arg %d of tabled subgoal %s\n",i+1,buffer);*/ \
 	/*	resetpdl;						*/ \
-	clean_up_table_structures_for_throw;				\
+	clean_up_subgoal_table_structures_for_throw;				\
 	return XSB_FAILURE;						\
       }									\
       else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {	\
@@ -1937,7 +1936,7 @@ int vcs_tnot_call = 0;
 	tripwire_interrupt("max_table_subgoal_handler");		\
       }									\
       else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{	\
-	clean_up_table_structures_for_throw;				\
+	clean_up_subgoal_table_structures_for_throw;				\
 	if (is_cyclic(CTXTc (Cell)call_arg)) {				\
 	  abort_on_cyclic_subgoal;					\
 	}								\
@@ -2648,7 +2647,7 @@ BTNptr trie_assert_chk_ins(CTXTdeclc CPtr termptr, BTNptr root, int *flagptr)
       one_btn_chk_ins(flag, EncodeTrieList(xtemp1), CZero, ASSERT_TRIE_TT);
       pdlpush(get_list_tail(xtemp1));
       pdlpush(get_list_head(xtemp1));
-      recvariant_trie(flag,ASSERT_TRIE_TT);
+      recvariant_trie_no_ans_subsf(flag,ASSERT_TRIE_TT);
       break;
     case XSB_STRUCT:
       psc = get_str_psc(xtemp1);
@@ -2656,7 +2655,7 @@ BTNptr trie_assert_chk_ins(CTXTdeclc CPtr termptr, BTNptr root, int *flagptr)
       for (j = get_arity(psc); j >= 1 ; j--) {
 	pdlpush(get_str_arg(xtemp1,j));
       }
-      recvariant_trie(flag,ASSERT_TRIE_TT);
+      recvariant_trie_no_ans_subsf(flag,ASSERT_TRIE_TT);
       break;
     case XSB_ATTV:
       /* Now xtemp1 can only be the first occurrence of an attv */
@@ -2670,7 +2669,7 @@ BTNptr trie_assert_chk_ins(CTXTdeclc CPtr termptr, BTNptr root, int *flagptr)
       one_btn_chk_ins(flag, EncodeNewTrieAttv(ctr), CZero, ASSERT_TRIE_TT);
       attv_ctr++; ctr++;
       pdlpush(cell(xtemp1+1));	/* the ATTR part of the attv */
-      recvariant_trie(flag, ASSERT_TRIE_TT);
+      recvariant_trie_no_ans_subsf(flag, ASSERT_TRIE_TT);
       break;
     default:
       xsb_abort("Bad type tag in trie_assert_check_ins()");
