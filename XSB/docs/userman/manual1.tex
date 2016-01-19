@@ -3,15 +3,17 @@
 
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
+\usepackage{epsf,epsfig,subfigure,latexsym,latexsym,xspace,amssymb}
+%%\usepackage{makeidx}
+%%\usepackage{index}
+\usepackage{imakeidx}
 \usepackage[colorlinks]{hyperref}
-\usepackage{epsf,epsfig,subfigure,latexsym,makeidx,latexsym,xspace,amssymb,index}
-\usepackage{lmodern}
-\usepackage[T1]{fontenc}
+\usepackage{url}
 \usepackage{alltt}
 \usepackage{epic}
 \usepackage{ecltree}
 \usepackage{longtable}
-\usepackage{graphicx,makeidx}
+\usepackage{graphicx}
 \usepackage{CJK}
 %\usepackage{pinyin}
 %\usepackage[utf8]{inputenc}
@@ -173,7 +175,8 @@
 %\input{predindex.sty}
 %\makepredindex
 \makeindex
-\newindex{pred}{prdx}{pnd}{Index of Predicates Standard in XSB}
+\makeindex[name=pred,title=Index of Standard XSB Predicates]
+%%\newindex{pred}{prdx}{pnd}{Index of Predicates Standard in XSB}
 % to make the predicate index 	makeindex manual1.prdx -o manual1.pnd
 %------------------------------------------------------------
 

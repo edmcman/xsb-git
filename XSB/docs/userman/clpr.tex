@@ -677,7 +677,7 @@ no
 %
 Shorthand for {\tt labeling([leftmost],+VarList)}.
 
-\ournewitem{indomain(?Var)}{bounds}\index{\texttt{}}
+\ournewitem{indomain(?Var)}{bounds}\index{\texttt{indomain/1}}
 %
 Unifies {\tt Var} with an element of its domain, and upon sucessive
 backttrakcing, with all other elements of its domain.
@@ -713,7 +713,7 @@ X in 1..10, Y in 1..10, serialized([X,Y],[8,1]),X #< Y,label([X,Y]),writeln((X,Y
 %
 removes all solutions where {\tt Y} is less than {\tt X}.
 
-\ournewitem{lex\_chain(+List)}{bounds}\index{\texttt{}}
+\ournewitem{lex\_chain(+List)}{bounds}\index{\texttt{lex\_chain/1}}
 %
 {\tt lex\_chain/1} takes as input a list of lists of variables and
 integers, and enforces the constraint that each element in a given
@@ -734,7 +734,7 @@ As an example, consider the query
   2} which is less than or equal to {\tt Y}.
 
 % Not 100% sure what they mean here.
-%\ournewitem{tuples\_in/2}{bounds}\index{\texttt{}}
+%\ournewitem{tuples\_in/2}{bounds}\index{\texttt{tuples\_in/2}}
 
 \end{description}
 
