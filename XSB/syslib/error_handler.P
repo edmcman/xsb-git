@@ -62,7 +62,7 @@ xsb_error_get_backtrace(error(_Tag,context(_MaybeM,Backtrace)),Backtrace).
    Ive added tabling_error.  (see manual for types and explanation).
    User handlers only work for main -- otherwise use on-exit */
 default_error_handler(Error) :- 
-%        writeln(default_error_handler(Error)),
+%       standard:writeln(default_error_handler(Error)),
 	xsb_thread_self(Thread),
 	Thread == 0,
 	default_user_error_handler(Error),
@@ -99,9 +99,8 @@ ccall_error_handler(Error) :-
 :- thread_shared('_$thread_exit_ball'(_,_)).
 
 %:- import writeln/1 from standard.
-default_sys_error_handler(error(Error,Msg,Backtrace)) :-
+default_sys_error_handler(error(Error,Msg,Backtrace)) :- !,
 	default_sys_error_handler(error(Error,context(Msg,Backtrace))).
-
 default_sys_error_handler(error(Error,Context)) :- 
 	nonvar(Context),
 	Context = context(Msg_or_Ctxt,Backtrace),!,
@@ -116,6 +115,8 @@ default_sys_error_handler(error(Error,Context)) :-
 	    default_sys_error_handler_main(Error,Context,BT,Backtrace)
 	  ; 
 	    default_sys_error_handler_nonmain(Error,Thread,Backtrace,Msg) ).
+default_sys_error_handler(Ball) :- 
+	default_sys_error_handler_message(Ball).
 
 default_sys_error_handler_message(error(thread_cancel,_)) :- !.
 default_sys_error_handler_message(error(misc_error(Level),Msg)) :- 
@@ -138,11 +139,12 @@ flush_all_open_streams:-
 	stream_property(S,mode(X)),(X = append ; X = write),flush_output(S),fail.
 flush_all_open_streams.
 
-:- import atom_codes/2 from standard.
+%%:- import atom_codes/2 from standard.
 :- import stat_set_flag/2 from machine.
 default_sys_error_handler_main(resource_error(E),_Message,_BT,_Backtrace):- 
 	% (aargh! module system)
-	atom_codes(E,Elist),atom_codes(memory,Elist),!,
+	%%atom_codes(E,Elist),atom_codes(memory,Elist),
+	functor(E,memory,0), !,
 	stat_set_flag(MEMORY_ERROR_FLAG,0),
 	close_open_tables(memory_error),fail.
 default_sys_error_handler_main(misc_error(Level),Message,_BT,_Backtrace):- !,
