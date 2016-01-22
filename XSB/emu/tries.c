@@ -910,7 +910,7 @@ BTNptr get_next_trie_solution(ALNptr *NextPtrPtr)
 
 /* Need to be able to expand */
 /*****************Term Stack*************/
-#if defined(BOUNDED_RATIONALITY)
+#if defined(BOUNDED_RATIONALITY_DEPTH)
 
 #ifndef MULTI_THREAD
 static size_t depth_stacksize;
@@ -935,12 +935,6 @@ static int *depth_stack;
     depth_stack[++answer_depth_ctr] = Num;\
 }
 
-//int depth_stack[1000];
-//#define depth_stack_push(Num) {		
-//    answer_depth_ctr++;				
-//    depth_stack[answer_depth_ctr] = Num;		
-//  }
-
 #else
 #define depth_stack_push(Num)    answer_depth_ctr++;				
 
@@ -948,7 +942,7 @@ static int *depth_stack;
 
 #endif
 
-#define apply_answer_depth_rationality(flag)  {	      \
+#define apply_answer_depth_rationality_nonlist(flag)  {	\
     int j, isNew;				      \
     Pair undefPair;				      \
     struct Table_Info_Frame * Utip;		      \
@@ -957,9 +951,7 @@ static int *depth_stack;
     item = makecs(psc);							\
     one_btn_chk_ins(flag, item, CZero, BASIC_ANSWER_TRIE_TT);		\
     for (j = get_arity(psc); j>=1 ; j--) {				\
-      bld_free(hreg);							\
-      /*  bind_ref(xtemp1, hreg);						*/ \
-      xtemp1 = hreg++;							\
+      bld_free(hreg);      xtemp1 = hreg++;				\
       StandardizeAndTrailVariable(xtemp1,ctr);				\
       /*    printf("standardizing VET_T %p\n",VarEnumerator_trail_top);	*/ \
       one_btn_chk_ins(flag,EncodeNewTrieVar(ctr), CZero,BASIC_ANSWER_TRIE_TT);	\
@@ -976,12 +968,27 @@ static int *depth_stack;
     }									\
   }
 
-#define CHECK_ANSWER_TERM_DEPTH	{					\
-    if (answer_depth_ctr >= depth_limit) {					\
-      if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_WARNING) {		\
-	sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr)));	\
-	xsb_warn(CTXTc "Exceeded max answer term depth of %d in call %s\n", \
-		 (int)depth_limit,forest_log_buffer_1->fl_buffer);	\
+#define apply_answer_depth_rationality_list(flag)  {  \
+    int isNew;					      \
+    Pair undefPair;				      \
+    struct Table_Info_Frame * Utip;		      \
+    						      \
+    one_btn_chk_ins(found_flag, EncodeTrieList(xtemp1), CZero, BASIC_ANSWER_TRIE_TT); \
+    bld_free(hreg);    xtemp1 = hreg++;							\
+    StandardizeAndTrailVariable(xtemp1,ctr);				\
+    one_btn_chk_ins(flag,EncodeNewTrieVar(ctr), CZero,BASIC_ANSWER_TRIE_TT); ctr++;\
+    bld_free(hreg);    xtemp1 = hreg++;							\
+    StandardizeAndTrailVariable(xtemp1,ctr);				\
+    one_btn_chk_ins(flag,EncodeNewTrieVar(ctr), CZero,BASIC_ANSWER_TRIE_TT); ctr++;\
+    if (!bratted) {							\
+      undefPair = insert("brat_undefined", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); \
+      Utip = get_tip(CTXTc pair_psc(undefPair));			\
+      delay_negatively(TIF_Subgoals(Utip));				\
+      bratted = 1;							\
+    }									\
+  }
+
+#define ADD_STRUCTURE_TO_ANSWER_TRIE {					\
 	psc = get_str_psc(xtemp1);					\
 	depth_stack_push(get_arity(psc));				\
 	item = makecs(psc);						\
@@ -989,75 +996,116 @@ static int *depth_stack;
 	for (j = get_arity(psc); j>=1 ; j--) {				\
 	  pdlpush(get_str_arg(xtemp1,j));				\
 	}								\
+  }
+
+#define ADD_LIST_TO_ANSWER_TRIE       { 					\
+	one_btn_chk_ins(found_flag, EncodeTrieList(xtemp1), CZero, BASIC_ANSWER_TRIE_TT); \
+	pdlpush(get_list_tail(xtemp1));					\
+	pdlpush(get_list_head(xtemp1));					\
       }									\
-      else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_FAILURE) {		\
-	safe_delete_branch(Paren);					\
-	resetpdl;							\
-	found_flag = 1;							\
-	return NULL;							\
-      }									\
-      else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_BRAT) {		\
-	apply_answer_depth_rationality(found_flag);			\
-      }									\
-      else {								\
-	sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
-	safe_delete_branch(Paren);					\
-	if (is_cyclic(CTXTc (Cell) (cptr -i))) {			\
-	  xsb_abort("Cyclic term in arg %d of tabled subgoal %s\n",i+1,forest_log_buffer_1->fl_buffer); \
-	}								\
-	else								\
-	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,"Exceeded max answer term depth of %d in call %s\n", \
-		    (int)depth_limit,forest_log_buffer_1->fl_buffer);	\
-      }									\
+
+#define HANDLE_ANSWER_LIST_DEPTH {					\
+    if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_BRAT) {			\
+      /*      printf("applying abstraction to list\n");	*/		\
+      apply_answer_depth_rationality_list(found_flag);			\
     }									\
-    else 	{							\
-      psc = get_str_psc(xtemp1);					\
-      depth_stack_push(get_arity(psc));					\
-      item = makecs(psc);						\
-      one_btn_chk_ins(found_flag, item, CZero, BASIC_ANSWER_TRIE_TT);		\
-      for (j = get_arity(psc); j>=1 ; j--) {				\
-	pdlpush(get_str_arg(xtemp1,j));					\
+    else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
+      printf("Debug: suspending on max_table_answer\n");		\
+      tripwire_interrupt("max_table_answer_handler");			\
       }									\
+    else  {  /* error */						\
+      sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
+      xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
+			    "Exceeded max answer list depth of %d in call %s\n", \
+			    flags[MAX_TABLE_ANSWER_LIST_DEPTH],forest_log_buffer_1->fl_buffer); \
     }									\
   }
 
+#define HANDLE_ANSWER_TERM_DEPTH	{					\
+    if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_BRAT) {			\
+      apply_answer_depth_rationality_nonlist(found_flag);		\
+    }									\
+    else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
+      safe_delete_branch(Paren);                                      \
+      resetpdl;                                                       \
+      found_flag = 1;                                                 \
+      printf("Debug: suspending on max_table_answer\n"); \
+      tripwire_interrupt("max_table_answer_handler");			\
+      return NULL;                                                    \
+      }									\
+    else { /* error */							\
+	sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
+	safe_delete_branch(Paren);					\
+	if (is_cyclic(CTXTc (Cell) (cptr -i))) {			\
+	  xsb_abort("Cyclic term in arg %d of tabled answer %s\n",i+1,forest_log_buffer_1->fl_buffer); \
+	}								\
+	else								\
+	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
+				"Exceeded max answer term size of %d in call %s\n", \
+				(int)working_answer_depth_limit,forest_log_buffer_1->fl_buffer); \
+    }									\
+  }									
 
-#define CHECK_ANSWER_LIST_DEPTH						\
-  if (--answer_list_depth_ctr <= 0)	{						\
-    if (flags[MAX_TABLE_ANSWER_LIST_ACTION] == XSB_WARNING) {		\
-      sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr)));	\
-      xsb_warn(CTXTc "Exceeded max answer list depth of %d in call %s\n",	\
-	       flags[MAX_TABLE_ANSWER_LIST_DEPTH],forest_log_buffer_1->fl_buffer); \
-    }									\
-    else if (flags[MAX_TABLE_ANSWER_LIST_ACTION] == XSB_FAILURE) {		\
-      safe_delete_branch(Paren);					\
-      resetpdl;								\
-      found_flag = 1;							\
-      return NULL;							\
-    }									\
-    else {								\
-      sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
-      xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,"Exceeded max answer list depth of %d in call %s\n",	\
-		flags[MAX_TABLE_ANSWER_LIST_DEPTH],forest_log_buffer_1->fl_buffer); \
-    }									\
-}
+#define CHECK_ANSWER_TERM_DEPTH {				\
+  if (answer_depth_ctr >= working_answer_depth_limit) {		\
+    if (working_answer_depth_limit == flags[CYCLIC_CHECK_SIZE]) {	\
+	if (is_cyclic(CTXTc (Cell) (cptr -i))) {			\
+	  sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
+	  safe_delete_branch(Paren);					\
+	  xsb_abort("Cyclic term in arg %d of tabled answer %s\n",i+1,forest_log_buffer_1->fl_buffer); \
+	}								\
+	ADD_STRUCTURE_TO_ANSWER_TRIE;					\
+	if (working_answer_depth_limit < answer_depth_limit) {		\
+	  working_answer_depth_limit = answer_depth_limit;		\
+	}								\
+      }									\
+      else {								\
+	HANDLE_ANSWER_TERM_DEPTH;					\
+      }									\
+  }									\
+   else {								\
+     ADD_STRUCTURE_TO_ANSWER_TRIE;					\
+   }									\
+  }
+
+#define CHECK_ANSWER_LIST_DEPTH {				\
+  if (++answer_depth_ctr >= working_answer_depth_limit) {		\
+    if (working_answer_depth_limit == flags[CYCLIC_CHECK_SIZE]) {	\
+      /*      printf("about to cyclecheck adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit);*/ \
+      if (is_cyclic(CTXTc (Cell) (cptr -i))) {				\
+	  sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
+	  safe_delete_branch(Paren);					\
+	  xsb_abort("Cyclic term in arg %lu of tabled answer %s\n",i+1,forest_log_buffer_1->fl_buffer); \
+	}								\
+	ADD_LIST_TO_ANSWER_TRIE;					\
+	if (working_answer_depth_limit < answer_depth_limit) {		\
+	  working_answer_depth_limit = answer_depth_limit;		\
+	}								\
+      }									\
+      else {								\
+	/*	printf("about to handle adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit); */ \
+	HANDLE_ANSWER_LIST_DEPTH;					\
+      }									\
+  }									\
+  else {								\
+    /*    printf("nocheck adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit); */ \
+    ADD_LIST_TO_ANSWER_TRIE;						\
+   }									\
+  }
 
 #define recvariant_trie_ans_subsf(flag,TrieType) {			\
   int  j;								\
 									\
   while (!pdlempty ) {							\
-    /*    printf("rv ");  pdlprint;				*/	\
+    /*    printf("rv ");  pdlprint;					*/ \
     xtemp1 = (CPtr) pdlpop;						\
     XSB_CptrDeref(xtemp1);						\
-    /*    if (ctrace_ctr >= 4191) {					\
-      printf("rv depth c %d i %d",answer_depth_ctr,answer_depth_ctr);			\
-      printterm(stddbg,xtemp1,10);printf("\n");	} */			\
     tag = cell_tag(xtemp1);						\
     switch (tag) {							\
     case XSB_FREE:							\
     case XSB_REF1:							\
       depth_stack_pop;							\
-      /*      printf("ctr %d xtemp1 %p\n",ctr,xtemp1);			*/ \
+      /*      printf("ctr %d xtemp1 %p\n",ctr,xtemp1);		*/	\
       if (! IsStandardizedVariable(xtemp1)){				\
 	bld_free(hreg);							\
 	bind_ref(xtemp1, hreg);						\
@@ -1070,7 +1118,7 @@ static int *depth_stack;
       } else {								\
 	/*	printf("already standardized\n");		*/	\
 	one_btn_chk_ins(flag,						\
-			EncodeTrieVar(IndexOfStdVar(xtemp1)), CZero,	\
+		EncodeTrieVar(IndexOfStdVar(xtemp1)), CZero,	\
 			TrieType);					\
       }									\
       break;								\
@@ -1082,9 +1130,6 @@ static int *depth_stack;
       break;								\
     case XSB_LIST:							\
       CHECK_ANSWER_LIST_DEPTH;						\
-      one_btn_chk_ins(flag, EncodeTrieList(xtemp1), CZero, TrieType);	\
-      pdlpush(get_list_tail(xtemp1));					\
-      pdlpush(get_list_head(xtemp1));					\
       break;								\
     case XSB_STRUCT:							\
       CHECK_ANSWER_TERM_DEPTH;						\
@@ -1192,20 +1237,20 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   Cell  item, tmp_var;
   ALNptr answer_node;
   int ctr, attv_ctr;
-  Cell answer_depth_ctr,answer_list_depth_ctr;
   BTNptr Paren, *ChildPtrOfParen;
+  Cell answer_depth_ctr;
+  UInteger answer_depth_limit,working_answer_depth_limit;
   int bratted = 0;
-  UInteger depth_limit;
   byte interning_terms;
   Integer termsize;
 
   interning_terms = TIF_Interning(subg_tif_ptr(subgoal_ptr));
 
   if (TIF_AnswerDepth(subg_tif_ptr(subgoal_ptr))) 
-    depth_limit = (UInteger) (TIF_AnswerDepth(subg_tif_ptr(subgoal_ptr)));
-  else depth_limit = (UInteger) flags[MAX_TABLE_ANSWER_DEPTH];  
+    answer_depth_limit = (UInteger) (TIF_AnswerDepth(subg_tif_ptr(subgoal_ptr)));
+  else answer_depth_limit = (UInteger) flags[MAX_TABLE_ANSWER_DEPTH];  
   
-  if (interning_terms && depth_limit < MY_MAXINT) 
+  if (interning_terms && answer_depth_limit < MY_MAXINT) 
     xsb_abort("Cannot use explicit answer depth bound when interning terms for table: %s/%d\n",
 	      get_name(TIF_PSC(subg_tif_ptr(subgoal_ptr))),
 	      get_arity(TIF_PSC(subg_tif_ptr(subgoal_ptr))));
@@ -1271,14 +1316,9 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   //  printf("\n");
   for (i = 0; i < sf_size; i++) {
     //    printf("starting again i %d\n",i);
+    if (flags[CYCLIC_CHECK_SIZE] < answer_depth_limit) working_answer_depth_limit = flags[CYCLIC_CHECK_SIZE];
+    else working_answer_depth_limit = answer_depth_limit;
     answer_depth_ctr = 0;  
-    answer_list_depth_ctr = flags[MAX_TABLE_ANSWER_LIST_DEPTH];  
-    if (interning_terms && answer_list_depth_ctr < MY_MAXINT) {
-      xsb_abort("Cannot use explicit answer depth bound when interning terms for table: %s/%d\n",
-		get_name(TIF_PSC(subg_tif_ptr(subgoal_ptr))),
-		get_arity(TIF_PSC(subg_tif_ptr(subgoal_ptr))));
-    }
-    
     xtemp1 = (CPtr) (cptr - i); /* One element of VarsInCall.  It might
 				 * have been bound in the answer for
 				 * the call.
@@ -1885,18 +1925,18 @@ int vcs_tnot_call = 0;
 
 
 #define subgoal_cyclic_term_check(xtemp1) {					\
-    if (second_checking_phase == FALSE && pred_depth > flags[CYCLIC_CHECK_SIZE])	{ \
+    if (second_checking_phase == FALSE && pred_subgoal_size_limit > flags[CYCLIC_CHECK_SIZE])	{ \
       if (is_cyclic(CTXTc (Cell)call_arg)) {				\
-		clean_up_subgoal_table_structures_for_throw;			\
+	clean_up_subgoal_table_structures_for_throw;			\
 	abort_on_cyclic_subgoal;					\
       }									\
       second_checking_phase = TRUE;					\
-      subgoal_size_ctr = subgoal_size_ctr + pred_depth - flags[CYCLIC_CHECK_SIZE];	\
-      /*      printf("new depth counter is %lu\n",subgoal_size_ctr);	*/	\
+      subgoal_size_ctr = subgoal_size_ctr + pred_subgoal_size_limit - flags[CYCLIC_CHECK_SIZE];	\
+      /*      printf("new size counter is %lu\n",subgoal_size_ctr);	*/ \
     }									\
   }
 
-#define handle_call_term_depth(xtemp1) {				\
+#define handle_subgoal_size(xtemp1) {				\
     /* At this point, we've already performed the cycle check:  need to do the full check. */ \
       if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE && !vcs_tnot_call) { \
 	Cell newElement;						\
@@ -1932,8 +1972,10 @@ int vcs_tnot_call = 0;
 	return XSB_FAILURE;						\
       }									\
       else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {	\
-	printf("Debug: suspending on max_scc_subgoals\n");		\
+	printf("Debug: suspending on max_table_subgoal\n");		\
 	tripwire_interrupt("max_table_subgoal_handler");		\
+	clean_up_subgoal_table_structures_for_throw;				\
+	return XSB_FAILURE;						\
       }									\
       else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{	\
 	clean_up_subgoal_table_structures_for_throw;				\
@@ -1945,13 +1987,13 @@ int vcs_tnot_call = 0;
 	    vcs_tnot_call = 0;						\
 	    sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
 	    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
-				  "Exceeded max table subgoal depth of %d in arg %i in tnot(%s)\n", \
+				  "Exceeded max table subgoal size of %d in arg %i in tnot(%s)\n", \
 				  (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
 	  }								\
 	  else {							\
 	    sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
 	    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
-				  "Exceeded max table subgoal depth of %d in arg %i in %s\n", \
+				  "Exceeded max table subgoal size of %d in arg %i in %s\n", \
 				  (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
 	  }								\
 	}								\
@@ -1959,12 +2001,12 @@ int vcs_tnot_call = 0;
   }									
 
 /* Cycle check will usually (not always) be done sooner than term depth/size check.  */
-#define CHECK_CALL_TERM_DEPTH(xtemp1)					\
-  if (--subgoal_size_ctr <= 0) {						\
-    subgoal_cyclic_term_check(xtemp1);						\
-  }									\
-  if (subgoal_size_ctr <= 0) {							\
-    handle_call_term_depth(xtemp1);					\
+#define CHECK_SUBGOAL_SIZE(xtemp1)					\
+  if (--subgoal_size_ctr <= 0) {					\
+    subgoal_cyclic_term_check(xtemp1);					\
+  } /* subgoal_size_ctr reset above */					\
+  if (subgoal_size_ctr <= 0) {						\
+    handle_subgoal_size(xtemp1);					\
   } else
 
 /* xtemp1 is a register */
@@ -1995,7 +2037,7 @@ int vcs_tnot_call = 0;
       one_btn_chk_ins(flag, EncodeTrieConstant(xtemp1), CZero, TrieType);	\
       break;								\
     case XSB_LIST:							\
-      CHECK_CALL_TERM_DEPTH(xtemp_bak)					\
+      CHECK_SUBGOAL_SIZE(xtemp_bak)					\
       {									\
 	if (interning_terms && isinternstr(xtemp1)) {					\
 	  /*printf("obci 3 %X, %X\n",EncodeTrieList(xtemp1), (Cell)xtemp1);*/ \
@@ -2013,7 +2055,7 @@ int vcs_tnot_call = 0;
       }									\
       break;								\
     case XSB_STRUCT:							\
-      CHECK_CALL_TERM_DEPTH(xtemp_bak)  /* no semi-colon here */	\
+      CHECK_SUBGOAL_SIZE(xtemp_bak)  /* no semi-colon here */	\
       {									\
 	psc = get_str_psc(xtemp1);					\
 	item = makecs(psc);						\
@@ -2116,7 +2158,7 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
   Cell tag = XSB_FREE, item;
   CPtr cptr, SubsFactReg, tSubsFactReg;
   int ctr, attv_ctr;
-  Cell  subgoal_size_ctr,pred_depth;
+  Cell  subgoal_size_ctr,pred_subgoal_size_limit;
   BTNptr Paren, *ChildPtrOfParen;
   byte interning_terms;
   Integer termsize;
@@ -2150,12 +2192,12 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
   ctr = attv_ctr = 0;
 
   if (TIF_SubgoalDepth(CallInfo_TableInfo(*call_info))) {
-    pred_depth = (Cell) TIF_SubgoalDepth(CallInfo_TableInfo(*call_info));
+    pred_subgoal_size_limit = (Cell) TIF_SubgoalDepth(CallInfo_TableInfo(*call_info));
   }
-  else pred_depth = flags[MAX_TABLE_SUBGOAL_SIZE];  
+  else pred_subgoal_size_limit = flags[MAX_TABLE_SUBGOAL_SIZE];  
 
-  if (interning_terms && pred_depth < MY_MAXINT) 
-    xsb_abort("Cannot use explicit depth bound when interning terms for table: %s/%d\n",
+  if (interning_terms && pred_subgoal_size_limit < MY_MAXINT) 
+    xsb_abort("Cannot use explicit size bound on subgoals when interning terms for table: %s/%d\n",
 	      get_name(TIF_PSC(CallInfo_TableInfo(*call_info))),
 	      get_arity(TIF_PSC(CallInfo_TableInfo(*call_info))));
 
@@ -2163,8 +2205,8 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
   for (i = 0; i < arity; i++) {
     can_abstract = TRUE;
 
-    if (flags[CYCLIC_CHECK_SIZE] < pred_depth) subgoal_size_ctr = flags[CYCLIC_CHECK_SIZE];
-    else subgoal_size_ctr = pred_depth;
+    if (flags[CYCLIC_CHECK_SIZE] < pred_subgoal_size_limit) subgoal_size_ctr = flags[CYCLIC_CHECK_SIZE];
+    else subgoal_size_ctr = pred_subgoal_size_limit;
 
     call_arg = (CPtr) (cptr + i);            /* Note! start with reg[1] */
     XSB_CptrDeref(call_arg);
@@ -2218,7 +2260,7 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
 	one_btn_chk_ins(flag, EncodeTrieList(call_arg), (Cell)call_arg, CALL_TRIE_TT);
       } else {
 	one_btn_chk_ins(flag, EncodeTrieList(call_arg), CZero, CALL_TRIE_TT);
-	/* must use addrs of cells, since depth-abstraction need addrs! */
+	/* must use addrs of cells, since size-abstraction need addrs! */
 	pdlpush( (Cell) (clref_val(call_arg)+1) );			
 	pdlpush( (Cell) clref_val(call_arg) );				
 	recvariant_call(flag,CALL_TRIE_TT,call_arg);
@@ -2412,13 +2454,13 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
       one_interned_node_chk_ins(flag, EncodeTrieConstant(xtemp1), TrieType);	\
       break;								\
     case XSB_LIST:							\
-      CHECK_TRIE_INTERN_LIST_DEPTH;					\
+      CHECK_TRIE_INTERN_DEPTH;					\
       one_interned_node_chk_ins(flag, EncodeTrieList(xtemp1), TrieType); \
       pdlpush(get_list_tail(xtemp1));					\
       pdlpush(get_list_head(xtemp1));					\
       break;								\
     case XSB_STRUCT:							\
-      CHECK_TRIE_INTERN_TERM_DEPTH;					\
+      CHECK_TRIE_INTERN_DEPTH;					\
       psc = get_str_psc(xtemp1);					\
       item = makecs(psc);						\
       one_interned_node_chk_ins(flag, item, TrieType);				\
@@ -2441,42 +2483,32 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
   resetpdl;								\
 }
 
-#define CHECK_TRIE_INTERN_TERM_DEPTH					\
-  if (--trie_intern_depth_ctr <= 0)	{						\
-    if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_FAILURE) {		\
-      safe_delete_branch(Paren);					\
-      resetpdl;								\
-      return(NULL);							\
+// TLS: not checking for max_table_answer_action, because if the size
+// limit is set, we'll simply throw an error: no suspend or abstract in this case.
+//
+#define CHECK_TRIE_INTERN_DEPTH {					\
+    if (++trie_intern_depth_ctr >= working_trie_intern_depth_limit)	{ \
+      if (working_trie_intern_depth_limit == flags[CYCLIC_CHECK_SIZE]) { \
+	if (is_cyclic(CTXTc term)) {					\
+	  sprintCyclicTerm(CTXTc forest_log_buffer_1,term);		\
+	  safe_delete_branch(Paren);					\
+	  xsb_abort("Cyclic term in term to be trie-interned %s\n",forest_log_buffer_1->fl_buffer); \
+	}								\
+	if (working_trie_intern_depth_limit < trie_intern_depth_limit) { \
+	  working_trie_intern_depth_limit = trie_intern_depth_limit;	\
+	}								\
+      }									\
+      else {								\
+	if (is_cyclic(CTXTc term))					\
+	  xsb_abort("Cyclic term in term to be trie-interned %s\n",forest_log_buffer_1->fl_buffer); \
+	else								\
+	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
+				"Exceeded max trie_intern size of %d for %s\n",	\
+				(int)flags[MAX_TABLE_ANSWER_DEPTH],forest_log_buffer_1->fl_buffer); \
+      }									\
     }									\
-    else {								\
-      resetpdl;								\
-      sprintCyclicTerm(CTXTc forest_log_buffer_1,term);			\
-      safe_delete_branch(Paren);					\
-      if (is_cyclic(CTXTc term))					\
-	xsb_abort("Cyclic term in term to be trie-interned %s\n",forest_log_buffer_1->fl_buffer); \
-      else								\
-	xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,"Exceeded max trie_intern depth of %d for %s\n", \
-		  (int)flags[MAX_TABLE_ANSWER_DEPTH],forest_log_buffer_1->fl_buffer); \
-    }									\
-}
+ }
 
-#define CHECK_TRIE_INTERN_LIST_DEPTH					\
-  if (--trie_intern_list_depth_ctr <= 0)	{					\
-    if (flags[MAX_TABLE_ANSWER_LIST_ACTION] == XSB_FAILURE) {		\
-      /*      printCyclicTerm(CTXTc term);				*/ \
-      safe_delete_branch(Paren);					\
-      return(NULL);							\
-    }									\
-    else {								\
-      sprintCyclicTerm(CTXTc forest_log_buffer_1,term);			\
-      safe_delete_branch(Paren);					\
-      if (is_cyclic(CTXTc term))					\
-	xsb_abort("Cyclic term in term to be trie-interned %s\n",forest_log_buffer_1->fl_buffer); \
-      else								\
-	xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,"Exceeded max trie_intern depth of %d for %s\n", \
-		  (int)flags[MAX_TABLE_ANSWER_DEPTH],forest_log_buffer_1->fl_buffer); \
-    }									\
-}
 
 BTNptr trie_intern_chk_ins(CTXTdeclc Cell term, BTNptr *hook, int *flagptr, int cps_check_flag, int expand_flag)
 {
@@ -2486,7 +2518,8 @@ BTNptr trie_intern_chk_ins(CTXTdeclc Cell term, BTNptr *hook, int *flagptr, int 
     Cell tag = XSB_FREE, item;
     int ctr, attv_ctr;
     BTNptr Paren, *ChildPtrOfParen;
-    Cell trie_intern_depth_ctr,trie_intern_list_depth_ctr;
+    Cell trie_intern_depth_ctr;
+    UInteger trie_intern_depth_limit,working_trie_intern_depth_limit;
 
     if ( IsNULL(*hook) )
       *hook = newBasicTrie(CTXTc EncodeTriePSC(get_intern_psc()),INTERN_TRIE_TT);
@@ -2500,8 +2533,12 @@ BTNptr trie_intern_chk_ins(CTXTdeclc Cell term, BTNptr *hook, int *flagptr, int 
     VarEnumerator_trail_top = (CPtr *)(& VarEnumerator_trail[0]) - 1;
     ctr = attv_ctr = 0;
 
-    trie_intern_depth_ctr = flags[MAX_TABLE_ANSWER_DEPTH];  
-    trie_intern_list_depth_ctr = flags[MAX_TABLE_ANSWER_LIST_DEPTH];  
+    trie_intern_depth_limit = (UInteger) flags[MAX_TABLE_ANSWER_DEPTH];
+    if (flags[CYCLIC_CHECK_SIZE] < trie_intern_depth_limit) 
+      working_trie_intern_depth_limit = flags[CYCLIC_CHECK_SIZE];
+    else working_trie_intern_depth_limit = trie_intern_depth_limit;
+    trie_intern_depth_ctr = 0;
+
 
     switch (tag) {
     case XSB_FREE: 
