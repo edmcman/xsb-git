@@ -6,7 +6,7 @@
 :- import numbervars/1 from num_vars.
 
 :- set_prolog_flag(max_table_answer_action, bounded_rationality).
-:- set_prolog_flag(max_table_answer_depth, 3).
+:- set_prolog_flag(max_table_answer_size, 3).
 :- import explain_u_val/3 from tables.
 
 test:- test(Ans,Reason),writeln(test(Ans,Reason)),fail.

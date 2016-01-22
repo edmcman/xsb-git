@@ -1,4 +1,6 @@
-:- import xsb_error_get_message/2 from error_handler.
+:- import xsb_error_get_message/2,xsb_error_get_tag/2 from error_handler.
+:- import new_trie/1 , trie_intern/2, trie_interned/4, trie_interned/2,  trie_unintern_nr/2,
+	  trie_unintern/2, delete_trie/1, bulk_trie_intern/2,trie_retractall/2  from intern.
 
 init:- 
 	set_prolog_flag(cyclic_check_size,15),
@@ -7,11 +9,40 @@ init:-
 :- table p/1.
 p(_).
 
-test:- catch(t1,E,(xsb_error_get_message(E,M),writeln(M))),fail.
-test:- catch(t2,E,(xsb_error_get_message(E,M),writeln(M))),fail.
+test:- catch(t_subgoal_cycle,E,(xsb_error_get_message(E,M),writeln(M))),fail.
+test:- catch(t_ans_cycle,E,(xsb_error_get_message(E,M),writeln(M))),fail.
+test:- catch(t_ans_list_cycle,E,(xsb_error_get_message(E,M),writeln(M))),fail.
+test:- test_intern_trie_cycle,fail.
+%test:- catch(t2,E,(xsb_error_get_message(E,M),writeln(M))),fail.
 test.
 
-t1:- X = p(X), call(X).
+%-------------------
+
+t_subgoal_cycle:- X = p(X), call(X).
+
+%-------------------
+
+t_ans_cycle :- p_answercycle(_X).
+
+:- table p_answercycle/1.
+p_answercycle(X):- X = f(X).
+
+%-------------------
+
+t_ans_list_cycle:- p_answerlistcycle(_X).
+
+:- table p_answerlistcycle/1.
+p_answerlistcycle(X):- X = [X].
+
+%-------------------
+
+?- new_trie(Trie),assert(cycle_trie(Trie)).
+
+test_intern_trie_cycle:- cycle_trie(Trie),
+       X = f(X),
+       catch(trie_intern(X,Trie),E,(xsb_error_get_message(E,M),writeln(M))).
+
+%--------------------------------------------
 
 t2:- init,makelist(100,X),p(X).
 
@@ -25,3 +56,5 @@ makelist(N,[N|R]):-
 t_i(X):- p(X,X).
 
 p(a,a).
+
+

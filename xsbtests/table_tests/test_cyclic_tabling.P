@@ -1,6 +1,6 @@
 :- import close_open_tables/1 from machine.
 
-?- set_prolog_flag(max_table_answer_depth,25).
+?- set_prolog_flag(max_table_answer_size,25).
 ?- set_prolog_flag(max_table_subgoal_size,25).
 ?- set_prolog_flag(max_table_subgoal_action,error).
 

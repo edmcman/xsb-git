@@ -1,2 +1,2 @@
-caught_list_error
-caught_term_error
+ Cyclic term in term to be trie-interned 
+ Cyclic term in term to be trie-interned 

@@ -2,8 +2,8 @@
 :- import close_open_tables/1 from machine.
 :- import xsb_error_get_tag/2 from error_handler.
 
-test:- test_failure,fail.
-test:-  p(7,Y),writeln(on_failure(p(7,Y))),fail.
+%test:- test_failure,fail.
+%test:-  p(7,Y),writeln(on_failure(p(7,Y))),fail.
 test:- catch(test_error,E,(xsb_error_get_tag(E,X),writeln(error_caught(X)))),fail.
 test:- close_open_tables(non_memory_error), fail.
 test.

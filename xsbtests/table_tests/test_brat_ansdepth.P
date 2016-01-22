@@ -1,7 +1,7 @@
 :- compiler_options([spec_off]).
 
 :- set_prolog_flag(max_table_answer_action, bounded_rationality).
-:- set_prolog_flag(max_table_answer_depth, 7).
+:- set_prolog_flag(max_table_answer_size, 7).
 :- set_prolog_flag(heap_garbage_collection,none).
 
 %:- import start_forest_view/1 from tables.
@@ -23,12 +23,13 @@ test:- tests3.
 test:- tests4.
 test:- tests5.
 test:- tests6.
+test:- testl1.
 test.
 
 test1:- s(A,B),writeln(s(A,B)),fail.
 test1:- s1(A,B),writeln(s1(A,B)),fail.
 
-testp:- p(X),get_residual(p(X),L),numbervars([X,Y,L]),
+testp:- p(X),get_residual(p(X),L),numbervars([X,L]),
 	writeln(get_residual(p(X),L)),fail.
 testq1:- q1(X,Y),get_residual(q1(X,Y),L),numbervars([X,Y,L]),
 	 writeln(get_residual(q1(X,Y),L)),fail.
@@ -54,6 +55,8 @@ tests5:- s5(X,Y),get_residual(s5(X,Y),L),numbervars([X,Y,L]),
 	 writeln(get_residual(s5(X,Y),L)),fail.
 tests6:- s6(X,Y),get_residual(s6(X,Y),L),numbervars([X,Y,L]),
 	 writeln(get_residual(s6(X,Y),L)),fail.
+testl1:- l(X),get_residual(l(X),L),numbervars([X,L]),
+	 writeln(get_residual(l(X),L)),fail.
 
 :- table p/1.
 p(f(X)):- p(X). %writeln(found(f(X))).
@@ -125,4 +128,8 @@ d3(f(f(f(f(a))))).
 :- table d4/3.
 d4(f(f(f(a,a),f(a,a)),f(f(a,a),f(a,a))),g(1),
   h(h(h(b,b),h(b,b)),h(h(b,b),h(b,b)))).
+
+:- table l/1.
+l([X]):- l(X). %writeln(found(f(X))).
+l(a).
 
