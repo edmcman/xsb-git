@@ -1977,8 +1977,8 @@ system.
 \index{termination!subgoal abstraction}
 \index{bounded rationality}
 \index{termination!radial restraint}
-\index{abstraction!subgoal}
-\index{abstraction!answer}
+\index{abstraction of terms!subgoal}
+\index{abstraction of terms!answer}
 \section{Tabling for Termination} \label{sec:tabling-termination}
 %
 As noted throughout this manual, tabling adds important termination
@@ -2051,7 +2051,60 @@ when given the query {\tt ?- p(X)}.
 
 We consider each case in turn.
 
+\subsection{Term Size Abstraction in XSB}
+\index{abstraction of terms!size metric}
+%
+Both subgoal and answer abstraction in XSB are based on limiting the
+size of any argument of a term $T$ that forms a subgoal or answer.
+The specific definition of size used is slightly complicated, but
+offeres advantages discussed below.  Each argument $T_a$ of $T$ is
+traversed as follows.  The size of $T_i$ is initialized to 0, then
+$T_a$ is traversed from left to right.  Each time a non-constant
+functor or list symbol is encountered, the size of $T_i$ is
+incremented by 1 -- regardless of the type of functor symbol that is
+encountered.  If the size of $T_a$ exceeds the associate size limit
+for $T$ (as declared in the next section), all further non-constant
+functor symbols encountered in $T_i$ will be abstracted.  Once $T_a$
+has been fully traversed, further arguments will be traversed in the
+exact same manner.
+
+%, with one
+%important exception.  The functor symbols will be abstracted {\em
+%  only} if they also occur at depth greater than 0.
+
+\begin{example}
+Applying the above definition of size abstraction with limit 2 to the
+term 
+
+{\tt p(d(e(1),a,f(c$_1$)),b,g(c$_2$),[c$_3$,[c$_4$,c$_5$]))}
+
+\noindent
+  produces the term 
+
+{\tt p(d(e(X$_1$),a,X$_2$),b,g($c_2$),[$c_4$|X$_3$])}.  
+
+\noindent
+In the traversal, the size limit is reached once the {\tt e/1} functor
+is encountered.  Afterwards all non-constant functor symbols of depth
+greater than 0 are abstracted.  This causes {\tt f/1} to be
+abstracted, as it occurs at depth 1; however {\tt g/1} in the third
+occurs at depth 0, and so is retained.  Similarly in the fourth
+argument, the outer list symbol and head is preserved, while the tail
+of the list is abstracted.
+\end{example}
+
+Size-based abstraction as described above has been implemented in a
+manner that has minimal if any impact on the speed of XSB's tabling
+engine.  Note that by not abstracting functor symbols at depth 0 and
+by abstracting each argument individually, both multi-argument
+indexing and star indexing of subgoals will be usually be
+preserved.\footnote{Other metrics could be used, such as term depth.
+  Depth-based abstraction offers conceptual clarity; however
+  size-based abstraction allows finer-grained optimization and incurs
+  slightly less cost for XSB's tabling engine.}
+
 \subsection{Subgoal Abstraction}
+\index{abstraction of terms!subgoal}
 %
 In a nutshell, subgoal abstraction allows a goal like {\tt
   p(f(f(f(1))))} to be rewritten as 
@@ -2095,51 +2148,6 @@ any program containing {\tt member/2} and at least one constant does
 not have a finite model.  While an experienced programmer would never
 want to table {\tt member/2}, he well may want to table a grammar or
 other program that performs recursion through a finite structure.
-
-\paragraph{Term Size Abstraction in XSB}
-%
-Both subgoal and answer abstraction in XSB are based on limiting the
-size of a term.  The specific definition of size used is slightly
-complicated, but offeres advantages discussed below.  A term $T$ is
-traversed from left to right.  Each time a non-constant functor symbol
-is encountered, the size is incremented by 1 -- regardless of the type
-of symbol that is encountered.  Once the size limit has been reached,
-all further non-constant functor symbols encountered will be
-abstracted, with one important exception.  The functor symbols will be
-abstracted {\em only} if they also occur at depth greater than 0.
-
-\begin{example}
-Applying the above definition of size abstraction with limit 2 to the
-term 
-
-{\tt p(d(e(1),a,f(c$_1$)),b,g(c$_2$),[c$_3$,[c$_4$,c$_5$]))}
-
-\noindent
-  produces the term 
-
-{\tt p(d(e(X$_1$),a,X$_2$),b,g($c_2$),[$c_4$|X$_3$])}.  
-
-\noindent
-In the traversal, the size limit is reached once the {\tt e/1} functor
-is encountered.  Afterwards all non-constant functor symbols of depth
-greater than 0 are abstracted.  This causes {\tt f/1} to be
-abstracted, as it occurs at depth 1; however {\tt g/1} in the third
-occurs at depth 0, and so is retained.  Similarly in the fourth
-argument, the outer list symbol and head is preserved, while the tail
-of the list is abstracted.
-\end{example}
-
-Size-based abstraction as described has been implemented in a manner
-that has minimal if any impact on the speed of XSB's tabling engine.
-Note that by not abstracting functor symbols at depth 0,
-multi-argument indexing of subgoals will be usually be preserved.
-However, XSB's star indexing will not always be preserved if it is
-declared on an argument that is incuntered after a size limit has been
-hit.\footnote{Other metrics could be used, such as term depth.
-  Depth-based abstraction offers conceptual clarity and makes it
-  easier to preserve star indexing; however size-based abstraction
-  allows finer-grained optimization and incurs slightly less cost for
-  XSB's tabling engine.}
 
 \subsubsection{Declaring Subgoal Abstraction}
 %
@@ -2197,6 +2205,7 @@ command-line arguments {\tt --max\_subgoal\_action a} and {\tt
 the desired size limit.
 
 \subsection{Bounded Rationality through Radial Restraint} \label{sec:restraint}
+\index{abstraction of terms!answer}
 %
 In XSB, a programmer can use a form of bounded rationality called {\em
   radial restraint} to ensure that only a finite number of answers are

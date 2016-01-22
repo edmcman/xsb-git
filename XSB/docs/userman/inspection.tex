@@ -22,13 +22,14 @@ inspect a derivation that has completed.  In this section, we first
 describe two important sets of interactive inspection predicates.
 First we describe the {\tt table\_dump} library which provides a
 flexible approch to inspecting tables
-(Section~\ref{sec:table-dump}). (Other, predicates for table
-inspection that are generally lower-level are described in
-Section~\ref{sec:TablingPredicates}.)  Next we discuss a set of
+(Section~\ref{sec:table-dump}).\footnote{Other predicates for table
+  inspection that are generally lower-level are described in
+  Section~\ref{sec:TablingPredicates}.}  Next we discuss a set of
 predicates for inspecting various dependency graphs of a computation
 (Section~\ref{sec:dep-graph}.  We then discuss how {\em tripwires} can
 automatically suspend a derivation for inspection at a point where the
-derivation becomes inefficient (Section~\ref{sec:tripwire}).
+derivation begins to use too many resources, and so might be
+inefficient (Section~\ref{sec:tripwire}).
 
 \subsection{Inspecting Tables with {\tt table\_dump}} \label{sec:table-dump}
 
@@ -122,10 +123,10 @@ yes
 
 summary = p(A,B) - subgoals(3) - total_times_called(4) - total_answers(7).
 details = p(A,B) - subgoals(3) - details([
-    p(C,D) - times_called(1) - answers(5) - [p(3,1)-t,p(3,2)-t,p(2,b)-t,p(1,b)-t,p(1,a)-t] 
-                                          - completed,
-    p(1,a) - times_called(2) - answers(1) - [p(1,a)-t]                         - completed,
-    p(2,b) - times_called(1) - answers(1) - [p(2,b)-t]                         - completed]).
+    p(C,D) - times_called(1) - answers(5) - [p(3,1)-t,p(3,2)-t,p(2,b)-t,
+                                             p(1,b)-t,p(1,a)-t]          - completed,
+    p(1,a) - times_called(2) - answers(1) - [p(1,a)-t]                   - completed,
+    p(2,b) - times_called(1) - answers(1) - [p(2,b)-t]                   - completed]).
 
 X = p(_h232,_h233);
 
