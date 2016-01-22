@@ -896,7 +896,6 @@ tif_translate(intern,INTERNING_GROUND).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Forest Logging
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:- import ensure_loaded/1 from consult.
 
 log_all_forest_start :-
 	start_forest_view(userout).
@@ -959,7 +958,7 @@ set_forest_logging_for_pred(PredSpec,_Val):-
 	type_error(predicate_or_term_indicator,PredSpec,set_forest_logging_for_pred/2,1).
 
 load_forest_log(File):- 
-	ensure_loaded(term_abstract),
+%	ensure_loaded(term_abstract),
 	dynamic(pus_smpl/4), 	dynamic(puc_smpl/5), 
 	dynamic(ns_smpl/3),	dynamic(nf_smpl/3),
 	dynamic(cmp/3),
@@ -1774,7 +1773,29 @@ max_table_subgoal_default_handler:-
 max_table_subgoal_header:- 
   current_prolog_flag(max_table_subgoal_size,Max),
   format("~n          WARNING!! XSB-oriented math-talk to follow.~n~n~n",[]),
-  format("Term called with size of ~d~n",[Max]),
+  format("Subgoal called with size of ~d~n",[Max]),
+  format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
+  format("  * To abort, enter the command 'abort/0'~n",[]),
+  format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]).
+
+%----
+
+:- export max_table_answer_handler/0.
+:- import max_table_answer_user_handler/0 from usermod.
+:- dynamic max_table_answer_user_handler/0. 
+
+max_table_answer_handler:- 
+     max_table_answer_user_handler,!.
+max_table_answer_handler:- 
+    max_table_answer_default_handler.
+
+max_table_answer_default_handler:- 
+	      break_for_tripwires([tables:max_table_answer_header]).
+
+max_table_answer_header:- 
+  current_prolog_flag(max_table_answer_size,Max),
+  format("~n          WARNING!! XSB-oriented math-talk to follow.~n~n~n",[]),
+  format("Answer derived with size of ~d~n",[Max]),
   format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
   format("  * To abort, enter the command 'abort/0'~n",[]),
   format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]).
