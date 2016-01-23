@@ -225,10 +225,9 @@ case IS_INCOMPLETE: {
       CPtr delay_lists;
       Cell dls_head;
 
-#ifdef DEBUG_DELAYVAR
-      xsb_mesg(">>>> (at the beginning of GET_DELAY_LISTS");
-      xsb_mesg(">>>> global_trieinstr_vars_num = %d)",global_trieinstr_vars_num);
+      //      printf("build_delay_list(): beginning global_trieinstr_vars_num = %d\n",global_trieinstr_vars_num);
 	
+#ifdef DEBUG_DELAYVAR
       {
 	int i;
 	for (i = 0; i <= global_trieinstr_vars_num; i++) {
@@ -261,6 +260,8 @@ case IS_INCOMPLETE: {
 	  if (var_addr_arraysz < num_vars_in_anshead) 
 	    trie_expand_array(CPtr,var_addr,var_addr_arraysz,num_vars_in_anshead,"var_addr");
 	  copy_of_var_addr_arraysz = var_addr_arraysz;
+	  //	  printf("1) cova_size to be alloced %d num_vars_in_anshead %d\n",
+	  //              copy_of_var_addr_arraysz,num_vars_in_anshead);
 	  copy_of_var_addr = (CPtr *)mem_calloc(copy_of_var_addr_arraysz, sizeof(CPtr),OTHER_SPACE);
 	  for( i = 0; i < num_vars_in_anshead; i++)
 	    copy_of_var_addr[i] = trieinstr_vars[i];
@@ -277,6 +278,7 @@ case IS_INCOMPLETE: {
 	  copy_of_num_heap_term_vars = num_vars_in_anshead;
 	}
 
+	//	printf("1) copy_of_nhtv %d num_vars_in_anshead %d\n",copy_of_num_heap_term_vars,num_vars_in_anshead);
 	for (dl = asi_dl_list((ASI) Delay(as_leaf)); dl != NULL; ) {
 	  de = dl_de_list(dl);
 
@@ -284,11 +286,29 @@ case IS_INCOMPLETE: {
 	  dbg_print_subgoal(LOG_DELAY, stddbg, de_subgoal(de)); 
 	  xsb_dbgmsg((LOG_DELAY, ").\n"));
 
+	  //	  printf("2) copy_of_nhtv %d num_vars_in_anshead %d size %d\n",
+	  //	 copy_of_num_heap_term_vars,num_vars_in_anshead,var_addr_arraysz);
 	  dls_head = build_delay_list(CTXTc de);
+	  //	  printf("3) copy_of_nhtv %d cva_size %d num_vars_in_anshead %d size %d\n",
+	  //	 copy_of_num_heap_term_vars,copy_of_var_addr_arraysz,num_vars_in_anshead,var_addr_arraysz);
 
 	  /* Answer may have more than one delay list, so must re-init
 	     rest of vars used back to 0; head vars are unchanged. */
+
+	  /* TES: The following while loop triggers an "invalid write"
+	     error in Valgrind, because when
+	     copy_of_num_heap_term_vars is greater than
+	     copy_of_var_addr_arraysz.  The if-statement might not be
+	     much more than a band-aid, I'm actually suspicious about
+	     the loose use of var_addr and copy_of_var_addr in
+	     residual.c:build_delay_list(), but I don't presently
+	     understand this code enough to want to try a possibly
+	     better fix */
+
+	  if (copy_of_num_heap_term_vars > copy_of_var_addr_arraysz)
+	    copy_of_num_heap_term_vars = copy_of_var_addr_arraysz;
 	  while (copy_of_num_heap_term_vars > num_vars_in_anshead) {
+	    //	    printf("cnhtv %d nvia %d\n",copy_of_num_heap_term_vars,num_vars_in_anshead);
 	    copy_of_var_addr[--copy_of_num_heap_term_vars] = 0;
 	  }
 
