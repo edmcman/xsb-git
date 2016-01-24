@@ -2499,12 +2499,16 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
 	}								\
       }									\
       else {								\
-	if (is_cyclic(CTXTc term))					\
+	if (is_cyclic(CTXTc term)) {					\
+	  sprintCyclicTerm(CTXTc forest_log_buffer_1,term);		\
 	  xsb_abort("Cyclic term in term to be trie-interned %s\n",forest_log_buffer_1->fl_buffer); \
-	else								\
+	}								\
+	else {								\
+	  sprintTerm(CTXTc forest_log_buffer_1,term);		\
 	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
 				"Exceeded max trie_intern size of %d for %s\n",	\
 				(int)flags[MAX_TABLE_ANSWER_DEPTH],forest_log_buffer_1->fl_buffer); \
+	}								\
       }									\
     }									\
  }
