@@ -2,11 +2,13 @@
 	  trie_unintern/2, delete_trie/1, bulk_trie_intern/2,trie_retractall/2  from intern.
 :- import xsb_error_get_message/2 from error_handler.
 
-:- set_prolog_flag(max_table_answer_size,10).
 %:- set_prolog_flag(max_table_answer_list_size,10).
 
-test:- set_prolog_flag(unify_with_occurs_check,off),fail.
 test:- create_trie,fail.
+test:- test_term_error,fail.
+test:- test_list_error,fail.
+test:- set_prolog_flag(unify_with_occurs_check,off),fail.
+test:- set_prolog_flag(max_table_answer_size,10),fail.
 test:- test_term_error,fail.
 test:- test_list_error,fail.
 %test:- set_prolog_flag(max_table_answer_action,failure),
