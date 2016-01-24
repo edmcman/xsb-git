@@ -1016,7 +1016,7 @@ void call_conv xsb_new_table_error(CTXTdeclc char *subtype, char * goalstring, c
   bld_cs(error_rec+6,error_rec+8);
   bld_copy(error_rec+7,build_xsb_backtrace(CTXT));
   bld_functor(error_rec+8, pair_psc(insert("context",2,(Psc)flags[CURRENT_MODULE],&isnew)));
-  bld_string(error_rec+9,message);
+  bld_string(error_rec+9,string_find(message,1));
   bld_string(error_rec+10,string_find(goalstring,1));
 
   xsb_throw_internal(CTXTc ball_to_throw, ball_len);
