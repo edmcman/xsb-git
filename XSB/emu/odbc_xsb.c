@@ -494,7 +494,7 @@ char *detailed_error(char *msg1, char *msg2, SQLHANDLE handle, SQLSMALLINT type)
       ret = SQLGetDiagRec(type, handle, ++i, state, &native, text,
 			  sizeof(text), &len );
       if (SQL_SUCCEEDED(ret)) {
-	snprintf(msg_segment,2510,"::%s:%d:%ld:%s", state, i, native, text);
+	snprintf(msg_segment,250,"::%s:%d:%ld:%s", state, i, native, text);
         XSB_StrAppend(&odbc_err_msg,msg_segment);
       }
     } while( ret == SQL_SUCCESS );
