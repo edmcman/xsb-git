@@ -71,6 +71,8 @@
 #define MAXINCL 18   /* max # of include dirs */
 #define MAXINCLUDE_DEPTH 200 /* max depth of #include statements */
 
+#define DEFAULT_BUFSIZE 80
+
 #define MAX_GPP_NUM_SIZE 18
 
 typedef struct MODE {
@@ -705,15 +707,15 @@ void outchar(char c)
     C->out->buf[C->out->len++]=c;
   }
   else {
-    if (dosmode&&(c==10)) {
-      fputc(13,C->out->f);
+    if (dosmode && c=='\n') {
+      fputc((int)'\r',C->out->f);
       if (file_and_stderr)
-        fputc(13,stderr);
+        fputc((int)'\r',stderr);
     }
-    if (c!=13) {
-      fputc(c,C->out->f);
+    if (c!='\r') {
+      fputc((int)c,C->out->f);
       if (file_and_stderr)
-        fputc(c,stderr);
+        fputc((int)c,stderr);
     }
   }
 }
@@ -756,7 +758,7 @@ char getChar(int pos)
   }
   extendBuf(pos);
   while (pos>=C->len) {
-    do { c=fgetc(C->in); } while (c==13);
+    do { c=fgetc(C->in); } while (c=='\r');
     if (c=='\n') C->lineno++;
     if (c==EOF) c=0;
     C->buf[C->len++]=(char)c;
@@ -1080,7 +1082,7 @@ void initthings(int argc, char **argv)
   C->lineno=0;
   isinput=isoutput=ismode=ishelp=hasmeta=usrmode=0;
   nincludedirs=0;
-  C->bufsize=80;
+  C->bufsize=DEFAULT_BUFSIZE;
   C->len=0;
   C->buf=C->malloced_buf=malloc(C->bufsize);
   C->eof=0;
@@ -1487,9 +1489,9 @@ char *ProcessText(char *buf,int l,int ambience)
   C->argc=T->argc;
   C->argv=T->argv;
   C->filename=T->filename;
-  C->out->buf=malloc(80);
+  C->out->buf=malloc(DEFAULT_BUFSIZE);
   C->out->len=0;
-  C->out->bufsize=80;
+  C->out->bufsize=DEFAULT_BUFSIZE;
   C->out->f=NULL;
   C->lineno=T->lineno;
   C->bufsize=l+2;
@@ -1533,9 +1535,9 @@ char *ProcessFastDefinition(char *buf,int l,char **argnames)
   C->argc=8;
   C->argv=argval;
   C->filename=T->filename;
-  C->out->buf=malloc(80);
+  C->out->buf=malloc(DEFAULT_BUFSIZE);
   C->out->len=0;
-  C->out->bufsize=80;
+  C->out->bufsize=DEFAULT_BUFSIZE;
   C->out->f=NULL;
   C->lineno=T->lineno;
   C->bufsize=l+2;
@@ -2342,7 +2344,7 @@ int ParsePossibleMeta()
       C->filename=incfile_name;
       C->out=N->out;
       C->lineno=0;
-      C->bufsize=80;
+      C->bufsize=DEFAULT_BUFSIZE;
       C->len=0;
       C->buf=C->malloced_buf=malloc(C->bufsize);
       C->eof=0;
