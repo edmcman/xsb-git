@@ -224,92 +224,77 @@ case IS_INCOMPLETE: {
       BTNptr as_leaf;
       CPtr delay_lists;
       Cell dls_head;
-
-      //      printf("build_delay_list(): beginning global_trieinstr_vars_num = %d\n",global_trieinstr_vars_num);
 	
 #ifdef DEBUG_DELAYVAR
-      {
-	int i;
+      {	int i;
 	for (i = 0; i <= global_trieinstr_vars_num; i++) {
 	  Cell x;
 	  fprintf(stddbg, ">>>> trieinstr_vars[%d] =", i);
 	  x = (Cell)trieinstr_vars[i];
 	  XSB_Deref(x);
-	  printterm(stddbg, x, 25);
-	  fprintf(stddbg, "\n");
+	  printterm(stddbg, x, 25);	  fprintf(stddbg, "\n");
 	}
       }
 #endif /* DEBUG_DELAYVAR */
-
       as_leaf = (NODEptr) ptoc_int(CTXTc 1);
-      delay_lists = (CPtr)ptoc_tag(CTXTc 2); // should test is var
+      delay_lists = (CPtr)ptoc_tag(CTXTc 2); // should test if var
       if (is_conditional_answer(as_leaf)) {
-	int copy_of_var_addr_arraysz;
-	int i;
+	int i;	//	int var_addr_accum_arraysz;
 	int num_vars_in_anshead = global_trieinstr_vars_num+1;
 	{ /*
-	   * Make copy of trieinstr_vars & global_trieinstr_vars_num (after get_returns,
+	   * Initialize var_addr_accum with trieinstr_vars & global_trieinstr_vars_num (after get_returns,
 	   * which calls trie_get_return).  (global_trieinstr_vars_num +
 	   * 1) is the number of variables left in the answer
 	   * (substitution factor of the answer)
 	   *
-	   * So, copy_of_var_addr[] starts as the substitution factor of the
+	   * So, var_addr_accum[] starts as the substitution factor of the
 	   * answer for the head predicate.  It will accumulate the variables in 
 	   * body of the residual rule.
 	   */
 	  if (var_addr_arraysz < num_vars_in_anshead) 
 	    trie_expand_array(CPtr,var_addr,var_addr_arraysz,num_vars_in_anshead,"var_addr");
-	  copy_of_var_addr_arraysz = var_addr_arraysz;
-	  //	  printf("1) cova_size to be alloced %d num_vars_in_anshead %d\n",
-	  //              copy_of_var_addr_arraysz,num_vars_in_anshead);
-	  copy_of_var_addr = (CPtr *)mem_calloc(copy_of_var_addr_arraysz, sizeof(CPtr),OTHER_SPACE);
+	  if (var_addr_accum_arraysz < num_vars_in_anshead) 
+	    trie_expand_array(CPtr,var_addr_accum,var_addr_accum_arraysz,num_vars_in_anshead,"var_addr_accum");
 	  for( i = 0; i < num_vars_in_anshead; i++)
-	    copy_of_var_addr[i] = trieinstr_vars[i];
+	    var_addr_accum[i] = trieinstr_vars[i];
+	  //	  printf("GET_DELAY_LISTS end of setup cova_sz %d num_vars_in_anshead %d\n",
+	  //	 var_addr_accum_arraysz,num_vars_in_anshead);
+	  //	  var_addr_accum_arraysz = var_addr_arraysz;
+	  //	  var_addr_accum = (CPtr *)mem_calloc(var_addr_accum_arraysz, sizeof(CPtr),OTHER_SPACE);
 	  
-	  /* copy_of_addr_var[] will accumulate the variables across
+	  /* var_addr_accum[] will accumulate the variables across
 	     the delay-elements (i.e., body subgoals in the residual
-	     rule.)  copy_of_num_heap_term_vars will accumulate the
-	     max number of vars in copy_of_var_addr so we can reset
-	     them to 0.  The entries in copy_of_var_addr[], other than
+	     rule.)  var_addr_accum_num will accumulate the
+	     max number of vars in var_addr_accum so we can reset
+	     them to 0.  The entries in var_addr_accum[], other than
 	     for the answer variables, must be 0, since the 1st
 	     occurrence mark for variables in the delay list cant be
 	     depended on, due to possible deletion of
-	     delay-elements. */
-	  copy_of_num_heap_term_vars = num_vars_in_anshead;
+	     delay-elements. (TES, not sure I understand this last part*/
+	  var_addr_accum_num = num_vars_in_anshead;
 	}
 
-	//	printf("1) copy_of_nhtv %d num_vars_in_anshead %d\n",copy_of_num_heap_term_vars,num_vars_in_anshead);
 	for (dl = asi_dl_list((ASI) Delay(as_leaf)); dl != NULL; ) {
 	  de = dl_de_list(dl);
 
 	  xsb_dbgmsg((LOG_DELAY, "orig_delayed_term("));
-	  dbg_print_subgoal(LOG_DELAY, stddbg, de_subgoal(de)); 
-	  xsb_dbgmsg((LOG_DELAY, ").\n"));
+	  dbg_print_subgoal(LOG_DELAY, stddbg, de_subgoal(de)); xsb_dbgmsg((LOG_DELAY, ").\n"));
 
-	  //	  printf("2) copy_of_nhtv %d num_vars_in_anshead %d size %d\n",
-	  //	 copy_of_num_heap_term_vars,num_vars_in_anshead,var_addr_arraysz);
+	  //	  printf("2) accum_nhtv %d num_vars_in_anshead %d va_size %d cova_size %d\n",
+	  //	 var_addr_accum_num,num_vars_in_anshead,var_addr_arraysz,var_addr_accum_arraysz);
 	  dls_head = build_delay_list(CTXTc de);
-	  //	  printf("3) copy_of_nhtv %d cva_size %d num_vars_in_anshead %d size %d\n",
-	  //	 copy_of_num_heap_term_vars,copy_of_var_addr_arraysz,num_vars_in_anshead,var_addr_arraysz);
+	  //	  printf("3) accum_nhtv %d cva_size %d num_vars_in_anshead %d size %d\n",
+	  //	 var_addr_accum_num,var_addr_accum_arraysz,num_vars_in_anshead,var_addr_arraysz);
 
 	  /* Answer may have more than one delay list, so must re-init
-	     rest of vars used back to 0; head vars are unchanged. */
+	     rest of vars used in var_addr_accum back to 0; head vars are unchanged. */
 
-	  /* TES: The following while loop triggers an "invalid write"
-	     error in Valgrind, because when
-	     copy_of_num_heap_term_vars is greater than
-	     copy_of_var_addr_arraysz.  The if-statement might not be
-	     much more than a band-aid, I'm actually suspicious about
-	     the loose use of var_addr and copy_of_var_addr in
-	     residual.c:build_delay_list(), but I don't presently
-	     understand this code enough to want to try a possibly
-	     better fix */
-
-	  if (copy_of_num_heap_term_vars > copy_of_var_addr_arraysz)
-	    copy_of_num_heap_term_vars = copy_of_var_addr_arraysz;
-	  while (copy_of_num_heap_term_vars > num_vars_in_anshead) {
-	    //	    printf("cnhtv %d nvia %d\n",copy_of_num_heap_term_vars,num_vars_in_anshead);
-	    copy_of_var_addr[--copy_of_num_heap_term_vars] = 0;
+	  if (var_addr_accum) {
+	    while (var_addr_accum_num > num_vars_in_anshead 
+		   && var_addr_accum_num <= var_addr_accum_arraysz) {
+	      //	    printf("cnhtv %d nvia %d\n",var_addr_accum_num,num_vars_in_anshead);
+	      var_addr_accum[--var_addr_accum_num] = 0;
+	    }
 	  }
 
 	  bind_list(delay_lists,hreg);
@@ -319,7 +304,7 @@ case IS_INCOMPLETE: {
 	  dl = dl_next(dl);
 	}
 	bind_nil(delay_lists);
-	mem_dealloc(copy_of_var_addr,copy_of_var_addr_arraysz*sizeof(CPtr),OTHER_SPACE);
+	//	mem_dealloc(var_addr_accum,var_addr_accum_arraysz*sizeof(CPtr),OTHER_SPACE);
       } else {
 	bind_nil((CPtr)delay_lists);
       }

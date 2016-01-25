@@ -25,5 +25,6 @@
 
 
 extern Cell build_delay_list(CTXTdeclc DE);
+extern int var_addr_accum_arraysz;
 
 /*---------------------- end of file residual.h ------------------------*/

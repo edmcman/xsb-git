@@ -69,8 +69,9 @@
 
 #ifndef MULTI_THREAD
 Cell cell_array[MAXTERMBUFSIZE];
-CPtr *copy_of_var_addr;
-int copy_of_num_heap_term_vars;
+CPtr *var_addr_accum;
+int var_addr_accum_arraysz;
+int var_addr_accum_num;
 #endif
 
 #define build_subgoal_args(SUBG)	\
@@ -80,7 +81,7 @@ int copy_of_num_heap_term_vars;
 
 /*
  * Function build_delay_list() is called by builtin #143 GET_DELAY_LISTS
- * to construct on the heap the delay list pointed by `de'.  Since XSB
+ * to construct on the heap the delay list pointed to by `de'.  Since XSB
  * 1.8.1, this function is changed to handle variables in delay list.
  * Basically, to construct a delayed subgoal, we have to go through three 
  * tries one by one: the call trie, answer trie, and delay trie of the
@@ -99,13 +100,12 @@ Cell build_delay_list(CTXTdeclc DE de)
 #ifdef DEBUG_DELAYVAR
   BTNptr subs_factp;
 #endif
-  CPtr *tmp_var_addr;
+  //  CPtr *tmp_var_addr;
   CPtr oldhreg;
  
   i = 0;
   if (de != NULL && !isnil(de)) {
-    //    printf("bdl: var_addr %p copy %p\n",var_addr,copy_of_var_addr);
-    /* must build back-to-front so existential vars are handled consistently (?dsw)*/
+    /* must build back-to-front so existential vars are handled consistently (?dsw ?TES)*/
     delay_list = build_delay_list(CTXTc de_next(de)); /* recursive call */
     oldhreg = hreg;
     follow(hreg+1) = delay_list;
@@ -153,10 +153,10 @@ Cell build_delay_list(CTXTdeclc DE de)
 	  cell_array[arity-j] = cell(sreg-1);
 	}
 	
-#ifdef DEBUG_DELAYVAR
-	xsb_dbgmsg((LOG_DEBUG,">>>> (before build_subgoal_args) num_heap_term_vars = %d",
-		   num_heap_term_vars));
-#endif
+	//#ifdef DEBUG_DELAYVAR
+	//	  printf("build_delay_list (before build_subgoal_args) num_heap_term_vars = %d accum %d\n",
+	//	 num_heap_term_vars,var_addr_accum_num);
+	//#endif
 
 	/*
 	 * Function build_subgoal_args() goes through the subgoal trie
@@ -169,10 +169,10 @@ Cell build_delay_list(CTXTdeclc DE de)
 	 */
 	build_subgoal_args(subg);
 	
-#ifdef DEBUG_DELAYVAR
-	xsb_dbgmsg((LOG_DEBUG,">>>> (after build_subgoal_args) num_heap_term_vars = %d",
-		   num_heap_term_vars));
-#endif
+	//#ifdef DEBUG_DELAYVAR
+	//	printf("build_delay_list (after build_subgoal_args) num_heap_term_vars = %d accum %d\n",
+	//     num_heap_term_vars,var_addr_accum_num);
+	//#endif
 	
 	for (i = 0, j = num_heap_term_vars-1; j >= 0; j--) {
 	  cell_array[i++] = (Cell)var_addr[j];
@@ -188,10 +188,10 @@ Cell build_delay_list(CTXTdeclc DE de)
 	 */
 	load_solution_trie(CTXTc i, 0, &cell_array[i-1], ans_subst);
 	
-#ifdef DEBUG_DELAYVAR
-	xsb_dbgmsg((LOG_DEBUG,">>>> (after load_solution_trie) num_heap_term_vars = %d",
-		   num_heap_term_vars));
-#endif
+	//#ifdef DEBUG_DELAYVAR
+	//	  printf("build_delay_list: (after load_solution_trie) num_heap_term_vars = %d accum %d\n",
+	//		   num_heap_term_vars,var_addr_accum_num);
+	//#endif
 	
 	for (i = 0, j = num_heap_term_vars-1; j >= 0; j--) {
 	  cell_array[i++] = (Cell)var_addr[j];
@@ -200,31 +200,42 @@ Cell build_delay_list(CTXTdeclc DE de)
 #endif
 	}
 	
-	tmp_var_addr = var_addr;
-	
 	/*
-	 * Restore var_addr[] to copy_of_var_addr[], which contains all
+	 * Restore var_addr[] to var_addr_accum[], which contains all
 	 * the variables in the _head_ predicate after get_returns is
-	 * called (see bineg_xsb_i.h).
+	 * called (see bineg_xsb_i.h, where it was first initialized).
 	 *
-	 * The content of copy_of_var_addr[] is used in
+	 * The content of var_addr_accum[] is used in
 	 * load_delay_trie(), and might be changed by each delay
 	 * element.  But during the whole process for one paticular
-	 * delay list, copy_of_var_addr[] will be shared by all the
+	 * delay list, var_addr_accum[] will be shared by all the
 	 * delay elements.
 	 *
-	 * It is not necessary to restore copy_of_num_heap_term_vars
+	 * It is not necessary to restore num_heap_term_vars
 	 * each time before load_delay_trie() is called for a delay
 	 * element.  Each variable in the trie can find its binding in
-	 * copy_of_var_addr[] without num_heap_term_vars.
+	 * var_addr_accum[] without num_heap_term_vars.
 	 */
-	var_addr = copy_of_var_addr; /* variables left in the head */
-	num_heap_term_vars = copy_of_num_heap_term_vars;
-	
+	//	printf("about to copy: va_sz %d cova_sz %d cnhtv %d\n",var_addr_arraysz,var_addr_accum_arraysz,
+	//	       var_addr_accum_num);
+
+	/* macro_make_heap_term actually increments
+	   var_addr_accum_num, without writing anything to it.  I'm
+	   not sure why that is, but it means we need the following expansion */
+	if (var_addr_accum_arraysz < var_addr_accum_num) 
+	  trie_expand_array(CPtr,var_addr_accum,var_addr_accum_arraysz,var_addr_accum_num,
+			    "var_addr_accum");
+	if (var_addr_arraysz < var_addr_accum_num) 
+	  trie_expand_array(CPtr,var_addr,var_addr_arraysz,var_addr_accum_num,"var_addr");
+	{ int i;
+	  for (i=0; i<var_addr_accum_num; i++)
+	    var_addr[i] = var_addr_accum[i];  
+	}
+	num_heap_term_vars = var_addr_accum_num;
 	
 #ifdef DEBUG_DELAYVAR
-	xsb_dbgmsg((LOG_DEBUG,">>>> NOW copy_of_num_heap_term_vars = %d",
-		   copy_of_num_heap_term_vars));
+	xsb_dbgmsg((LOG_DEBUG,">>>> NOW var_addr_accum_num = %d",
+		   var_addr_accum_num));
 	{
 	  int i;
 	  for(i = 0; i < num_heap_term_vars; i++)
@@ -253,24 +264,16 @@ Cell build_delay_list(CTXTdeclc DE de)
 	load_delay_trie(CTXTc i, &cell_array[i-1], de_subs_fact_leaf(de));
 #endif
 
-#ifdef DEBUG_DELAYVAR
-	xsb_dbgmsg((LOG_DEBUG,">>>> num_heap_term_vars becomes %d",
-		   num_heap_term_vars));
-	for (i = 0; i < num_heap_term_vars; i++)
-	  xsb_dbgmsg((LOG_DEBUG,">>>> var_addr[%d] = %x",i, (int)var_addr[i]));
-#endif
+	//#ifdef DEBUG_DELAYVAR
+	//	  printf("build_delay_list() after delay trie num_heap_term_vars becomes %d copy of %d\n",
+	//	 num_heap_term_vars,var_addr_accum_num);
+      //	for (i = 0; i < num_heap_term_vars; i++)
+      //	  xsb_dbgmsg((LOG_DEBUG,">>>> var_addr[%d] = %x",i, (int)var_addr[i]));
+	//#endif
 
-	/* TLS: Need to set copy_of_var_addr back to addr.  Most of
-	   the time, they will be equal, as cova was set to va.
-	   However, var_addr might have been expanded during
-	   load_delay_trie().  If so, then the values will be
-	   different, and the deallocation of cova in the builtin
-	   build_delay_lists will abort */
-
-	copy_of_var_addr = var_addr;
-	var_addr = tmp_var_addr;
       }
     }
+    //    printf("----------------------\n");
     return makelist(oldhreg);
   } else {
     return makenil;

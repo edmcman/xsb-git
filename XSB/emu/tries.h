@@ -533,8 +533,8 @@ extern CPtr *var_addr;
 extern int  var_addr_arraysz;
 
 /* similar .. used in get_residual */
-extern CPtr *copy_of_var_addr;
-extern int  copy_of_num_heap_term_vars;
+extern CPtr *var_addr_accum;
+extern int  var_addr_accum_num;
 
 /*----------------------------------------------------------------------*/
 

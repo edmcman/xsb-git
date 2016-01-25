@@ -60,6 +60,7 @@
 #include "biassert_defs.h"
 #include "loader_xsb.h" /* for XOOM_FACTOR */
 #include "struct_intern.h"
+#include "residual.h"
 
 extern Integer intern_term_size(CTXTdeclc Cell);
 extern xsbBool is_cyclic(CTXTdeclc Cell);
@@ -102,11 +103,13 @@ char *trie_trie_type_table[] = {"call_trie_tt","basic_answer_trie_tt",
 /*----------------------------------------------------------------------*/
 /* Safe assignment -- can be generalized by type.
    CPtr can be abstracted out */
-#define safe_assign(ArrayNam,Index,Value,ArraySz) {		\
-    if (Index >= ArraySz-1) {					\
-     trie_expand_array(CPtr,ArrayNam,ArraySz,Index,"var_addr");\
-   }\
-   ArrayNam[Index] = Value;\
+#define safe_assign(ArrayNam,ArraySz,ArrayPrint,Index,Value) {	\
+    /*    printf("safe_assign %s %p Index %d ArraySz %d\n",ArrayPrint,ArrayNam,Index,ArraySz); */ \
+    if (Index >= ArraySz-1) {						\
+      trie_expand_array(CPtr,ArrayNam,ArraySz,Index,ArrayPrint);	\
+    }									\
+    ArrayNam[Index] = Value;						\
+    /*    printf("    safe_assign2 %s %p Index %d ArraySz %d\n",ArrayPrint,ArrayNam,Index,ArraySz); */ \
 }
 
 /*----------------------------------------------------------------------*/
@@ -292,6 +295,8 @@ void init_trie_aux_areas(CTXTdecl)
 
   var_addr_arraysz = 0;
   var_addr = NULL;
+  var_addr_accum_arraysz = 0;
+  var_addr_accum = NULL;
 
   trieinstr_unif_stk = NULL;
   trieinstr_unif_stk_size = 0;
@@ -310,6 +315,7 @@ void free_trie_aux_areas(CTXTdecl)
   mem_dealloc(term_stack,term_stacksize,TABLE_SPACE); term_stack = NULL;
   mem_dealloc(term_mod_stack,term_stacksize,TABLE_SPACE); term_mod_stack = NULL;
   mem_dealloc(var_addr,var_addr_arraysz,TABLE_SPACE); var_addr = NULL;
+  mem_dealloc(var_addr_accum,var_addr_accum_arraysz,TABLE_SPACE); var_addr_accum = NULL;
   mem_dealloc(Addr_Stack,addr_stack_size,TABLE_SPACE); Addr_Stack = NULL;
   mem_dealloc(trieinstr_unif_stk,trieinstr_unif_stk_size,TABLE_SPACE); trieinstr_unif_stk = NULL;
 }
@@ -685,7 +691,7 @@ BTNptr get_next_trie_solution(ALNptr *NextPtrPtr)
 
 /*----------------------------------------------------------------------*/
 
-#define rec_macro_make_heap_term(Macro_addr) {				\
+#define rec_macro_make_heap_term(Macro_addr,BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT) { \
   int rj,rArity;							\
   while(addr_stack_index) {						\
     Macro_addr = (CPtr)pop_Addr_Stack;					\
@@ -693,24 +699,24 @@ BTNptr get_next_trie_solution(ALNptr *NextPtrPtr)
     switch( TrieSymbolType(xtemp2) ) {					\
     case XSB_TrieVar: {							\
       int index = DecodeTrieVar(xtemp2);				\
-      if (copy_of_num_heap_term_vars <= index)				\
-	copy_of_num_heap_term_vars = index+1;				\
+      if (var_addr_accum_num <= index)				\
+	var_addr_accum_num = index+1;				\
       if (IsNewTrieVar(xtemp2)) {					\
-	safe_assign(var_addr,index,Macro_addr,var_addr_arraysz);	\
+	safe_assign(BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT,index,Macro_addr); \
 	num_heap_term_vars++;						\
       }									\
       else if (IsNewTrieAttv(xtemp2)) {					\
-        safe_assign(var_addr,index,					\
-		    (CPtr) makeattv(hreg),var_addr_arraysz);		\
+        safe_assign(BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT,index,		\
+		    (CPtr) makeattv(hreg));				\
         num_heap_term_vars++;						\
         new_heap_free(hreg);						\
         push_Addr_Stack(hreg);						\
         hreg++;								\
-      } else if (var_addr[index] == NULL) {				\
-	safe_assign(var_addr,index,Macro_addr,var_addr_arraysz);	\
+      } else if (BINDING_ARRAY[index] == NULL) {			\
+	safe_assign(BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT,index,Macro_addr);	\
 	num_heap_term_vars++;						\
       }									\
-      *Macro_addr = (Cell) var_addr[index];				\
+      *Macro_addr = (Cell) BINDING_ARRAY[index];			\
     }									\
     break;								\
     case XSB_STRING:							\
@@ -750,31 +756,31 @@ BTNptr get_next_trie_solution(ALNptr *NextPtrPtr)
 
 /*----------------------------------------------------------------------*/
 
-#define macro_make_heap_term(ataddr,ret_val,dummy_addr) {		\
+#define macro_make_heap_term(ataddr,ret_val,dummy_addr,BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT) { \
   int mArity,mj;							\
   pop_Term_Stack(xtemp2,xtemp2_mod);					\
   switch( TrieSymbolType(xtemp2) ) {					\
   case XSB_TrieVar: {							\
     int index = DecodeTrieVar(xtemp2);					\
-    if (copy_of_num_heap_term_vars <= index)				\
-      copy_of_num_heap_term_vars = index+1;				\
+    if (var_addr_accum_num <= index)				\
+      var_addr_accum_num = index+1;				\
     if (IsNewTrieVar(xtemp2)) { /* diff with CHAT - Kostis */		\
-      safe_assign(var_addr,index,ataddr,var_addr_arraysz);		\
+      safe_assign(BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT,index,ataddr);		\
       num_heap_term_vars++;						\
     }									\
     else if (IsNewTrieAttv(xtemp2)) {					\
-      safe_assign(var_addr, index,					\
-		  (CPtr) makeattv(hreg),var_addr_arraysz);		\
+      safe_assign(BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT,index,			\
+		  (CPtr) makeattv(hreg));				\
       num_heap_term_vars++;						\
       new_heap_free(hreg);						\
       push_Addr_Stack(hreg);						\
       hreg++;								\
-      rec_macro_make_heap_term(dummy_addr);				\
-    } else if (var_addr[index] == NULL) {				\
-      safe_assign(var_addr,index,ataddr,var_addr_arraysz);		\
+      rec_macro_make_heap_term(dummy_addr,BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT);		\
+    } else if (BINDING_ARRAY[index] == NULL) {				\
+      safe_assign(BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT,index,ataddr);		\
       num_heap_term_vars++;						\
     }									\
-    ret_val = (Cell) var_addr[index];					\
+    ret_val = (Cell) BINDING_ARRAY[index];					\
   }									\
   break;								\
   case XSB_STRING:     							\
@@ -789,7 +795,7 @@ BTNptr get_next_trie_solution(ALNptr *NextPtrPtr)
       hreg += 2;							\
       push_Addr_Stack(hreg-1);						\
       push_Addr_Stack(hreg-2);						\
-      rec_macro_make_heap_term(dummy_addr);				\
+      rec_macro_make_heap_term(dummy_addr,BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT); \
     }									\
     break;								\
    case XSB_STRUCT:		       					\
@@ -805,7 +811,7 @@ BTNptr get_next_trie_solution(ALNptr *NextPtrPtr)
        }								\
        hreg += mArity;							\
        hreg++;								\
-       rec_macro_make_heap_term(dummy_addr);				\
+       rec_macro_make_heap_term(dummy_addr,BINDING_ARRAY,BINDING_ARRAY_SZ,BINDING_ARRAY_PRINT); \
     }									\
     break;								\
   default:								\
@@ -1664,7 +1670,7 @@ static void load_solution_trie_1(CTXTdeclc int arity, CPtr cptr)
    for (i=0; i<arity; i++) {
      xtemp1 = (CPtr) (cptr-i);
      XSB_CptrDeref(xtemp1);
-     macro_make_heap_term(xtemp1,returned_val,Dummy_Addr);
+     macro_make_heap_term(xtemp1,returned_val,Dummy_Addr,var_addr,var_addr_arraysz,"var_addr");
      if (xtemp1 != (CPtr)returned_val) {  /* i.e. numcon, no heap term created */
        if (isattv(xtemp1)) {	/* an XSB_ATTV */
 	 /* Bind the variable part of xtemp1 to returned_val */
@@ -1688,7 +1694,7 @@ static void load_solution_trie_notrail_1(CTXTdeclc int arity, CPtr cptr)
    for (i=0; i<arity; i++) {
      xtemp1 = (CPtr) (cptr+i);    // <<<<<< different from above
      XSB_CptrDeref(xtemp1);
-     macro_make_heap_term(xtemp1,returned_val,Dummy_Addr);
+     macro_make_heap_term(xtemp1,returned_val,Dummy_Addr,var_addr,var_addr_arraysz,"var_addr");
      if (xtemp1 != (CPtr)returned_val) {  /* i.e. numcon, no heap term created */
        if (isattv(xtemp1)) {	/* an XSB_ATTV */
 	 /* Bind the variable part of xtemp1 to returned_val */
@@ -1696,6 +1702,38 @@ static void load_solution_trie_notrail_1(CTXTdeclc int arity, CPtr cptr)
 	 dbind_ref((CPtr) dec_addr(xtemp1), returned_val);
        } else {			/* a regular variable or other?*/
 	 bld_ref(xtemp1,returned_val);  // <<<<<< different from above
+       }
+     }
+   }
+   resetpdl;
+}
+
+/*
+ * Expects that the path in the trie -- to which the variables (stored
+ * in the vector `cptr') are to be unified -- has been pushed onto the
+ * termstack.  This function, which is used in build_delay_list() uses
+ * a different array var_addr_accum, rather than var_addr, which is used elsewhere.
+ */
+
+static void load_delay_trie_1(CTXTdeclc int arity, CPtr cptr)
+{
+   int i;
+   CPtr xtemp1, Dummy_Addr;
+   Cell returned_val, xtemp2;
+   byte xtemp2_mod;
+
+   for (i=0; i<arity; i++) {
+     xtemp1 = (CPtr) (cptr-i);
+     XSB_CptrDeref(xtemp1);
+     macro_make_heap_term(xtemp1,returned_val,Dummy_Addr,var_addr_accum,var_addr_accum_arraysz,
+			  "var_addr_accum");
+     if (xtemp1 != (CPtr)returned_val) {  /* i.e. numcon, no heap term created */
+       if (isattv(xtemp1)) {	/* an XSB_ATTV */
+	 /* Bind the variable part of xtemp1 to returned_val */
+	 add_interrupt(CTXTc cell(((CPtr)dec_addr(xtemp1) + 1)), returned_val); 
+	 dbind_ref((CPtr) dec_addr(xtemp1), returned_val);
+       } else {			/* a regular variable or other?*/
+	 dbind_ref(xtemp1,returned_val);
        }
      }
    }
@@ -1727,7 +1765,7 @@ static void bottomupunify(CTXTdeclc Cell term, BTNptr Leaf)
   }
   XSB_Deref(term);
   gen = (CPtr) term;
-  macro_make_heap_term(gen,returned_val,Dummy_Addr);
+  macro_make_heap_term(gen,returned_val,Dummy_Addr,var_addr,var_addr_arraysz,"var_addr");
   bld_ref(gen,returned_val);
 
   for(i = 0; i < num_heap_term_vars; i++){
@@ -1812,7 +1850,7 @@ void load_solution_trie(CTXTdeclc int arity, int attv_num, CPtr cptr, BTNptr Tri
       for (xtemp = cptr; xtemp > cptr - arity; xtemp--) {
 	if (isattv(cell(xtemp))) {
 	  //	  var_addr[num_heap_term_vars] = (CPtr) cell(xtemp);
-	  safe_assign(var_addr,num_heap_term_vars,(CPtr) cell(xtemp),var_addr_arraysz);
+	  safe_assign(var_addr,var_addr_arraysz,"var_addr",num_heap_term_vars,(CPtr) cell(xtemp));
 	  num_heap_term_vars++;
 	}
       }
@@ -1836,7 +1874,7 @@ CPtr xtemp; int heap_needed;
       for (xtemp = cptr; xtemp < cptr + arity; xtemp++) {
 	if (isattv(cell(xtemp))) {
 	  //	  var_addr[num_heap_term_vars] = (CPtr) cell(xtemp);
-	  safe_assign(var_addr,num_heap_term_vars,(CPtr) cell(xtemp),var_addr_arraysz);
+	  safe_assign(var_addr,var_addr_arraysz,"var_addr",num_heap_term_vars,(CPtr) cell(xtemp));
 	  num_heap_term_vars++;
 	}
       }
@@ -1865,7 +1903,7 @@ void load_solution_trie_no_heapcheck(CTXTdeclc int arity, int attv_num, CPtr cpt
       for (xtemp = cptr; xtemp > cptr - arity; xtemp--) {
 	if (isattv(cell(xtemp))) {
 	  //	  var_addr[num_heap_term_vars] = (CPtr) cell(xtemp);
-	  safe_assign(var_addr,num_heap_term_vars,(CPtr) cell(xtemp),var_addr_arraysz);
+	  safe_assign(var_addr,var_addr_arraysz,"var_addr",num_heap_term_vars,(CPtr) cell(xtemp));
 	  num_heap_term_vars++;
 	}
       }
@@ -1878,6 +1916,7 @@ void load_solution_trie_no_heapcheck(CTXTdeclc int arity, int attv_num, CPtr cpt
   }
 }
 
+
 /*----------------------------------------------------------------------*/
 
 void load_delay_trie(CTXTdeclc int arity, CPtr cptr, BTNptr TriePtr)
@@ -1888,7 +1927,7 @@ void load_delay_trie(CTXTdeclc int arity, CPtr cptr, BTNptr TriePtr)
      heap_needed = follow_par_chain(CTXTc TriePtr);
      if (glstack_overflow(heap_needed*sizeof(Cell))) 
        handle_heap_overflow_trie(CTXTc &cptr,arity,heap_needed);
-     load_solution_trie_1(CTXTc arity,cptr);
+     load_delay_trie_1(CTXTc arity,cptr);
    }
 }
 

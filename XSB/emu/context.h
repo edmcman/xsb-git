@@ -287,8 +287,8 @@ DynamicStack  _tstTrail;
 
   /* delay, simplification, etc. */
   Cell _cell_array[MAXTERMBUFSIZE];
-  CPtr *_copy_of_var_addr;
-  int _copy_of_num_heap_term_vars;
+  CPtr *_var_addr_accum;
+  int _var_addr_accum_num;
 
 #define MAX_SIMPLIFY_NEG_FAILS_STACK 10
   VariantSF _simplify_neg_fails_stack[MAX_SIMPLIFY_NEG_FAILS_STACK];
@@ -760,8 +760,8 @@ typedef struct th_context th_context ;
 #define  SL_header		(th->_SL_header)
 
 #define  cell_array                         (th->_cell_array)
-#define  copy_of_var_addr                   (th->_copy_of_var_addr)
-#define  copy_of_num_heap_term_vars         (th->_copy_of_num_heap_term_vars)
+#define  var_addr_accum                     (th->_var_addr_accum)
+#define  var_addr_accum_num                 (th->_var_addr_accum_num)
 
 #define  simplify_neg_fails_stack           (th->_simplify_neg_fails_stack)
 #define  simplify_neg_fails_stack_top       (th->_simplify_neg_fails_stack_top)
