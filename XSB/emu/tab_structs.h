@@ -1209,14 +1209,14 @@ void tstCreateTSIs(struct th_context *,TSTNptr);
 
 #ifdef CALL_ABSTRACTION
 #define get_var_and_attv_nums(var_num, attv_num, abstr_size, tmp_int)   \
-  var_num = (int)tmp_int & 0x7ff;					\
-  abstr_size = ((int)tmp_int & 0x3ff800) >>11;				\
-  attv_num = (int)tmp_int >> 22
+  var_num = (int)tmp_int & 0xffff;					\
+  abstr_size = ((int)tmp_int & 0x3f0000) >>16;				\
+  attv_num = (int)tmp_int >> 27
 
-#define get_template_size(var_num,tmp_int)   var_num = tmp_int & 0x7ff
+#define get_template_size(var_num,tmp_int)   var_num = tmp_int & 0xffff
 
 #define encode_ansTempl_ctrs(Attvars,AbstractSize,Ctr)   \
-  makeint((Attvars << 22) | (AbstractSize << 11) | Ctr)
+  makeint((Attvars << 27) | (AbstractSize << 16) | Ctr)
 #else
 #define get_var_and_attv_nums(var_num, attv_num, tmp_int)	\
   var_num = (int) (tmp_int & 0xffff);				\

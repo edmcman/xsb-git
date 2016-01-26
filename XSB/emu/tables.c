@@ -323,7 +323,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
     size = int_val(*tmplt_component) & 0xffff;
 #ifdef CALL_ABSTRACTION
     get_var_and_attv_nums(size, attv_num, abstr_size, int_val(*tmplt_component)); 
-    //    printf("done with vcs, answer_template info %x lur %x size %d\n",
+    //        printf("done with vcs, size %d attv_num %d abstr_size %d\n",size, attv_num, abstr_size);
     //	   CallLUR_AnsTempl(*results),CallInfo_AnsTempl(*call_info),size);
 #endif
     /* expand heap if there's not enough space */

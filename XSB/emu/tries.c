@@ -1980,7 +1980,7 @@ int vcs_tnot_call = 0;
       if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE && !vcs_tnot_call) { \
 	Cell newElement;						\
 	CPtr pElement = xtemp1;						\
-	/*      printf("begin abs reg1 dc %d ",subgoal_size_ctr);printterm(stddbg,reg[1],8);printf("\n"); */ \
+	/*	printf("begin abs reg1 dc %d ",subgoal_size_ctr);printterm(stddbg,reg[1],8);printf("\n");*/ \
 	/*      printf("abstracting %p @ %p\n",pElement,*pElement);		*/ \
 	XSB_Deref(*pElement);						\
 	newElement = (Cell) hreg;new_heap_free(hreg);			\
@@ -2386,6 +2386,15 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
   }
     
   vcs_tnot_call = 0;
+
+  //  printf("ctr %d attvs %d allAbsStk_index %d\n",ctr,attv_ctr,callAbsStk_index);
+  if (ctr > flags[MAX_TABLE_SUBGOAL_VAR_NUM]) { 
+    clean_up_subgoal_table_structures_for_throw;			
+    sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); 
+    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,		
+			  "Exceeded maximum number of allowed variables (%d) in the tabled subgoal %s\n", 
+			  flags[MAX_TABLE_SUBGOAL_VAR_NUM],forest_log_buffer_1->fl_buffer); 
+  }
 
 #ifdef CALL_ABSTRACTION
     cell(--SubsFactReg) = encode_ansTempl_ctrs(attv_ctr,callAbsStk_index,ctr);  
