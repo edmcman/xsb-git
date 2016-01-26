@@ -1471,6 +1471,24 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
    * the substitution factor of the answer, into `AnsVarCtr'.
    */
   AnsVarCtr = ctr;		
+
+
+  /* TES: Added check for adding into a table an answer with a large number
+     of variables.  The problem is that the variables get trailed, so
+     if there are enough variables, they will cause a TCP stack realloc, which messes up 
+     the table choice point pointers in new_answer_dealloc.
+
+     This should be simple enough to fix, but since the limit is about
+     40000 variables in an answer, we should be ok for now. */
+  if (AnsVarCtr >   flags[MAX_TABLE_ANSWER_VAR_NUM]) {
+  sprint_subgoal(CTXTc forest_log_buffer_1,0, subgoal_ptr);
+//    sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); 
+    safe_delete_branch(Paren);					
+    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	
+			  "Exceeded max number of variables (%d) allowed in an answer to the subgoal  %s\n", 
+			    flags[MAX_TABLE_ANSWER_VAR_NUM],forest_log_buffer_1->fl_buffer); 
+  }
+
   
   /* if there is no term to insert, an ESCAPE node has to be created/found */
   if (sf_size == 0) {

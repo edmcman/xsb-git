@@ -160,6 +160,7 @@ interrupt flag
 #define MAX_SCC_SUBGOALS_ACTION         107
 #define CYCLIC_CHECK_SIZE               108
 #define MAX_TABLE_SUBGOAL_VAR_NUM               109
+#define MAX_TABLE_ANSWER_VAR_NUM               110
 
 #define MAX_FLAGS		 120
 
