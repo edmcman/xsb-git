@@ -3620,6 +3620,10 @@ void retractall_prref(CTXTdeclc PrRef prref) {
     if (prref != NULL) {
       PrRef_FirstClRef(prref) = NULL;
       PrRef_DelCF(prref) = NULL;
+      //PrRef_Instr(prref) = ????;
+      PrRef_LastClRef(prref) = NULL;
+      PrRef_Psc(prref) = NULL;
+      PrRef_Mark(prref) = 0;
     }
   }
 }
