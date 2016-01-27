@@ -236,8 +236,16 @@ xsbBool incr_eval_builtin(CTXTdecl)
     
   case INVALIDATE_CALLNODE_TRIE: {
     const int callreg=2;
+    int index = ptoc_int(CTXTc callreg);
 
-    callnodeptr c = itrie_array[ptoc_int(CTXTc callreg)].callnode;
+    if (!itrie_array[ptoc_int(CTXTc callreg)].incremental) {
+      //      sprint_subgoal(CTXTc forest_log_buffer_1,0,(VariantSF)ptcpreg);  dont think this is relevant
+      xsb_abort("Trying to invalidate trie number %d, which is non-incremental.\n",index);
+    }
+
+    //    printf("invalidating trie %d callnode w. cn %p\n",index,itrie_array[index].callnode);
+
+    callnodeptr c = itrie_array[index].callnode;
     invalidate_call(CTXTc c,NOT_ABOLISHING); 
     break;
   }
