@@ -236,7 +236,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
     
   case INVALIDATE_CALLNODE_TRIE: {
     const int callreg=2;
-    int index = ptoc_int(CTXTc callreg);
+    int index = (int)ptoc_int(CTXTc callreg);
 
     if (!itrie_array[ptoc_int(CTXTc callreg)].incremental) {
       //      sprint_subgoal(CTXTc forest_log_buffer_1,0,(VariantSF)ptcpreg);  dont think this is relevant
