@@ -5175,180 +5175,6 @@ results.
 
 Error cases are the same as {\tt call/1}.
 
-%\ourrepeatstandarditem{timed\_call(\#Goal,+Interval,\#Handler,+Option)}{timed\_call/4}{}
-\ourstandarditem{timed\_call(\#Goal,\#Options)}{timed\_call/2}{}
-%
-This predicate calls {\tt Goal} and may interrupt {\tt Goal} to call
-various handlers as specified in {\tt Options}, the list of options.
-In the case where a handler succeeds, the execution of {\tt Goal} will
-be continued; if the handler fails, {\tt Goal} will fail; and if a
-handler throws an uncaught exception the execution of {\tt Goal} may
-be aborted. In these ways {\tt timed\_call/2} can be used to allow
-co-routining of {\tt Goal} with a repetition handler and/or timing
-{\tt Goal} out with a (separate) handler.
-
-{\tt Options} is a list that may contain the following terms
-\bi
-\item The term {\tt max(+MaxInterval,\#MaxHandler)} specifies that {\tt
-  MaxHandler} will be called when it is determined that the total elapsed
-  time to execute {\tt Goal} exceeds {\tt MaxInterval} milliseconds.  As
-  a use case, if {\tt MaxHandler} throws an exception, {\tt Goal} can be
-  aborted; and if {\tt MaxHandler} fails, {\tt Goal} will fail.
-%
-\item The term {\tt repeating(+RepInterval,\#RepHandler)} specifies that
-  {\tt RepHandler} will be repeatedly called whenever {\tt Goal} has
-  executed an additional {\tt RepInterval} milliseconds of elapsed time.
-  The time taken to execute {\tt RepHandler} is not counted as part of
-  {\tt RepInterval} milliseconds (or that of {\tt MaxInterval}, if a
-  maximum handler is also specified).
-%
-\item The term {\tt nesting} indicates that nested timed calls should
-  be allowed within the same break level.  In this case, the nested
-  timed call is simply treated as a call to {\tt Goal}: in other words
-  the interval(s) and handlers for the nested call are ignored.
-  Otherwise, if {\tt Options} does not contain the term {\tt nesting}
-  an attempt to nest calls will raise a permission exception.  \ei
-
-Executing a timed call for {\tt Goal} is more expensive than simply
-calling {\tt Goal}, so it should not be used for frequent calls to
-goals that whose derivation is simple.
-
-{\tt timed\_call/[3,4]} is based on XSB's internal interrupt
-mechanism, used for attributed variable handlers and thread
-signalling.  As such, the ability to execute complex actions upon
-interrupt and to resume is very robust.  However, checks for
-interrupts are only made whenever XSB's SLG-WAM engine is executing.
-Because of this, if XSB is suspended on I/O, calling a C or java
-function, in a C-implemented built-in, or otherwise outside of its
-virtual machine, the interrupt will not be executed until computation
-is back within XSB's virtual machine.
-
-{\tt timed\_call/2} is integrated with XSB's break levels with a
-different timed call possible at each break level.  In this way, an
-executing program can be interrupted via a Ctrl-C and inspected using
-one of XSB's introspection built-ins.  The time that is spent in a
-break level is not counted as part of the goals maximum allowable time.
-
-{\tt timed\_call/3} is not yet implemented for the multi-threaded
-engine but its functionality is easily duplicated using thread
-signalling (Section`\ref{sec:thread-signals}).
-
-{\bf Examples}
-Consider the simple (and non-tabled) program fragment
-\begin{verbatim}
-loop :- loop.
-\end{verbatim}
-which goes into an infinite loop on the query {\tt ?- loop.}  However,
-the query
-\begin{verbatim}
-timed_call(loop,[max(5000,abort)]).
-\end{verbatim}
-will interrupt {\tt loop} and abort its computation after 5000
-milliseconds.  Alternately, the query
-\begin{verbatim}
-timed_call(loop,[max(500,fail)]).
-\end{verbatim}
-will fail the query.  Finally, the query
-\begin{verbatim}
-timed_call(loop,[repeating(500,statistics)]).
-\end{verbatim}
-will interrupt the computation every 500 milliseconds, print out
-statistics, and resume the computation where it left off.
-
-These approaches can be combined: 
-\begin{verbatim}
-timed_call(loop,[repeating(500,statistics),max(5000,abort)]).
-\end{verbatim}
-will interrupt the computation every 500 milliconds to print
-statistics, and will abort after 5000 milliseconds.  More
-sophisticated interrupt handlers could introspect a computation (e.g.,
-using {\tt statistics/2}, {\tt table\_dump/[1,3]} or other such
-predicates) and possibly modify parameters of the computation when
-possible (e.g., by changing one form of tabling to another, when
-permitted).
-
-{\bf Error Cases} 
-%
-Error cases are the same as {\tt call/1} for the first argument of
-{\tt timed\_call/3} and for handlers.  In addition {\tt timed\_call/1}
-also throws these other errors.
-%
-\begin{description}
-\item {\tt Options} is non-ground
-\bi
-\item {\tt instantiation\_error}
-\ei
-\item {\tt Options} is not a list
-\bi
-\item {\tt type\_error}
-\ei
-\item {\tt Interval} as contained in the first argument of {\tt max/2}
-  or {\tt repeating/2} is not a positive  integer
-\bi
-\item {\tt type\_error}
-\ei
-\item {\tt Options} contains neither a term of the form {\tt max/2}
-  nor of the form {\tt repeating/2}
-\bi
-\item {\tt misc\_error}
-\ei
-\item A call {\tt C} to {\tt timed\_call/3} is made within the scope
-  of some other call to {\tt timed\_call/3}
-%
-\bi
-\item {\tt permission\_error(nested\_call,predicate,{\tt C})}
-\ei
-\item {\tt timed\_call/3} is called from the multi-threaded engine
-\bi
-\item {\tt misc\_error}
-\ei
-\end{description}
-
-\ourrepeatmoditem{bounded\_call(\#Goal,+MaxMemory,+MaxCPU,\#Handler)}{bounded\_call/4}{standard}
-\ourmoditem{bounded\_call(\#Goal,+MaxMemory,+MaxCPU)}{bounded\_call/3}{standard}
-%
-These predicates call {\tt Goal} and check once per second
-whether the total CPU time to execute {\tt Goal} is greater than {\tt
-  MaxCPU} seconds, and whether the total memory taken by XSB is
-greater than {\tt MaxMemory} bytes.  Under {\tt bounded\_call/4} if
-either of these conditions arise, {\tt Handler} is called; under {\tt
-  bounded\_call/3} a resource exception is thrown for memory or CPU
-time.  
-
-These predicates are implemented directly using {\tt timed\_call/3}
-and inherit the advantages and limitations of that predicate.  As an
-advantage, the ability to execute complex actions upon interrupt and
-to resume is very robust.  However, checks for interrupts are only
-made whenever XSB's SLG-WAM engine is executing.  Because of this, if
-XSB is suspended on I/O, calling a C or java function, in a
-C-implemented built-in, or otherwise outside of its virtual machine,
-the interrupt will not be executed until computation is back within
-XSB's virtual machine.
-
-{\tt Handler} cannot cause {\tt timed\_call/3} to be executed as a
-subgoal; but otherwise {\tt Handler} has no restrictions.
-
-{\tt bounded\_call/[3,4]} is not yet implemented for the
-multi-threaded engine but its functionality is easily duplicated using
-thread signalling (Section`\ref{sec:thread-signals}).
-
-{\bf Error Cases} 
-%
-Error cases are the same as in {\tt call/1} for the first argument of
-{\tt bounded\_call/3}, and are the same as that of {\tt timed\_call}
-for {\tt Handler}.  
-%
-\begin{description}
-\item {\tt MaxCPU} or {\tt MaxMemory} is not an integer
-\bi
-\item {\tt type\_error(integer)}
-\ei
-\item {\tt MaxCPU} or {\tt MaxMemory}  is not a positive integer
-\bi
-\item {\tt domain\_error(positive\_integer)}
-\ei
-\end{description}
-
 \isoitem{once(\#X)}{once/1}
 %
     {\tt once/1} is defined as {\tt once(X):- call(X),!.}  {\tt
@@ -5498,6 +5324,301 @@ based on the state of XSB's choice point stack.
 \item  {\tt Handler} is neither a variable nor a callable term
 \bi
 \item {\tt type error(callable, Handler)}
+\ei
+\end{description}
+
+\end{description}
+
+%----------------------------------------------------------------------
+
+\subsection{Timed Calls}
+
+\begin{description}
+%\ourrepeatstandarditem{timed\_call(\#Goal,+Interval,\#Handler,+Option)}{timed\_call/4}{}
+\ourstandarditem{timed\_call(\#Goal,\#Options)}{timed\_call/2}{}
+%
+This predicate calls {\tt Goal} and may interrupt {\tt Goal} to call
+various handlers as specified in {\tt Options}, the list of options.
+In the case where a handler succeeds, the execution of {\tt Goal} will
+be continued; if the handler fails, {\tt Goal} will fail; and if a
+handler throws an uncaught exception the execution of {\tt Goal} may
+be aborted. In these ways {\tt timed\_call/2} can be used to allow
+co-routining of {\tt Goal} with a repetition handler and/or timing
+{\tt Goal} out with a (separate) handler.
+
+{\tt Options} is a list that may contain the following terms
+\bi
+\item The term {\tt max(+MaxInterval,\#MaxHandler)} specifies that {\tt
+  MaxHandler} will be called when it is determined that the total elapsed
+  time to execute {\tt Goal} exceeds {\tt MaxInterval} milliseconds.  As
+  a use case, if {\tt MaxHandler} throws an exception, {\tt Goal} can be
+  aborted; and if {\tt MaxHandler} fails, {\tt Goal} will fail.
+%
+\item The term {\tt repeating(+RepInterval,\#RepHandler)} specifies that
+  {\tt RepHandler} will be repeatedly called whenever {\tt Goal} has
+  executed an additional {\tt RepInterval} milliseconds of elapsed time.
+  The time taken to execute {\tt RepHandler} is not counted as part of
+  {\tt RepInterval} milliseconds (or that of {\tt MaxInterval}, if a
+  maximum handler is also specified).
+%
+\item The term {\tt nesting} indicates that nested timed calls should
+  be allowed within the same break level.  In this case, the nested
+  timed call is simply treated as a call to {\tt Goal}: in other words
+  the interval(s) and handlers for the nested call are ignored.
+  Otherwise, if {\tt Options} does not contain the term {\tt nesting}
+  an attempt to nest calls will raise a permission exception.  \ei
+
+Executing a timed call for {\tt Goal} is more expensive than simply
+calling {\tt Goal}, so it should not be used for frequent calls to
+goals that whose derivation is simple.
+
+{\tt timed\_call/2} is based on XSB's internal interrupt mechanism,
+used for attributed variable handlers and thread signalling.  As such,
+the ability to execute complex actions upon interrupt and then to
+resume {\tt Goal} is very robust.  However, checks for interrupts are
+only made whenever XSB's SLG-WAM engine is executing.  Because of
+this, if XSB is suspended on I/O, calling a C or java function, in a
+C-implemented built-in, or otherwise outside of its virtual machine,
+the interrupt will not be executed until computation returns to XSB's
+virtual machine.
+
+{\tt timed\_call/2} is integrated with XSB's break levels with a
+different timed call possible at each break level.  In this way, a
+handler can call a break statement, and in this way an executing
+program can periodically enter a break, so that it can be inspected
+using one of XSB's introspection built-ins.  The time that is spent in
+a break level is not counted as part of the goals maximum allowable
+time.
+
+{\tt timed\_call/3} is not yet implemented for the multi-threaded
+engine but its functionality is easily duplicated using thread
+signalling (Section`\ref{sec:thread-signals}).
+
+{\bf Examples}
+Consider the simple (and non-tabled) program fragment
+\begin{verbatim}
+loop :- loop.
+\end{verbatim}
+which goes into an infinite loop on the query {\tt ?- loop.}  However,
+the query
+\begin{verbatim}
+timed_call(loop,[max(5000,abort)]).
+\end{verbatim}
+will interrupt {\tt loop} and abort its computation after 5000
+milliseconds.  Alternately, the query
+\begin{verbatim}
+timed_call(loop,[max(5000,fail)]).
+\end{verbatim}
+will fail the query.  Finally, the query
+\begin{verbatim}
+timed_call(loop,[repeating(500,statistics)]).
+\end{verbatim}
+will interrupt the computation every 500 milliseconds, print out
+statistics, and resume the computation where it left off.
+
+These approaches can be combined: 
+\begin{verbatim}
+timed_call(loop,[repeating(500,statistics),max(5000,break)]).
+\end{verbatim}
+will interrupt the computation every 500 milliconds to print
+statistics, and then will enter a break after 5000 milliseconds, so
+that the state of computation can be explored after 5000 milliseconds
+using XSB's inspectoin routines (Section~\ref{sec:suspend-analyze}).
+Handlers can be quite complex, and can support UI-based monitors, and
+even analysis routines that may modify the parameters of the
+computation when possible (e.g., by changing one form of tabling to
+another, when permitted).
+
+{\bf Error Cases} 
+%
+Error cases are the same as {\tt call/1} for the first argument of
+{\tt timed\_call/3} and for handlers.  In addition {\tt timed\_call/1}
+also throws these other errors.
+%
+\begin{description}
+\item {\tt Options} is non-ground
+\bi
+\item {\tt instantiation\_error}
+\ei
+\item {\tt Options} is not a list
+\bi
+\item {\tt type\_error}
+\ei
+\item {\tt Interval} as contained in the first argument of {\tt max/2}
+  or {\tt repeating/2} is not a positive  integer
+\bi
+\item {\tt type\_error}
+\ei
+\item {\tt Options} contains neither a term of the form {\tt max/2}
+  nor of the form {\tt repeating/2}
+\bi
+\item {\tt misc\_error}
+\ei
+\item A call {\tt C} to {\tt timed\_call/3} is made within the scope
+  of some other call to {\tt timed\_call/3}
+%
+\bi
+\item {\tt permission\_error(nested\_call,predicate,{\tt C})}
+\ei
+\item {\tt timed\_call/3} is called from the multi-threaded engine
+\bi
+\item {\tt misc\_error}
+\ei
+\end{description}
+
+%-------------------------------------------------------
+
+\ourmoditem{current\_timed\_call(?Index,?DisplayOptions)}{current\_timed\_call/2}{standard}
+%
+If there is an active timed call, invoked by {\tt
+  timed\_call(Goal,Options)}, at break level {\tt Index}, this
+predicate returns information representing {\tt Options}.  {\tt
+  DisplayOptions} differs from {\tt Options} only in the following
+case.  If {\tt Options} contains a term {\tt max(Interval,Handler)},
+{\tt DisplayOptions} will contain a corresponding term {\tt
+  max(Used/Interval,Handler)}, indicating both the original interval
+(in milliseconds) and the number of milliseconds used.
+
+{\bf Example}
+
+As above, assume that the following goal is called from the
+command-line interpreter:
+
+{\tt ?- timed\_call(loop,[max(5000,abort)]).}
+
+After a few seconds, the user interrupts the goal with a Ctrl-C,
+sending XSB into a break level.  At that point the goal 
+
+{\tt 1: ?- current\_timed\_call(Index,Options).} 
+
+succeeds with {\tt Index = 0} and {\tt Options = [max(3539 / 5000,abort)]}.
+
+%-------------------------------------------------------
+%-------------------------------------------------------
+\ourstandarditem{timed\_call\_modify(\#NewOptions)}{timed\_call\_modify/1}{}
+%
+When called from a command-line interpreter at break level $N>1$, this
+predicate modifies the behavior of the suspended derivation.  
+\bi
+\item If the current suspended state is in the scope of the goal {\tt
+  timed\_call(Goal,OldOptions)} at break level $N-1$, where {\tt
+  Options} does not contain {\tt nesting}, {\tt Goal} is made to
+  behave as if it had been called with {\tt
+    timed\_call(Goal,NewOptions)}.  I.e., {\tt NewOptions} rather than
+  {\tt OldOptions} takes effect as soon as the suspended state is
+  resumed.  If {\tt NewOptions} is the empty list, this has the effect
+  of removing any interrupts that would be due to the timed call.
+%
+\item If the current suspended state is {\em not} in the scope of a
+  timed call as described above, the {\em top-level} goal $G_T$ of
+  interpreter level $N-1$ is made to behave as if it had been called
+  as {\tt timed\_call($G_T$,NewOptions)}.
+\ei
+
+{\bf Example} 
+%
+This rather fanciful example shows the essential points in how {\tt
+  timed\_call\_modify/1} can be used in practice.  Suppose a user
+wants to monitor the infinite loop program (introduced above) using
+the goal:
+
+{\tt timed\_call(loop,[repeating(500,writeln(interruption\_interval(500)))]).}
+
+which produces the output 
+
+\begin{verbatim}
+interruption_interval(500)
+interruption_interval(500)
+interruption_interval(500)
+:
+\end{verbatim}
+%
+At this point, the user realizes that too much information is being
+printed out, and decides to back off somewhat.  The user obtains a
+break level by executing Ctrl-C as before, and calls the goal: 
+
+\begin{verbatim}
+1: ?- timed_call_modify([repeating(1000,writeln(new_interruption_interval(1000)))]).
+\end{verbatim}
+
+When the break is exited, information is presented in an undoubtedly
+more useful manner:
+
+\begin{verbatim}
+1: ?- [ End break (level 1) ]
+new_interruption_interval(1000)
+new_interruption_interval(1000)
+new_interruption_interval(1000)
+\end{verbatim}
+
+Additions and deletions of timed call parameters is done in a similar
+manner.
+
+{\bf Error Cases} 
+%
+Error cases are the same those for the options list of 
+{\tt timed\_call/2} and for handlers.  In addition {\tt timed\_call/1}
+also throws the following error.
+
+\bi
+\item {\tt timed\_call\_modify/1} is called in the top-level interpreter.
+\bi
+\item {\tt permissions\_error}
+\ei
+\ei
+%
+
+%-------------------------------------------------------
+
+\ourmoditem{current\_timed\_call(?Index,?Options)}{current\_timed\_call/2}{standard}
+%
+Unifies {\tt Index} and {\tt Options} with the options list used for
+the active timed call associated with the interpreter level {\tt Index}.
+
+%-------------------------------------------------------
+
+\ourrepeatmoditem{bounded\_call(\#Goal,+MaxMemory,+MaxCPU,\#Handler)}{bounded\_call/4}{standard}
+\ourmoditem{bounded\_call(\#Goal,+MaxMemory,+MaxCPU)}{bounded\_call/3}{standard}
+%
+These predicates call {\tt Goal} and check once per second
+whether the total CPU time to execute {\tt Goal} is greater than {\tt
+  MaxCPU} seconds, and whether the total memory taken by XSB is
+greater than {\tt MaxMemory} bytes.  Under {\tt bounded\_call/4} if
+either of these conditions arise, {\tt Handler} is called; under {\tt
+  bounded\_call/3} a resource exception is thrown for memory or CPU
+time.  
+
+These predicates are implemented directly using {\tt timed\_call/3}
+and inherit the advantages and limitations of that predicate.  As an
+advantage, the ability to execute complex actions upon interrupt and
+to resume is very robust.  However, checks for interrupts are only
+made whenever XSB's SLG-WAM engine is executing.  Because of this, if
+XSB is suspended on I/O, calling a C or java function, in a
+C-implemented built-in, or otherwise outside of its virtual machine,
+the interrupt will not be executed until computation is back within
+XSB's virtual machine.
+
+{\tt Handler} cannot cause {\tt timed\_call/3} to be executed as a
+subgoal; but otherwise {\tt Handler} has no restrictions.
+
+{\tt bounded\_call/[3,4]} is not yet implemented for the
+multi-threaded engine but its functionality is easily duplicated using
+thread signalling (Section`\ref{sec:thread-signals}).
+
+{\bf Error Cases} 
+%
+Error cases are the same as in {\tt call/1} for the first argument of
+{\tt bounded\_call/3}, and are the same as that of {\tt timed\_call}
+for {\tt Handler}.  
+%
+\begin{description}
+\item {\tt MaxCPU} or {\tt MaxMemory} is not an integer
+\bi
+\item {\tt type\_error(integer)}
+\ei
+\item {\tt MaxCPU} or {\tt MaxMemory}  is not a positive integer
+\bi
+\item {\tt domain\_error(positive\_integer)}
 \ei
 \end{description}
 

@@ -18,24 +18,20 @@ of the XSB system, and the interested user can find them by
 looking at the sources.
 
 \begin{description}
-\ouroldmoditem{append(?List1, ?List2, ?List3)}{basics}\index{\texttt{append/3}}
-%\predindex{append/3~(L)}
+\ourmoditem{append(?List1, ?List2, ?List3)}{append/3}{basics}
     Succeeds if list {\tt List3} is the concatenation of lists 
     {\tt List1} and {\tt List2}.
 
-\ouroldmoditem{member(?Element, ?List)}{basics}\index{\texttt{member/2}}
-%\predindex{member/2~(L)}
+\ourmoditem{member(?Element, ?List)}{member/2}{basics}
     Checks whether {\tt Element} unifies with any element of list 
     {\tt List}, succeeding more than once if there are multiple 
     such elements.
 
-\ouroldmoditem{memberchk(?Element, ?List)}{basics}\index{\texttt{memberchk/2}}
-%\predindex{memberchk/2~(L)}
+\ourmoditem{memberchk(?Element, ?List)}{memberchk/2}{basics}
     Similar to {\tt member}/2, except that {\tt memberchk}/2 is
     deterministic, i.e.\ does not succeed more than once for any call.
 
-\ouroldmoditem{ith(?Index, ?List, ?Element)}{basics}\index{\texttt{ith/3}}
-%\predindex{ith/3~(L)}
+\ourmoditem{ith(?Index, ?List, ?Element)}{ith/3}{basics}
     Succeeds if the ${\tt Index^{th}}$ element of the list {\tt List} 
     unifies with {\tt Element}.  Fails if {\tt Index} is not a positive
     integer or greater than the length of {\tt List}.
@@ -43,16 +39,13 @@ looking at the sources.
     should be instantiated (but not necessarily ground) at the time of 
     the call.
 
-\ouroldmoditem{delete\_ith(+Index, +List, ?Element, ?RestList)}{listutil}
-\index{\texttt{delete\_ith/4}}
-%\predindex{delete\_ith/4~(L)}
+\ourmoditem{delete\_ith(+Index, +List, ?Element, ?RestList)}{delete\_ith/4}{listutil}
     Succeeds if the ${\tt Index^{th}}$ element of the list {\tt List}
     unifies with {\tt Element}, and {\tt RestList} is {\tt List} with
     {\tt Element} removed.  Fails if {\tt Index} is not a positive
     integer or greater than the length of {\tt List}.
 
-\ouroldmoditem{log\_ith(?Index, ?Tree, ?Element)}{basics}\index{\texttt{log\_ith/3}}
-%\predindex{log\_ith/3~(L)}
+\ourmoditem{log\_ith(?Index, ?Tree, ?Element)}{log\_ith/3}{basics}
     Succeeds if the ${\tt Index^{th}}$ element of the Tree {\tt Tree}
     unifies with {\tt Element}.  Fails if {\tt Index} is not a
     positive integer or greater than the number of elements that can
@@ -64,9 +57,8 @@ looking at the sources.
     very similar to {\tt ith/3} except it uses a tree instead of a
     list to obtain log-time access to its elements.
 
-\ouroldmoditem{log\_ith\_bound(?Index, ?Tree, ?Element)}{basics}
-        \index{\texttt{log\_ith\_bound/3}}
-%\predindex{log\_ith\_bound/3~(L)}
+\ourmoditem{log\_ith\_bound(?Index, ?Tree, ?Element)}{log\_ith\_bound/3}{basics}
+
     is like {\tt log\_ith/3}, but only if the ${\tt Index^{th}}$ element
     of {\tt Tree} is non-variable and equal to Element.  This predicate
     can be used in both directions, and is most useful with Index
@@ -75,8 +67,7 @@ looking at the sources.
     $N*logN$, for $N$ the number of non-variable entries in {\tt
     Tree}.)
 
-\ouroldmoditem{length(?List, ?Length)}{basics}\index{\texttt{length/2}}
-%\predindex{length/2~(L)}
+\ourmoditem{length(?List, ?Length)}{length/2}{basics}
     Succeeds if the length of the list {\tt List} is {\tt Length}.
     This predicate is deterministic if {\tt List} is instantiated 
     to a list of definite length, but is nondeterministic if 
@@ -84,8 +75,7 @@ looking at the sources.
     is uninstantiated, it is unified with a list of length {\tt Length}
     that contains variables.
 
-\ouroldmoditem{same\_length(?List1, ?List2)}{basics}\index{\texttt{same\_length/2}}
-%\predindex{same\_length/2~(L)}
+\ourmoditem{same\_length(?List1, ?List2)}{same\_length/2}{basics}
     Succeeds if list {\tt List1} and {\tt List2} are both lists of
     the same number of elements.  No relation between the types or
     values of their elements is implied.  This predicate may be used
@@ -93,27 +83,22 @@ looking at the sources.
     the other, or to generate two lists of the same length, in which
     case the arguments will be bound to lists of length $0,1,2,\ldots$.
 
-\ouroldmoditem{select(?Element, ?L1, ?L2)}{basics}\index{\texttt{select/3}}
-%\predindex{select/3~(L)}
+\ourmoditem{select(?Element, ?L1, ?L2)}{select/3}{basics}
     {\tt List2} derives from {\tt List1} by selecting (removing) an 
     {\tt Element} non-deterministically.
 
-\ouroldmoditem{reverse(+List, ?ReversedList)}{basics}\index{\texttt{reverse/2}}
-%\predindex{reverse/2~(L)}
+\ourmoditem{reverse(+List, ?ReversedList)}{reverse/2}{basics}
     Succeeds if {\tt ReversedList} is the reverse of list {\tt List}.
     If {\tt List} is not a proper list, {\tt reverse/2} can succeed
     arbitrarily many times.  It works only one way.
 
-\ouroldmoditem{perm(+List, ?Perm)}{basics}\index{\texttt{perm/2}}
-%\predindex{perm/2~(L)}
+\ourmoditem{perm(+List, ?Perm)}{perm/2}{basics}
     Succeeds when {\tt List} and {\tt Perm} are permutations of each
     other.  The main use of {\tt perm/2} is to generate permutations
     of a given list.  {\tt List} must be a proper list.
     {\tt Perm} may be partly instantiated.
 
-\ouroldmoditem{subseq(?Sequence, ?SubSequence, ?Complement)}{basics}
-\index{\texttt{subseq/3}}
-%\predindex{subseq/3(L)}
+\ourmoditem{subseq(?Sequence, ?SubSequence, ?Complement)}{subseq/3}{basics}
     Succeeds when {\tt SubSequence} and {\tt Complement} are both
     subsequences of the list {\tt Sequence} (the order of corresponding
     elements being preserved) and every element of {\tt Sequence} which
@@ -126,8 +111,7 @@ looking at the sources.
     complements together, but can also be used to interleave two lists
     in all possible ways.
 
-\ouroldmoditem{merge(+List1, +List2, ?List3)}{listutil}\index{\texttt{merge/3}}
-%\predindex{merge/3~(L)}
+\ourmoditem{merge(+List1, +List2, ?List3)}{merge/3}{listutil}
     Succeeds if {\tt List3} is the list resulting from ``merging'' lists 
     {\tt List1} and {\tt List2},
     i.e.\ the elements of {\tt List1} together with any element of 
@@ -135,17 +119,17 @@ looking at the sources.
     If~{\tt List1} or~{\tt List2} contain duplicates, {\tt List3} may 
     also contain duplicates.
 
-\ouroldmoditem{absmerge(+List1, +List2, ?List3)}{listutil}\index{\texttt{absmerge/3}}
+\ourmoditem{absmerge(+List1, +List2, ?List3)}{absmerge/3}{listutil}
     Predicate {\tt absmerge/3} is similar to {\tt merge/3}, except that 
     it uses predicate {\tt absmember/2} described below rather than 
     {\tt member/2}.
 
-\ouroldmoditem{absmember(+Element, +List)}{listutil}\index{\texttt{absmember/2}}
+\ourmoditem{absmember(+Element, +List)}{absmember/2}{listutil}
     Similar to {\tt member}/2, except that it checks for identity
     (through the use of predicate {\tt '=='/2}) rather than unifiability 
     (through {\tt '='/2}) of {\tt Element} with elements of {\tt List}.
 
-\ouroldmoditem{member2(?Element, ?List)}{listutil}\index{\texttt{member2/2}}
+\ourmoditem{member2(?Element, ?List)}{member2/2}{listutil}
     Checks whether {\tt Element} unifies with any of the actual elements 
     of {\tt List}.  The only difference between this predicate and 
     predicate {\tt member/2} is on lists having a variable tail, 
@@ -154,7 +138,7 @@ looking at the sources.
     Predicate {\tt member2/2} only checks for membership but does not 
     insert the {\tt Element} into the list if it is not there.
 
-\ouroldmoditem{closetail(?List)}{listutil}\index{\texttt{closetail/1}}
+\ourmoditem{closetail(?List)}{closetail/1}{listutil}
     Predicate {\tt closetail/1} closes the tail of an open-ended list.
     It succeeds only once.
 
@@ -168,8 +152,8 @@ preprocessing.  XSB libraries include the following simple utilities.
 
 \begin{description}
 
-\ouroldmoditem{comma\_to\_list(+CommaList,-List)}{basics}
-\index{\texttt{comma\_to\_list/2}}
+\ourmoditem{comma\_to\_list(+CommaList,-List)}{comma\_to\_list/2}{basics}
+
 %
 Transforms {\tt CommaList} to {\tt List}.
 
@@ -182,8 +166,7 @@ Transforms {\tt CommaList} to {\tt List}.
 \ournewrepeatitem{comma\_member(?Element,?CommaList)}{basics}
 \index{\texttt{comma\_member/2}}
 %
-\ouroldmoditem{comma\_member(?Element,?CommaList)}{basics}
-\index{\texttt{comma\_memberchk/2}}
+\ouroldmoditem{comma\_memberchk(?Element,?CommaList)}{comma\_memberchk/2}{basics}
 %
 Analogues for comma lists of {\tt append/3}, {\tt length/3}, {\tt member/2} and {\tt
 memberchk/2}, respectively.
@@ -218,7 +201,7 @@ Attributes can be manipulated with the following three predicates
 defined in the module \texttt{machine}.
 
 \begin{description}
-\ouroldmoditem{get\_attr(-Var,+Mod, ?Val)}{machine}\index{\texttt{get\_attr/3}} 
+\ourmoditem{get\_attr(-Var,+Mod, ?Val)}{get\_attr/3}{machine}
 %
 Gets the value of the attribute of \texttt{Var} in attribute module
 \texttt{Mod}. Non-variable terms in \texttt{Var} cause a type
