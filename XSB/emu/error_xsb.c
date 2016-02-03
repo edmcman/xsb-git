@@ -275,7 +275,7 @@ DllExport void call_conv xsb_throw_error(CTXTdeclc char *message, char *error_ty
   xsb_throw_internal(CTXTc ball_to_throw,ball_len);
 }
 
-/* this function seems never used??*/
+/* this function for calling from user c-code */
 DllExport void call_conv xsb_throw(CTXTdeclc prolog_term Ball)
 {
   Psc exceptballpsc;
@@ -289,7 +289,7 @@ DllExport void call_conv xsb_throw(CTXTdeclc prolog_term Ball)
   if (heap_local_overflow(ball_len)) {
     xsb_exit("no heap space in xsb_throw");
   }
-  printf("in xsb_throw\n");
+  //  printf("in xsb_throw\n");
 
   if (flags[CTRACE_CALLS])  { 
     if (ptcpreg) 
