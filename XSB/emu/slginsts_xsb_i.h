@@ -297,7 +297,8 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
 	} 
 	else{
 	  if(!get_opaque(TIF_PSC(CallInfo_TableInfo(callInfo))))
-	    xsb_abort("Predicate %s/%d not declared incr_table: cannot create dependency edge\n", 
+	    xsb_abort("Predicate %s:%s/%d not declared incr_table: cannot create dependency edge\n", 
+		      get_mod_name(TIF_PSC(CallInfo_TableInfo(callInfo))),
 		      get_name(TIF_PSC(CallInfo_TableInfo(callInfo))),
 		      get_arity(TIF_PSC(CallInfo_TableInfo(callInfo))));       
 	}
@@ -357,7 +358,10 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
 	addcalledge(producer_sf->callnode,parent_table_sf->callnode);  
       }else{
 	if(!get_opaque(TIF_PSC(CallInfo_TableInfo(callInfo))))
-	  xsb_abort("Predicate %s/%d not declared incr_table\n", get_name(TIF_PSC(CallInfo_TableInfo(callInfo))),get_arity(TIF_PSC(CallInfo_TableInfo(callInfo))));       
+	  xsb_abort("Predicate %s:%s/%d not declared incr_table\n",
+		    get_mod_name(TIF_PSC(CallInfo_TableInfo(callInfo))),
+		    get_name(TIF_PSC(CallInfo_TableInfo(callInfo))),
+		    get_arity(TIF_PSC(CallInfo_TableInfo(callInfo))));       
       }
     }
 
@@ -791,8 +795,11 @@ XSB_Start_Instr(tabletrysinglenoanswers,_tabletrysinglenoanswers)
   else  /* not incremental */
     if (!get_opaque(TIF_PSC(tip))) {
       sf=(VariantSF)ptcpreg;
-      xsb_abort("Parent predicate %s/%d not declared incr_table\n", 
-		get_name(TIF_PSC(subg_tif_ptr(sf))),get_arity(TIF_PSC(subg_tif_ptr(sf)))); 
+      xsb_abort("Parent predicate %s:%s/%d not declared incr_table\n", 
+		get_mod_name(TIF_PSC(subg_tif_ptr(sf))),
+		get_name(TIF_PSC(subg_tif_ptr(sf))),
+		get_arity(TIF_PSC(subg_tif_ptr(sf)))
+		); 
     }
 #endif
   ADVANCE_PC(size_xxx);
