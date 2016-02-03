@@ -2467,12 +2467,20 @@ call_attribute_handlers([Mod,Attr|Rest],Value) :-
 call_attribute_handlers(Rest,Value).	
 
 :- dynamic '_$timed_call_rep_handler'/3.
-:- dynamic '_$timed_call_max_handler'/4.
-:- dynamic '_$timed_call_rep_max_handler'/6.
+:- dynamic '_$timed_call_max_handler'/5.
+:- dynamic '_$timed_call_rep_max_handler'/7.
 :- import timed_call_index_hook/1 from usermod.
 :- dynamic timed_call_index_hook/1.
 
 timed_call(Call,Options):- 
+	check_timed_call_options(Options,Rep_interval,Rep_handler,Max_interval,Max_handler,Nesting),
+        (Rep_interval = 0,Max_interval \== 0 -> 
+	   timed_call_max(Call,Max_interval,Max_handler,Nesting)
+   	 ; (Rep_interval \== 0,Max_interval == 0 -> 
+	         timed_call_rep(Call,Rep_interval,Rep_handler,Nesting)
+               ; timed_call_rep_max(Call,Rep_interval,Rep_handler,Max_interval,Max_handler,Nesting)) ).
+
+check_timed_call_options(Options,Rep_interval,Rep_handler,Max_interval,Max_handler,Nesting):- 
         check_nonvar_list(Options,timed_call/2,2),
 	(memberchk(nesting,Options) -> Nesting = true ; Nesting = false),
 	(memberchk(max(I1,H1),Options) -> 
@@ -2487,12 +2495,7 @@ timed_call(Call,Options):-
 	 ; Rep_interval = 0, Rep_handler = true),
 	(Rep_interval = 0,Max_interval = 0 -> 
 	   misc_error('Either maximum or repeating intervals/handlers must be specified in timed_call/2')
-	 ; true),
-        (Rep_interval = 0,Max_interval \== 0 -> 
-	   timed_call_max(Call,Max_interval,Max_handler,Nesting)
-   	 ; (Rep_interval \== 0,Max_interval == 0 -> 
-	         timed_call_rep(Call,Rep_interval,Rep_handler,Nesting)
-               ; timed_call_rep_max(Call,Rep_interval,Rep_handler,Max_interval,Max_handler,Nesting)) ).
+	 ; true).
 
 % need to make assert faster
 timed_call_rep(Call,Rep_interval,Rep_handler,Nesting):- 
@@ -2515,11 +2518,11 @@ timed_call_max(Call,Max_interval,Max_handler,Nesting):-
               ;   permission_error(nested_call,predicate,timed_call(Call),'timed_call/2') )
           ;
 	    machine:stat_walltime(Walltime),
-            assert('_$timed_call_max_handler'(Index,Max_handler,Max_interval,Walltime)),
+            assert('_$timed_call_max_handler'(Index,Max_handler,Max_interval,Walltime,Max_interval)),
             start_sleeper_thread(Max_interval),
-            call_cleanup(Call,retractall('_$timed_call_max_handler'(Index,_Handler,_Interval,_Walltime))) ).
-timed_call_rep_max(Call,Rep_interval,Rep_handler,Max_interval,Max_handler,Nesting):- 
-%writeln(timed_call_rep_max(Call,Rep_interval,Rep_handler,Max_interval,Max_handler,Nesting)),
+            call_cleanup(Call,retractall('_$timed_call_max_handler'(Index,_Handler,_Int,_Walltime,_Orig_intl))) ).
+timed_call_rep_max(Call,Rep_int,Rep_handler,Max_int,Max_handler,Nesting):- 
+%writeln(timed_call_rep_max(Call,Rep_int,Rep_handler,Max_int,Max_handler,Nesting)),
 	get_timed_call_index(Index),
         (timed_call_handler_is_active(Index) -> 
    	    (Nesting == true -> 
@@ -2527,9 +2530,10 @@ timed_call_rep_max(Call,Rep_interval,Rep_handler,Max_interval,Max_handler,Nestin
               ;   permission_error(nested_call,predicate,timed_call(Call),'timed_call/2'))
 	  ; 
             machine:stat_walltime(Walltime),
-	    assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,Walltime)),
-	    start_sleeper_thread(Rep_interval),
-	    call_cleanup(Call,retractall('_$timed_call_rep_max_handler'(Index,_Handler,_Interval,_Max_handler,_Max_interval,_Walltime))) ).
+	    assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_int,Max_handler,Max_int,Walltime,Max_int)),
+	    start_sleeper_thread(Rep_int),
+	    call_cleanup(Call,retractall('_$timed_call_rep_max_handler'(Index,_Rep_hand,_Rep_int,_Max_hand,_Max_int,
+	                                                                _Walltime,_Orig_int))) ).
 
 get_timed_call_index(Index) :-  %% for apps that have their own command loop
         timed_call_index_hook(Hook),
@@ -2538,9 +2542,9 @@ get_timed_call_index(Index) :-  %% for apps that have their own command loop
 	!.
 get_timed_call_index(Index):- conget('_$break_level',Index). 
 
-timed_call_handler_is_active(Index):- 	'_$timed_call_rep_max_handler'(Index,_,_,_,_,_),!.
+timed_call_handler_is_active(Index):- 	'_$timed_call_rep_max_handler'(Index,_,_,_,_,_,_),!.
 timed_call_handler_is_active(Index):- 	'_$timed_call_rep_handler'(Index,_,_),!.
-timed_call_handler_is_active(Index):- 	'_$timed_call_max_handler'(Index,_,_,_),!.
+timed_call_handler_is_active(Index):- 	'_$timed_call_max_handler'(Index,_,_,_,_),!.
 
 %:- import writeln/1 from standard.
 timer_interrupt_trap(One,_Two) :-
@@ -2554,22 +2558,22 @@ timer_interrupt_trap(One,_Two) :-
 	 call_c(One).
 timer_interrupt_trap(_One,_Two) :-
         get_timed_call_index(Index),
-        '_$timed_call_max_handler'(Index,Handler,_Max,_Walltime),!,
-%	writeln('_$timed_call_max_handler'(Index,Handler,_Max,_Walltime)),
+        '_$timed_call_max_handler'(Index,Handler,_Max,_Walltime,_Orig),!,
+%	writeln('_$timed_call_max_handler'(Index,Handler,_Max,_Walltime,_Orig)),
         timed_call_handler(Handler).
 timer_interrupt_trap(One,_Two) :- 
         get_timed_call_index(Index),
-	'_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime),
-%	writeln('_$timed_call_rep_max_handler'(Rep_handler,Rep_interval,Max_handler,Max_interval,Walltime)),
-	New_Max is Max_interval - Rep_interval,
+	'_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_int,Max_handler,Max_int,_Walltime,Orig),
+%	writeln('_$timed_call_rep_max_handler'(Rep_handler,Rep_int,Max_handler,Max_int,Walltime,Orig)),
+	New_Max is Max_int - Rep_int,
 	(New_Max =< 0 -> 
 	      timed_call_handler(Max_handler)
 	    ; 
 	      timed_call_handler(Rep_handler),
-	      retract('_$timed_call_rep_max_handler'(Index,_Handler,_Interval,Max_handler,_Max_interval,_Walltime)),
+	      retract('_$timed_call_rep_max_handler'(Index,_Handler,_Rep_int,Max_handler,_Max_int,_Walltime,Orig)),
 	      machine:stat_walltime(NewWalltime),
-	      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,New_Max,NewWalltime)),
-              start_sleeper_thread(Rep_interval)	
+	      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_int,Max_handler,New_Max,NewWalltime,Orig)),
+              start_sleeper_thread(Rep_int)	
 	  ; true),!,
 	call_c(One).
 timer_interrupt_trap(_One,_Two):- 
@@ -2580,6 +2584,42 @@ timer_interrupt_trap(_One,_Two):-
 
 timed_call_handler(Handler):- call(Handler),!.
 %call_handler(_).
+
+current_timed_call(Index,[repeating(Rep_interval,Rep_handler)]):-
+%	get_timed_call_index(Index),
+	'_$timed_call_rep_handler'(Index,Rep_handler,Rep_interval).
+current_timed_call(Index,[max(Max_interval/Orig_interval,Max_handler)]):-
+%	get_timed_call_index(Index),
+       '_$timed_call_max_handler'(Index,Max_handler,Max_interval,_Walltime,Orig_interval).
+current_timed_call(Index,[repeating(Rep_interval,Rep_handler),max(Max_interval,Max_handler)]):-
+%	get_timed_call_index(Index),
+       '_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime,_Orig).
+
+remove_timed_call_state(Index):- 
+	retractall('_$timed_call_rep_handler'(Index,_,_)),
+	retractall('_$timed_call_max_handler'(Index,_,_,_,_)),
+	retractall('_$timed_call_rep_max_handler'(Index,_,_,_,_,_,_)).
+remove_timed_call_state(_Index).
+
+timed_call_modify(Options):- 
+	check_timed_call_options(Options,Rep_int,Rep_handl,Max_int,Max_handl,_Nesting),
+%	writeln(check_timed_call_options(Options,Rep_int,Rep_handl,Max_int,Max_handl,_Nesting)),
+	get_timed_call_index(Index),
+	(Index = 0 -> permission_error(modify,predicate,timed_call,'timed_call/2') ; true),
+	UpIndex is Index -1,
+%	writeln(upindex(UpIndex)),
+	remove_timed_call_state(UpIndex),
+%	writeln(remove_timed_call_state(UpIndex)),
+        (Rep_int = 0,Max_int \== 0 -> 
+	    machine:stat_walltime(Walltime),
+%            writeln('_$timed_call_max_handler'(UpIndex,Max_handl,Max_int,Walltime,Orig_interval)),
+            assert('_$timed_call_max_handler'(UpIndex,Max_handl,Max_int,Walltime,Max_int))
+   	 ; (Rep_int \== 0,Max_int == 0 -> 
+%               writeln('_$timed_call_rep_handler'(UpIndex,Rep_handl,Rep_int)),
+               assert('_$timed_call_rep_handler'(UpIndex,Rep_handl,Rep_int))
+            ;  machine:stat_walltime(Walltime),
+%	       writeln('_$timed_call_rep_max_handler'(UpIndex,Rep_handl,Rep_int,Max_handl,Max_int,Walltime,Orig)),
+	       assert('_$timed_call_rep_max_handler'(UpIndex,Rep_handl,Rep_int,Max_handl,Max_int,Walltime,Max_int)) ) ).
 
 bounded_call(Goal,MaxMemory,MaxTime,Handler):-
 	check_pos_integer(MaxMemory,bounded_call/4,2),

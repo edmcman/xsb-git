@@ -91,7 +91,9 @@
 %:- export timed_call/4.
 :- export get_timed_call_index/1.
 :- export timer_interrupt_trap/2.
-:- export timed_call/2.
+:- export timed_call/2,timed_call_modify/1.
+:- export current_timed_call/2.
+
 :- export memory_bounded_call/3.
 
    :- export expand_atom/2.
@@ -115,8 +117,8 @@
 :- export statistics/2.
 :- export use_module/3.
 :- export  '_$timed_call_rep_handler'/3.
-:- export  '_$timed_call_max_handler'/4.
-:- export  '_$timed_call_rep_max_handler'/6.
+:- export  '_$timed_call_max_handler'/5.
+:- export  '_$timed_call_rep_max_handler'/7.
 :- export bounded_call/4.
 :- export bounded_call/3.
 

@@ -44,8 +44,8 @@
    handle_interrupts/1
      from standard.
 :- import '_$timed_call_rep_handler'/3 from standard.
-:- import '_$timed_call_max_handler'/4 from standard.
-:- import '_$timed_call_rep_max_handler'/6 from standard.
+:- import '_$timed_call_max_handler'/5 from standard.
+:- import '_$timed_call_rep_max_handler'/7 from standard.
 :- import get_timed_call_index/1 from standard.
 :- import '$$exception_ball'/2 from standard.
 :- import close_open_tables/1,
@@ -55,7 +55,7 @@
 	  xwam_state/2,
 	  prompt/2, prompt/3
      from machine.
-:- import start_sleeper_thread/1 from machine.
+:- import cancel_sleeper_thread/0,start_sleeper_thread/1 from machine.
 :- import file_open/3, file_close/1, file_get/2, fmt_write_string/3,
           file_flush/2, /*ioport2iostream/2,*/
 %	  fmt_write/3, 

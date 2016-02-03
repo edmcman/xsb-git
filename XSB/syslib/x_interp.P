@@ -324,32 +324,31 @@ handle_timed_calls:-
       machine:stat_walltime(NewWalltime),
       get_timed_call_index(Index),
 %      writeln(index_is(Index)),
-      ('_$timed_call_rep_max_handler'(Index,_Rep_handler,_Rep_interval,_Max_handler,_Remaining,_Walltime) -> 
+      ('_$timed_call_rep_max_handler'(Index,_Rep_handler,_Rep_interval,_Max_handler,_Remaining,_Walltime,_Orig) -> 
          handle_timed_calls_rep_max(Index,NewWalltime)
-	 ; ( '_$timed_call_max_handler'(Index,_Max_handler,_Remaining,_Walltime) -> 
+	 ; ( '_$timed_call_max_handler'(Index,_Max_handler,_Remaining,_Walltime,_Orig_int) -> 
 	       handle_timed_calls_max(Index,NewWalltime)
 	     ; true  ) ), % nothing to do for rep
       !.
 handle_timed_calls.
 
 handle_timed_calls_max(Index,NewWalltime):- 
-      retract('_$timed_call_max_handler'(Index,Max_handler,Remaining,Walltime)),
+      retract('_$timed_call_max_handler'(Index,Max_handler,Remaining,Walltime,Orig_int)),
       NewRemaining is Remaining - (NewWalltime - Walltime),
-%      writeln(stopping_sleeper_thread_max(Remaining,Walltime,NewWalltime,NewRemaining)),
-      assert('_$timed_call_max_handler'(Index,Max_handler,NewRemaining,Walltime)).
+      assert('_$timed_call_max_handler'(Index,Max_handler,NewRemaining,Walltime,Orig_int)).
 
 handle_timed_calls_rep_max(Index,NewWalltime):- 
-      retract('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Remaining,Walltime)),
+      retract('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Remaining,Walltime,Orig)),
       NewRemaining is Remaining - (NewWalltime - Walltime),
 %      writeln(stopping_sleeper_thread_rep_max(Remaining,Walltime,NewWalltime,NewRemaining)),
-      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,NewRemaining,Walltime)).
+      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,NewRemaining,Walltime,Orig)).
 % nothing to do for timed_call_rep_handler
 
 reinvoke_timed_calls:- 
       get_timed_call_index(Index),
-      ( '_$timed_call_rep_max_handler'(Index,_Rep_handler,_Rep_interval,_Max_handler,_Max_interval,_Walltime) -> 
+      ( '_$timed_call_rep_max_handler'(Index,_Rep_handler,_Rep_interval,_Max_handler,_Max_int,_Walltime,_Orig) -> 
             reinvoke_timed_calls_rep_max(Index)
-        ; '_$timed_call_max_handler'(Index,_Max_handler,_Remaining,_Walltime) -> 
+        ; '_$timed_call_max_handler'(Index,_Max_handler,_Remaining,_Walltime,_Orig_int) -> 
             reinvoke_timed_calls_max(Index)
 	; '_$timed_call_rep_handler'(_Index,_Rep_handler,Rep_interval) ->
 %	    writeln(restarting_sleeper_thread_rep(Rep_interval)),
@@ -357,15 +356,15 @@ reinvoke_timed_calls:-
 	; true ).
   
 reinvoke_timed_calls_max(Index):- 
-      retract('_$timed_call_max_handler'(Index,Max_handler,Remaining,_Walltime)),
+      retract('_$timed_call_max_handler'(Index,Max_handler,Remaining,_Walltime,Orig_int)),
       machine:stat_walltime(NewWalltime),
-      assert('_$timed_call_max_handler'(Index,Max_handler,Remaining,NewWalltime)),
+      assert('_$timed_call_max_handler'(Index,Max_handler,Remaining,NewWalltime,Orig_int)),
 %      writeln(restarting_sleeper_thread_max(Remaining)),
       start_sleeper_thread(Remaining),!.
 reinvoke_timed_calls_rep_max(Index):- 
-      retract('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime)),
+      retract('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime,Orig)),
       machine:stat_walltime(NewWalltime),
-      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,NewWalltime)),
+      assert('_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,NewWalltime,Orig)),
 %      writeln(restarting_sleeper_thread_max_rep(Rep_interval)),
       start_sleeper_thread(Rep_interval),!.
 
@@ -410,7 +409,7 @@ execute_messages_on_signal_queue:-
 	    fail
 	 ;  true),!.
 
-:- import writeln/1 from standard.
+%:- import writeln/1 from standard.
 '_$goal_int'(One,_Two) :- 
 	handle_goal_interrupt(Message),
 %	writeln(call(Message)),
