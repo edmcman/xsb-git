@@ -148,6 +148,8 @@ typedef struct psc_pair *Pair;
 #define  get_ep(psc)		((psc)->ep)
 #define  get_data(psc)		((psc)->data)
 #define  get_name(psc)		((psc)->nameptr)
+#define  get_mod_for_psc(psc)	(isstring(get_data(psc))?global_mod:get_data(psc))
+#define  get_mod_name(psc)	get_name(get_mod_for_psc(psc))
 
 #define  set_type(psc, type)	(psc)->entry_type = type
 #define  set_env(psc, envir)	(psc)->env = ((psc)->env & ~T_ENV) | envir
