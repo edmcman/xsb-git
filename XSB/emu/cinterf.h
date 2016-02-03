@@ -342,6 +342,8 @@ DllExport extern char *p_charlist_to_c_string(CTXTdeclc prolog_term term, VarStr
 					      char *in_func, char *where);
 DllExport extern void c_string_to_p_charlist(CTXTdeclc char *name, prolog_term list,
 				      int regs_to_protect, char *in_func, char *where);
+DllExport extern void c_bytes_to_p_charlist(CTXTdeclc char *name, size_t len, prolog_term list,
+				      int regs_to_protect, char *in_func, char *where);
 
 /*******************************************************************************/
 

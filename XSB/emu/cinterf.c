@@ -269,7 +269,8 @@ DllExport xsbBool call_conv c2p_functor(CTXTdeclc char *functor, int arity,
     Pair sym;
     int i;
     if (is_var(v)) {
-	sym = (Pair)insert(functor, (byte)arity, (Psc)flags[CURRENT_MODULE], &i);
+      XSB_Deref(v);
+      sym = (Pair)insert(functor, (byte)arity, (Psc)flags[CURRENT_MODULE], &i);
 	sreg = hreg;
 	hreg += arity + 1;
 	bind_cs(vptr(v), sreg);
@@ -460,19 +461,21 @@ DllExport char *p_charlist_to_c_string(CTXTdeclc prolog_term term, VarString *bu
    WHERE is another string with additional info. These two are used to provide
    informative error messages to the user. */
 DllExport void c_string_to_p_charlist(CTXTdeclc char *name, prolog_term list,
+				      int regs_to_protect, char *in_func, char *where) {
+  c_bytes_to_p_charlist(CTXTc name, strlen(name), list, regs_to_protect, in_func, where);
+}
+
+/* uses explicit length, so can convert byte strings containing 0x00 bytes, if nec. */
+DllExport void c_bytes_to_p_charlist(CTXTdeclc char *name, size_t len, prolog_term list,
 				      int regs_to_protect, char *in_func, char *where)
 {
   Cell new_list;
   CPtr top = 0;
   size_t i;
-  size_t len=0;
 
   if (isnonvar(list)) {
     xsb_abort("[%s] A variable expected, %s", in_func, where);
   }
-
-  if (NULL != name)
-	len=strlen(name);
 
   if (0 == len) {
     bind_nil((CPtr)(list));
