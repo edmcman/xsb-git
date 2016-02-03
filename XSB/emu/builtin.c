@@ -333,11 +333,12 @@ DllExport prolog_int call_conv iso_ptoc_int_arg(CTXTdeclc int regnum,const char 
   return FALSE;
 }
 
+/** now a macro
 Psc get_mod_for_psc(Psc psc) {
   Cell psc_data = (Cell)get_data(psc);
   if (isstring(psc_data)) return global_mod;
   else return (Psc)psc_data;
-}
+  } **/
 
 char *get_filename_for_psc(Psc psc) {
   struct psc_rec *psc_data = get_data(psc);
