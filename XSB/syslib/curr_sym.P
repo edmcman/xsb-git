@@ -525,6 +525,7 @@ module_file(ModuleName, File) :-
 predicate_property(Term_Indicator, Property) :-
 	nonvar(Term_Indicator),
 	Term_Indicator = :(Module, Term),
+	nonvar(Term),		% send ':'(_,_) predicate to next clause
 	!,
 	get_first_psc_pair(PSC_Pair),
 	module_scan(PSC_Pair, ModuleName, ModulePSC),

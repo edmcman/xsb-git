@@ -1969,6 +1969,46 @@ abolish_table_call(Term) :-
 	abolish_table_subgoals(Term).
 
 /*======================================================================*/
+
+/* print to userout tabled predicates, and their number of calls and
+answers, for tabled predicate with non-zero calls. */
+
+dump_table_counts :-
+	table_counts(Module,Pred,Arity,CallCnt,AnsCnt),
+	CallCnt =\= 0,
+	write(userout,'Table Calls: '),
+	write(userout,CallCnt),
+	write(userout,', Answers: '),
+	write(userout,AnsCnt),write(userout,', '),
+	writeq(userout,Pred), write(userout,'/'),
+	write(userout,Arity),
+	write(userout,' '(Module)),
+	writeln(userout,'.'),
+	fail.
+
+/* return module, predicate, arity, number of calls, and number of
+answers, for all tabled predicates.  */
+
+table_counts(Module,Pred,Arity,CallCnt,AnsCnt) :-
+	current_predicate(Module:Pred/Arity),
+	Module:Pred/Arity \== usermod:':'/2, % messes up later calls
+	functor(Term,Pred,Arity),
+	predicate_property(Module:Term,tabled),
+	functor(UCall,Pred,Arity),
+	term_new_mod(Module,UCall,Call),
+	conset('_call_cntr',0),
+	conset('_ans_cntr',0),
+	(get_calls(Call,SF,Skel),
+	 coninc('_call_cntr'),
+	 get_returns(SF,Skel),
+	 coninc('_ans_cntr'),
+	 fail
+	 ;	
+	 conget('_call_cntr',CallCnt),
+	 conget('_ans_cntr',AnsCnt)
+	).
+
+
 end_of_file.
 
 :- export explain_u_val/4.

@@ -81,7 +81,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
    variant_get_residual/2.
 :- export floundered_undefined/0.
 :- export answer_completion/2.
-
+:- export dump_table_counts/0, table_counts/5.
 
 % Obsolete
 :- export    abolish_table_call/1,       abolish_table_call/2.
@@ -115,6 +115,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 
 :- import set_prolog_flag/2 from curr_sym.
 :- import current_prolog_flag/2 from curr_sym.
+:- import predicate_property/2, current_predicate/1 from curr_sym.
 :- import load_dync/2 from consult.
 
 :- import
@@ -140,7 +141,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 
 :- import numbervars/4, unnumbervars/2 from num_vars.
 
- :- import bagof/3, findall/3, setof/3, sort/2, excess_vars/4 from setof.
+:- import bagof/3, findall/3, setof/3, sort/2, excess_vars/4 from setof.
 
 :- import
    (=..)/2, abort/1, call/1,arg/3,
@@ -148,7 +149,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 	(index)/2, (==)/2
    from standard.
 :- import call_c/1,nl/0,write/1, tell/1, told/0, '\='/2, arg/3 from standard.
-:- import writeln/2 from standard.
+:- import writeln/2, write/2, writeq/2 from standard.
 :- import is_most_general_term/1 from standard.
 :- import call/3 from standard.
 
@@ -156,6 +157,6 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 :- import invalidate_table_for/2 from usermod.
 
 :- import trie_interned/2,trie_intern/2,new_trie/1,delete_trie/1 from intern.
-:- import gensym/2 from gensym.
+   :- import gensym/2, conset/2, conget/2, coninc/1 from gensym.
 
 /* ------------------- end of file tables.H --------------------------- */
