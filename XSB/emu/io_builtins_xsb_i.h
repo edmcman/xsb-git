@@ -450,7 +450,10 @@ inline static xsbBool file_function(CTXTdecl)
 //	printf("frll: expand buffer line_buff(%p,%d)\n",line_buff,line_buff_len);
       }
       *(line_buff+line_buff_disp) = c = getc(fptr);  // fix for charset!!
-      if (c == EOF) break;
+      if (c == EOF) {
+	if (feof(fptr)) break;
+	else xsb_throw_error(strerror(errno),"File Access");
+      }
       line_buff_disp++;
     } while (c != '\n');
     *(line_buff+line_buff_disp) = 0;
