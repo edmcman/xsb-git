@@ -1986,6 +1986,7 @@ abolish_cdf_tables:-
 #if TABLEDISA
 abolish_isas:-
     abolish_table_pred(isa_bf_maybe_table(_,_)),
+    abolish_table_pred(isa_bf_inner(_,_)),
     abolish_table_pred(isa_subclass_fx_maybe_table(_,_)),
     abolish_table_pred(isa_subrel_fx_maybe_table(_,_)),
     abolish_table_pred(isa_nospec_fx_maybe_table(_,_)),

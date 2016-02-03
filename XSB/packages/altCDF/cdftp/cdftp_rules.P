@@ -27,7 +27,7 @@ dlrule_to_cdf('<='(Head,Body),Name,CDFList,Cmpt):-
 
 assert_translation_facts(Cmpt,CDFList):- 
 	member((:-(H,B)),CDFList),
-	writeln(userout,:-(H,B)),
+	%%writeln(userout,:-(H,B)),
 	asserta(compdltrans(Cmpt,H,B)),
 	fail.
 assert_translation_facts(_Cmpt,_CDFList).
