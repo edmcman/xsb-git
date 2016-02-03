@@ -71,7 +71,7 @@ read_dsv(FileName,Options,Term) :-
 	functor(Term,Pred,Arity),
 	length(Types,Arity),	% no constraints
 	Term =.. [Pred|Args],
-	load_dsv(FileName,Term,Sep,Delim,Options,Types,Args).
+	read_dsv(FileName,Term,Sep,Delim,Options,Types,Args).
 
 :- comment(load_dsv/5,
 "@pred{load_dsv(+FileName,+PSpec,+Sep,+Delim,+Options)} loads a
@@ -100,7 +100,7 @@ load_dsv(FileName,PSpec,Sep,Delim,Options) :-
 	process_predspec(PSpec,Spec,Types,Args),
 	dynamic(Spec),
 	retractall(Spec),
-	(load_dsv(FileName,PSpec,Sep,Delim,Options,Types,Args),
+	(read_dsv(FileName,PSpec,Sep,Delim,Options,Types,Args),
 	 (Reverse =:= 0
 	  ->	 assertz(Spec),
 		 fail
@@ -111,7 +111,7 @@ load_dsv(FileName,PSpec,Sep,Delim,Options) :-
 	 true
 	).
 
-load_dsv(FileName,PSpec,Sep,Delim,Options,Types,Args) :-
+read_dsv(FileName,PSpec,Sep,Delim,Options,Types,Args) :-
 	cputime(T0),
 	conset('__errcnt',0),
 	conset('__recsread',0),
@@ -621,3 +621,4 @@ write_code_field(FieldCodes,Stream,Sep,Delim,DelimA) :-
 		write(Stream,DelimA)
 	 ;	put_list(Stream,FieldCodes)
 	).
+
