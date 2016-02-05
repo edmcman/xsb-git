@@ -2105,20 +2105,23 @@ length([], N, N).
 length([_|R], M, N) :- N1 is M+1, length(R, N1, N).
 
 abort :- 
-    conget('_$break_level',Level),
+%    conget('_$break_level',Level),
+    get_interpreter_index(Level),
     (Level == 0 -> 
        misc_error('Aborting...')
      ; abort_all('Aborting...') ). 
 
 %  abort/1
 abort(Msg) :- 
-    conget('_$break_level',Level),
+%    conget('_$break_level',Level),
+    get_interpreter_index(Level),
     (Level == 0 -> 
        misc_error(Msg)
      ; abort_all(Msg) ). 
 
 abort_all(Msg):- 
-    conget('_$break_level',Level),
+    get_interpreter_index(Level),
+%    conget('_$break_level',Level),
     misc_error(Msg,Level).
 
 abort_level(Msg):- 
@@ -2469,8 +2472,8 @@ call_attribute_handlers(Rest,Value).
 :- dynamic '_$timed_call_rep_handler'/3.
 :- dynamic '_$timed_call_max_handler'/5.
 :- dynamic '_$timed_call_rep_max_handler'/7.
-:- import timed_call_index_hook/1 from usermod.
-:- dynamic timed_call_index_hook/1.
+:- import interpreter_index_hook/1 from usermod.
+:- dynamic interpreter_index_hook/1.
 
 timed_call(Call,Options):- 
 	check_timed_call_options(Options,Rep_interval,Rep_handler,Max_interval,Max_handler,Nesting),
@@ -2500,7 +2503,7 @@ check_timed_call_options(Options,Rep_interval,Rep_handler,Max_interval,Max_handl
 % need to make assert faster
 timed_call_rep(Call,Rep_interval,Rep_handler,Nesting):- 
 %	writeln(timed_call_rep(Call,Rep_interval,Rep_handler,Nesting)),
-	get_timed_call_index(Index),
+	get_interpreter_index(Index),
         (timed_call_handler_is_active(Index) -> 
             (Nesting == true ->
                   call(Call)
@@ -2511,7 +2514,7 @@ timed_call_rep(Call,Rep_interval,Rep_handler,Nesting):-
             call_cleanup(Call,retractall('_$timed_call_rep_handler'(Index,_Handler,_Interval))) ).
 timed_call_max(Call,Max_interval,Max_handler,Nesting):- 
 %	writeln(timed_call_max(Call,Max_interval,Max_handler,Nesting)),
-	get_timed_call_index(Index),
+	get_interpreter_index(Index),
         (timed_call_handler_is_active(Index) -> 
             (Nesting == true ->
                   call(Call)
@@ -2523,7 +2526,7 @@ timed_call_max(Call,Max_interval,Max_handler,Nesting):-
             call_cleanup(Call,retractall('_$timed_call_max_handler'(Index,_Handler,_Int,_Walltime,_Orig_intl))) ).
 timed_call_rep_max(Call,Rep_int,Rep_handler,Max_int,Max_handler,Nesting):- 
 %writeln(timed_call_rep_max(Call,Rep_int,Rep_handler,Max_int,Max_handler,Nesting)),
-	get_timed_call_index(Index),
+	get_interpreter_index(Index),
         (timed_call_handler_is_active(Index) -> 
    	    (Nesting == true -> 
 	          call(Call)
@@ -2535,12 +2538,12 @@ timed_call_rep_max(Call,Rep_int,Rep_handler,Max_int,Max_handler,Nesting):-
 	    call_cleanup(Call,retractall('_$timed_call_rep_max_handler'(Index,_Rep_hand,_Rep_int,_Max_hand,_Max_int,
 	                                                                _Walltime,_Orig_int))) ).
 
-get_timed_call_index(Index) :-  %% for apps that have their own command loop
-        timed_call_index_hook(Hook),
+get_interpreter_index(Index) :-  %% for apps that have their own command loop
+        interpreter_index_hook(Hook),
 	arg(1,Hook,Index),
         call(Hook),
 	!.
-get_timed_call_index(Index):- conget('_$break_level',Index). 
+get_interpreter_index(Index):- conget('_$break_level',Index). 
 
 timed_call_handler_is_active(Index):- 	'_$timed_call_rep_max_handler'(Index,_,_,_,_,_,_),!.
 timed_call_handler_is_active(Index):- 	'_$timed_call_rep_handler'(Index,_,_),!.
@@ -2549,7 +2552,7 @@ timed_call_handler_is_active(Index):- 	'_$timed_call_max_handler'(Index,_,_,_,_)
 %:- import writeln/1 from standard.
 timer_interrupt_trap(One,_Two) :-
 %	writeln(timer_int),
-        get_timed_call_index(Index),
+        get_interpreter_index(Index),
         '_$timed_call_rep_handler'(Index,Handler,Interval),!,
         timed_call_handler(Handler),
         (Interval > 0 ->
@@ -2557,12 +2560,12 @@ timer_interrupt_trap(One,_Two) :-
 	 ; true),!,
 	 call_c(One).
 timer_interrupt_trap(_One,_Two) :-
-        get_timed_call_index(Index),
+        get_interpreter_index(Index),
         '_$timed_call_max_handler'(Index,Handler,_Max,_Walltime,_Orig),!,
 %	writeln('_$timed_call_max_handler'(Index,Handler,_Max,_Walltime,_Orig)),
         timed_call_handler(Handler).
 timer_interrupt_trap(One,_Two) :- 
-        get_timed_call_index(Index),
+        get_interpreter_index(Index),
 	'_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_int,Max_handler,Max_int,_Walltime,Orig),
 %	writeln('_$timed_call_rep_max_handler'(Rep_handler,Rep_int,Max_handler,Max_int,Walltime,Orig)),
 	New_Max is Max_int - Rep_int,
@@ -2586,13 +2589,13 @@ timed_call_handler(Handler):- call(Handler),!.
 %call_handler(_).
 
 current_timed_call(Index,[repeating(Rep_interval,Rep_handler)]):-
-%	get_timed_call_index(Index),
+%	get_interpreter_index(Index),
 	'_$timed_call_rep_handler'(Index,Rep_handler,Rep_interval).
 current_timed_call(Index,[max(Max_interval/Orig_interval,Max_handler)]):-
-%	get_timed_call_index(Index),
+%	get_interpreter_index(Index),
        '_$timed_call_max_handler'(Index,Max_handler,Max_interval,_Walltime,Orig_interval).
 current_timed_call(Index,[repeating(Rep_interval,Rep_handler),max(Max_interval,Max_handler)]):-
-%	get_timed_call_index(Index),
+%	get_interpreter_index(Index),
        '_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime,_Orig).
 
 remove_timed_call_state(Index):- 
@@ -2604,7 +2607,7 @@ remove_timed_call_state(_Index).
 timed_call_modify(Options):- 
 	check_timed_call_options(Options,Rep_int,Rep_handl,Max_int,Max_handl,_Nesting),
 %	writeln(check_timed_call_options(Options,Rep_int,Rep_handl,Max_int,Max_handl,_Nesting)),
-	get_timed_call_index(Index),
+	get_interpreter_index(Index),
 	(Index = 0 -> permission_error(modify,predicate,timed_call,'timed_call/2') ; true),
 	UpIndex is Index -1,
 %	writeln(upindex(UpIndex)),

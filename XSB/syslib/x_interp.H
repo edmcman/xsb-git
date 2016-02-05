@@ -46,7 +46,7 @@
 :- import '_$timed_call_rep_handler'/3 from standard.
 :- import '_$timed_call_max_handler'/5 from standard.
 :- import '_$timed_call_rep_max_handler'/7 from standard.
-:- import get_timed_call_index/1 from standard.
+:- import get_interpreter_index/1 from standard.
 :- import '$$exception_ball'/2 from standard.
 :- import close_open_tables/1,
           is_xwammode/1, 

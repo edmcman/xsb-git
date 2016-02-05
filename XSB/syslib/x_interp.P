@@ -322,7 +322,7 @@ call_initializers([Initializer|Rest]):-
 handle_timed_calls:- 
       cancel_sleeper_thread,
       machine:stat_walltime(NewWalltime),
-      get_timed_call_index(Index),
+      get_interpreter_index(Index),
 %      writeln(index_is(Index)),
       ('_$timed_call_rep_max_handler'(Index,_Rep_handler,_Rep_interval,_Max_handler,_Remaining,_Walltime,_Orig) -> 
          handle_timed_calls_rep_max(Index,NewWalltime)
@@ -345,7 +345,7 @@ handle_timed_calls_rep_max(Index,NewWalltime):-
 % nothing to do for timed_call_rep_handler
 
 reinvoke_timed_calls:- 
-      get_timed_call_index(Index),
+      get_interpreter_index(Index),
       ( '_$timed_call_rep_max_handler'(Index,_Rep_handler,_Rep_interval,_Max_handler,_Max_int,_Walltime,_Orig) -> 
             reinvoke_timed_calls_rep_max(Index)
         ; '_$timed_call_max_handler'(Index,_Max_handler,_Remaining,_Walltime,_Orig_int) -> 
