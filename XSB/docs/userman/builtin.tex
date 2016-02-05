@@ -5331,20 +5331,63 @@ based on the state of XSB's choice point stack.
 
 %----------------------------------------------------------------------
 
-\subsection{Timed Calls}
+\subsection{Timed Calls and Co-routining}
+
+When XSB is used in multi-threaded mode, one XSB thread $t_1$ may send
+a signal goal $G$ to another thread $t_2$, which causes $t_2$ to
+interrupt its computation, execute $G$, and then resume its
+computation.  (Section~\ref{chap:threads}).  {\tt timed\_call/2} and
+related predicates provide similar functionality within the
+single-threaded engine, a useful addition since not all of tabling
+features are currently available in the multi-threaded engine.  {\tt
+  timed\_call/2} invokes a {\em base goal} which is interrupted either
+once or repeatedly at specified time intervals; when interrupted the
+engine invokes a handler that can implement a fairly general
+co-routine.  In this way, monitors, logs, specialized debuggers --
+even adaptive behavior -- can be implemented for large and complex
+tabled evaluations.
+
+Within the timed call paradigm, it is important that the execution of
+the handler be independent of the base goal.  For instance, any tables
+called by the handler should not depend on incomplete tables called by
+the base goal.  On the other hand, the handler may inspect and analyze
+the evaluation state of the base goal through XSB's growing set of
+inspection routines (Section~\ref{sec:suspend-analyze}).
+
+\subsubsection{Interpreter Indicess}
+%
+One use of timed calls is to have the handler suspend the base
+computation, and then start an interpreter that can be used to execute
+queries about the base computation.  In the classic command-line
+interpreter of XSB, this is done by {\tt break/0}.  However, XSB can
+be called in a variety of ways other than the
+command-line-interpreter.  It can be invoked as an executable via its
+{\tt -e} option, called from a socket, called directly from C, or
+called from Java via Interprolog or some other bridge.  To represent
+the generality of the interpreters that may be used, we make use of
+the notion of {\em interpreter indices} in this section and in
+Section~\ref{sec:suspend-analyze}, which discusses inspection
+predicates.  Conceptually, a computation starts at index 0 -- even if
+XSB was not invoked with a command-line interpreter.  The handler
+executes at index 1, which might or might not be associated with a new
+command-line interpreter.  In principle, an index $N$ interpreter is
+invoked through the handler of a suspended goal that was executed at
+level $N-1$.
+
+\subsubsection{Timed Call and related predicates}
 
 \begin{description}
 %\ourrepeatstandarditem{timed\_call(\#Goal,+Interval,\#Handler,+Option)}{timed\_call/4}{}
 \ourstandarditem{timed\_call(\#Goal,\#Options)}{timed\_call/2}{}
 %
 This predicate calls {\tt Goal} and may interrupt {\tt Goal} to call
-various handlers as specified in {\tt Options}, the list of options.
-In the case where a handler succeeds, the execution of {\tt Goal} will
-be continued; if the handler fails, {\tt Goal} will fail; and if a
-handler throws an uncaught exception the execution of {\tt Goal} may
-be aborted. In these ways {\tt timed\_call/2} can be used to allow
-co-routining of {\tt Goal} with a repetition handler and/or timing
-{\tt Goal} out with a (separate) handler.
+handlers as specified in {\tt Options}.  In the case where a handler
+succeeds, the execution of {\tt Goal} will be continued; if the
+handler fails, {\tt Goal} will fail; and if a handler throws an
+uncaught exception the execution of {\tt Goal} may be aborted. In
+these ways {\tt timed\_call/2} can be used to allow co-routining of
+{\tt Goal} with a repetition handler and/or timing {\tt Goal} out with
+a (separate) handler.
 
 {\tt Options} is a list that may contain the following terms
 \bi
@@ -5362,11 +5405,12 @@ co-routining of {\tt Goal} with a repetition handler and/or timing
   maximum handler is also specified).
 %
 \item The term {\tt nesting} indicates that nested timed calls should
-  be allowed within the same break level.  In this case, the nested
-  timed call is simply treated as a call to {\tt Goal}: in other words
-  the interval(s) and handlers for the nested call are ignored.
-  Otherwise, if {\tt Options} does not contain the term {\tt nesting}
-  an attempt to nest calls will raise a permission exception.  \ei
+  be allowed within the same interpreter index.  In this case, the
+  nested timed call is simply treated as a call to {\tt Goal}: in
+  other words the interval(s) and handlers for the nested call are
+  ignored.  Otherwise, if {\tt Options} does not contain the term {\tt
+    nesting} an attempt to nest calls will raise a permission
+  exception.  \ei
 
 Executing a timed call for {\tt Goal} is more expensive than simply
 calling {\tt Goal}, so it should not be used for frequent calls to
@@ -5384,15 +5428,13 @@ virtual machine.
 
 {\tt timed\_call/2} is integrated with XSB's break levels with a
 different timed call possible at each break level.  In this way, a
-handler can call a break statement, and in this way an executing
-program can periodically enter a break, so that it can be inspected
-using one of XSB's introspection built-ins.  The time that is spent in
-a break level is not counted as part of the goals maximum allowable
-time.
+handler can call a break statement, and the base computation inspected
+using one of XSB's built-ins.  As mentioned, the time that is spent in
+a break level is not counted as part of the repetition or maximum intervals associated with the base goal.
 
-{\tt timed\_call/3} is not yet implemented for the multi-threaded
-engine but its functionality is easily duplicated using thread
-signalling (Section`\ref{sec:thread-signals}).
+{\tt timed\_call/3} is not implemented for the multi-threaded engine
+but its functionality is easily duplicated using thread signalling
+(Section`\ref{sec:thread-signals}).
 
 {\bf Examples}
 Consider the simple (and non-tabled) program fragment
@@ -5422,8 +5464,7 @@ timed_call(loop,[repeating(500,statistics),max(5000,break)]).
 \end{verbatim}
 will interrupt the computation every 500 milliconds to print
 statistics, and then will enter a break after 5000 milliseconds, so
-that the state of computation can be explored after 5000 milliseconds
-using XSB's inspectoin routines (Section~\ref{sec:suspend-analyze}).
+that the state of computation can be explored after 5000 milliseconds.
 Handlers can be quite complex, and can support UI-based monitors, and
 even analysis routines that may modify the parameters of the
 computation when possible (e.g., by changing one form of tabling to
@@ -5471,13 +5512,13 @@ also throws these other errors.
 \ourmoditem{current\_timed\_call(?Index,?DisplayOptions)}{current\_timed\_call/2}{standard}
 %
 If there is an active timed call, invoked by {\tt
-  timed\_call(Goal,Options)}, at break level {\tt Index}, this
+  timed\_call(Goal,Options)}, at interpreter index {\tt Index}, this
 predicate returns information representing {\tt Options}.  {\tt
   DisplayOptions} differs from {\tt Options} only in the following
 case.  If {\tt Options} contains a term {\tt max(Interval,Handler)},
 {\tt DisplayOptions} will contain a corresponding term {\tt
   max(Used/Interval,Handler)}, indicating both the original interval
-(in milliseconds) and the number of milliseconds used.
+(in milliseconds) and the number of milliseconds used so far.
 
 {\bf Example}
 
@@ -5497,15 +5538,15 @@ succeeds with {\tt Index = 0} and {\tt Options = [max(3539 / 5000,abort)]}.
 %-------------------------------------------------------
 \ourstandarditem{timed\_call\_modify(\#NewOptions)}{timed\_call\_modify/1}{}
 %
-When called from a command-line interpreter at break level $N>1$, this
-predicate modifies the behavior of the suspended derivation.  
+When called from interpreter index $N>1$, this predicate modifies the
+behavior of the suspended derivation.  
+%
 \bi
-\item If the current suspended state is in the scope of the goal {\tt
-  timed\_call(Goal,OldOptions)} at break level $N-1$, where {\tt
-  Options} does not contain {\tt nesting}, {\tt Goal} is made to
-  behave as if it had been called with {\tt
+\item If current state is in the scope of the suspended goal {\tt
+  timed\_call(Goal,OldOptions)} at interpreter index $N-1$, {\tt Goal}
+  is made to behave as if it had been called with {\tt
     timed\_call(Goal,NewOptions)}.  I.e., {\tt NewOptions} rather than
-  {\tt OldOptions} takes effect as soon as the suspended state is
+  {\tt OldOptions} takes effect as soon as the suspended goalß is
   resumed.  If {\tt NewOptions} is the empty list, this has the effect
   of removing any interrupts that would be due to the timed call.
 %
@@ -5517,9 +5558,9 @@ predicate modifies the behavior of the suspended derivation.
 
 {\bf Example} 
 %
-This rather fanciful example shows the essential points in how {\tt
-  timed\_call\_modify/1} can be used in practice.  Suppose a user
-wants to monitor the infinite loop program (introduced above) using
+This rather fanciful example shows the essential points about how {\tt
+  timed\_call\_modify/1} can be used in practice.  Suppose a user sets
+up a monitor for the infinite loop program (introduced above) using
 the goal:
 
 {\tt timed\_call(loop,[repeating(500,writeln(interruption\_interval(500)))]).}
@@ -5537,9 +5578,11 @@ At this point, the user realizes that too much information is being
 printed out, and decides to back off somewhat.  The user obtains a
 break level by executing Ctrl-C as before, and calls the goal: 
 
+{\small
 \begin{verbatim}
 1: ?- timed_call_modify([repeating(1000,writeln(new_interruption_interval(1000)))]).
 \end{verbatim}
+}
 
 When the break is exited, information is presented in an undoubtedly
 more useful manner:
@@ -5567,13 +5610,6 @@ also throws the following error.
 \ei
 \ei
 %
-
-%-------------------------------------------------------
-
-\ourmoditem{current\_timed\_call(?Index,?Options)}{current\_timed\_call/2}{standard}
-%
-Unifies {\tt Index} and {\tt Options} with the options list used for
-the active timed call associated with the interpreter level {\tt Index}.
 
 %-------------------------------------------------------
 
