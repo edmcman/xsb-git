@@ -121,6 +121,7 @@
 :- export  '_$timed_call_rep_max_handler'/7.
 :- export bounded_call/4.
 :- export bounded_call/3.
+:- export get_interpreter_index/1.
 
 :- import (dynamic)/1, asserta/1, assert0/4, retract/1 from assert.
 :- import member/2,append/3,comma_member/2,memberchk/2 from basics.
