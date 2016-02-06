@@ -452,7 +452,7 @@ inline static xsbBool file_function(CTXTdecl)
       *(line_buff+line_buff_disp) = c = getc(fptr);  // fix for charset!!
       if (c == EOF) {
 	if (feof(fptr)) break;
-	else xsb_throw_error(strerror(errno),"File Access");
+	else xsb_permission_error(CTXTc strerror(errno),"file read",reg[2],"file_read_line_list",2);
       }
       line_buff_disp++;
     } while (c != '\n');
