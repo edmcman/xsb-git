@@ -2083,7 +2083,7 @@ int builtin_call(CTXTdeclc byte number)
     }
     case XSB_INT    :
       if (fprintf(fptr, "%" Intfmt, (Integer)ptoc_int(CTXTc 3)) < 0)
-	xsb_permission_error(CTXTdeclc strerror(errno),"file write",
+	xsb_permission_error(CTXTc strerror(errno),"file write",
 			     open_file_name(io_port),"file_puttoken",3);
 
       break;
@@ -2095,7 +2095,7 @@ int builtin_call(CTXTdeclc byte number)
       int tmp = (int) ptoc_int(CTXTc 3);
       fix_bb4((byte *)&tmp);
       if (fwrite(&tmp, 4, 1, fptr) != 1)
-	xsb_permission_error(CTXTdeclc strerror(errno),"file write",
+	xsb_permission_error(CTXTc strerror(errno),"file write",
 			     open_file_name(io_port),"file_puttoken",3);
       break;
     }
@@ -2104,7 +2104,7 @@ int builtin_call(CTXTdeclc byte number)
       float ftmp = (float)ptoc_float(CTXTc 3);
       fix_bb4((byte *)&ftmp);
       if (fwrite(&ftmp, 4, 1, fptr) != 1)
-	xsb_permission_error(CTXTdeclc strerror(errno),"file write",
+	xsb_permission_error(CTXTc strerror(errno),"file write",
 			     open_file_name(io_port),"file_puttoken",3);
       //printf("TK_FLOAT_0 case in put token left\n");
       break;
@@ -2112,7 +2112,7 @@ int builtin_call(CTXTdeclc byte number)
     case TK_DOUBLE_0: {
       double ftmp = ptoc_float(CTXTc 3);
       if (fwrite(&ftmp, 8, 1, fptr) != 1)
-	xsb_permission_error(CTXTdeclc strerror(errno),"file write",
+	xsb_permission_error(CTXTc strerror(errno),"file write",
 			     open_file_name(io_port),"file_puttoken",3);
       break;
     }
