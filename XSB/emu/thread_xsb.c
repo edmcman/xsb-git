@@ -70,6 +70,7 @@
 pthread_mutexattr_t attr_errorcheck_gl;
 #endif
 
+void interrupt_with_goal(CTXTdecl);
 
 #ifndef MULTI_THREAD
 extern struct asrtBuff_t * asrtBuff;
@@ -913,9 +914,10 @@ void close_str(CTXTdecl)
 		strclose( iostrdecode(i) );
 }
 
+//void tripwire_interrupt(char * tripwire_call) {
+//}
 
 #else /* Not MULTI_THREAD */
-void interrupt_with_goal(void);
 
 void print_mutex_use() {
   xsb_abort("[THREAD] This engine is not configured for mutex profiling.");
@@ -1858,7 +1860,7 @@ case THREAD_ACCEPT_MESSAGE: {
         {
                 
 	case INTERRUPT_WITH_GOAL: {
-	  interrupt_with_goal();
+	  interrupt_with_goal(CTXT);
 	  break;
 	}
 
@@ -2022,9 +2024,9 @@ void init_message_queue(XSB_MQ_Ptr xsb_mq, int declared_size) {
 #endif
 }
 
-extern void c_assert_code_to_buff(prolog_term);
+extern void c_assert_code_to_buff(CTXTdeclc prolog_term);
 
-void tripwire_interrupt(char * tripwire_call) {
+void tripwire_interrupt(CTXTdeclc char * tripwire_call) {
   int isnew;
   Psc tripwire_psc,call_psc;
   prolog_term term_to_assert;
@@ -2047,12 +2049,13 @@ void tripwire_interrupt(char * tripwire_call) {
   //  printf("***\n");printterm(stdout,term_to_assert,7);  printf("***\n");
   c_assert_code_to_buff(CTXTc term_to_assert);
   hreg = start_hreg;
-  interrupt_with_goal();
+  interrupt_with_goal(CTXT);
 }
 
 
-void interrupt_with_goal() {
-          int index = THREAD_ENTRY(id);
+void interrupt_with_goal(CTXTdecl) {
+  //          int index = THREAD_ENTRY(id);
+          int index = THREAD_ENTRY(0);
 	  XSB_MQ_Ptr message_queue;
 	  MQ_Cell_Ptr this_cell;
 	  message_queue = &mq_table[index];   // actually, only on thread/queue for seq engine 

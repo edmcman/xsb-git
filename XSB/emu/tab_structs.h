@@ -545,7 +545,7 @@ struct completion_stack_frame {
 		  flags[MAX_SCC_SUBGOALS]);				\
       else { /* flags[MAX_SCC_SUBGOALS_ACTION] == XSB_SUSPEND */	\
 	printf("Debug: suspending on max_scc_subgoals\n");		\
-	tripwire_interrupt("max_scc_subgoals_handler");			\
+	tripwire_interrupt(CTXTc "max_scc_subgoals_handler");			\
       }									\
     }									\
   }
@@ -588,7 +588,7 @@ struct completion_stack_frame {
 		  flags[MAX_INCOMPLETE_SUBGOALS]);			\
       else { /* flags[MAX_INCOMPLETE_SUBGOALS_ACTION] == XSB_SUSPEND */	\
 	printf("Debug: suspending on max_incomplete_subgoals\n");	\
-	tripwire_interrupt("max_incomplete_subgoals_handler");		\
+	tripwire_interrupt(CTXTc "max_incomplete_subgoals_handler");		\
       }									\
     }									\
   }

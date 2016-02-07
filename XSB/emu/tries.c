@@ -1017,7 +1017,7 @@ static int *depth_stack;
     }									\
     else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
       printf("Debug: suspending on max_table_answer\n");		\
-      tripwire_interrupt("max_table_answer_handler");			\
+      tripwire_interrupt(CTXTc "max_table_answer_handler");			\
       }									\
     else  {  /* error */						\
       sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
@@ -1036,7 +1036,7 @@ static int *depth_stack;
       resetpdl;                                                       \
       found_flag = 1;                                                 \
       printf("Debug: suspending on max_table_answer\n"); \
-      tripwire_interrupt("max_table_answer_handler");			\
+      tripwire_interrupt(CTXTc "max_table_answer_handler");			\
       return NULL;                                                    \
       }									\
     else { /* error */							\
@@ -2030,7 +2030,7 @@ int vcs_tnot_call = 0;
       }									\
       else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {	\
 	printf("Debug: suspending on max_table_subgoal\n");		\
-	tripwire_interrupt("max_table_subgoal_handler");		\
+	tripwire_interrupt(CTXTc "max_table_subgoal_handler");		\
 	clean_up_subgoal_table_structures_for_throw;				\
 	return XSB_FAILURE;						\
       }									\
@@ -2570,7 +2570,7 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
 	  xsb_abort("Cyclic term in term to be trie-interned %s\n",forest_log_buffer_1->fl_buffer); \
 	}								\
 	else {								\
-	  sprintTerm(CTXTc forest_log_buffer_1,term);		\
+	  sprintTerm(forest_log_buffer_1,term);		\
 	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
 				"Exceeded max trie_intern size of %d for %s\n",	\
 				(int)flags[MAX_TABLE_ANSWER_DEPTH],forest_log_buffer_1->fl_buffer); \

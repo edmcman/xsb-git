@@ -289,6 +289,7 @@ DynamicStack  _tstTrail;
   Cell _cell_array[MAXTERMBUFSIZE];
   CPtr *_var_addr_accum;
   int _var_addr_accum_num;
+  int _var_addr_accum_arraysz;
 
 #define MAX_SIMPLIFY_NEG_FAILS_STACK 10
   VariantSF _simplify_neg_fails_stack[MAX_SIMPLIFY_NEG_FAILS_STACK];
@@ -582,6 +583,7 @@ typedef struct th_context th_context ;
 #define num_heap_term_vars	(th->_num_heap_term_vars)
 #define var_addr		(th->_var_addr)
 #define var_addr_arraysz	(th->_var_addr_arraysz)
+#define var_addr_accum_arraysz	(th->_var_addr_accum_arraysz)
 
 #define VarEnumerator		(th->_VarEnumerator)
 #define TrieVarBindings		(th->_TrieVarBindings)
