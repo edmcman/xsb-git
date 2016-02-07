@@ -1,4 +1,0 @@
-test_dense( Tripwire max_incomplete_subgoals hit.  The user-set limit of 10 incomplete subgoals within a derivation has been exceeded)
-test_inc( Tripwire max_incomplete_subgoals hit.  The user-set limit of 10 incomplete subgoals within a derivation has been exceeded)
-test_inc( Tripwire max_incomplete_subgoals hit.  The user-set limit of 10 incomplete subgoals within a derivation has been exceeded)
-test_sparse( Tripwire max_incomplete_subgoals hit.  The user-set limit of 10 incomplete subgoals within a derivation has been exceeded)

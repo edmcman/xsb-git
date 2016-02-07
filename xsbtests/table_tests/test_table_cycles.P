@@ -9,9 +9,25 @@ init:-
 :- table p/1.
 p(_).
 
+write_cycle_error(E):- 
+       xsb_error_get_message(E,M),
+       make_mt_consistent(M,M1),
+       writeln(M1).
+
+make_mt_consistent(M,M1):- 
+	atom_codes(M,Mlist),
+	(Mlist = [91,116,104,32,48,93,32,32|Rest] ->  atom_codes(M1,Rest) ; M = M1).
+
+
+
+/*
 test:- catch(t_subgoal_cycle,E,(xsb_error_get_message(E,M),writeln(M))),fail.
 test:- catch(t_ans_cycle,E,(xsb_error_get_message(E,M),writeln(M))),fail.
 test:- catch(t_ans_list_cycle,E,(xsb_error_get_message(E,M),writeln(M))),fail.
+*/
+test:- catch(t_subgoal_cycle,E,write_cycle_error(E)),fail.
+test:- catch(t_ans_cycle,E,write_cycle_error(E)),fail.
+test:- catch(t_ans_list_cycle,E,write_cycle_error(E)),fail.
 test:- test_intern_trie_cycle,fail.
 %test:- catch(t2,E,(xsb_error_get_message(E,M),writeln(M))),fail.
 test.
@@ -40,7 +56,8 @@ p_answerlistcycle(X):- X = [X].
 
 test_intern_trie_cycle:- cycle_trie(Trie),
        X = f(X),
-       catch(trie_intern(X,Trie),E,(xsb_error_get_message(E,M),writeln(M))).
+%       catch(trie_intern(X,Trie),E,(xsb_error_get_message(E,M),writeln(M))).
+       catch(trie_intern(X,Trie),E,write_cycle_error(E)).
 
 %--------------------------------------------
 
