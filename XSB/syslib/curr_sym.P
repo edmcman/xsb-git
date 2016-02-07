@@ -684,6 +684,8 @@ settable_flag(double_quotes).
 settable_flag_value(unknown,error).
 settable_flag_value(unknown,fail).
 settable_flag_value(unknown,warning).
+settable_flag_value(unknown,undefined).
+settable_flag_value(unknown,user_hook).
 % PM: avoid error when setting the double_quotes flag to codes
 settable_flag_value(double_quotes,codes).
 
