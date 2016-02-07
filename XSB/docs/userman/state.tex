@@ -118,12 +118,62 @@ ISO and Prolog-commons flags are as follows:
 \item {\tt debug} Indicates whether trace or debugging is turned {\tt
   on} or {\tt off}
 %
-\item {\tt unknown} Indicates the behavior taken when calling an
-  unknown predicate.  Values can be set to {\tt fail}, {\tt warning},
-  or {\tt error}, indicating that calls to unknown predicates should
-  fail, produce a warning message to the {\tt user\_warning}
-  stream. or throw an existence error.  The default setting is {\tt
-    error}.
+\index{Unknown predicate handling}
+\item {\tt unknown} Indicates the behavior to be taken when calling an
+  unknown predicate.  The value can be set to {\tt error}, {\tt fail},
+  {\tt warning}, {\tt unknown} or {\tt user\_hook}.  The default
+  setting is {\tt error}.
+  
+  The first three values respectively indicate that calls to unknown
+  predicates should throw an existence error, fail, or produce a
+  warning message to the {\tt user\_warning} stream and then throw an
+  existence error.
+  
+  The value is {\tt undefined} then a call $G$ to an unknown
+  predicate succeeds with value {\em undefined}, and the delay literal
+  {\tt wcs\_undefined(G)} is added to the delay list.\footnote{This
+    action is part of a semantics for Prolog sometimes called the {\em
+      Weak Completion Semantics.}}
+
+  The value is {\tt user\_hook} allows a hook to be user-specified.
+  The hook must be specified as follows.  In {\tt usermod} the fact
+  
+  {\tt unknown\_predicate\_hook(Goal)} 
+
+  should be asserted, where {\tt Goal}$= Predicate(Arg)$.  When
+  handling a call of the form $G_1$, where $G_1$ refers to an unknown
+  predicate, {\tt Goal} will be unified with $G_1$ and then
+  $Goal\theta_{G_1}$ will be called.
+
+  {\bf Example}
+
+Suppose the following code has been compiled during an XSB session.
+
+\begin{verbatim}
+:- import misc_error/1 from error_handler.
+
+my_unknown_predicate_hook(Goal):-
+        writeln(this_is_my_undefined_warning_about(Goal)),
+        misc_error(unknown_predicate).
+\end{verbatim}
+
+and the following fact asserted into usermod.
+
+\begin{verbatim}
+unknown_predicate_hook(my_unknown_predicate_hook(_X)
+\end{verbatim}
+
+Then XSB will have the following behavior when calling the following
+unknown predicate:
+
+\begin{verbatim}
+| ?- foo(X).
+this_is_my_undefined_warning_about(foo(A))
+++Error[XSB/Runtime/P]: [Miscellaneous] unknown_predicate
+Forward Continuation...
+:
+\end{verbatim}
+
 %
 \item {\tt double\_quotes} Indicates that double-quoted terms in XSB
   represent lists of character codes.  Value is {\tt codes}
