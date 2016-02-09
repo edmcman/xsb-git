@@ -90,7 +90,8 @@ test_html_redir(OutPath) :-
 test_secure_crt(OutPath, CertPath) :- 
 	slash(Slash), 
 	fmt_write_string(CertFile, '%s%scs.stonybrook.edu.crt', f(CertPath, Slash)), 
-	open(url('https://mail.cs.stonybrook.edu'), read, X, [secure(CertFile)]),
+	open(url('https://mail.google.com'), read, X, [secure(CertFile)]),
+	%%open(url('https://mail.cs.stonybrook.edu'), read, X, [secure(CertFile)]),
 	fmt_write_string(OutFile, '%s%ssecure_crt.html', f(OutPath, Slash)),
 	tell(OutFile),
 	write_page(X),
@@ -98,7 +99,8 @@ test_secure_crt(OutPath, CertPath) :-
 	close(X).
 
 test_nonsecure(OutPath) :- 
-	open(url('https://mail.cs.stonybrook.edu'), read, X, [secure(false)]),
+	%%open(url('https://mail.cs.stonybrook.edu'), read, X, [secure(false)]),
+	open(url('https://mail.google.com'), read, X, [secure(false)]),
 	slash(Slash), fmt_write_string(OutFile, '%s%snon_secure.html', f(OutPath, Slash)),
 	tell(OutFile), write_page(X), told,  
 	close(X).
