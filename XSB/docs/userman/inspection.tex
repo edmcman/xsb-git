@@ -385,6 +385,26 @@ F = [subgoal(q(2,3),1,140253373671912,3,0,
 
 \end{example}
 
+\ourmoditem{get\_sdg\_subgoal\_info(-SDG)}{get\_sdg\_subgoal\_info/1}{tables}
+%
+Note that the size of the SDG, which includes dependency edges, may be
+quadratic in the number of incomplete subgoals.  When only summary
+information about the subgoals in the subgoal dependency graph {\tt
+  get\_sdg\_subgoal\_info/1} can be used, rather than {\tt
+  get\_sdg\_info/1}.  As with the previous predicate, a list of terms of the form, 
+%
+
+{\small
+\noindent
+{\tt subgoal(Vertex,SCCKey,\_SubgoalKey,CallsTo,Answers,\_PosEdges,\_NegEdges)} }
+%
+
+\noindent
+is returned, but {\tt \_SubgoalKey} is set to the atom {\tt null}, and
+{\tt \_PosEdges} and {\tt \_NegEdges} are both set to the empty list.
+
+This predicate has no error conditions.
+
 \end{description}
 
 \subsubsection{Predicates to Access the Incremental Dependency Graph} \label{sec:idg-preds}
@@ -894,6 +914,11 @@ Subgoal: q(3,3)
 \ourmoditem{print\_sdg\_info}{print\_sdg\_info/0}{tables}
 %
 Prints the current SDG to {\tt stdout} in a readable manner.
+
+\ourmoditem{print\_sdg\_subgoal\_info}{print\_sdg\_subgoal\_info/0}{tables}
+%
+Prints summary subgoal information about the current SDG to {\tt stdout} in a
+readable manner.
 
 \end{description}
 
