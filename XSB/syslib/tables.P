@@ -1314,6 +1314,31 @@ remove_gencon_cp([SF|Rest],SF,Rest):- !.
 remove_gencon_cp([H|T],Genparent,[H|T1]):- 
 	remove_gencon_cp(T,Genparent,T1).
 
+:- export get_sdg_subgoal_info/1.
+get_sdg_subgoal_info(List):- 
+	get_sdg_subgoal_info(0,List).
+
+get_sdg_subgoal_info(CSF,Rest):- 
+	table_inspection_function(INCOMPLETE_SUBGOAL_INFO,CSF,NewCSF,Level,SF,CallsTo,Answers,_IsNegCall,_GenParent),
+	(SF == 0 -> 
+	   Rest = []
+	;  get_call_from_sf(SF,Subgoal)
+%	   writeln(gisi(CSF,NewCSF,Level,SF,CallsTo,Answers,Subgoal,IsIncr)),
+%	   table_inspection_function(GET_POS_AFFECTS,SF,PosSFList_1,_,_,_,_,_),
+%	   (IsNegCall == 1 -> 
+%	      remove_gencon_cp(PosSFList_1,GenParent,PosSFList_2)
+%	    ; PosSFList_1 = PosSFList_2),
+%	    sort(PosSFList_2,PosSFList),
+%	    table_inspection_function(GET_NEG_AFFECTS,SF,NegSFList_1,_,_,_,_,_),
+%	    sort(NegSFList_1,NegSFList) 
+            ),
+	    (var(Rest) -> 
+	       (NewCSF = 0 -> 
+	          Rest = [subgoal(Subgoal,Level,null,CallsTo,Answers,[],[])]
+	        ; Rest = [subgoal(Subgoal,Level,null,CallsTo,Answers,[],[])|Rest1],
+	          get_sdg_subgoal_info(NewCSF,Rest1) )
+	      ; true).
+
 %-------------
 
 morph_dep_graph(SdgIn,Abstr,SdgOut):-	
@@ -1469,6 +1494,34 @@ get_subgoal_avl(SDG1,AVL):-
 get_kvs([],[]).
 get_kvs([subgoal(Subgoal,_Level,SF,_CallsTo,_Answers,_PosSFList,_NegSFList)|R],[SF-Subgoal|R1]):- 
 	get_kvs(R,R1).
+
+:- export print_sdg_subgoal_info/0.
+print_sdg_subgoal_info:-
+        get_sdg_subgoal_info(Subgoals),
+	writeln(about_to_copy),
+        print_sdg_subgoal_info(Subgoals).
+
+print_sdg_subgoal_info(SDG):-
+        reverse(SDG,SDG1),
+        get_subgoals_base_level(SDG1,Base),
+        print_each_subgoal_no_deps(SDG1,Base).
+
+:- import numbervars/1 from num_vars.
+:- import copy_term_nat/2 from basics.
+print_each_subgoal_no_deps([],_Base).
+print_each_subgoal_no_deps([subgoal(Subgoal_orig,Level,_Key,CallsTo,Answers,_PosDeps,_NegDeps)|R],Base):-
+        copy_term_nat(Subgoal_orig,Subgoal),
+        numbervars(Subgoal),
+        format("Subgoal: ~q~n",Subgoal),
+        (integer(Level) ->
+           Index is Level - Base,
+           format("        SCC: ~d; Number of calls to this subgoal ~d; Number of answers ~d~n",[Index,CallsTo,Answers])
+         ; format("        Number of calls to this subgoal ~d; Number of answers ~d~n",[CallsTo,Answers]) ),
+        print_each_subgoal_no_deps(R,Base).
+
+get_subgoals_base_level(SDG,Base):- 
+	SDG = [subgoal(_Subgoal,Level,_,_CallsTo,_Answers,_,_)|_],
+	(integer(Level) -> Base is Level - 1 ; Base = Level).
 
 %----------------
 
