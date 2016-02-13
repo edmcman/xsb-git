@@ -5,5 +5,5 @@
 
 % Don't abstract -- no finite model.
 ?- set_prolog_flag(max_table_subgoal_size,200000).
-?- set_prolog_flag(max_table_subgoal_action,error).
+?- set_prolog_flag(max_table_subgoal_size_action,error).
 test :- exec,fail.

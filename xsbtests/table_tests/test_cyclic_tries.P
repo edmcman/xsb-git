@@ -20,7 +20,7 @@ test:- set_prolog_flag(unify_with_occurs_check,off),fail.
 test:- set_prolog_flag(max_table_answer_size,10),fail.
 test:- test_term_error,fail.
 test:- test_list_error,fail.
-%test:- set_prolog_flag(max_table_answer_action,failure),
+%test:- set_prolog_flag(max_table_answer_size_action,failure),
 %       set_prolog_flag(max_table_answer_list_action,failure),fail.
 %test:- test_term_failure,writeln(test_term_failure_success),fail.
 %test:- test_list_error,writeln(test_list_failure_success),fail.

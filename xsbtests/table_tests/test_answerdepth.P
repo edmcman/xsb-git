@@ -15,19 +15,19 @@ test.
 test_error:- 
 	abolish_all_tables,
 	set_prolog_flag(max_table_answer_size,4),
-	set_prolog_flag(max_table_answer_action,error),
+	set_prolog_flag(max_table_answer_size_action,error),
 	p([4,3],_Y).
 
 %test_warn:- 
 %	abolish_all_tables,
 %	set_prolog_flag(max_table_answer_size,4),
-%	set_prolog_flag(max_table_answer_action,warning),
+%	set_prolog_flag(max_table_answer_size_action,warning),
 %	p([1,a],_X).
 
 %test_failure:- 
 %	abolish_all_tables,
 %	set_prolog_flag(max_table_answer_size,4),
-%	set_prolog_flag(max_table_answer_action,failure),
+%	set_prolog_flag(max_table_answer_size_action,failure),
 %	p(7,_Y).
 
 :- table p/2.
@@ -39,19 +39,19 @@ p(_,a).
 test_list_warn:- 
 	abolish_all_tables,
 	set_prolog_flag(max_table_answer_size,4),
-	set_prolog_flag(max_table_answer_action,warning),
+	set_prolog_flag(max_table_answer_size_action,warning),
 	l(a,_X).
 
 test_list_error:- 
 	abolish_all_tables,
 	set_prolog_flag(max_table_answer_size,4),
-	set_prolog_flag(max_table_answer_action,error),
+	set_prolog_flag(max_table_answer_size_action,error),
 	l(a,_Y).
 
 %test_list_failure:- 
 %	abolish_all_tables,
 %	set_prolog_flag(max_table_answer_size,4),
-%	set_prolog_flag(max_table_answer_action,failure),
+%	set_prolog_flag(max_table_answer_size_action,failure),
 %	l(a,_X).
 
 :- table l/2.

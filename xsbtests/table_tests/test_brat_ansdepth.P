@@ -1,6 +1,6 @@
 :- compiler_options([spec_off]).
 
-:- set_prolog_flag(max_table_answer_action, bounded_rationality).
+:- set_prolog_flag(max_table_answer_size_action, bounded_rationality).
 :- set_prolog_flag(max_table_answer_size, 7).
 :- set_prolog_flag(heap_garbage_collection,none).
 

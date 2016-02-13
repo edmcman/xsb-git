@@ -10,12 +10,12 @@ test.
 
 test_failure:- 
 	abolish_all_tables,
-	set_prolog_flag(max_table_answer_action,failure),
+	set_prolog_flag(max_table_answer_size_action,failure),
 	p(7,_Y).
 
 test_error:- 
 	abolish_all_tables,
-	set_prolog_flag(max_table_answer_action,error),
+	set_prolog_flag(max_table_answer_size_action,error),
 	p([4,3],_Y).
 
 :- table p/2 as answer_abstract(4).
@@ -26,7 +26,7 @@ p(_,a).
 
 test_warn:- 
 	abolish_all_tables,
-	set_prolog_flag(max_table_answer_action,warning),
+	set_prolog_flag(max_table_answer_size_action,warning),
 	p_w([1,a],_X).
 
 :- table p_w/2 as answer_abstract(4).

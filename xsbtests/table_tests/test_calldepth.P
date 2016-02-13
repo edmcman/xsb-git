@@ -9,13 +9,13 @@ test:-
 %test_fail:- 
 %	abolish_all_tables,
 %	set_prolog_flag(max_table_subgoal_size,4),
-%	set_prolog_flag(max_table_subgoal_action,failure),
+%	set_prolog_flag(max_table_subgoal_size_action,failure),
 %	p(_X).
 
 test_error:- 
 	abolish_all_tables,
 	set_prolog_flag(max_table_subgoal_size,4),
-	set_prolog_flag(max_table_subgoal_action,error),
+	set_prolog_flag(max_table_subgoal_size_action,error),
 	p(_X).
 
 :- table p/1.

@@ -5,8 +5,8 @@
 
 :- compiler_options([spec_off]).
 
-%:- set_prolog_flag(max_table_subgoal_action,failure).
-:- set_prolog_flag(max_table_subgoal_action,abstract).
+%:- set_prolog_flag(max_table_subgoal_size_action,failure).
+:- set_prolog_flag(max_table_subgoal_size_action,abstract).
 :- set_prolog_flag(max_table_subgoal_size,2).
 %:- import start_forest_view/1 from tables.
 %?- start_forest_view(userout).
