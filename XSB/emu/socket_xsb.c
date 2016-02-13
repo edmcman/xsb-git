@@ -412,7 +412,10 @@ static int socket_get0(CTXTdeclc int *rc, char* message_read, int timeout) {
   SOCKET sock_handle;
   sock_handle = (SOCKET) ptoc_int(CTXTc 2);
   if (read_select(sock_handle, timeout)) {
-    *rc = recvfrom(sock_handle, message_read, 1, 0, NULL, 0);
+    do {
+      XSB_SOCKET_ERRORCODE_RESET;
+      *rc = recvfrom(sock_handle, message_read, 1, 0, NULL, 0);
+    } while (*rc == -1 && XSB_SOCKET_ERRORCODE == EINTR);
     return NORMAL_TERMINATION;
   } else {
     return TIMED_OUT;
