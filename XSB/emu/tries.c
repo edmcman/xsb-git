@@ -1023,7 +1023,7 @@ static int *depth_stack;
       sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
       xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
 			    "Exceeded max answer list depth of %d in call %s\n", \
-			    flags[MAX_TABLE_ANSWER_LIST_DEPTH],forest_log_buffer_1->fl_buffer); \
+			    flags[MAX_TABLE_ANSWER_DEPTH],forest_log_buffer_1->fl_buffer); \
     }									\
   }
 
