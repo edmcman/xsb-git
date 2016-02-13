@@ -246,6 +246,8 @@ static int readmsg(SOCKET sock_handle, char **msg_buff, UInteger *msg_len)
   char lenbuf[XSB_MSG_HEADER_LENGTH];
   size_t msglen, net_encoded_len;
 
+  // TODO: consider adding protection against interrupts, EINTR, like
+  //       in socket_get0.
   actual_len =
     // the MSG_PEEK flag makes it only peek at the first XSB_MSG_HEADER_LENGTH
     // bytes. This is needed in order to talk to datagram sockets.
@@ -265,6 +267,8 @@ static int readmsg(SOCKET sock_handle, char **msg_buff, UInteger *msg_len)
      "SOCKET_RECV" case of xsb_socket_request */
   *msg_buff=(char *)mem_calloc(msglen,sizeof(char),OTHER_SPACE);
 
+  // TODO: consider adding protection against interrupts, EINTR, like
+  //       in socket_get0.
   actual_len = recvfrom(sock_handle,*msg_buff,(int)msglen,0,NULL,0);
   if (SOCKET_OP_FAILED(actual_len)) return SOCK_READMSG_FAILED;
 
@@ -580,6 +584,8 @@ xsbBool xsb_socket_request(CTXTdecl)
     
   case SOCKET_RECV:
     /* socket_request(SOCKET_RECV,+Sockfd, -Msg, -Error,_,_,_) */
+    // TODO: consider adding protection against interrupts, EINTR, like
+    //       in socket_get0.
     timeout_flag = socket_recv(CTXTc &rc, &message_buffer, &msg_len, (int)pflags[SYS_TIMER]);
 	  
     if (timeout_flag == TIMED_OUT) {
