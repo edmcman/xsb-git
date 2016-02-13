@@ -456,6 +456,7 @@ standard_symbol((table), 1, standard).
 standard_symbol(timed_call,2,standard).
 standard_symbol(timed_call_modify,1,standard).
 standard_symbol(current_timed_call,2,standard).
+standard_symbol(remove_timed_call_state,1,standard).
 
 standard_metapredicate_template(table_once,1,(0)).
 
