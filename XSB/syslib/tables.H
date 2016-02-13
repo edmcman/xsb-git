@@ -79,9 +79,15 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
    (use_subsumptive_tabling)/1,
    (use_variant_tabling)/1,
    variant_get_residual/2.
+:- export not_exists(Goal).
 :- export floundered_undefined/0.
 :- export answer_completion/2.
 :- export dump_table_counts/0, table_counts/5.
+:- export print_sdg_info/0,print_sdg_info_modes/0, print_sdg_info_functor/0, print_sdg_info/1, 
+          print_sdg_subgoal_info/0.
+:- export get_sdg_subgoal_info/1.
+:- export get_residual_sccs/3.
+:- export get_residual_sccs/5.
 
 % Obsolete
 :- export    abolish_table_call/1,       abolish_table_call/2.
@@ -110,6 +116,9 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 	t_assert_2/2
    from assert.
 
+:- import list_to_assoc/2,get_assoc/3 from assoc_xsb.
+
+:- import reverse/2 from basics.
 :- import copy_term/2,flatten/2,length/2, member/2, memberchk/2
      from basics.
 
@@ -152,6 +161,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 :- import writeln/2, write/2, writeq/2 from standard.
 :- import is_most_general_term/1 from standard.
 :- import call/3 from standard.
+:- import writeq/1 from standard.
 
 :- import variant/2 from subsumes.
 :- import invalidate_table_for/2 from usermod.

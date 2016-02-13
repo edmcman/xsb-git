@@ -321,8 +321,6 @@ floundered(_Goal):- floundered_undefined(a).
 %%	pp :- p(X).
 %% where pp is a new proposition.
 
-:- export not_exists(Goal).
-
 not_exists(Goal):- sk_not(Goal).
 
 sk_not(Goal) :-
@@ -1314,7 +1312,6 @@ remove_gencon_cp([SF|Rest],SF,Rest):- !.
 remove_gencon_cp([H|T],Genparent,[H|T1]):- 
 	remove_gencon_cp(T,Genparent,T1).
 
-:- export get_sdg_subgoal_info/1.
 get_sdg_subgoal_info(List):- 
 	get_sdg_subgoal_info(0,List).
 
@@ -1430,12 +1427,6 @@ get_next_set([subgoal(AbsSubg,none,Key,CallsTo,Answers,KeyList,Neglist)|RestIn],
 get_next_set(List,_Key,[],List).
 
 %----------------
-%:- ensure_loaded(term_abstract).
-
-:- export print_sdg_info/0,print_sdg_info_modes/0, print_sdg_info_functor/0, print_sdg_info/1.
-:- import reverse/2 from basics.
-:- import writeq/1 from standard.
-:- import list_to_assoc/2,get_assoc/3 from assoc_xsb.
 
 print_sdg_info:- 
 	get_sdg_info(SDG),
@@ -1495,7 +1486,6 @@ get_kvs([],[]).
 get_kvs([subgoal(Subgoal,_Level,SF,_CallsTo,_Answers,_PosSFList,_NegSFList)|R],[SF-Subgoal|R1]):- 
 	get_kvs(R,R1).
 
-:- export print_sdg_subgoal_info/0.
 print_sdg_subgoal_info:-
         get_sdg_subgoal_info(Subgoals),
 	writeln(about_to_copy),
@@ -1570,13 +1560,11 @@ abstract_modes_args([H|T],[M|TM]):-
 
 %--------------------------------------------------------------------------------
 
-:- export get_residual_sccs/3.
 get_residual_sccs(Call,Answer,Scc):-
 	get_answer_leaf(Call,Answer,AnsLeaf),
 	get_residual_sccs_1(AnsLeaf,Scc_1),
 	process_sccs(Scc_1,Scc).
 
-:- export get_residual_sccs/5.
 get_residual_sccs(Call,Answer,Scc,Deps,Signs):-
 	get_answer_leaf(Call,Answer,AnsLeaf),
 	get_residual_sccs_1(AnsLeaf,Scc_1),
