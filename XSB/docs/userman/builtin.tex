@@ -5331,8 +5331,8 @@ based on the state of XSB's choice point stack.
 
 %----------------------------------------------------------------------
 
-\subsection{Timed Calls and Co-routining}
-
+\subsection{Timed Calls and Co-routining} \label{sec:timed-call}
+\index{tripwires!timed call}
 When XSB is used in multi-threaded mode, one XSB thread $t_1$ may send
 a signal goal $G$ to another thread $t_2$, which causes $t_2$ to
 interrupt its computation, execute $G$, and then resume its

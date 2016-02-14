@@ -157,16 +157,15 @@ preprocessing.  XSB libraries include the following simple utilities.
 %
 Transforms {\tt CommaList} to {\tt List}.
 
-\ournewrepeatitem{comma\_append(?CL1,?CL2,?CL3)}{basics}
-\index{\texttt{comma\_append/3}}
+\ourrepeatmoditem{comma\_append(?CL1,?CL2,?CL3)}{comma\_append/3}{basics}
 %
-\ournewrepeatitem{comma\_length(?CommaList,?Length)}{basics}
-\index{\texttt{comma\_length/2}}
+\ourrepeatmoditem{comma\_length(?CommaList,?Length)}{comma\_length/2}{basics}
+
 %
-\ournewrepeatitem{comma\_member(?Element,?CommaList)}{basics}
-\index{\texttt{comma\_member/2}}
+\ourrepeatmoditem{comma\_member(?Element,?CommaList)}{comma\_member/2}{basics}
+
 %
-\ouroldmoditem{comma\_memberchk(?Element,?CommaList)}{comma\_memberchk/2}{basics}
+\ourmoditem{comma\_memberchk(?Element,?CommaList)}{comma\_memberchk/2}{basics}
 %
 Analogues for comma lists of {\tt append/3}, {\tt length/3}, {\tt member/2} and {\tt
 memberchk/2}, respectively.
@@ -208,14 +207,14 @@ Gets the value of the attribute of \texttt{Var} in attribute module
 error. \texttt{Val} will be unified with the value of the attribute,
 if it exists. Otherwise the predicate fails.
 
-\ouroldmoditem{put\_attr(-Var,+Mod, ?Val)}{machine}\index{\texttt{put\_attr/3}}
+\ourmoditem{put\_attr(-Var,+Mod, ?Val)}{put\_attr/3}{machine}
 %
 Sets the value of the attribute of \texttt{Var} in attribute module
 \texttt{Mod}. Non-variable terms in \texttt{Var} cause a type
 error. The previous value of the attribute is overwritten, if it
 exists.
 
-\ouroldmoditem{del\_attr(-Var,  +Mod)}{machine}\index{\texttt{del\_attr/2}} 
+\ourmoditem{del\_attr(-Var,  +Mod)}{del\_attr/2}{machine} 
 %
 Removes the attribute of \texttt{Var} in attribute module
 \texttt{Mod}. Non-variable terms in \texttt{Var} cause a type
@@ -234,9 +233,9 @@ attributes by installing a handler in the following way:
 
 \noindent The
 predicates
-\texttt{install\_verify\_attribute\_handler/5}\index{\texttt{install\_verify\_attribute\_handler/5}}
+\texttt{install\_verify\_attribute\_handler/5}\index{\texttt  {install\_verify\_attribute\_handler/5}}
 and
-\texttt{install\_verify\_attribute\_handler/4}\index{\texttt{install\_verify\_attribute\_handler/4}}
+\texttt{install\_verify\_attribute\_handler/4}\index{\texttt  {install\_verify\_attribute\_handler/4}}
 are defined in module \texttt{machine}. $Mod$ is the
 attribute {\tt Module} and $Handler$ is a term with arguments
 $AttrValue$ and $Target$. The $Handler$ term has to correspond to a
@@ -321,8 +320,7 @@ command line.  This can be controlled using the following two predicates:
 
 \begin{description}
 
-\ouroldmoditem{install\_attribute\_portray\_hook(Module,Attribute,Handler)}{machine}
-\index{install\_attribute\_portray\_hook/3}
+\ourmoditem{install\_attribute\_portray\_hook(Module,Attribute,Handler)}{install\_attribute\_portray\_hook/3}{machine}
 %
 This hook is called by the command-line interpreter when printing out
 the value of each variable in a top-level query.  When a printing out
@@ -359,8 +357,7 @@ attribute (in this case {\tt bounds}).  XSB's command-line interpreter
 will unify the second argument of the portray hook with the attribute,
 and then call {\tt Handler}.
 
-\ouroldmoditem{install\_attribute\_constraint\_hook(Module,Vars,Names,Handler)}{machine}
-\index{install\_attribute\_constraint\_hook/4}
+\ourmoditem{install\_attribute\_constraint\_hook(Module,Vars,Names,Handler)}{install\_attribute\_constraint\_hook/4}{machine}
 %
 For some constraint packages, it may not be particularly useful to
 associate constraints with variables: instead, the projection of
@@ -447,7 +444,7 @@ in computing the well-founded semantics, and is not based on the state
 of instantiation of a term.}.
 
 \begin{description}
-\ouroldmoditem{when(+Condition,Goal)}{constraintLib}\index{\texttt{when/2}}
+\ourmoditem{when(+Condition,Goal)}{when/2}{constraintLib}
 %
 Delays the execution of {\tt Goal} until {\tt Condition} is satisfied,
 whereupon {\tt Goal} will be executed.  Condition can have the form
@@ -474,8 +471,7 @@ X = f(_h245)
 \end{verbatim}
 \end{small}
 
-\ouroldmoditem{unifiable(X, Y, -Unifier)}{constraintLib}
-\index{\texttt{unifiable/3}}
+\ourmoditem{unifiable(X, Y, -Unifier)}{unifiable/3}{constraintLib}
 %
 If {\tt X} and {\tt Y} can unify, succeeds unifying {\tt Unifier} with
 a list of terms of the form {\tt Var = Value} representing a most
@@ -485,8 +481,8 @@ variables. Associated hooks are not executed~\footnote{In \version ,
   {\tt unifiable/3} is implemented as a Prolog predicate and so is slower
   than many of the predicates in this section.}.
 
-\ouroldmoditem{setarg(+Index,+Term,+Value)}{constraintLib}\index{\texttt{setarg/3}}
-\ouroldmoditem{set\_arg(+Index,+Term,+Value)}{machine}\index{\texttt{set\_arg/3}}
+\ourmoditem{setarg(+Index,+Term,+Value)}{setarg/3}{constraintLib}
+\ourrepeatmoditem{set\_arg(+Index,+Term,+Value)}{set\_arg/3}{machine}
 %
 The predicate {\tt setarg/3} provides an efficient but non-logical way
 to update argument {\tt Index} of a Prolog term {\tt Term} to {\tt
@@ -535,8 +531,8 @@ X = p(f(1),g(2),r([a]))
 \ei
 \ei
 
-\ouroldmoditem{term\_variables(+Term,-Variables)}{constraintLib}
-\index{\texttt{term\_variables/2}}
+\ourmoditem{term\_variables(+Term,-Variables)}{term\_variables/2}{constraintLib}
+
 % 
 Given any Prolog term {\tt Term} as input, returns a sorted list of
 variables in the term.  
@@ -545,8 +541,8 @@ variables in the term.
 \section{Formatted Output}
 
 \begin{description}
-\ouroldmoditem{format(+String,+Control)}{format}\index{\texttt{format/2}}
-\ouroldmoditem{format(+Stream,+String,+Control)}{format}\index{\texttt{format/3}}
+\ourrepeatmoditem{format(+String,+Control)}{format/2}{format}
+\ourmoditem{format(+Stream,+String,+Control)}{format/3}{format}
 
 {\tt format/2} and {\tt format/3} act as a Prolog analog to the C {\tt
 stdio} function {\tt printf()}, allowing formatted
@@ -904,55 +900,17 @@ position movement to @var{N}, where @var{N} defaults to @key{SPC}.
 
 \begin{description}
 
-%\ouroldmoditem{current\_input\_port(-IOport)}{curr\_sym} \index{\texttt{current\_input\_port/}}
-%   See {\tt current\_output\_port/1}.
-%\ouroldmoditem{current\_output\_port(-IOport)}{curr\_sym} \index{\texttt{current\_output\_port/}}
-%   The above two predicates instantiate {\tt IOport} to the XSB I/O port
-%   for the current user input and output ({\it i.e.}, the things 
-%   that are manipulated through {\tt see/seen} and {\tt tell/told} predicates).
-%   Once the I/O port is obtained, it is possible to safely use the
-%   lower-level I/O predicates described below interchangeably with stream
-%   I/O. 
-    
-%\ouroldmoditem{file\_open(+FileName,+Mode,-IOport)}{file\_io} \index{\texttt{file\_open/3}}
-%    Opens a file with name {\tt FileName} to be accessed
-%    in mode {\tt Mode} and returns a file-descriptor in {\tt IOport} that
-%    can be used to access the file.  If {\tt Mode} is atom ``{\tt r}'', the
-%    the file is opened for reading; if it is ``{\tt w}'', the file is
-%    opened for writing; if it is ``{\tt a}'', the file is opened for
-%    appending.  If {\tt Mode} is ``{\tt sr}'', then the string making
-%    up the atom {\tt FileName} is treated as the contents of the file, and
-%    a descriptor is returned that allows ``file'' access to that string.
-%    This is how one can use XSB's term I/O routines to build terms from
-%    atoms. Mode ``{\tt sw}'' is reserved for ``open string for writing,''
-%    but this has not been implemented as of yet.
 
-%    The old-style mode specification, 0 ({\tt OREAD}), 1 ({\tt OWRITE}), 2
-%    ({\tt OAPPEND}), or 3 ({\tt OSTRING}), is also supported.
-%
-%\ouroldmoditem{file\_close(+IOport)}{file\_io}\index{\texttt{file\_close/1}}
-%    Closes the file (or string) for descriptor {\tt IOport}.
-
-%\ouroldmoditem{ioport2iostream(+IOport, -Stream)}{file\_io}
-%\index{\texttt{ioport2iostream/2}}
-%Takes a valid open I/O port and returns an I/O stream. This stream can then
-%be used by the standard I/O predicates, like see/1, tell/1, read/1, etc.
-%The stream returns by this predicate is identified by a newly created atom,
-%such as \verb|_$newstream_#123|. 
-
-\ouroldmoditem{file\_write(+IOport,+Term)}{xsb\_writ}
-\index{\texttt{file\_write/2}}
+\ourmoditem{file\_write(+IOport,+Term)}{file\_write/2}{xsb\_writ}
     Writes the term {\tt Term} to the file (or string) with descriptor {\tt
     IOport}.
 
-\ouroldmoditem{file\_read(+IOport,-Term)}{xsb\_read}
-\index{\texttt{file\_read/2}}
+\ourmoditem{file\_read(+IOport,-Term)}{file\_read/2}{xsb\_read}
     Reads a term from the file (or string) with descriptor {\tt
     IOport} into {\tt Term}.  Note that the term must be terminated
     with a period (.) (whether it appears in a file or in a string.)
 
-\ouroldmoditem{file\_read(+IOport,-Term,-Vars)}{xsb\_read}
-\index{\texttt{file\_read/3}}
+\ourmoditem{file\_read(+IOport,-Term,-Vars)}{file\_read/3}{xsb\_read}
     Reads a term from the file (or string) with descriptor {\tt
     IOport} into {\tt Term}, and returns in {\tt Vars} an open-tailed list of
     pairs of names of variables and the variables themselves that
@@ -965,8 +923,7 @@ position movement to @var{N}, where @var{N} defaults to @key{SPC}.
     {\tt Vars} is not a proper list, but has a free variable instead 
     of [] at its end.
 
-\ouroldmoditem{file\_read\_canonical(+IOport,-Term,-Psc)}{machine}
-\index{\texttt{file\_read\_canonical/3}}
+\ourmoditem{file\_read\_canonical(+IOport,-Term,-Psc)}{file\_read\_canonical/3}{machine}
     Reads a term that is in canonical format from the the I/O port
     indicated by {\tt IOport} (as returned by {\tt file\_open/3} or
     by {\tt stat\_flag(10,IOport))}, and returns it in {\tt Term}.
@@ -977,16 +934,6 @@ position movement to @var{N}, where @var{N} defaults to @key{SPC}.
     load\_dync/1}).  Otherwise {\tt Psc} is set to 0.  To initialize
     its previous psc value to zero, this predicate can be called with
     {\tt IOport} of -1000.
-
-%\ouroldmoditem{fget\_line(+Str,-Inlist,-Next)}{scrptutl}
-%\index{\texttt{fget\_line/3}}
-%    {\tt fget\_line/3} reads one line from the input stream {\tt Str} and
-%    unifies {\tt Inlist} to the list of ASCII integers representing the
-%    characters in the line, and {\tt Next} to the line terminator, either
-%    a newline ({\tt 10}) or EOF ({\tt-1}).
-%    
-%    This predicate is obsolete and
-%    \verb|file_read_line_list| should be used instead.
 
 \end{description}
 
@@ -1069,17 +1016,8 @@ the beginning of {\tt Str}) of the last character of {\tt
 
 %-----------------------------------------------------------------------
 
-\comment{
-% taken out -- most people should be using atom_length/2
-\ouroldmoditem{str\_length(+Str, ?Result)}{string}
-\index{\texttt{str\_length/2}}
-
-Unifies the {\tt Result}  with the length of {\tt Str}.
-}
-
 %%
-\ouroldmoditem{substring(+String, +BeginOffset, +EndOffset, -Result)}{string}
-\index{\texttt{substring/4}}
+\ourmoditem{substring(+String, +BeginOffset, +EndOffset, -Result)}{substring/4}{string}
 %%
 {\tt String} can be an atom or a list of characters, and the offsets must
 be integers.  If {\tt EndOffset} is negative, endof({\tt String})+{\tt
@@ -1136,8 +1074,7 @@ single mutex, and may cause contention if many threads seek to
 concurrently use sockets.
 
 \begin{description}
-\ouroldmoditem{expand\_filename(+FileName,-ExpandedName)}{machine}
-\index{\texttt{expand\_filename/2}}
+\ourmoditem{expand\_filename(+FileName,-ExpandedName)}{expand\_filename/2}{machine}
 %
 Expands the file name passed as the first argument and binds the
 variable in the second argument to the expanded name. This includes
@@ -1154,14 +1091,12 @@ Under Windows, this predicates does rectification as described above,
 (using backslashes when appropriate), but it does not expand the
 tildes.
 
-\ouroldmoditem{expand\_filename\_no\_prepend(+FileName,-ExpandedName)}{shell}
-\index{\texttt{expand\_filename\_no\_prepend/2}}
+\ourmoditem{expand\_filename\_no\_prepend(+FileName,-ExpandedName)}{expand\_filename\_no\_prepend/2}{shell}
 This predicate behaves as {\tt expand\_filename/2}, but only expands
 tildes and does rectification. It does not prepend the current working
 directory to relative file names.
 
-\ouroldmoditem{parse\_filename(+FileName,-Dir,-Base,-Extension)}{machine}
-\index{\texttt{parse\_filename/4}}
+\ourmoditem{parse\_filename(+FileName,-Dir,-Base,-Extension)}{parse\_filename/4}{machine}
 This predicate parses file names by separating the directory part, the base
 name part, and file extension. If file extension is found, it is removed
 from the base name. Also, directory names are rectified and if a directory
@@ -1185,156 +1120,6 @@ the current machine, in bytes.~\footnote{Based on code by David Robert
 \end{description}
 
 %---------------------------------------------------------------------------------------
-\comment{
-TLS: Taken out of doc.  But I didn't touch the code, so as to not
-introduce any incompatibilities.
-
-\ouroldmoditem{rm(+Path)}{shell}
-\index{\texttt{rm/1}}
-Remove file.
-
-\ouritem{ls}\index{\texttt{ls/0}} 
-    Under UNIX, this command lists in the current output stream the files 
-    in the system's current directory if it can do so.  If so, it succeeds.
-    It is the same as {\tt shell('ls -F', 0)}.  
-
-    Provided that the environment variable {\tt EDITOR} has been set,
-    and the system is executing under UNIX, 
-    a call to {\tt edit(foo)} will call the default editor on the file
-    named {\tt foo.P}.  The argument to {\tt edit/1}, should be instantiated,
-    it can be an absolute or a relative file name, but it should {\em not}
-    contain the suffix {\tt .P}.  Users can also set their preferred options
-    of calling the default editor by setting an environment variable named
-    {\tt EDITOR\_OPTIONS}.
-
-    Examples of possible uses of predicate {\tt edit/1} are:
-    \begin{enumerate}
-    \item If the environment variables have been set as follows:
-          \begin{verbatim}
-                setenv EDITOR /usr/ucb/vi
-                setenv EDITOR_OPTIONS -l
-          \end{verbatim}
-          a call like:
-          \begin{verbatim}
-                | ?- edit(foo).
-          \end{verbatim}
-          will call the vi editor in the mode where left and right parentheses
-          and curly brackets are checked for balance for the file {\tt foo.P}
-          in the current working directory.
-    \item If, on the other hand, they have been set as follows:
-          \begin{verbatim}
-                setenv EDITOR /usr/local/bin/emacs
-                setenv EDITOR_OPTIONS -r
-          \end{verbatim}
-          a call like:
-          \begin{verbatim}
-                | ?- edit('~/foo').
-          \end{verbatim}	
-          will call the emacs editor in reverse video for the file {\tt foo.P}
-          in user's home directory.
-    \end{enumerate}
-
-\ouroldmoditem{file\_time(+FileName, -time(Time1,Time2))}{file\_io}
-\index{\texttt{file\_time/2}}
-
-Returns file's modification time. Because XSB steals 5 bits from each
-word, time must be returned as two words: Time1, representing the most
-significant digits, and Time2, representing the less significant
-digits.
-
-\ouroldmoditem{file\_size(+FileName, -Size)}{file\_io}
-\index{\texttt{file\_size/2}}
-
-Returns file size.
-
-\ouroldmoditem{cwd(-Dir)}{shell}
-\index{\texttt{cwd/1}}
-Get current working directory.
-
-\ouroldmoditem{is\_absolute\_filename(+FileName)}{machine} 
-\index{\texttt{is\_absolute\_filename/1}} Succeeds, if file name is absolute; fails
-otherwise.  This predicate works also under Windows, {\it
-i.e.}, it recognizes drive letters, etc.
-
-\ouroldmoditem{cd(+Path)}{shell}
-\index{\texttt{cd/1}}
-Change directory.
-
-\ouroldmoditem{rename(+Old,-New)}{shell}
-\index{\texttt{rename/2}}
-Rename file.
-
-\ouroldmoditem{directory(+Path,?Directory)}{directry}
-\index{\texttt{directory/2}}
-
-Unifies {\tt Directory} with a list of files in the directory specified by
-path.  Information about the files is similar to that obtained by {\tt ls
-  -l}, but transformed for ease of processing.  This currently works for
-Unix only, is slow, and should be reimplemented in C using {\tt opendir()}
-and {\tt readdir()}.
-
-TLS: I think I put this in, and I think its overtaken by
-file_read_line_list plus scan . 
-\ouroldmoditem{file\_to\_list(S, List)}{scrptutls}
-\index{\texttt{file\_to\_list/2}}
-%%
-Read lines from an \emph{open} I/O port. Return a
-list of terms, one per each line read. Each such term is a list of tokens
-on the corresponding line.  Tokens are lists of characters separated by a
-space symbol (space, newline, return, tabs, formfeed). For instance, if
-{\tt IOport} 10 is bound to a file
-%%
-\begin{verbatim}
-ads sdfdsfd ee
-112 444
-4555  
-\end{verbatim}
-%%
-then
-%%
-\begin{verbatim}
-| ?- file_to_list(10, L).  
-L = [[ads,sdfdsfd,ee],[112,444],[4555]]
-yes
-\end{verbatim}
-%%
-Note: {\tt file\_to\_list/2} does not close the I/O port, so it is an
-application program responsibility.
-
-
-%% This predicate is superseded by spawn_process/5 and shell/5
-%% Do not use it!
-%%
-%%\ouroldmoditem{sysin(+Command,?Output)}{scrptutl}
-%%\index{\texttt{sysin/2}}
-%%
-%%      Unifies {\tt Output} with the stdout of {\tt Command}
-%%represented as a list of lists of tokens, where each element in the
-%%outer list of {\tt Command} represents a line of stdout.
-%%
-%%Example:
-%%{\footnotesize
-%%\begin{verbatim}
-%%                > uname -a
-%%                Linux swiftlap 1.2.8 #1 Sun May 7 13:10:10 CDT 1995 i486
-%%                | ?- sysin('uname -a',Output).
-%%
-%%                Output = [[Linux,swiftlap,1.2.8,#1,Sun,May,7,13:10:10,CDT,1995,i486]]
-%%
-%%                yes
-%%\end{verbatim}}
-
-\ouritem{ls}{shell}
-\index{\texttt{ls/0}}
-Does {\tt ls -F} in Unix, and a {\tt dir} in Windows.
-
-\ouroldmoditem{edit(+Path)}{shell}
-\index{\texttt{edit/1}}
-Edit file using your favorite editor (specified by the environment variable
-{\tt EDITOR}. Unix only.
-}
-%----------------------------------------------------------------------------------------
-
 \subsection{Communication with Subprocesses} \label{sec:subprocesses}
 
 In the previous section, we have seen several predicates that allow XSB to
@@ -1357,7 +1142,7 @@ predicates {\tt pipe\_open/2} and {\tt fd2stream/2} must be imported
 from {\tt file\_io}.
 
 \begin{description}
-\ouritem{spawn\_process(+CmdSpec,-StreamToProc,-StreamFromProc,-ProcStderrStream,-ProcId)}\index{\texttt{spawn\_process/5}} 
+\ourmoditem{spawn\_process(+CmdSpec,-StreamToProc,-StreamFromProc,-ProcStderrStream,-ProcId)}{spawn\_process/5}{shell}
 Spawn a new process specified by {\tt CmdSpec}. {\tt CmdSpec} must be
 either a single atom or a \emph{list} of atoms.
 If it is an atom, then it must represent a shell command.
@@ -1542,7 +1327,7 @@ the following shell command:
 \end{enumerate}
 
 \begin{description}
-  \ouritem{process\_status(+Pid,-Status)}\index{\texttt{process\_status/2}}
+  \ourmoditem{process\_status(+Pid,-Status)}{process\_status/2}{shell}
   This predicate always succeeds. Given a process id, it binds the second
   argument (which must be an unbound variable) to one of the following
   atoms: {\tt running}, {\tt stopped}, {\tt exited\_normally}, {\tt
@@ -1559,7 +1344,7 @@ the following shell command:
   status might be inaccurate in some Unix systems as well, if the process
   has terminated and {\tt wait()} has been executed on that process.
 
-\ouritem{process\_control(+Pid,+Operation)}\index{\texttt{process\_control/2}} 
+\ourmoditem{process\_control(+Pid,+Operation)}{process\_control/2}{shell}
     Perform a process control {\tt operation} on the process with the given
     {\tt Pid}. 
     Currently, the only supported operations are {\tt kill} (an atom) and {\tt
@@ -1582,8 +1367,7 @@ the following shell command:
     \emph{Note}: under Windows, the programmer's manual warns of dire
     consequences if one kills a process that has DLLs attached to it.
 %
-\ouroldmoditem{get\_process\_table(-ProcessList)}{shell}
-\index{\texttt{get\_process\_table/1}} 
+\ourmoditem{get\_process\_table(-ProcessList)}{get\_process\_table/1}{shell}
     This predicate is imported from module {\tt shell}.
     It binds {\tt ProcessList} to the list of terms, each describing one of
     the active XSB subprocesses (created via \verb|spawn_process/5|).
@@ -1599,8 +1383,8 @@ the following shell command:
     to invoke the process.
     This predicate always succeeds.
 
-\ouritem{shell(+CmdSpec,-StreamToProc, -StreamFromProc, -ProcStderr,
-  -ErrorCode)}\index{\texttt{shell/5}} 
+\ourmoditem{shell(+CmdSpec,-StreamToProc, -StreamFromProc, -ProcStderr,
+  -ErrorCode)}{shell/5}{shell}
 %
 The arguments of this predicate are similar to those of
 \verb|spawn_process|, except for the following: (1) The first argument
@@ -1663,7 +1447,7 @@ familiar standard predicates {\tt shell/1} and {\tt shell/2}
 \end{enumerate}
 %%
 
-\ouritem{pipe\_open(-ReadPipe, -WritePipe)}\index{\texttt{pipe\_open/2}} 
+\ourmoditem{pipe\_open(-ReadPipe, -WritePipe)}{pipe\_open/2}{shell}
 Open a new pipe and return the read end and the write end of that
 pipe.  If the operation fails, both {\tt ReadPipe} and {\tt WritePipe}
 are bound to negative numbers.
@@ -1777,21 +1561,11 @@ yes
     pipe.  The XSB child-process can then convert this pipe fd to a
     file using {\tt fd2iostream} and then talk to the parent C program.
 
-\ouritem{fd2iostream(+Pipe, -IOstream)}\index{\texttt{fd2iostream/2}} 
+\ourmoditem{fd2iostream(+Pipe, -IOstream)}{fd2iostream/2}{shell}
 Take a file descriptor and convert it to an XSB I/O stream. This
 predicate should be used only for user-defined I/O.  Otherwise, use
 {\tt open/\{3,4\}} when possible.
 
-
-%------------------------------------------------------------------------------------------
-\comment{
-% TLS: Redefining ISO halt/1 as sys_exit/1.
-\ouritem{sys\_exit(-ExitCode)}\index{\texttt{sys\_exit/1}} 
-This predicate causes XSB subprocess to exit unconditionally with the exit
-code {\tt ExitCode}. Normally {\tt 0} is considered to indicate normal
-termination, while other exit codes are used to report various degrees of
-abnormality.
-}
 %------------------------------------------------------------------------------------------
 \end{description}
 
@@ -1847,13 +1621,13 @@ corresponding socket operation. This argument is explained separately.
 These are used to open/close sockets, to establish connections, and set
 special socket options.
 \begin{description}
-\ouritem{socket(-Sockfd, ?ErrorCode)}\index{\texttt{socket/2}}
+\ourmoditem{socket(-Sockfd, ?ErrorCode)}{socket/2}{socket}
     A socket {\tt Sockfd}  in the AF\_INET domain is created.
     (The AF\_UNIX domain is not yet implemented). 
     {\tt Sockfd} is bound to a small integer, called socket descriptor or
     socket handle.
 
-\ouritem{socket\_set\_option(+Sockfd,+OptionName,+Value)}\index{\texttt{socket\_set\_option/3}}
+\ourmoditem{socket\_set\_option(+Sockfd,+OptionName,+Value)}{socket\_set\_option/3}{socket}
     Set socket option. At present, only the {\tt linger} option is
     supported. ``Lingering'' is a situation when a socket continues to live
     after it was shut down by the owner. This is used in order to let the
@@ -1861,15 +1635,15 @@ special socket options.
     from/to the socket. {\tt Value} represents the number of seconds to linger.
     The value -1 means do not linger at all.
 
-\ouritem{socket\_close(+Sockfd, ?ErrorCode)}\index{\texttt{socket\_close/2}}
+\ourmoditem{socket\_close(+Sockfd, ?ErrorCode)}{socket\_close/2}{socket}
     {\tt Sockfd} is closed. Sockets used in {\tt socket\_connect/2}  should
     not be closed by {\tt socket\_close/1}  as they will be closed when the
     corresponding stream is closed.
 
-\ouritem{socket\_bind(+Sockfd,+Port, ?ErrorCode)}\index{\texttt{socket\_bind/3}}
+\ourmoditem{socket\_bind(+Sockfd,+Port, ?ErrorCode)}{socket\_bind/3}{socket}
    The socket {\tt Sockfd}  is bound to the specified local port number.
 
-\ouritem{socket\_connect(+Sockfd,+Port,+Hostname,?ErrorCode)}\index{\texttt{socket\_connect/4}}
+\ourmoditem{socket\_connect(+Sockfd,+Port,+Hostname,?ErrorCode)}{socket\_connect/4}{socket}
     The socket Sockfd is connected to the address ({\tt Hostname}  and
 {\tt Port}). If {\tt socket\_connect/4} terminates abnormally for any reason
 (connection refused, timeout, etc.), then XSb closes the socket {\tt
@@ -1878,11 +1652,11 @@ special socket options.
     the return code and reopen the socket, if the error code is not
     {\tt SOCK\_OK}.
 
-\ouritem{socket\_listen(+Socket, +Length, ?ErrorCode)}\index{\texttt{socket\_listen/3}}
+\ourmoditem{socket\_listen(+Socket, +Length, ?ErrorCode)}{socket\_listen/3}{socket}
     The socket {\tt Sockfd}  is defined to have a maximum backlog queue of
 {\tt Length}  pending connections.
 
-\ouritem{socket\_accept(+Sockfd,-SockOut, ?ErrorCode)}\index{\texttt{socket\_accept/3}}
+\ourmoditem{socket\_accept(+Sockfd,-SockOut, ?ErrorCode)}{socket\_accept/3}{socket}
     Block the caller until a connection attempt arrives. If the incoming 
     queue is not empty, the first connection request is accepted, the call
     succeeds and returns a new socket, {\tt SockOut}, which can be used for
@@ -1940,13 +1714,13 @@ At present, however, the buffered stream-based interface does not work on
 Windows.
 %%
 \begin{description}
-\ouritem{socket\_recv(+Sockfd,-Message, ?ErrorCode)}\index{\texttt{socket\_recv/3}}
+\ourmoditem{socket\_recv(+Sockfd,-Message, ?ErrorCode)}{socket\_recv/3}{socket}
     Receives a message from the connection identified by the socket descriptor
     {\tt Sockfd}. Binds {\tt Message} to the message. {\tt socket\_recv/3}
     provides a message-oriented interface. It understands message
     boundaries set by {\tt socket\_send/3}.
 
-\ouritem{socket\_send(+Sockfd,+Message, ?ErrorCode)}\index{\texttt{socket\_send/3}}
+\ourmoditem{socket\_send(+Sockfd,+Message, ?ErrorCode)}{socket\_send/3}{socket}
     Takes a message (which must be an atom) and sends it through the
     connection specified by {\tt Sockfd}. {\tt socket\_send/3} provides
     message-oriented communication. It prepends a 4-byte header to the
@@ -1966,10 +1740,10 @@ end-of-file character {\tt CH\_EOF\_P} (a.k.a. 255) defined in {\tt
 that need to send an end-of-file character should send {\tt (char)-1}.
 %%
 \begin{description}
-\ouritem{socket\_get0(+Sockfd, -Char, ?ErrorCode)}\index{\texttt{socket\_get0/3}}
+\ourmoditem{socket\_get0(+Sockfd, -Char, ?ErrorCode)}{socket\_get0/3}{socket}
 The equivalent of {\tt get0} for sockets.
 
-\ouritem{socket\_put(+Sockfd, +Char, ?ErrorCode)}\index{\texttt{socket\_put/3}}
+\ourmoditem{socket\_put(+Sockfd, +Char, ?ErrorCode)}{socket\_put/3}{socket}
 Similar to put/1, but works on sockets.
 \end{description}
 %%
@@ -1987,7 +1761,7 @@ The directory {\tt XSB/examples/socket/select/} has a number of examples of
 the use of the socket-probing calls.
 %%
 \begin{description}
-  \ouritem{socket\_select(+SymConName,+Timeout,-ReadSockL,-WriteSockL,-ErrSockL,?ErrorCode)} \index{\texttt{socket\_select/6}}
+  \ourmoditem{socket\_select(+SymConName,+Timeout,-ReadSockL,-WriteSockL,-ErrSockL,?ErrorCode)}{socket\_select/6}{socket}
   {\tt SymConName} must be an atom that
   denotes an existing connection group, which must be previously created with
   {\tt socket\_set\_select/4} (described below). {\tt ReadSockL}, {\tt
@@ -1998,14 +1772,14 @@ the use of the socket-probing calls.
   means probe and exit immediately). If {\tt Timeout} is a variable, then
   wait indefinitely until one of the sockets becomes available.
 
-\ouritem{socket\_set\_select(+SymConName,+ReadSockFdLst,+WriteSockFdLst,+ErrorSockFdLst)} \index{\texttt{socket\_set\_select/4}}
+\ourmoditem{socket\_set\_select(+SymConName,+ReadSockFdLst,+WriteSockFdLst,+ErrorSockFdLst)}{socket\_set\_select/4}{socket}
 Creates a connection group with the symbolic name {\tt SymConName}
 (an atom) for subsequent use by {\tt socket\_select/6}.
 {\tt ReadSockFdLst}, {\tt WriteSockFdLst}, and {\tt ErrorSockFdLst} are
 lists of sockets for which {\tt socket\_select/6} will be used to monitor read,
 write, or exception conditions.
 
-\ouritem{socket\_select\_destroy(+SymConName)} \index{\texttt{socket\_select\_destroy/1}}
+\ourmoditem{socket\_select\_destroy(+SymConName)}{socket\_select\_destroy/1}{socket}
 Destroys the specified connection group.
 
 \end{description}
@@ -2057,7 +1831,7 @@ The {\tt set\_timer/1} and {\tt sleep/1} primitives are described below.
 They are standard predicates and do not need to be explicitly imported.
 %%
 \begin{description}
-\ouritem{set\_timer(+Seconds)}\index{\texttt{set\_timer/1}}
+\ourstandarditem{set\_timer(+Seconds)}{set\_timer/1}
 Set timeout value. If a timer-enabled goal executes after this value is
 set, the clock begins ticking. If the goal does not finish in time, it
 succeeds with the error code set to {\tt TIMEOUT\_ERR}. The timer is turned
@@ -2068,7 +1842,7 @@ Note that if the timer is not set, the timer-enabled goals execute
 ``normally,'' without timeouts. In particular, they might block (say, on
 {\tt socket\_recv}, if data is not available).
 
-\ouritem{sleep(+Seconds)}\index{\texttt{sleep/1}}
+\ourstandarditem{sleep(+Seconds)}{sleep/1}
 Put XSB to sleep for the specified number of seconds. Execution resumes
 after the {\tt Seconds} number of seconds. This goal always succeeds.
 \end{description}
@@ -2102,9 +1876,9 @@ regular read/write commands can be used with such streams. In XSB, such
 promotion can be done using the following predicate:
 %%
 \begin{description}
-\ouroldmoditem{fd2ioport(+Pipe, -IOport)}{shell}\index{\texttt{fd2ioport/2}} 
-    Take a socket descriptor and convert it to an XSB I/O port that can be used
-    for regular file I/O. 
+\ourmoditem{fd2ioport(+Pipe, -IOport)}{fd2ioport/2}{shell} Take a
+socket descriptor and convert it to an XSB I/O port that can be used
+for regular file I/O.
 \end{description}
 %%
 Once {\tt IOport} is obtained, all normal I/O primitives can be used by
@@ -2146,17 +1920,17 @@ library provides simple syntactic sugar for {\tt functor/3}, {\tt
 predicates.
 
 \begin{description}
-\ouroldmoditem{array\_new(-Array,+Size)}{array}\index{\texttt{array\_new/2}}
+\ourmoditem{array\_new(-Array,+Size)}{array\_new/2}{array}
 %
 Creates a one dimensional empty array of size {\tt Size}.  All the
 elements of this array are variables.  
 
-\ouroldmoditem{array\_elt(+Array, +Index, ?Element)}{array} \index{\texttt{array\_elt/3}} 
+\ourmoditem{array\_elt(+Array, +Index, ?Element)}{array\_elt/3}{array}
 %
 Succeeds iff {\tt Element} unifies with the {\tt Index}-th element of
 array {\tt Array}.  
 %
-\ouroldmoditem{array\_update(+Array, +Index, +Elem)}{array} \index{\texttt{array\_update/3}} 
+\ourmoditem{array\_update(+Array, +Index, +Elem)}{array\_update/3}{array}
 %
 Updates the array {\tt Array} such that the {\tt Index}-th element of
 the new array is {\tt Elem} using destructive assignement.  The
@@ -2198,7 +1972,7 @@ invokes profiling.  The profiling library should only be used with the
 single-threaded engine in \version{}.
 
 \begin{description}
-\ouroldmoditem{profile\_call(+Goal)}{xsb\_profiling}\index{profile\_call/1}
+\ourmoditem{profile\_call(+Goal)}{profile\_call/1}{xsb\_profiling}
 
 Calls {\tt Goal}, and when it first succeeds, prints to {\tt userout}
 a table of predicate names indicating for each, the percentage of time
@@ -2269,7 +2043,7 @@ applicable, and there are more than 20 potentially matching clauses.
 See {\tt profile\_unindexed\_calls/1} below for details.
 
 \begin{description}
-\ouroldmoditem{profile\_mode\_call(+Goal)}{xsb\_profiling}\index{profile\_mode\_call/1}
+\ourmoditem{profile\_mode\_call(+Goal)}{profile\_mode\_call/1}{xsb\_profiling}
 
 Calls the goal {\tt Goal} and constructs a table of the modes in which
 the predicate is called and the number of times it is called in that
@@ -2282,21 +2056,21 @@ profile\_mode\_dump/0} and can be cleared using {\tt profile\_mode\_init/0}.
 \end{description}
 
 \begin{description}
-\ouroldmoditem{profile\_mode\_dump}{xsb\_profiling}\index{profile\_mode\_dump/0}
+\ourmoditem{profile\_mode\_dump}{profile\_mode\_dump/0}{xsb\_profiling}
 
 Prints out the counts of calls in particular modes as accumulated using \\
 {\tt profile\_mode\_call(+Goal)}.
 \end{description}
 
 \begin{description}
-\ouroldmoditem{profile\_mode\_init}{xsb\_profiling}\index{profile\_mode\_init/0}
+\ourmoditem{profile\_mode\_init}{profile\_mode\_init/0}{xsb\_profiling}
 
 Clears the table that accumulates counts of calls in particular modes
 (done by\\ {\tt profile\_mode\_call(+Goal)}.
 \end{description}
 
 \begin{description}
-\ouroldmoditem{profile\_unindexed\_calls(+Par)}{xsb\_profiling}\index{profile\_unindexed\_calls/1}
+\ourmoditem{profile\_unindexed\_calls(+Par)}{profile\_unindexed\_calls/1}{xsb\_profiling}
 
 Sets the kind of unindexed profiling to perform.  If {\tt Par} is
 \texttt{off},  no
@@ -2349,11 +2123,10 @@ tries for backtrackable updates and associative arrays.
 %%
 \begin{description}
   %%
-\ouroldmoditem{new\_trie(-Root)}{intern} \index{\texttt{newtrie/1}}
+\ourmoditem{new\_trie(-Root)}{newtrie/1}{intern} 
         {\tt Root} is instantiated to a handle for a new trie.
 
-\ouroldmoditem{trie\_intern(+Term,+Root)}{intern}
-\index{\texttt{trie\_intern/2}}
+\ourmoditem{trie\_intern(+Term,+Root)}{trie\_intern/2}{intern}
 % 
 Effectively asserts \texttt{Term} by interning into the trie
 designated by {\tt Root}.  If a variant of {\tt Term} is already in
@@ -2373,8 +2146,7 @@ added to the trie.
 \end{itemize}
 %%
 
-\ouroldmoditem{trie\_interned(?Term,+Root)}{intern}
-\index{\texttt{trie\_interned/2}}
+\ourmoditem{trie\_interned(?Term,+Root)}{trie\_interned/2}{intern}
 %%
 This predicate backtracks through the terms that unify with {\tt Term}
 and that are interned into the trie represented by the handle {\tt
@@ -2393,7 +2165,7 @@ and that are interned into the trie represented by the handle {\tt
 \end{itemize}
 %%
 
-\ouroldmoditem{delete\_trie(+Root)}{intern} \index{\texttt{delete\_trie/1}}
+\ourmoditem{delete\_trie(+Root)}{delete\_trie/1}{intern}
 %%
 Deletes all the terms in the trie pointed to by {\tt Root}.
 
@@ -2429,8 +2201,7 @@ implement modules such as the {\tt storage} module described in Volume
 %%
 \begin{description}
   %%
-\ouroldmoditem{trie\_intern(+Term,+Root,-Leaf,-Flag,-Skel)}{intern}
-\index{\texttt{trie\_intern/5}}
+\ourmoditem{trie\_intern(+Term,+Root,-Leaf,-Flag,-Skel)}{trie\_intern/5}{intern}
 %%
 Acts as {\tt trie\_intern/2} but returns additional information: {\tt
   Leaf} is the handle for the interned {\tt Term} in the trie.  {\tt
@@ -2453,13 +2224,12 @@ the XSB manual).
 \end{itemize}
 %%
 
-\ouroldmoditem{trie\_intern(+Term,-Leaf,-Skel)}{intern}\index{\texttt{trie\_intern/3}}
+\ourmoditem{trie\_intern(+Term,-Leaf,-Skel)}{trie\_intern/3}{intern}
 %%
 Acts as {\tt trie\_intern/5}, but interns {\tt Term} into the default
 trie and does not return the new/old flag.
 
-\ouroldmoditem{trie\_interned(?Term,+Root,?Leaf,-Skel)}{intern}
-\index{\texttt{trie\_interned/4}}
+\ourmoditem{trie\_interned(?Term,+Root,?Leaf,-Skel)}{trie\_interned/4}{intern}
 %%
 This predicate backtracks through the terms that unify with {\tt Term}
 interned into the trie represented by the handle {\tt Root} if {\tt
@@ -2483,11 +2253,11 @@ collection of all the variables in {\tt Term}; it has the form {\tt
 \end{itemize}
 %%
 
-\ouroldmoditem{trie\_interned(?Term,?Leaf,-Skel)}{intern} \index{\texttt{trie\_interned/3}}
+\ourmoditem{trie\_interned(?Term,?Leaf,-Skel)}{trie\_interned/3}{intern} 
 %%
 Similar to {\tt trie\_interned/4}  but uses the default trie.
 
-\ouroldmoditem{trie\_unintern(+Root,+Leaf)}{intern} \index{\texttt{trie\_unintern/2}}
+\ourmoditem{trie\_unintern(+Root,+Leaf)}{trie\_unintern/2}{intern}
 %%
 Uninterns a term indicated by {\tt Leaf} from the trie indicated by
 root.  If there are failure continuations that point to trie nodes in
@@ -2495,7 +2265,7 @@ root.  If there are failure continuations that point to trie nodes in
 Otherwise, the term is really deleted.
 %%
 
-\ouroldmoditem{trie\_unintern\_nr(+Root,+Leaf)}{intern}\index{\texttt{trie\_unintern\_nr/2}}
+\ourmoditem{trie\_unintern\_nr(+Root,+Leaf)}{trie\_unintern\_nr/2}{intern}
 %%
 This is a safe version of {\tt trie\_unintern/2}. The term pointed to by
 {\tt Leaf} is marked as deleted, but is not deleted from the trie. This
@@ -2515,7 +2285,7 @@ permits an efficient implementation of backtrackable updates.
 \end{itemize}
 %%
 
-\ouroldmoditem{unmark\_uninterned\_nr(+Root,+Leaf)}{intern}\index{\texttt{unmark\_uninterned\_nr/2}}
+\ourmoditem{unmark\_uninterned\_nr(+Root,+Leaf)}{unmark\_uninterned\_nr/2}{intern}
 The term pointed to by {\tt Leaf} should have been previously marked for
 deletion using
 {\tt trie\_unintern\_nr/2}. This term is then ``unmarked'' (or undeleted)
@@ -2535,8 +2305,7 @@ and becomes again a normal interned term.
 \end{itemize}
 %%
 
-\ouroldmoditem{reclaim\_uninterned\_nr(+Root)}{intern}
-\index{\texttt{reclaim\_uninterned\_rn/1}}
+\ourmoditem{reclaim\_uninterned\_nr(+Root)}{reclaim\_uninterned\_rn/1}{intern}
 %%
 Runs through the chain of leaves of the trie {\tt Root} and deletes
 the terms that have been marked for deletion by {\tt
@@ -2568,18 +2337,18 @@ The Gensym library provides a convenient way to generate unique
 integers or constants.  
 
 \begin{description}
-\ouroldmoditem{prepare(+Index)}{gensym} \index{\texttt{prepare/1}}
+\ourmoditem{prepare(+Index)}{prepare/1}{gensym}
 %
 Sets the initial integer to be used for generation to {\tt Index}.
 Thus, the command {\tt ?- prepare(0)} would cause the first call to
 {\tt gennum/1} to return {\tt 1}.  {\tt Index} must be a non-negative
 integer.
 
-\ouroldmoditem{gennum(-Var)}{gensym} \index{\texttt{gennum/1}}
+\ourmoditem{gennum(-Var)}{gennum/1}{gensym} 
 %
 Unifies {\tt Var} with a new integer.
 
-\ouroldmoditem{gensym(+Atom,-Var)}{gensym} \index{\texttt{gensym/2}}
+\ourmoditem{gensym(+Atom,-Var)}{gensym/2}zzzz{gensym} 
 %
 Generates a new integer, and concatenates this integer with {\tt
 Atom}, unifying the result with {\tt Var}.  For instance a call {\tt
@@ -2602,45 +2371,45 @@ sequences of random numbers.
 
 \begin{description}
 
-\ouroldmoditem{random(-Number)}{random} \index{\texttt{random/1}}
+\ourmoditem{random(-Number)}{random/1}{random} 
 %
 Binds \texttt{Number} to a random float in the interval [0.0, 1.0).
 Note that 1.0 will never be generated.
 
-\ouroldmoditem{random(+Lower,+Upper,-Number)}{random} \index{\texttt{random/3}}
+\ourmoditem{random(+Lower,+Upper,-Number)}{random/3}{random}
     Binds \texttt{Number} to a random integer in the interval
     [\texttt{Lower},\texttt{Upper}) if \texttt{Lower} and \texttt{Upper}
     are integers.  Otherwise \texttt{Number} is bound to a random float
     between \texttt{Lower} and \texttt{Upper}.  \texttt{Upper} will
     never be generated.
 
-\ouroldmoditem{getrand(?State)}{random} \index{\texttt{getrand/1}}
+\ourmoditem{getrand(?State)}{getrand/1}{random}
     Tries to unify \texttt{State} with the term \texttt{rand(X,Y,Z)}
     where \texttt{X},\texttt{Y},and \texttt{Z} are integers describing
     the state of the random generator.
 
-\ouroldmoditem{setrand(rand(+X,+Y,+Z))}{random} \index{\texttt{setrand/1}}
+\ourmoditem{setrand(rand(+X,+Y,+Z))}{setrand/1}{random} 
     Sets the state of the random generator.  \texttt{X},\texttt{Y}, and
     \texttt{Z} must be integers in the ranges [1,30269), [1,30307),
     [1,30323), respectively.
 
-\ouroldmoditem{datime\_setrand}{random} \index{\texttt{datime\_setrand/0}}
+\ourmoditem{datime\_setrand}{datime\_setrand/0}{random}
 This simple initialization utility sets the random seed triple based on a
 function of the current day, hour, minute and second. 
 
-\ouroldmoditem{randseq(+K, +N, -RandomSeq)}{random} \index{\texttt{randseq/3}}
+\ourmoditem{randseq(+K, +N, -RandomSeq)}{randseq/3}{random}
     Generates a sequence of \texttt{K} unique integers chosen randomly
     in the range from 1 to \texttt{N}.  \texttt{RandomSeq} is not
     returned in any particular order.
 
-\ouroldmoditem{randset(+K, +N, -RandomSet)}{random} \index{\texttt{randset/3}}
+\ourmoditem{randset(+K, +N, -RandomSet)}{randset/3}{random} 
     Generates an ordered set of \texttt{K} unique integers chosen
     randomly in the range from 1 to \texttt{N}.  The set is returned in
     reversed order, with the largest element first and the smallest
     last.
 
 \index{Random Variables!Normal}
-\ouroldmoditem{gauss(-G1,-G2)}{ramdom} \index{\texttt{gauss/2}}
+\ourmoditem{gauss(-G1,-G2)}{gauss/2}{random}
 %
 Generates two random numbers that are normally distributed with mean 0
 and standard deviation 1.  It uses the polar form of the Box-Muller
@@ -2648,7 +2417,7 @@ transformation~\cite{BoxM58} of uniform random variables as generated by
 {\tt random/1}.
 
 \index{Random Variables!Weibull}
-\ouroldmoditem{weibull(K,Lambda,X)}{ramdom} \index{\texttt{weibull/3}}
+\ourmoditem{weibull(K,Lambda,X)}{weibull/3}{random}
 %
 Generates a random number for the Weibull distribution:
 \[
@@ -2658,10 +2427,10 @@ based on the transformation
 \[
   x = \lambda(-ln(U))^{1/k}
 \]
-of a uniformly distributed ranom variable produce by {\tt random/1}
+of a uniformly distributed random variable produced by {\tt random/1}
 
 \index{Random Variables!Exponential}
-\ouroldmoditem{exponential(K,X)}{ramdom} \index{\texttt{exponential/2}}
+\ourmoditem{exponential(K,X)}{exponential/2}{random}
 %
 Generates a random number for the exponential distribution:
 \[
@@ -2676,7 +2445,7 @@ This is the same as the Weibull distribution with $k = 1$.
 
 \end{description}
 
-\section{Loading Separated Files}
+\section{Loading Delimiter-Separated Files}
 
 A common file format uses comma separated values, the so-called csv
 files.  The XSB module, {\tt proc\_files}, supports the loading of
@@ -2684,7 +2453,7 @@ files in this, and similar, formats to define Prolog predicates.
 
 \begin{description}
 
-\ouroldmoditem{load\_csv(+FileName,+PredSpec)}{proc\_files} \index{\texttt{load\_csv/2}}
+\ourmoditem{load\_csv(+FileName,+PredSpec)}{load\_csv/2}{proc\_files}
 
 {\tt load\_csv/2} takes a file name and a predicate specification, and
 reads a csv-formatted file into memory, defining the indicated dynamic
@@ -2716,7 +2485,7 @@ fact.
 \item[\_\_] (A variable) Treated as {\tt atom}.
 \end{itemize}
 
-\ouroldmoditem{load\_dsv(+FileName,+PredSpec,+Options)}{proc\_files} \index{\texttt{load\_dsv/3}}
+\ourmoditem{load\_dsv(+FileName,+PredSpec,+Options)}{load\_dsv/3}{proc\_files}
 
 This predicate supports the loading of more general forms of files
 with value-separated fields.  The {\tt FileName} and {\tt PredSpec}
@@ -2751,7 +2520,7 @@ lex} or {\em flex}.
 
 \begin{description}
 
-\ouroldmoditem{scan(+List,-Tokens)}{stdscan} \index{\texttt{scan/2}}  
+\ourmoditem{scan(+List,-Tokens)}{scan/2}{stdscan}
 
 Given as input a {\tt List} of character codes, {\tt scan/2} scans
 this list producing a list of atoms constituting the lexical tokens.
@@ -2761,8 +2530,7 @@ Tokens produced are either a sequence of {\em letters} and/or {\em
 numbers} or consist of a single {\em special character} (e.g. {\tt (}
 or {\tt )}).  Whitespaces may occur between tokens.
 
-\ouroldmoditem{scan(+List,+FieldSeparator,-Tokens)}{stdscan} 
-\index{\texttt{scan/3}}  
+\ourmoditem{scan(+List,+FieldSeparator,-Tokens)}{scan/3}{stdscan} 
 
 Given as input a {\tt List} of character codes, along with a character
 code for a field separator, {\tt scan/3} scans this list producing a
@@ -2770,8 +2538,7 @@ list of list of atoms constituting the lexical tokens in each field.
 {\em scan/3} thus can be used to scan tabular information.  Its
 parameters are set via {\tt set\_scan\_pars/1}.
 
-\ouroldmoditem{set\_scan\_pars(+List)}{stdscan} 
-\index{\texttt{set\_scan\_pars/1}}  
+\ourmoditem{set\_scan\_pars(+List)}{set\_scan\_pars/1}{stdscan} 
 
 {\tt set\_scan\_pars(+List)} is used to configure the tokenizer to a
 particular need.  {\tt List} is a list of parameters including the
@@ -2819,8 +2586,8 @@ A--Z} are regarded as letters.
 \end{verbatim}
 \end{itemize}
 
-\ouroldmoditem{get\_scan\_pars(-List)}{stdscan} 
-\index{\texttt{get\_scan\_pars/1}}  
+\ourmoditem{get\_scan\_pars(-List)}{get\_scan\_pars/1}{stdscan} 
+%
 {\tt get\_scan\_pars/1} returns a list of the currently active
 parameters.
 
@@ -2863,7 +2630,7 @@ checkImpExps/\{1,2\}} and {\tt add\_libraries/1} predicates in {\tt
 usermod}.
 
 \begin{description}
-\ouritem{add\_libraries(+DirectoryNameList)}
+\ourmoditem{add\_libraries(+DirectoryNameList)}{add\_libraries/1}{xsb\_lint}
 %
 {\tt add\_libraries/1} takes a list of directory names and adds them
 to the {\tt library\_directory/1} predicate.  This causes the XSB
@@ -2873,7 +2640,7 @@ modules) referenced (recursively) in the files to be processed must be
 in the {\tt library\_directory/1} predicate.  This predicate can be
 used to add a number of directories at once.
 
-\ouritem{checkImpExps(+Options,+FileNameList)}
+\ouritem{checkImpExps(+Options,+FileNameList)}{checkImpExps/2}{xsb\_lint}
 %
 {\tt checkImpExps/1} reads all the XSB source files named in the list
 {\tt FileNameList}, and all files they reference (recursively), and
@@ -2920,7 +2687,7 @@ allow nonconstant symbols appearing in any other context to also count
 as uses of that symbol as that predicate symbol.  This is useful for
 programs that define their own meta-predicates.
 
-\ouritem{checkImpExps(+FileNameList)}
+\ourmoditem{checkImpExps(+FileNameList)}{checkImpExps/1}{xsb\_lint}
 %
 {\tt checkImpExps/1}  is
 currently equivalent to {\tt checkImpExps([],FileNameList)}.
@@ -2955,11 +2722,11 @@ intern these DB's, and to table them (as intern).
 
 The predicates provided by the Prolog DB interface are as follows:
 \begin{description}
-\ouritem{empty\_db(-EmptyPrologDB)}
+\ourmoditem{empty\_db(-EmptyPrologDB)}{empty\_db/1}{prolog\_db}
 {\tt empty\_db/1} returns an empty Prolog DB.  It is used to create an
 initial Prolog DB to pass to the other in\_db predicates.
 
-\ouritem{assert\_in\_db(+Clause,+DB0,-DB)}
+\ourmoditem{assert\_in\_db(+Clause,+DB0,-DB)}{assert\_in\_db/3}{prolog\_db}
 {\tt assert\_in\_db/3} adds the clause, {\tt Clause}, to the Prolog
 DB, {\tt DB0}, and returns a new Prolog DB, {\tt DB}.  A Prolog DB is
 a {\em set} of clauses, so asserting a clause that is already in {\tt
@@ -2967,19 +2734,19 @@ DB0} just returns that same database.  No ordering of clauses is
 preserved, so cuts do not make sense and cannot be used in clauses.
 (The if-then else ('->'/3) should be used instead.)
 
-\ouritem{retractall\_in\_db(+ClauseHead,+DB0,-DB)}
+\ourmoditem{retractall\_in\_db(+ClauseHead,+DB0,-DB)}{retractall\_in\_db/3}{prolog\_db}
 {\tt retractall\_in\_db/3} removes all clauses whose heads unify with
 {\tt ClauseHead} from {\tt DB0} returning {\tt DB}.  If no clauses in
 {\tt DB0} unify, then {\tt DB0} is returned unchanged.
 
-\ouritem{clause\_in\_db(?ClauseHead,?ClauseBody,+DB)}
+\ourmoditem{clause\_in\_db(?ClauseHead,?ClauseBody,+DB)}{clause\_in\_db/3}{prolog\_db}
 {\tt clause\_in\_db/3} returns all clauses in {\tt DB} whose heads and
 bodies unify with {\tt ClauseHead} and {\tt ClauseBody}, respectively.
 (Note that, unlike {\tt clause/2} in Prolog, {\tt clause\_in\_db} can
 be called with {\tt ClauseHead} as a variable.)  Note also that the
 order of clauses is not preserved and is indeterminate.
 
-\ouritem{call\_in\_db(?Goal,+DB)}
+\ourmoditem{call\_in\_db(?Goal,+DB)}{call\_in\_db/2}{prolog\_db}
 {\tt call\_in\_db/2} calls {\tt Goal} in {\tt DB} and returns all
 instances of {\tt Goal} provable by rules in {\tt DB}.  Clauses must
 not contain cuts (!).  They can contain most Prolog constructs,
@@ -2989,15 +2756,15 @@ satisfied by calling the goal in the indicated module. So in this case
 one can think of a Prolog DB as being extended by the code in any
 module.
 
-\ouritem{load\_in\_db(+FileName,+DB0,-DB)}
+\ourmoditem{load\_in\_db(+FileName,+DB0,-DB)}{load\_in\_db/3}{prolog\_db}
 {\tt load\_in\_db/3} reads the clauses from the file named {\tt
 FileName} and asserts them into database {\tt DB0} returning {\tt DB}.
 
-\ouritem{load\_in\_db(+FileName,-DB)}
+\ourmoditem{load\_in\_db(+FileName,-DB)}{load\_in\_db/2}{prolog\_db}
 {\tt load\_in\_db/2} reads the clauses from the file named {\tt
 FileName} and asserts them into an empty database returning {\tt DB}.
 
-\ouritem{union\_db(+DB1,+DB2,-DB3)}
+\ourmoditem{union\_db(+DB1,+DB2,-DB3)}{union\_db/3}{prolog\_db}
 {\tt union\_db/3} returns in {\tt DB3} the union of the sets of
 clauses in {\tt DB1} and {\tt DB2}.
 
@@ -3010,17 +2777,16 @@ clauses in {\tt DB1} and {\tt DB2}.
 
 \begin{description}
 
-\ouroldmoditem{term\_hash(+Term,+HashSize,-HashVal)}{machine}
-\index{\texttt{term\_hash/3}}
+\ourmoditem{term\_hash(+Term,+HashSize,-HashVal)}{term\_hash/3}{machine}
 %
 Given an arbitrary Prolog term, {\tt Term}, that is to be hashed into
 a table of {\tt HashSize} buckets, this predicate returns a hash value
 for {\tt Term} that is between {\tt 0} and {\tt HashSize -1}.
 
-\ouroldmoditem{pretty\_print(+ClausePairs)}{pretty\_print}
-\ouroldmoditem{pretty\_print(+Stream,+ClausePairs)}{pretty\_print}
-\index{\texttt{pretty\_print/1}}
-\index{\texttt{pretty\_print/2}}
+\ourrepeatmoditem{pretty\_print(+ClausePairs)}{pretty\_print/1}{pretty\_print}
+\ourmoditem{pretty\_print(+Stream,+ClausePairs)}{pretty\_print/2}{pretty\_print}
+
+
 %
 The input to {\tt pretty\_print/1}, {\tt ClausePairs}, can be either a
 list of clause pairs or a single clause pair.  A clause pair is either
@@ -3054,8 +2820,7 @@ constraints in XSB's {\tt XASP} package is done via the hook
 which outputs a weight constraint in a (non-Prolog) syntax that is 
 used by several ASP systems.
 
-\ouroldmoditem{module\_of\_term(+Term,?Module)}{machine}
-\index{\texttt{module\_of\_term/2}}
+\ourmoditem{module\_of\_term(+Term,?Module)}{module\_of\_term/2}{machine}
 %
 Given a term {\tt Term}, {\tt module\_of\_term/2} returns the module
 of its main functor symbol in {\tt Module}.  If the module cannot be

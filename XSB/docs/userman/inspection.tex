@@ -738,7 +738,7 @@ q:- tnot r.                   r:- tnot q.
 s(f(X)):- s(X).               s(0).
 \end{verbatim}
 %
-where the bounded rationality depth has been set to 3.  The query {\tt
+where the bounded rationality size has been set to 3.  The query {\tt
   explain\_u\_value(p,P,Reason)} will bind {\tt Reason} to {\tt
   negative\_loops(cycle)}, to {\tt negative\_loops(dependent)}, and
 to {\tt bounded\_rationality} (this ordering is not guaranteed).
@@ -1008,7 +1008,7 @@ user's tastes in and needs for debugging:
 A tripwire represents an unexpected property of a derivation: such as
 an excessive use of time or memory; an unexpected number or complexity
 of tabled subgoals or answers; or an unexpected number of mutually
-dependent tabled subgoals.  Depending on both the class of a tripwire
+dependent tabled subgoals.  Depending both on the class of a tripwire
 and on how runtime settings are given for XSB, a tripwire may have
 different effects.  Any tripwire may be treated as an error so that it
 throws an exception just as any other error.  {\em Inspectable}
@@ -1026,20 +1026,28 @@ encountered, along with suggestions about how to further inspect the
 suspended derivation.  {\em Correctable} tripwires are a subset of
 inspectable tripwires for which an automatic action may be taken to
 remedy the situation, such as rewriting a subgoal or an answer whose
-depth is more than a given level via subgoal abstraction or answer
+size is more than a given level via subgoal abstraction or answer
 restraint.
 
-Tripwires may be set in various ways: most can be set and viewed as
-Prolog flags, others can also be set via the {\tt table/1}
-declaration, while still others can only be set by explicit
-programming.  Tripwires thus represent a unified way of understanding
-bounds on a tabled derivation, rather than a unified API.
+Tripwires may be set in various ways: most can be set and viewed at a
+session level using Prolog flags, others can also be set at the
+predicate level via the {\tt table/1} declaration, while still others
+can only be set by explicit programming.  Tripwires thus represent a
+coordinated set of tools for understanding bounds on a tabled
+derivation, rather than a unified API.
 
 For a tripwire {\tt T} that can be set and viewed as a Prolog flag,
 the flag name has the form {\tt tripwire(T)}, and this flag has two or
 more values.  An {\em action}, designated {\tt action(A)}, indicating
-the action to take such as {\tt error}, {\tt inspect}, or other
+the action to take such as {\tt error}, {\tt suspend}, or other
 actions; and one or more parameters, designated {\tt parameter(P)}.
+For example, if a user wants to be able to suspend and inspect a
+computation whenever it has an active recursive component (SCC) with
+over 100 subgoals, she can execute the following directives:
+
+{\tt ?- set\_prolog\_flag(tripwire(max\_scc\_subgoals),parameter(100)).}
+
+{\tt ?- set\_prolog\_flag(tripwire(max\_scc\_subgoals),action(suspend)).}
 
 We discuss various types of tripwires in turn, and provide informal
 guidelines for inspecting a derivation when a given tripwire has been
@@ -1053,13 +1061,21 @@ tripwire is a user-imposed limit, rather than an external limit
 imposed by the platform or operating system, and thus differs from an
 ISO resource error.
 
-Time-based resource tripwires can easily be programmed using a handler
-to {\tt timed\_call/2}.  Time-based tripwires are inspectable, so such
-a handler might throw an error after a derivation has taken a certain
-amount of CPU time, or call {\tt break/0} to implement periodic
-inspection points, or implement other periodic analytics or
-monitoring.
+\index{tripwires!timed call} 
+\index{\texttt  {timed\_call/2}}
+\index{\texttt  {timed\_call\_modify/1}}
+%
+Time-based resource tripwires can easily
+be programmed using a handler to {\tt timed\_call/2}.  Time-based
+tripwires are inspectable, so such a handler might throw an error
+after a derivation has taken a certain amount of CPU time, or call
+{\tt break/0} to implement periodic inspection points, or implement
+other periodic analytics or monitoring.  The parameters for timed call
+can be changed whenever the timed call is suspended by {\tt
+  timed\_call\_modify/1}.  See Section~\ref{sec:timed-call} for more
+details.
 
+\index{tripwires!max\_memory}
 A memory-based resource tripwire can be set via the Prolog flag {\tt
   tripwire(max\_memory)}, so that an error will be thrown whenever XSB
 uses more than a given total amount of memory.  This amount can be set
@@ -1107,9 +1123,6 @@ starts with viewing the output of {\tt statistics/[0,1]}.
 
 \subsubsection{Tripwires Based on Properties of a Tabled Derivation}
 %
-{\sc TBD: change depth-based to size-based; possibly change names of
-  tripwires}
-
 {\sc Not all tripwires have yet been implemented}
 
 Theoretically speaking, if a tabled derivation is not terminating it
@@ -1132,11 +1145,11 @@ in turn.
   using call subsumption.  However termination can be ensured by using
   subgoal abstraction, as long as a derivation produces only a finite
   number of answers~\cite{RigS14}.  XSB allows subgoal abstraction to
-  be applied based on term depth either globally through the tripwire
-  {\tt max\_table\_subgoal\_depth}, or on a predicate-by-predicate
+  be applied based on term size either globally through the tripwire
+  {\tt max\_table\_subgoal\_size}, or on a predicate-by-predicate
   basis through tabling directives
   (cf. Section~\ref{sec:tabling-termination}).  In other words, when a
-  tabled subgoal, $S_{deep}$, is called whose depth is greater then
+  tabled subgoal, $S_{deep}$, is called whose size is greater then
   the limit specified for its predicate, a tripwire is activated, and
   various actions can be specified.  In many -- perhaps most -- cases,
   the best action is simply to abstract $S_{deep}$.  However it is
@@ -1146,7 +1159,7 @@ in turn.
   cases.
 
 \item {\em There are a finite but large number of tabled
-  subgoals}\ Checking for the depth of a subgoal may not catch certain
+  subgoals}\ Checking for the size of a subgoal may not catch certain
   causes of inefficency. If a program is written over a language that
   has a finite but large number of constant symbols, then a program
   that generates subgoals of the form
@@ -1178,7 +1191,7 @@ in turn.
 %
 {\em Guidelines for Analysis} If the computation is producing too many
 tabled subgoals the suspension may have been triggered by one of the
-tripwires: {\tt max\_table\_subgoal\_depth}, {\tt
+tripwires: {\tt max\_table\_subgoal\_size}, {\tt
   max\_incomplete\_subgoals} or {\tt max\_scc\_size}.  In any of these
 cases, the suspension or error message will indicate the tripwire that
 has been hit.  The number of incomplete subgoals can be seen from the
@@ -1252,17 +1265,18 @@ dependencies determined.
 
 \begin{description}
 
-\item {\tt max\_answers\_for\_subgoal}
-
 \item {\tt max\_incomplete\_subgoals}
 
 \item {\tt max\_scc\_subgoals}
 
-\item {\tt max\_table\_subgoal\_depth}
+\item {\tt max\_table\_subgoal\_size}
 
-\item {\tt max\_table\_answer\_depth}
+\item {\tt max\_table\_answer\_size}
 
-\item {\tt max\_table\_answer\_list\_depth}
+\item {\tt max\_memory}
+
+\item {\tt max\_answers\_for\_subgoal}
+
 
 \end{description}
 
