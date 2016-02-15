@@ -962,7 +962,7 @@ characters.
 
 \begin{description}
 \ourrepeatmoditem{str\_sub(+Sub, +Str, ?Pos)}{str\_sub/3}{string}
-\altourmoditem{str\_sub(+Sub, +Str)}{str\_sub/3}{string}
+\ourmoditem{str\_sub(+Sub, +Str)}{str\_sub/3}{string}
 
 Succeeds if {\tt Sub} is a substring of {\tt Str}. In that case, {\tt
   Pos} unifies with the position where the match occurred. Positions
@@ -971,7 +971,7 @@ to having {\tt \_} in the third argument of {\tt
   str\_sub/3}~\footnote{Currently, {\tt str\_sub/2} works properly for
   UTF-8 characters, but {\tt str\_sub/3} does not.}.
 
-\altourmoditem{str\_match(+Sub, +Str, +Direction, ?Beg, ?End)}{str\_match/5}{string}
+\ourmoditem{str\_match(+Sub, +Str, +Direction, ?Beg, ?End)}{str\_match/5}{string}
 %\index{\texttt{str\_match/5}}
 
 This is an enhanced version of the previous predicate.

@@ -731,16 +731,16 @@ details.
 
 \begin{description}
 
-\ouritem{int xsb\_init\_string(char *options)}
-\index{\texttt{xsb\_init\_string}} This function is used to initialize
-XSB via an initialization string {\tt *options}, and must be called
-before any other calls can be made.  The initialization string must
-include the path to the XSB directory installation directory {\tt
-\$XSB\_DIR}, which is expanded to an absolute path by XSB.  Any other
-  command line options may be included just as in a command line
-  except {\tt -D}, {\tt -d}, {\tt -B} and {\tt -i}.  For example, a
-  call from an executable in a sibling directory of XSB might have the
-  form
+\ourCitem{int xsb\_init\_string(char *options)}{xsb\_init\_string}
+%
+This function is used to initialize XSB via an initialization string
+{\tt *options}, and must be called before any other calls can be made.
+The initialization string must include the path to the XSB directory
+installation directory {\tt \$XSB\_DIR}, which is expanded to an
+absolute path by XSB.  Any other command line options may be included
+just as in a command line except {\tt -D}, {\tt -d}, {\tt -B} and {\tt
+  -i}.  For example, a call from an executable in a sibling directory
+of XSB might have the form
 %%
 \begin{verbatim}
    xsb_init_string("../XSB -e startup.");
@@ -763,7 +763,7 @@ which initializes XSB with the goal {\tt ?- startup.}
 %
 \ei
 
-\ouritem{int xsb\_init(int argc, char *argv[])} \index{\texttt{xsb\_init}}
+\ourCitem{int xsb\_init(int argc, char *argv[])}{xsb\_init}
 %
 This function is a variant of {\tt xsb\_init\_string()} which passes
 initialization arguments as an argument vector: {\tt argc} is the
@@ -797,7 +797,7 @@ int main(int argc, char *argv[])
 The return codes for {\tt xsb\_init()} are the same as those for {\tt
   xsb\_init\_string()}.
 
-\ouritem{int xsb\_close()} \index{\texttt{xsb\_close}}
+\ourCitem{int xsb\_close()}{xsb\_close}
 %
 This routine closes the entire connection to XSB .  After this, no
 more calls can be made (not even calls to {\tt xsb\_init\_string()} or
@@ -823,8 +823,7 @@ is freed.
 \subsection{Passing Commands to XSB}
 
 \begin{description}
-\ouritem{int xsb\_command\_string(th\_context *th, char *cmd)} 
-\index{\texttt{xsb\_command\_string}}
+\ourCitem{int xsb\_command\_string(th\_context *th, char *cmd)}{xsb\_command\_string}
 %
 This function passes a command to the XSB thread designated by {\tt
   th} (the first argument is not used in the single-threaded engine).
@@ -854,7 +853,7 @@ the command is finished.
 %
 \ei
 
-\ouritem{int xsb\_command(th\_context *th)} \index{\texttt{xsb\_command}}
+\ourCitem{int xsb\_command(th\_context *th)}{xsb\_command}
 %
 This function passes a command to the XSB thread designated by {\tt
   th} (the first argument is not used in the single-threaded engine).
@@ -887,8 +886,7 @@ codes.
 \subsection{Querying XSB}
 
 \begin{description}
-\ouritem{int xsb\_query\_string\_string(th\_context *th, char *query, VarString *buff,
-char *sep)} \index{\texttt{xsb\_query\_string\_string}} 
+\ourCitem{int xsb\_query\_string\_string(th\_context *th, char *query, VarString *buff,char *sep)}{xsb\_query\_string\_string}
 %
 This function opens a query to the XSB thread designated by {\tt th}
 (the first argument is not used in the single-threaded engine); it
@@ -994,7 +992,7 @@ calls from other pthreads until the entire query is finished.
 %
 \ei
 
-\ouritem{int xsb\_query(th\_context *th)} \index{\texttt{xsb\_query}} 
+\ourCitem{int xsb\_query(th\_context *th)}{xsb\_query}
 %
 This function passes a query to the XSB thread {\tt th}.  Any previous
 query to {\tt th} must have already been closed.  Any query may return
@@ -1028,9 +1026,8 @@ mutex or other concurrency control, from the time the goal begins to
 be constructed in the register 1 until the query is closed, failed, or
 exited upon error.
 
-\ouritem{int xsb\_get\_last\_answer\_string(th\_context *th, char
-  *buff, int bufflen, int *anslen)}
-\index{\texttt{xsb\_get\_last\_answer\_string\_b}}
+\ourCitem{int xsb\_get\_last\_answer\_string(th\_context *th, char
+  *buff, int bufflen, int *anslen)}{xsb\_get\_last\_answer\_string\_b}
 %
 This function is used only when a call {\tt
   xsb\_query\_string\_string\_b()} or {\tt xsb\_next\_string\_b()} to
@@ -1049,8 +1046,7 @@ same as the 2nd through 4th parameters of {\tt
   too long for the buffer.  
 \ei
 
-\ouritem{int xsb\_query\_string(th\_context *th,char *query)}
-\index{\texttt{xsb\_query\_string}} 
+\ourCitem{int xsb\_query\_string(th\_context *th,char *query)}{xsb\_query\_string}
 %
 This function passes a query to the XSB thread {\tt th}.  The query is
 a string consisting of a term that can be read by the XSB reader.  The
@@ -1080,8 +1076,7 @@ closed, failed, or exited upon error.
 %
 \ei
 
-\ouritem{int xsb\_next\_string(th\_context *th,VarString *buff,char *sep)}
-\index{\texttt{xsb\_next\_string}}  
+\ourCitem{int xsb\_next\_string(th\_context *th,VarString *buff,char *sep)}{xsb\_next\_string}
 %
 This routine is called after {\tt xsb\_query\_string()} to retrieve a
 subsequent answer in {\tt buff}.  If a query is not open in {\tt th},
@@ -1119,8 +1114,7 @@ query was invoked by {\tt xsb\_query\_string\_string(\_b)}.
 %
 \ei
 
-\ouritem{int xsb\_next\_string\_b(th\_context *th, char *buff, int bufflen, int
-*anslen, char *sep)} \index{\texttt{xsb\_next\_string}} 
+\ourCitem{int xsb\_next\_string\_b(th\_context *th, char *buff, int bufflen, int *anslen, char *sep)}{xsb\_next\_string}
 %
 This function is a variant of {\tt xsb\_next\_string()} that does not
 use the {\tt VarString} type.  Its parameters are the same as the 3rd
@@ -1149,7 +1143,7 @@ query was invoked by {\tt xsb\_query\_string\_string(\_b)}.
 %
 \ei
 
-\ouritem{int xsb\_next(th\_context *)} \index{\texttt{xsb\_next}} 
+\ourCitem{int xsb\_next(th\_context *)}{xsb\_next}
 %
 This function is called after {\tt xsb\_query()} (which must have
 returned {\tt XSB\_SUCCESS}) to retrieve more answers.  It rebinds the
@@ -1165,7 +1159,7 @@ It is the user's responsibility to protect the XSB thread, using a
 mutex or other concurrency control, through the time that registers
 are accessed by the calling program.
 
-\ouritem{int xsb\_close\_query(th\_context *th)} \index{\texttt{xsb\_close\_query}}
+\ourCitem{int xsb\_close\_query(th\_context *th)}{xsb\_close\_query}
 %
 This function allows a user to close a query to {\tt th} before all
 its answers have been retrieved.  Since XSB is (usually) a
@@ -1193,7 +1187,7 @@ but otherwise has no effect.
 \subsection{Obtaining Information about Errors}
 
 \begin{description}
-\ouritem{char * xsb\_get\_init\_error\_message()} \index{\texttt{xsb\_get\_error\_message}}
+\ourCitem{char * xsb\_get\_init\_error\_message()}{xsb\_get\_error\_message}
 %
 Used to find error messages if {\tt xsb\_init\_string()} or {\tt
   xsb\_init()} returns {\tt XSB\_ERROR}.  Any errors returned by these
@@ -1201,7 +1195,7 @@ functions have type {\tt init\_error}.  Because initialization errors
 occur before XSB or any of its threads have been initialized,
 initialization errors do not require a thread context for input.
 
-\ouritem{char * xsb\_get\_error\_type(th\_context *th)} \index{\texttt{xsb\_get\_error\_type}}
+\ourCitem{char * xsb\_get\_error\_type(th\_context *th)}{xsb\_get\_error\_type}
 %
 If a function called for {\tt th} returned {\tt XSB\_ERROR} this
 function provides a pointer to a string representing the type of the
@@ -1211,7 +1205,7 @@ initialization of XSB, and {\tt unrecoverable\_error} for errors from
 which no recovery is possible for XSB (e.g. inability to allocate new
 memory).  
 
-\ouritem{char *xsb\_get\_error\_message(th\_context *th)}\index{\texttt{xsb\_get\_error\_message}}
+\ourCitem{char *xsb\_get\_error\_message(th\_context *th)}{xsb\_get\_error\_message}
 %
 If a function called for {\tt th} returned {\tt XSB\_ERROR} this
 function provides a pointer to a string representing a message
@@ -1225,8 +1219,7 @@ portion of execution, messages are as in Volume 1 {\em Exception
 
 \begin{description}
 
-\ouritem{int xsb\_ccall\_thread\_create(th\_context *callingThread, th\_context **newThread)}
-\index{\texttt{xsb\_ccall\_thread\_create}}
+\ourCitem{int xsb\_ccall\_thread\_create(th\_context *callingThread, th\_context **newThread)}{xsb\_ccall\_thread\_create}
 %
 Causes {\tt callingThread} to create a thread pointed to by {\tt
   newThread}.  {\tt newThread} runs exactly the same interpreter loop
@@ -1238,16 +1231,14 @@ specific task or a detached thread, rather than one that executes a
 command loop, simply call the query {\tt thread\_create/[2,3]} from
 one of the query functions.
 
-\ouritem{th\_context *xsb\_get\_main\_thread()}\index{\texttt{xsb\_get\_main\_thread}}
+\ourCitem{th\_context *xsb\_get\_main\_thread()}{xsb\_get\_main\_thread}
 %
 Returns a pointer to the thread context of XSB's main thread.  If XSB
 has not been initialized or has been closed this function returns 0.
 
-\ouritem{xsb\_tid xsb\_thread\_id\_to\_context(th\_context *th)}
-\index{\texttt{xsb\_thread\_id\_to\_context}}
+\ourCitem{xsb\_tid xsb\_thread\_id\_to\_context(th\_context *th)}{xsb\_thread\_id\_to\_context}
 
-\ouritem{th\_context *xsb\_thread\_context\_to\_id(xsb\_tid id)}
-\index{\texttt{xsb\_thread\_context\_to\_id}}
+\ourCitem{th\_context *xsb\_thread\_context\_to\_id(xsb\_tid id)}{xsb\_thread\_context\_to\_id}
 
 \end{description}
 
@@ -1362,7 +1353,7 @@ into XSB 's register 1, which is necessary before calling {\tt
 
 
 \begin{description}
-\ouritem{void xsb\_make\_vars((int) N)} \index{\texttt{xsb\_make\_vars}}
+\ourCitem{void xsb\_make\_vars((int) N)}{xsb\_make\_vars}
     {\tt xsb\_make\_vars} creates a return structure of arity {\tt N}
 in Register 2.  So this routine may called before calling any of {\tt
 xsb\_query}, {\tt xsb\_query\_string}, {\tt xsb\_command}, or {\tt
@@ -1371,24 +1362,21 @@ goal.  It must be called before calling one of the {\tt
 xsb\_set\_var\_*} routines can be called. {\tt N} must be the number
 of variables in the query that is to be evaluated.
 
-\ouritem{void xsb\_set\_var\_int((int) Val, (int) N)} 
-\index{\texttt{xsb\_set\_var\_int}}
+\ourCitem{void xsb\_set\_var\_int((int) Val, (int) N)}{xsb\_set\_var\_int}
     {\tt set\_and\_int} sets the {\tt N}$^{th}$ field in the return
 structure to the integer value {\tt Val}.  It is used to set the value of
 the {\tt N}$^{th}$ variable in a query before calling {\tt xsb\_query} or
 {\tt xsb\_query\_string}.  When called in XSB, the query will
 have the {\tt N}$^{th}$ variable set to this value.
 
-\ouritem{void xsb\_set\_var\_string((char *) Val, (int) N)} 
-\index{\texttt{xsb\_set\_var\_string}}
+\ourCitem{void xsb\_set\_var\_string((char *) Val, (int) N)}{xsb\_set\_var\_string}
     {\tt set\_and\_string} sets the {\tt N}$^{th}$ field in the return
 structure to the atom with name {\tt Val}.  It is used to set the
 value of the {\tt N}$^{th}$ variable in a query before calling {\tt
 xsb\_query} or {\tt xsb\_query\_string}.  When called in XSB,
 the query will have the {\tt N}$^{th}$ variable set to this value.
 
-\ouritem{void xsb\_set\_var\_float((float) Val, (int) N)} 
-\index{\texttt{xsb\_set\_var\_float}}
+\ourCitem{void xsb\_set\_var\_float((float) Val, (int) N)}{xsb\_set\_var\_float}
     {\tt set\_and\_float} sets the {\tt N}$^{th}$ field in the return
 structure to the floating point number with value {\tt Val}.  It is
 used to set the value of the {\tt N}$^{th}$ variable in a query before
@@ -1396,20 +1384,20 @@ calling {\tt xsb\_query} or {\tt xsb\_query\_string}.  When called in
 XSB, the query will have the {\tt N}$^{th}$ variable set to this
 value.
 
-\ouritem{prolog\_int xsb\_var\_int((int) N)} \index{\texttt{xsb\_var\_int}} 
+\ourCitem{prolog\_int xsb\_var\_int((int) N)}{xsb\_var\_int}
 {\tt xsb\_var\_int} is called after {\tt xsb\_query} or {\tt
 xsb\_query\_string} returns an answer.  It returns the value of the
 {\tt N}$^{th}$ variable in the query as set in the returned answer.
 This variable must have an integer value (which is cast to {\tt
 long} in a 64-bit architecture).
 
-\ouritem{char* xsb\_var\_string((int) N)} \index{\texttt{xsb\_var\_string}}
+\ourCitem{char* xsb\_var\_string((int) N)}{xsb\_var\_string}
     {\tt xsb\_var\_string} is called after {\tt xsb\_query} or {\tt
 xsb\_query\_string} returns an answer.  It returns the value of the
 {\tt N}$^{th}$ variable in the query as set in the returned answer.
 This variable must have an atom value.
 
-\ouritem{prolog\_float xsb\_var\_float((int) N)} \index{\texttt{xsb\_var\_float}}
+\ourCitem{prolog\_float xsb\_var\_float((int) N)}{xsb\_var\_float}
     {\tt xsb\_var\_float} is called after {\tt xsb\_query} or {\tt
     xsb\_query\_string} returns an answer.  It returns the value of
     the {\tt N}$^{th}$ variable in the query as set in the returned
