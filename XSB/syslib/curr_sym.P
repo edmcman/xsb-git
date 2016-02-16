@@ -672,7 +672,7 @@ current_prolog_flag(Flag, Value) :-
     	        (  Value = action(A),
    	           tripwire_action(F,FA),
   	           xsb_flag(FA,A)
-  	         ; Value = parameter(P),
+  	         ; Value = limit(P),
   	           xsb_flag(F,P) )
          ;      atom(Flag),\+ compound(Value),xsb_flag(Flag,Value)
   	 ;	prolog_commons_flag(Flag,Value)
@@ -796,7 +796,7 @@ tripwire_action(max_table_subgoal_size,max_table_subgoal_size_action).
 tripwire_action(max_table_answer_size,max_table_answer_size_action).
 tripwire_action(max_incomplete_subgoals,max_incomplete_subgoals_action).
 tripwire_action(max_scc_subgoals,max_scc_subgoals_action).
-tripwire_action(max_memory,max_max_memory_action).
+tripwire_action(max_memory,max_memory_action).
 tripwire_action(max_answers_for_subgoal,max_answers_for_subgoal_action). 
 
 xsb_flag(write_attributes,Value):- 
@@ -940,16 +940,17 @@ xsb_flag(max_table_subgoal_size_action, Action) :-
 	stat_flag(MAX_TABLE_SUBGOAL_ACTION, A),
 	(A == XSB_ERROR -> Action = error 
          ; A == XSB_ABSTRACT -> Action = abstract 
-         ; A == XSB_SUSPEND -> Action = abstract 
-         ; A == XSB_FAILURE, Action = failure ).
+         ; A == XSB_SUSPEND -> Action = suspend).
+%         ; A == XSB_FAILURE, Action = failure ).
 xsb_flag(max_table_answer_size,Action):- 
 	stat_flag(MAX_TABLE_ANSWER_DEPTH,Action).
 xsb_flag(max_table_answer_size_action, Action) :-
 	stat_flag(MAX_TABLE_ANSWER_ACTION, A),
 	(A == XSB_ERROR -> Action = error 
-         ; (A == XSB_BRAT -> Action = bounded_rationality 
-	   ; (A == XSB_FAILURE -> Action = failure 
-              ; A == XSB_WARNING, Action = warning)) ).
+         ; (A == XSB_BRAT -> Action = abstract 
+         ; (A == XSB_SUSPEND -> Action = suspend) ) ).
+%	   ; (A == XSB_FAILURE -> Action = failure 
+%              ; A == XSB_WARNING, Action = warning) ).
 %xsb_flag(max_table_answer_list_depth,Depth):- 
 %	stat_flag(MAX_TABLE_ANSWER_LIST_DEPTH,Depth).
 %xsb_flag(max_table_answer_list_action, Action) :-
@@ -979,6 +980,9 @@ xsb_flag(max_tab_usage, Mode) :-
 	( Flag =:= 0 -> Mode = off ; Mode = on ).
 xsb_flag(max_memory, Max) :-
 	stat_flag(MAX_MEMORY, Max).
+xsb_flag(max_memory_action, Action) :-
+	stat_flag(MAX_MEMORY_ACTION,A),
+	(A == XSB_ERROR -> Action = error).
 xsb_flag(exception_pre_action, Mode) :-
 	stat_flag(EXCEPTION_PRE_ACTION, Flag),
 	( Flag =:= PRINT_INCOMPLETE_ON_ABORT -> 
@@ -1018,7 +1022,7 @@ set_xsb_flag_1(tripwire(F),V):-
 	(  V = action(A),
 	   tripwire_action(F,FA),
   	   set_xsb_flag_1(FA,A)
-	 ; V = parameter(P),
+	 ; V = limit(P),
 	   set_xsb_flag_1(F,P) ),!.
 %set_xsb_flag(tripwire(F),V):- 
 %	tripwire_1(F),
@@ -1168,22 +1172,23 @@ set_xsb_flag_1(max_table_subgoal_size_action, Action) :-!,
 	    stat_set_flag(MAX_TABLE_SUBGOAL_ACTION, XSB_SUSPEND)
           ; (Action == abstract ->  
 	    stat_set_flag(MAX_TABLE_SUBGOAL_ACTION, XSB_ABSTRACT)
-            ; domain_error([error,', ',failure],
+            ; domain_error([error,', ',suspend,', ',abstract],
                         Action,set_xsb_flag/2,2,'max_table_subgoal_action clause') ) ) ).
 set_xsb_flag_1(max_table_answer_size, Size) :-!,
 	stat_set_flag(MAX_TABLE_ANSWER_DEPTH, Size).
 set_xsb_flag_1(max_table_answer_size_action, Action) :-!,
 	(Action == error -> 
 	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_ERROR)
-          ; (Action == warning ->  
-	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_WARNING)
+%          ; (Action == warning ->  
+%	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_WARNING)
           ; ((Action == bounded_rationality ; Action == abstract) ->  
 	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_BRAT),
 	    reinitialize_undefineds
           ; (Action == suspend ->  
 	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_SUSPEND)
-            ; domain_error([error,', ',warning,', ',suspend,', ',bounded_rationality],
-                        Action,set_xsb_flag/2,2,'max_table_answer_action clause') ) ) ) ).
+%            ; domain_error([error,', ',warning,', ',suspend,', ',abstract],
+            ; domain_error([error,', ',suspend,', ',abstract],
+                        Action,set_xsb_flag/2,2,'max_table_answer_action clause') ) ) ).
 set_xsb_flag_1(max_incomplete_subgoals, Max) :-!,
 	stat_set_flag(MAX_INCOMPLETE_SUBGOALS, Max).
 set_xsb_flag_1(max_incomplete_subgoals_action, Action) :-!,
@@ -1215,6 +1220,11 @@ set_xsb_flag_1(max_memory,Max):-!,
 	     Ram is floor(Ram1/1024),
 	     stat_set_flag(MAX_MEMORY,Ram)
 	 ;  domain_error(positive_number,Max,set_prolog_flag/2,2,max_memory_clause) ).
+% TES: Placeholder for now.
+set_xsb_flag_1(max_memory_action, Action) :-!,
+	(Action == error -> 
+	    stat_set_flag(MAX_MEMORY_ACTION, XSB_ERROR)
+          ; domain_error([error],Action,set_prolog_flag/2,2,'max_memory_action clause') ).
 
 
 set_xsb_flag_1(ctrace, OnOff) :-!,
