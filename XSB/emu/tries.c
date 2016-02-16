@@ -1017,7 +1017,7 @@ static int *depth_stack;
     }									\
     else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
       printf("Debug: suspending on max_table_answer\n");		\
-      tripwire_interrupt(CTXTc "max_table_answer_handler");			\
+      tripwire_interrupt(CTXTc "max_table_answer_size_handler");			\
       }									\
     else  {  /* error */						\
       sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
@@ -2030,7 +2030,7 @@ int vcs_tnot_call = 0;
       }									\
       else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {	\
 	printf("Debug: suspending on max_table_subgoal\n");		\
-	tripwire_interrupt(CTXTc "max_table_subgoal_handler");		\
+	tripwire_interrupt(CTXTc "max_table_subgoal_size_handler");		\
 	clean_up_subgoal_table_structures_for_throw;				\
 	return XSB_FAILURE;						\
       }									\
