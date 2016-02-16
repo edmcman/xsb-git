@@ -161,7 +161,7 @@ interrupt flag
 #define CYCLIC_CHECK_SIZE               108
 #define MAX_TABLE_SUBGOAL_VAR_NUM               109
 #define MAX_TABLE_ANSWER_VAR_NUM               110
-
+#define MAX_MEMORY_ACTION 111
 #define MAX_FLAGS		 120
 
 #define MAXTOINDEX 20              /* maximum depth in term to go when using deep indexing; 

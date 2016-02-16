@@ -270,6 +270,7 @@ static void init_flags(CTXTdecl)
   //  flags[MAX_TABLE_ANSWER_LIST_ACTION] = XSB_ERROR;
   flags[MAX_TABLE_SUBGOAL_VAR_NUM] = 2000;
   flags[MAX_TABLE_ANSWER_VAR_NUM] = 20000;
+  flags[MAX_MEMORY_ACTION] = XSB_ERROR;
 
   flags[CYCLIC_CHECK_SIZE] = 1000;
   flags[MAXTOINDEX_FLAG] = 5;
