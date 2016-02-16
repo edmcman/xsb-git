@@ -566,8 +566,8 @@ obtained through predicates such as {\tt get\_residual/2} and {\tt
 
 \begin{description}
 \index{residual program}
-\index{\texttt{get\_residual/2}}
-\index{\texttt{variant\_get\_residual/2}}
+\predref{get\_residual/2}
+\predref{variant\_get\_residual/2}
 \index{Incremental Dependency Graph (IDG)}
 \index{residual dependency graph}
 \ourrepeatmoditem{get\_rdg\_info(+PairList,-SDG)}{get\_rdg\_info/2}{tables}
@@ -620,7 +620,7 @@ is called, information is returned about the entire dependency graph.
 %{\em depends on} or {\em affects}.
 
 \index{termination!radial restraint} 
-\index{\texttt{u\_not/1}} 
+\predref{u\_not/1}
 %
 {\bf {\em Warning: these predicates may be obsolescent.}}
 
@@ -687,8 +687,8 @@ the high-level topography of the dependency graph~\footnote{Currently,
   
 \index{radial restraint}
 \index{termination!radial restraint}
-\index{\texttt{u\_not/1}}
-\index{\texttt{get\_residual\_sccs/5}}
+\predref{u\_not/1}
+\predref{get\_residual\_sccs/5}
 \ourrepeatmoditem{explain\_u\_val(+Subgoal,+Answer,-Reason)}{explain\_u\_val/3}{tables}	
 \ourmoditem{explain\_u\_val(+Subgoal,+Answer,-Sccs,-Deps,-Signs,-Reason)}{explain\_u\_val/6}{tables}	
 %
@@ -739,7 +739,7 @@ s(f(X)):- s(X).               s(0).
 \end{verbatim}
 %
 where the bounded rationality size has been set to 3.  The query {\tt
-  explain\_u\_value(p,P,Reason)} will bind {\tt Reason} to {\tt
+  explain\_u\_val(p,P,Reason)} will bind {\tt Reason} to {\tt
   negative\_loops(cycle)}, to {\tt negative\_loops(dependent)}, and
 to {\tt bounded\_rationality} (this ordering is not guaranteed).
 \end{example}
@@ -886,10 +886,23 @@ for each SCC under evaluation, such that:
 \item {\tt NumNegEdges} is the total number of negative edges within the SCC.
   \ei
 
+\ourmoditem{print\_sdg\_info}{print\_sdg\_info/0}{tables}
+%
+Prints the current SDG to {\tt stdout} in a readable
+manner.\footnote{This predicate, along with {\tt
+    print\_sdg\_subgoal\_info/0} replaces the predicate {\tt
+    print\_incomplete\_tables/0}, which was included in previous
+  releases.}
+
+\ourmoditem{print\_sdg\_subgoal\_info}{print\_sdg\_subgoal\_info/0}{tables}
+%
+Prints summary subgoal information about the current SDG to {\tt stdout} in a
+readable manner.
+
 \ourmoditem{print\_dep\_graph(+DG)}{print\_dep\_graph/1}{tables}
 %
-Prints the dependency graph {\tt DG} {\tt stdout} in a simple, but
-readable manner.
+Prints a dependency graph {\tt DG} (whether its an SDG, IDG, or RDG)
+to {\tt stdout} in a simple, but readable manner.
 %
 \begin{example}
 Continuing from Example~\ref{ex:morph-sdg}, if 
@@ -910,15 +923,6 @@ Subgoal: q(3,3)
         Affects positively q(1,3) 
 \end{verbatim}
 \end{example}
-
-\ourmoditem{print\_sdg\_info}{print\_sdg\_info/0}{tables}
-%
-Prints the current SDG to {\tt stdout} in a readable manner.
-
-\ourmoditem{print\_sdg\_subgoal\_info}{print\_sdg\_subgoal\_info/0}{tables}
-%
-Prints summary subgoal information about the current SDG to {\tt stdout} in a
-readable manner.
 
 \end{description}
 
@@ -1040,12 +1044,12 @@ For a tripwire {\tt T} that can be set and viewed as a Prolog flag,
 the flag name has the form {\tt tripwire(T)}, and this flag has two or
 more values.  An {\em action}, designated {\tt action(A)}, indicating
 the action to take such as {\tt error}, {\tt suspend}, or other
-actions; and one or more parameters, designated {\tt parameter(P)}.
+actions; and one or more parameters, designated {\tt limit(P)}.
 For example, if a user wants to be able to suspend and inspect a
 computation whenever it has an active recursive component (SCC) with
 over 100 subgoals, she can execute the following directives:
 
-{\tt ?- set\_prolog\_flag(tripwire(max\_scc\_subgoals),parameter(100)).}
+{\tt ?- set\_prolog\_flag(tripwire(max\_scc\_subgoals),limit(100)).}
 
 {\tt ?- set\_prolog\_flag(tripwire(max\_scc\_subgoals),action(suspend)).}
 
@@ -1062,8 +1066,8 @@ imposed by the platform or operating system, and thus differs from an
 ISO resource error.
 
 \index{tripwires!timed call} 
-\index{\texttt  {timed\_call/2}}
-\index{\texttt  {timed\_call\_modify/1}}
+\predref{timed\_call/2}
+\predref{timed\_call\_modify/1}
 %
 Time-based resource tripwires can easily
 be programmed using a handler to {\tt timed\_call/2}.  Time-based
@@ -1084,47 +1088,107 @@ as a floating point number indicating a percentate of the RAM of the
 platform upon which XSB is executing.  Currently, a memory-based
 tripwire can only throw an error.
 
-\paragraph{Guidelines for Analysis of Resource-based Tripwires} 
+\paragraph{Guidelines for Analysis of Resource-based Tripwires}  \ \\
+
+{\bf {\em Note that the numbers and sizes below are for example
+    purposes only.  If memory limits are set to, say, a gigabyte or
+    more of memory, and time limits are set to several seconds, the
+    numbers and sizes may be several orders of magnitude more than
+    those shown below.}}
+
 If a resource tripwire is hit, the best course of analysis usually
 starts with viewing the output of {\tt statistics/[0,1]}.  
 \bi
-\item If there are a large number of incomplete tables, XSB's stask
-  space is likely to be high also, since an incomplete table $T$ needs
-  to maintain many details of its derivation state to ensure all
-  answers for $T$ are returned to all calls to $T$.  In this case,
-  the predicates for analyzing the Subgoal Dependency Graph of the
-  suspended derivation can be used (Section~\ref{sec:sdg-preds}).
-  {\em Note that, here and below, information returned by {\tt
-      get\_sdg\_info/1}, as well as by {\tt get\_idg\_info/1} and {\tt
-      get\_rdg\_info/1} may need to be filtered or manipulated using
-    the predicates in
-    Section~\ref{sec:dependency-graph-manipulation}.}
+\item {\em Check that there are a large number of incomplete tables}
+  This can be determined, for instance, using the output of {\tt
+    statistics/0}, by a line near the end of the memory
+  table.~\footnote{This line is not printed out if there are no
+    incomplete tables.}  E.g.:
+%
+{\small \begin{verbatim}
+        (501227 incomplete table(s) in 89 SCCs)
+\end{verbatim} }
 
-\item Otherwise, if there are not many incomplete tables but the table
-  space seems large, {\tt statistics/[0,1,2]} indicates both the total
-  number of tabled subgoals and the total number of answers.  In this
-  case, {\tt table\_dump/[2,3]} can be called to provide further
-  information.
+\bi
+\item If there are a large number of incomplete tables, XSB's stask
+ space is likely to be high also, since an incomplete table $T$ needs
+ to maintain many details of its derivation state to ensure all
+ answers for $T$ are returned to all calls to $T$.  In this case, the
+ predicates for analyzing the Subgoal Dependency Graph of the
+ suspended derivation can be used (Section~\ref{sec:sdg-preds}).  {\em
+ Note that, here and below, when there are a large number of
+ incomplete tables, information returned by {\tt get\_sdg\_info/1}, as
+ well as by {\tt get\_idg\_info/1} and {\tt get\_rdg\_info/1} may need
+ to be filtered or manipulated using the predicates in
+ Section~\ref{sec:dependency-graph-manipulation}.}
+\ei
+
+\item {\em Otherwise, Check whether there are a large number of
+ completed subgoals.} If there are not many incomplete
+ tables but the table space seems large, {\tt statistics/[0,1,2]}
+ indicates both the total number of tabled subgoals and the total
+ number of answers.  In this case.  For instance, the beginning of the
+ summary of tabling operations might contain information such as:
+
+%
+{\small 
+\begin{verbatim}
+ Tabling Operations
+  12 subsumptive call check/insert ops: 9 producers, 3 variants,
+  0 properly subsumed (0 table entries), 0 used completed table.
+  0 relevant answer ident ops.  0 consumptions via answer list.
+  1065417 variant call check/insert ops: 938125 producers, 127292 variants.
+  46210 answer check/insert ops: 46210 unique inserts, 0 redundant.
+\end{verbatim} } 
+
+This indicates that there are 1065417 subgoals (complete or incomplete)
+tabled with call variance, and 12 subgoals tabled with call
+subsumption.  Among all subgoals there are 46210 ansewrs.  
+\bi
+\item To understand details of overall table space usage, {\tt
+  table\_dump/[2,3]} can be called to provide further information
+  (Section~\ref{sec:table-dump}).  
+\ei
+%
+\item {\em Check whether the IDG is large.}  In addition to simply
+  having a large number of subgoals (incomplete or complete) and
+  answers, the use of incremental dependency, which maintains an IDG,
+  has an effect on memory.  {\tt statistics/[0,1]} indicates when
+  incremental tabling is being used heavily, by a line towards the
+  bottom of the output, such as:
+%Total number of incremental subgoals created: 50
+{\small \begin{verbatim}
+Currently 501688 incremental subgoals, 781432 dependency edges
+\end{verbatim} }
 %
 \bi
-\item If {\tt statistics/[0,1]} indicates that incremental tabling is
-  being used heavily, {\tt get\_idg\_info/1}
+\item When there are large numbers of incrementally tabled subgoals
+  and dependency edges, {\tt get\_idg\_info/1}
   (Section~\ref{sec:idg-preds}) can be used to obtain a global view of
   the IDG.  Note that incremental tabling does require more memory for
   completed tables than non-incremental tabling, due to the need to
-  retain the IDG.
-\item If {\tt statistics/[0,1]} indicates that there are a large
-  number of answers with truth value {\em undefined}~\footnote{This is
-    indicated by a large number of DEs and DLs in {\tt statistics/0}
-    or by a call to {\tt statistics(table)}.} {\tt get\_rdg\_info/[1]}
-  and/or {\tt explain\_u\_val/2} can be used to understand the
-  dependencies among these answers.  
-\ei \ei
+  retain the IDG.  
+\ei
+\item {\em Check whether there are a large number of answers whose
+  truth value is {\em undefined}}.  This is indicated, for instance,
+  by lines at the end of the summary of tabling operations in {\tt
+    statistics/0}.~\footnote{These lines are not printed out if there are no
+    incomplete tables.}  E.g.:
+{\small \begin{verbatim}
+   80005 DEs in the tables (space: 3932480 bytes allocated, 3840560 in use)
+   40005 DLs in the tables (space: 983200 bytes allocated, 960280 in use)
+\end{verbatim} }
+%
+\bi
+If there is indication that there are a large number of answers with
+ truth value {\em undefined}{\tt get\_rdg\_info/[1]} and/or {\tt
+ explain\_u\_val/2} can be used to understand the dependencies among
+ these answers.  
+\ei
+\ei
 
 \subsubsection{Tripwires Based on Properties of a Tabled Derivation}
 %
-{\sc Not all tripwires have yet been implemented}
-
 Theoretically speaking, if a tabled derivation is not terminating it
 is because there are an unbounded number of SLG trees, or because one
 or more of the SLG trees is of unbounded size.  The former case
@@ -1139,27 +1203,27 @@ in turn.
 \item {\em There are too many tabled subgoals} 
 \bi
 \item {\em There are a potentially unbounded number of tabled
-  subgoals} In this case, there must be a potentially unbounded number
-  of {\em distinct} tabled subgoals in the derivation.  If call
-  variance is being used, this situation can sometimes be addressed by
-  using call subsumption.  However termination can be ensured by using
-  subgoal abstraction, as long as a derivation produces only a finite
-  number of answers~\cite{RigS14}.  XSB allows subgoal abstraction to
-  be applied based on term size either globally through the tripwire
-  {\tt max\_table\_subgoal\_size}, or on a predicate-by-predicate
-  basis through tabling directives
-  (cf. Section~\ref{sec:tabling-termination}).  In other words, when a
-  tabled subgoal, $S_{deep}$, is called whose size is greater then
-  the limit specified for its predicate, a tripwire is activated, and
-  various actions can be specified.  In many -- perhaps most -- cases,
-  the best action is simply to abstract $S_{deep}$.  However it is
-  also possible to suspend and inspect the derivation so that the
-  causes that led to $S_{deep}$ can be analyzed.  As a final
-  alternative, an error can be thrown, which may be useful in certain
-  cases.
+ subgoals.}\/ In this case, there must be a potentially unbounded
+ number of {\em distinct} tabled subgoals in the derivation.  If this
+ happens using call variance, this situation can sometimes be
+ addressed by using call subsumption instead.  However termination can
+ always be ensured by using subgoal abstraction, as long as a
+ derivation produces only a finite number of answers
+ (cf. Section~\ref{sec:tabling-termination} and \cite{RigS14}).  XSB
+ allows subgoal abstraction to be applied based on term size either
+ globally through the tripwire {\tt max\_table\_subgoal\_size}, or on
+ a predicate-by-predicate basis through tabling directives.  In other
+ words, when a tabled subgoal, $S_{big}$, is called whose size is
+ greater then the limit specified for its predicate, a tripwire is
+ activated, and various actions can be specified.  In many -- perhaps
+ most -- cases, the best action is simply to abstract $S_{big}$.
+  However it is also possible to suspend and inspect the derivation so
+ that the causes that led to $S_{big}$ can be analyzed.  As a final
+ alternative, an error can be thrown, which may be useful in certain
+ cases and which is the default action.
 
 \item {\em There are a finite but large number of tabled
-  subgoals}\ Checking for the size of a subgoal may not catch certain
+  subgoals.}\/ Checking for the size of a subgoal may not catch certain
   causes of inefficency. If a program is written over a language that
   has a finite but large number of constant symbols, then a program
   that generates subgoals of the form
@@ -1171,33 +1235,36 @@ in turn.
 
   To address such situations XSB has two further tripwires.
 \bi
-\item The derivation has a state in which there are a large number of
-  incomplete subgoals that do not necessarily occur in the same
-  recursive component.  The tripwire {\tt max\_incomplete\_subgoals}
-  allows a limit to be set on the maximal number of incomplete
-  subgoals.  If a derivation exceeds that limit, the computation may
-  be suspended, or an error thrown.
+\item {\em The derivation has a state in which there are a large
+ number of incomplete subgoals that do not necessarily occur in the
+ same recursive component.}\/ The tripwire {\tt
+ max\_incomplete\_subgoals} allows a limit to be set on the maximal
+ number of incomplete subgoals.  If a derivation exceeds that limit,
+ the computation may be suspended, or an error thrown.
 
 \item The derivation has a state in which there is a large number of
-  incomplete subgoals in the {\em same} recurive component.  The
-  tripwire {\tt max\_scc\_subgoals} allows a limit to be set on the
-  maximal number of incomplete subgoals in any recursive component.
-  If a derivation exceeds that limit, the computation may be
-  suspended, or an error thrown.  This situation is similar to the
-  previous one, but may suggest a different focus when analyzing a
-  suspended computation.  
+ incomplete subgoals in the {\em same} recurive component.  The
+ tripwire {\tt max\_scc\_subgoals} allows a limit to be set on the
+ maximal number of incomplete subgoals in any recursive component.  If
+ a derivation exceeds that limit, the computation may be suspended, or
+ an error thrown.  This situation is similar to the previous one, but
+ may suggest a different focus when analyzing a suspended computation.
+  In addition, the number of dependencies can rise quadratically with
+ the absolute size of an SCC.  As a result, it often makes sense to
+ have different limit for the size of a single (incomplete) SCC and
+ for the number of incomplete subgoals overall
 %
 \ei 
 %
 {\em Guidelines for Analysis} If the computation is producing too many
-tabled subgoals the suspension may have been triggered by one of the
-tripwires: {\tt max\_table\_subgoal\_size}, {\tt
-  max\_incomplete\_subgoals} or {\tt max\_scc\_size}.  In any of these
-cases, the suspension or error message will indicate the tripwire that
-has been hit.  The number of incomplete subgoals can be seen from the
-output of {\tt statistics/0}.  By using the predicates for inspecting
-the SDG, these subgoals can be examined, and if needed, their
-dependencies determined.
+ tabled subgoals the suspension may have been triggered by one of the
+ tripwires: {\tt max\_table\_subgoal\_size}, {\tt
+ max\_incomplete\_subgoals} or {\tt max\_scc\_size}.  In any of these
+ cases, the suspension or error message will indicate the tripwire
+ that has been hit.  The number of incomplete subgoals can be seen
+ from the output of {\tt statistics/0}.  By using the inspection
+ predicates of Section~\ref{sec:dep-graph} can be used to examine these
+ subgoals and their dependencies.
 %
 \ei
 \ei 
@@ -1210,23 +1277,22 @@ dependencies determined.
 \bi
 \item {\em One or more subgoals has an unbounded number of answers.}
   In this case, termination can be ensured by using radial restraint,
-  which abstracts answers in a manner that is sound with respect to
-  the well-founded semantics~\cite{GroS13}, and can ensure that a
-  derivation will produce only a finite number of answers.  XSB allows
-  subgoal abstraction to be applied based on term depth in two ways.
-  First, restraint can be applied globally through the tripwires {\tt
-    max\_table\_answer\_list\_depth} for lists, and {\tt
-    max\_table\_answer\_depth} for other terms
-  (cf. Section~\ref{sec:restraint}).  Second, XSB allows restraint to
-  be declared at a predicate-by-predicate basis.  In other words, when
-  an answer, $A_{deep}$, is to be added to a table, and its depth is
-  greater then the limit specified for its predicate, a tripwire is
-  activated, and various actions can be specified.  In most cases, the
-  best action is simply to abstract $A_{deep}$, which gives it the
-  truth value {\em undefined} for that answer. However it is also
-  possible for the derivation to be suspended so that the causes that
-  led to $A_{deep}$ can be analyzed.  As a final alternative an error
-  can be thrown, which may be useful in certain cases.
+ which abstracts answers in a manner that is sound with respect to the
+ well-founded semantics and can ensure that a derivation will produce
+ only a finite number of answers
+ (cf. Section~\ref{sec:tabling-termination} and\cite{GroS13}), XSB
+ allows radial restraint to be applied based on term size in two ways.
+  First, restraint can be applied globally through the tripwire {\tt
+ max\_table\_answer\_size}.  Second, XSB allows restraint to be
+ declared at a predicate-by-predicate basis.  In other words, when an
+ answer, $A_{big}$, is to be added to a table, and its size is greater
+ then the limit specified for its predicate, a tripwire is activated,
+ and various actions can be specified.  In many cases, the best action
+ is simply to abstract $A_{big}$, which gives it the truth value {\em
+ undefined} for that answer. However it is also possible for the
+ derivation to be suspended so that the causes that led to $A_{big}$
+ can be analyzed.  As a final alternative an error can be thrown; this
+ is the default action for XSB.
 
 \item {\em There are a finite but large number of tabled answers.}\ As
   with subgoals, checking for the depth of an answer may not catch
@@ -1246,9 +1312,8 @@ dependencies determined.
 %
  \ei {\em Guidelines for Analysis} If the computation is producing too
  many tabled answers, a suspension may be triggered by one of the
- tripwires: {\tt max\_table\_answer\_depth}, {\tt
-   max\_table\_answer\_list\_depth}, or {\tt
-   max\_answers\_for\_subgoal}.  In any of these cases, the suspension
+ tripwires: {\tt max\_table\_answer\_size}, or {\tt
+ max\_answers\_for\_subgoal}.  In any of these cases, the suspension
  (or error message) will indicate the subgoal whose number of answers
  hit the tripwire.  The number and shape of answers for that subgoal
  and others can be viewed through the {\tt table\_dump} library
@@ -1256,29 +1321,80 @@ dependencies determined.
  predicates {\tt get\_rdg\_info/1} and {\tt explain\_u\_val/2} can be
  used to explore dependencies among the answers.  In addition,
  dependency graph analysis based on the predicates {\tt
-   get\_sdg\_info/1} and {\tt get\_idg\_info/1} can help locate areas
- of code that caused the profusion of answers.
+ get\_sdg\_info/1} and {\tt get\_idg\_info/1} can help locate areas of
+ code that caused the profusion of answers.
 
  \ei
 
 \subsubsection{Summary of Flag-Based Tripwires}
+%
+Each of the tripwires described below can be queried and set via
+ prolog flags.  For instance the query
 
-\begin{description}
+\begin{verbatim}
+| ?- current_prolog_flag(tripwire(max_table_subgoal_size),Property).
+
+Property = limit(12)
+Property = action(error);
+\end{verbatim}
+indicates the current values of this tripwire.  (Also see the
+ description of Prolog flags in Section~\ref{State}.)
+
+%\paragraph*{Tripwire Description
+\begin{itemize}
+
+\item {\em max\_table\_subgoal\_size}. 
+\bi  
+\item {\em Limit:} The maximum size of a given argument in a
+ subgoal (cf. Section~\ref{sec:size-metric}).  
+\item{\em  Possible Actions:} {\tt abstract}, {\tt suspend} or {\tt error}.
+\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\ei
 
 \item {\tt max\_incomplete\_subgoals}
+\bi  
+\item {\em Limit:} The maximum number of subgoals that are
+ incomplete at any given time.
+\item{\em  Possible Actions:} {\tt suspend}, {\tt error} or {\tt warning}.
+\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\ei
 
 \item {\tt max\_scc\_subgoals}
-
-\item {\tt max\_table\_subgoal\_size}
+\bi  
+\item {\em Limit:} The maximum number of subgoals that are
+ incomplete, and are in the same SCC at any given time.
+\item{\em  Possible Actions:} {\tt suspend}, {\tt error} or {\tt warning}.
+\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\ei
 
 \item {\tt max\_table\_answer\_size}
+\bi  
+\item {\em Limit:} The maximum size of a given argument of an
+ answer (cf. Section~\ref{sec:size-metric}).  
+\item{\em  Possible Actions:} {\tt abstract}, {\tt suspend}, or {\tt error}.
+\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\ei
+
+\item {\tt max\_answers\_for\_subgoal} (Not yet implemented)
+\bi  
+\item {\em Limit:} The maximum number of for any single tabled
+ subgoal.
+\item{\em  Possible Actions:} {\tt suspend}, {\tt error} or {\tt warning}.
+\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\ei
 
 \item {\tt max\_memory}
+\bi  
+\item {\em Limit:} If an integer, the limit is the maximum
+ amount of memory allowed for a computation, in kilobytes.  If a
+ floating-point number, the limit is the proportion of RAM for the
+ machine on which XSB is running.
+\item{\em Possible Actions:} {\tt error}. ({\tt suspend} is not yet
+ implemented, and this tripwire may be a little funky.)
+\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\ei
 
-\item {\tt max\_answers\_for\_subgoal}
-
-
-\end{description}
+\end{itemize}
 
 %%% Local Variables: 
 %%% mode: latex

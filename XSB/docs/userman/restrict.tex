@@ -1,7 +1,8 @@
 \chapter{Restrictions and Current Known Bugs}
 
-In this chapter we indicate some features and bugs of XSB that may
-affect the users at some point in their interaction with the system.
+{\bf {\em Note: this chapter is obsolescent: most restrictions are
+    discussed in previous chapter, near the functionality or
+    predicates to which they pertain.}}
 
 If at some point in your interaction with the system you suspect that
 you have run across a bug not mentioned below, please report it to
@@ -16,8 +17,8 @@ fix it or to assist you to bypass it.
 \begin{itemize}
 \item The maximum arity for predicate and function symbols is 255.
 %
-\item The maximum length of atoms that can be stored in an XSB
-      \emph{object} code file is in principle $2^{32}-1$.
+%\item The maximum length of atoms that can be stored in an XSB
+%      \emph{object} code file is in principle $2^{32}-1$.
 %
 \index{terms!cyclic}
 \item Not all of XSB's tabling and built-ins currently take account of
@@ -31,27 +32,27 @@ fix it or to assist you to bypass it.
       causes the system to load it into wrong places.  However, byte code 
       files for non-modules can be renamed at will.
 %
-\item XSB allows up to 1 Gigabyte of address space for 32-bit chips.
-  There are various tagging schemes, which depend on the operating
-  system and where in the 32-bit virtual address space it allocates
-  user memory.  The most general tagging scheme (named
-  GENERAL\_TAGGING) adjusts itself to the address space in use.  Other
-  more specific tagging schemes are available for specific
-  architectures.  Floating point numbers are by default double
-  precision when computed at runtime.  Floating point numbers in the
-  compiler are only single precision (due to the way they are
-  represented in object byte-code files.)  If {\tt
-    --enable-fast-floats} is specified, then 28-bit floats are used.
-  For 64-bit platforms, addresses are stored in 60 bits.  However, as
-  the \emph{object} code file format is the same as for the 32-bit
-  versions, compiled constants are subject to 32-bit limitations.
-%
-\item Indexing on floating-point numbers is suspect, since, as
-      implemented in XSB, the semantics of floating-point unification
-      is murky in the best case. Therefore, it is advisable that if
-      you use floating point numbers in the first argument of a
-      procedure, that you explicitly index the predicate in some other
-      argument.
+%\item XSB allows up to 1 Gigabyte of address space for 32-bit chips.
+%  There are various tagging schemes, which depend on the operating
+%  system and where in the 32-bit virtual address space it allocates
+%  user memory.  The most general tagging scheme (named
+%  GENERAL\_TAGGING) adjusts itself to the address space in use.  Other
+%  more specific tagging schemes are available for specific
+%  architectures.  Floating point numbers are by default double
+%  precision when computed at runtime.  Floating point numbers in the
+%  compiler are only single precision (due to the way they are
+%  represented in object byte-code files.)  If {\tt
+%    --enable-fast-floats} is specified, then 28-bit floats are used.
+%  For 64-bit platforms, addresses are stored in 60 bits.  However, as
+%  the \emph{object} code file format is the same as for the 32-bit
+%  versions, compiled constants are subject to 32-bit limitations.
+%%
+%\item Indexing on floating-point numbers is suspect, since, as
+%      implemented in XSB, the semantics of floating-point unification
+%      is murky in the best case. Therefore, it is advisable that if
+%      you use floating point numbers in the first argument of a
+%      procedure, that you explicitly index the predicate in some other
+%      argument.
 %
 \item	The XSB compiler cannot distinguish the occurrences of a
       0-ary predicate and a name of a module (of an import declaration) as

@@ -70,32 +70,39 @@
 \newcommand{\ourstandarditem}[3]{\item[{\mbox{\tt #1}}  ] \index[pred]{\texttt{#2}} \index{\texttt{#2}} \hspace*{\fill}{\mbox{\sf #3}}\ \\}
 \newcommand{\ourrepeatstandarditem}[3]{\item[{\mbox{\tt #1}}] \index[pred]{\texttt{#2}} \index{\texttt{#2}} \hspace*{\fill}{\mbox{\sf #3}}\ \\ \vspace*{-.25in}}
 
-% use our(repeat)item in libraries etc. where the module is understood
-\newcommand{\ouritem}[1]{\item[{\mbox{\tt #1}}] \ \\}
-\newcommand{\ourrepeatitem}[1]{\item[{\mbox{\tt #1}}]\ \\ \vspace*{-.35in}}
-
-% mosly obsolete, and only used in a couple of cases
-\newcommand{\ournewrepeatitem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\sf #2}}\ \\ \vspace*{-.35in}}
-\newcommand{\ournewitem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\sf #2}}\ \\}
-
-\newcommand{\ourCitem}[2]{\item[{\mbox{\tt #1}}]\index{\texttt{#2}{\texttt{()}}}\hspace*{\fill}{\mbox{\it C function}}\ \\}
-
+% Use for non-standard predicates
 \newcommand{\ourmoditem}[3]{\item[{\mbox{\tt #1}}] \index{\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\}
 \newcommand{\ourrepeatmoditem}[3]{\item[{\mbox{\tt #1}}]\index{\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\ \vspace*{-.35in}}
 
-% used for manual2 -> manual1
-%\newcommand{\ouroldmoditem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\tt module: #2}}\ \\}
-%\newcommand{\altourmoditem}[3]{\item[{\mbox{\tt #1}}] \index{\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\}
+% Use for C predicates
+\newcommand{\ourCitem}[2]{\item[{\mbox{\tt #1}}]\index{\texttt{#2}{\texttt{()}}}\hspace*{\fill}{\mbox{\it C function}}\ \\}
 
-\newcommand{\ournewmoditem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\sf #2}
-                   {\mbox{\sf module: }{\tt #2}}\ \\}
+% Use to refer to predicates in main index.  If you index directly,
+% the latex mangling of commands will make the index inconsistent.
+\newcommand{\predref}[1]{\index{\texttt{#1}}}
 
-\newcommand{\ourusageitem}[1]{\item[{\mbox{\tt #1}}]\ \\ \vspace*{-.25in}}
+%%%%%%%%%%%%% OBSOLETE SPECIAL CASES %%%%%%%%%%%%%%%%%%
+% Only used in one case in foreign -- could be disposed of.
+\newcommand{\ouritem}[1]{\item[{\mbox{\tt #1}}] \ \\}
+\newcommand{\ourrepeatitem}[1]{\item[{\mbox{\tt #1}}]\ \\ \vspace*{-.35in}}
+
+% Only used for special cases like \+.  Maybe we could get rid of it
+% with some fiddling.
+\newcommand{\ournewrepeatitem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\sf #2}}\ \\ \vspace*{-.35in}}
+\newcommand{\ournewitem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\sf #2}}\ \\}
 
 \newcommand{\ourisousageitem}[2]{\item[{\mbox{\tt #1}}] \index[pred]{\texttt{#2}} \index{\texttt{#2}} \hspace*{\fill}{\mbox{\sf ISO}}\ \\ \vspace*{-.25in}}
 \newcommand{\ourusage}[1]{\begin{itemize} 
 	                               \item {\bf Usage:} {\tt #1} 
 	                               \end{itemize}}
+% used for manual2 -> manual1
+%\newcommand{\ouroldmoditem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\tt module: #2}}\ \\}
+%\newcommand{\altourmoditem}[3]{\item[{\mbox{\tt #1}}] \index{\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\}
+
+%\newcommand{\ournewmoditem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\sf #2}
+%                   {\mbox{\sf module: }{\tt #2}}\ \\}
+
+%\newcommand{\ourusageitem}[1]{\item[{\mbox{\tt #1}}]\ \\ \vspace*{-.25in}}
 
 \newcommand{\stuff}[1]{
         \begin{minipage}{4in}

@@ -458,35 +458,35 @@ known to the C compiler.
 The first set of functions is typically used to check the type of
 Prolog terms passed into the C program. %%
 \begin{description}
-\ouritem{xsbBool is\_attv((prolog\_term) T)} \index{\texttt{is\_attv}}
+\ourCitem{xsbBool is\_attv((prolog\_term) T)}{is\_attv}
     {\tt is\_attv(T)} returns {\tt TRUE} if {\tt T} represents an XSB
     attributed variable,  and {\tt FALSE} otherwise.
 
-\ouritem{xsbBool is\_float((prolog\_term) T)} \index{\texttt{is\_float}}
+\ourCitem{xsbBool is\_float((prolog\_term) T)}{is\_float}
     {\tt is\_float(T)} returns {\tt TRUE} if {\tt T} represents an XSB
     float value, and {\tt FALSE} otherwise.
 
-\ouritem{xsbBool is\_functor((prolog\_term) T)} \index{\texttt{is\_functor}}
+\ourCitem{xsbBool is\_functor((prolog\_term) T)}{is\_functor}
     {\tt is\_functor(T)} returns {\tt TRUE} if {\tt T} represents an
     XSB structure value (not a list), and {\tt FALSE} otherwise.
 
-\ouritem{xsbBool is\_int((prolog\_term) T)} \index{\texttt{is\_int}}
+\ourCitem{xsbBool is\_int((prolog\_term) T)}{is\_int}
     {\tt is\_int(T)} returns {\tt TRUE} if {\tt T} represents an XSB
     integer value, and {\tt FALSE} otherwise.
 
-\ouritem{xsbBool is\_list((prolog\_term) T)} \index{\texttt{is\_list}}
+\ourCitem{xsbBool is\_list((prolog\_term) T)}{is\_list}
     {\tt is\_list(T)} returns {\tt TRUE} if {\tt T} represents an
     XSB list value (not nil), and {\tt FALSE} otherwise.
 
-\ouritem{xsbBool is\_nil((prolog\_term) T)} \index{\texttt{is\_nil}}
+\ourCitem{xsbBool is\_nil((prolog\_term) T)}{is\_nil}
     {\tt is\_nil(T)} returns {\tt TRUE} if {\tt T} represents an XSB
     \verb|[]| (nil) value, and {\tt FALSE} otherwise.
 
-\ouritem{xsbBool is\_string((prolog\_term) T)} \index{\texttt{is\_string}}
+\ourCitem{xsbBool is\_string((prolog\_term) T)}{is\_string}
     {\tt is\_string(T)} returns {\tt TRUE} if {\tt T} represents an XSB
     atom value, and {\tt FALSE} otherwise.
 
-\ouritem{xsbBool is\_var((prolog\_term) T)} \index{\texttt{is\_var}}
+\ourCitem{xsbBool is\_var((prolog\_term) T)}{is\_var}
     {\tt is\_var(T)} returns {\tt TRUE} if {\tt T} represents an XSB
     variable, and {\tt FALSE} otherwise.
 
@@ -500,29 +500,25 @@ arity.  Extraction of the components of a list and the arguments of a
 structured term is explained later.
 
 \begin{description}
-\ouritem{int p2c\_int((prolog\_term) V)}
-\index{\texttt{p2c\_int}} 
+\ourCitem{int p2c\_int((prolog\_term) V)}{p2c\_int}
 %
 The {\tt prolog\_term} parameter must represent a Prolog integer, and
 {\tt p2c\_int} returns the C representation of that integer.
 
-\ouritem{double p2c\_float((prolog\_term) V)}
-\index{\texttt{p2c\_float}} 
+\ourCitem{double p2c\_float((prolog\_term) V)}{p2c\_float}
 %
 The {\tt prolog\_term} parameter must represent a Prolog floating point
 number, and {\tt p2c\_float} returns the C representation of
 that floating point number.
 
-\ouritem{char *p2c\_string((prolog\_term) V)}
-\index{\texttt{p2c\_string}} 
+\ourCitem{char *p2c\_string((prolog\_term) V)}{p2c\_string}
 %
 The {\tt prolog\_term} parameter must represent a (Prolog) atom, and
 {\tt p2c\_string} returns that atom as a C string. The pointer
 returned points to the actual atom name in XSB 's atom table, and thus
 it must NOT be modified by the calling program.
 
-\ouritem{char *p2c\_functor((prolog\_term) V)} 
-\index{\texttt{p2c\_functor}}
+\ourCitem{char *p2c\_functor((prolog\_term) V)} {p2c\_functor}
 %
 The {\tt prolog\_term} parameter must represent a structured term (not a
 list).  {\tt p2c\_functor} returns the name of the main
@@ -530,8 +526,7 @@ functor symbol of that term as a string. The pointer returned points
 to the actual functor name in XSB 's space, and thus it must NOT be
 modified by the calling program.
 
-\ouritem{int p2c\_arity((prolog\_term) V)}
-\index{\texttt{p2c\_arity}} 
+\ourCitem{int p2c\_arity((prolog\_term) V)}{p2c\_arity}
 %
 The {\tt prolog\_term} parameter must represent a structured term (not
 a list).  {\tt p2c\_arity} returns the arity of the main
@@ -547,22 +542,19 @@ must always contain an XSB variable, which will be bound to the
 indicated value as a side effect of the function call.
 
 \begin{description}
-\ouritem{xsbBool c2p\_int(CTXTdeclc (int) N, (prolog\_term) V)}
-\index{\texttt{c2p\_int}}
+\ourCitem{xsbBool c2p\_int(CTXTdeclc (int) N, (prolog\_term) V)}{c2p\_int}
 %
  {\tt CTXTdeclc} is a context parameter; {\tt c2p\_int} binds the
  {\tt prolog\_term} {\tt V} (which must be a variable) to the integer
  value N, creating a Prolog integer.
 
-\ouritem{xsbBool c2p\_float(CTXTdeclc (double) F, (prolog\_term) V)}
-\index{\texttt{c2p\_float}} 
+\ourCitem{xsbBool c2p\_float(CTXTdeclc (double) F, (prolog\_term) V)}{c2p\_float}
 %
  {\tt CTXTdeclc} is a context parameter; {\tt c2p\_float} binds the
  {\tt prolog\_term} {\tt V} (which must be a variable) to the (double)
  float value F, creating a double Prolog float.
 
-\ouritem{xsbBool c2p\_string(CTXTdeclc (char *) S, (prolog\_term) V)}
-\index{\texttt{c2p\_string}} 
+\ourCitem{xsbBool c2p\_string(CTXTdeclc (char *) S, (prolog\_term) V)}{c2p\_string}
 %
  {\tt CTXTdeclc} is a context parameter; {\tt c2p\_string} binds the
  {\tt prolog\_term} {\tt V} (which must be a variable) to the Prolog
@@ -576,8 +568,7 @@ program. This is usually done in order to pass these structures back to
 the Prolog side.
 %%
 \begin{description}
-\ouritem{xsbBool c2p\_functor(CTXTdeclc (char *) S, (int) N,  (prolog\_term) V)} 
-\index{\texttt{c2p\_functor}} 
+\ourCitem{xsbBool c2p\_functor(CTXTdeclc (char *) S, (int) N, (prolog\_term) V)}{c2p\_functor}
 %
  {\tt CTXTdeclc} is a context parameter; {\tt c2p\_functor} binds the
  {\tt prolog\_term V} (which must be a variable) to an open term whose
@@ -585,8 +576,7 @@ the Prolog side.
  arity is {\tt N}.  An open term is one with all arguments as new
  distinct variables.
 
-\ouritem{xsbBool c2p\_list(CTXTdeclc (prolog\_term) V)} 
-\index{\texttt{c2p\_list}}
+\ourCitem{xsbBool c2p\_list(CTXTdeclc (prolog\_term) V)}{c2p\_list}
 %
  {\tt CTXTdeclc} is a context parameter; {\tt c2p\_list} binds the
  {\tt prolog\_term V} (which must be a variable) to an open list term,
@@ -594,15 +584,13 @@ the Prolog side.
  variables. Note: to create an empty list use the function {\tt
    c2p\_nil} described below.
 
-\ouritem{xsbBool c2p\_nil(CTXTdeclc (prolog\_term) V)} 
-\index{\texttt{c2p\_nil}}
+\ourCitem{xsbBool c2p\_nil(CTXTdeclc (prolog\_term) V)}{c2p\_nil}
 %
  {\tt CTXTdeclc} is a context parameter; {\tt c2p\_nil} binds the {\tt
    prolog\_term V} (which must be a variable) to the atom \verb|[]|
  (nil).
 
-\ouritem{prolog\_term p2p\_new()} 
-\index{\texttt{p2p\_new}} 
+\ourCitem{prolog\_term p2p\_new()}{p2p\_new}
 %
 Create a new Prolog variable. This is sometimes needed when you want
 to create a Prolog term on the C side and pass it to the Prolog side.
@@ -614,8 +602,7 @@ components of the structured Prolog terms.  This is done with the help
 of the following functions:
 
 \begin{description}
-\ouritem{prolog\_term p2p\_arg((prolog\_term) T, (int) A)}
-\index{\texttt{p2p\_arg}} 
+\ourCitem{prolog\_term p2p\_arg((prolog\_term) T, (int) A)}{p2p\_arg}
 %
 Parameter {\tt T} must be a {\tt prolog\_term} that is a structured
 term (but not a list).  A is a positive integer (no larger than the
@@ -623,15 +610,13 @@ arity of the term) that specifies an argument position of the term
 {\tt T}.  {\tt p2p\_arg} returns the A$^{th}$ subfield of the
 term {\tt T}.
 
-\ouritem{prolog\_term p2p\_car((prolog\_term) T)} 
-\index{\texttt{p2p\_car}}
+\ourCitem{prolog\_term p2p\_car((prolog\_term) T)}{p2p\_car}
 %
 Parameter {\tt T} must be a {\tt prolog\_term} that is a list (not
 nil).  {\tt p2p\_car} returns the car (i.e., head of the list)
 of the term T.
 
-\ouritem{prolog\_term p2p\_cdr((prolog\_term) T)} 
-\index{\texttt{p2p\_cdr}}
+\ourCitem{prolog\_term p2p\_cdr((prolog\_term) T)}{p2p\_cdr}
 %
 Parameter {\tt T} must be a {\tt prolog\_term} that is a list (not
 nil).  {\tt p2p\_cdr} returns the cdr (i.e., tail of the list)
@@ -679,16 +664,14 @@ Prolog side of XSB. The first function is the only way to get a
 sometimes needed in order to pass complex structures from C into Prolog.
 %%
 \begin{description}
-  \ouritem{prolog\_term reg\_term(CTXTdeclc (int) R)} 
-\index{\texttt{reg\_term}}
+\ourCitem{prolog\_term reg\_term(CTXTdeclc (int) R)}{reg\_term}
 %
   {\tt CTXTdeclc} is a context parameter.  Parameter R is an argument
   number of the Prolog predicate implemented by this C function (range
   1 to 255). The function {\tt reg\_term} returns the {\tt
     prolog\_term} in that predicate argument.
 % 
-\ouritem{xsbBool p2p\_unify(CTXTdeclc prolog\_term T1, prolog\_term T2)} 
-\index{\texttt{p2p\_unify}} 
+\ourCitem{xsbBool p2p\_unify(CTXTdeclc prolog\_term T1, prolog\_term T2)}{p2p\_unify}
 %
 Unify the two Prolog terms. This is useful when an argument of the
 Prolog predicate (implemented in C) is a structured term or a list,
@@ -1011,21 +994,21 @@ module are:
 
 \begin{description}
 
-\ouritem{int xsb\_query\_save(CTXTc (byte) NumRegs)}
-\index{\texttt{xsb\_query\_save}} This function is used in a foreign
-routine that is called from XSB.  It is used to save the current
-contents of the XSB registers and to initialize them to be prepared to
-accept a query.  It must be called after a foreign routine collects its
-input arguments from the XSB registers and before it invokes any XSB
-predicate.
+\ourCitem{int xsb\_query\_save(CTXTc (byte) NumRegs)}{xsb\_query\_save}
+%
+ This function is used in a foreign routine that is called from XSB.
+ It is used to save the current contents of the XSB registers and to
+ initialize them to be prepared to accept a query.  It must be called
+ after a foreign routine collects its input arguments from the XSB
+ registers and before it invokes any XSB predicate.
 
-\ouritem{int xsb\_query\_restore(CTXT)}
-\index{\texttt{xsb\_query\_restore}} This function is used in a foreign
-routine that is called from XSB and in turn calls an XSB predicate.
-It is used to restore the previously saved contents of the XSB
-registers.  It must be called after all XSB predicates have been
-called and returned, and before the current foreign routine sets its
-output parameters and returns to XSB.
+\ourCitem{int xsb\_query\_restore(CTXT)}{xsb\_query\_restore}
+%
+This function is used in a foreign routine that is called from XSB and
+in turn calls an XSB predicate.  It is used to restore the previously
+saved contents of the XSB registers.  It must be called after all XSB
+predicates have been called and returned, and before the current
+foreign routine sets its output parameters and returns to XSB.
 
 \end{description}
 
@@ -1072,7 +1055,7 @@ be specified using a loader flag in {\tt ldoption}.  The problem here is
 that different systems use a different flag!  To circumvent this, XSB
 provides a predicate that tries to guess the right flag for your system:
 %%
-\index{\texttt{runtime\_loader\_flag/2}}
+\predref{runtime\_loader\_flag/2}
 %%
 \begin{verbatim}
 runtime_loader_flag(+Hint,-Flag)  
@@ -1143,9 +1126,11 @@ where:
 
 \begin{description}
 
-\ouritem{foreign\_pred, private\_foreign\_pred} declares a new
-foreign predicate.  For most cases, the declaration {\tt
-  foreign\_pred} can be used in both the multi-threaded and the
+\ourrepeatstandarditem{foreign\_pred}{foreign\_pred/0}{}
+\ourstandarditem{private\_foreign\_pred}{private\_foreign\_pred/0}{}
+%
+These declare new foreign predicates.  For most cases, the declaration
+{\tt foreign\_pred} can be used in both the multi-threaded and the
 sequential engine.  The declaration {\tt private\_foreign\_pred} needs
 to be used only in the multi-threaded engine when the external foreign
 function, {\tt funcname} contains a context parameter as its first
@@ -1347,8 +1332,7 @@ can be used by code that uses either the lower- or higher-level
 interface.
 
 \begin{description}
-\ouritem{void xsb\_domain\_error(CTXTdeclc char *valid\_domain,Cell culprit,char *pred,int arity,int arg)}
-\index{\texttt{xsb\_domain\_error()}}
+\ourCitem{void xsb\_domain\_error(CTXTdeclc char *valid\_domain,Cell culprit,char *pred,int arity,int arg)}{xsb\_domain\_error}
 %
 Used to throw an ISO-style domain error from foreign code, indicating
 that {\tt culprit} is not in domain {\tt valid\_domain} in argument
@@ -1371,7 +1355,7 @@ in {\tt atom\_length/2} gives rise to the behavior
 
 %----------------
 
-\ouritem{void xsb\_existence\_error(CTXTdeclc char *objType,Cell culprit,char *pred,int arity,int arg)}\index{\texttt{xsb\_existence\_error()}}
+\ourCitem{void xsb\_existence\_error(CTXTdeclc char *objType,Cell culprit,char *pred,int arity,int arg)}{xsb\_existence\_error}
 %
 Used to throw an ISO-style existence error from foreign code,
 indicating that an object {\tt culprit} of type {\tt objType} does not
@@ -1394,8 +1378,8 @@ if a thread with thread id {\tt 7} does not exist.
 
 %----------------
 
-\ouritem{void xsb\_instantiation\_error(CTXTdeclc char *pred,int
-  arity,int arg,char *state) } \index{\texttt{xsb\_instantiation\_error()}} 
+\ourCitem{void xsb\_instantiation\_error(CTXTdeclc char *pred,int
+  arity,int arg,char *state) }{xsb\_instantiation\_error}
 %
 Used to throw an ISO-style instantiation error from foreign code.  If
 {\tt state} is a {\tt NULL} pointer, the message indicates that there
@@ -1416,14 +1400,14 @@ in {\tt atom\_length/2} gives rise to a the behavior
 
 %----------------
 
-\ouritem{void xsb\_misc\_error(CTXTdeclc char *message,char *pred,int arity)} \index{\texttt{xsb\_misc\_error()}} 
+\ourCitem{void xsb\_misc\_error(CTXTdeclc char *message,char *pred,int arity)}{xsb\_misc\_error}
 %
 Used to throw a non ISO-error from foreign code, printing {\tt
   message} and indicating that the error arose in {\tt pred/arity}.
 
 %----------------
 
-\ouritem{void xsb\_permission\_error(CTXTdeclc char *op,char *obj,Cell culprit,char *pred,int arity)}\index{\texttt{xsb\_permission\_error()}}
+\ourCitem{void xsb\_permission\_error(CTXTdeclc char *op,char *obj,Cell culprit,char *pred,int arity)}{xsb\_permission\_error}
 %
 Used to throw an ISO-style permission error from foreign code,
 indicating that an operation of type {\tt op} on type {\tt obj} is not
@@ -1445,7 +1429,7 @@ if thread {\tt 0} does not own mutex {\tt mymut}.
 
 %----------------
 
-\ouritem{void xsb\_resource\_error(CTXTdeclc char *resource,char *pred,int arity) } \index{\texttt{xsb\_resource\_error()}}
+\ourCitem{void xsb\_resource\_error(CTXTdeclc char *resource,char *pred,int arity) }{xsb\_resource\_error}
 %
 Used to indicate that there are not sufficient resources of type {\tt
   resource} for {\tt pred/arity} to succeed.
@@ -1463,7 +1447,7 @@ in {\tt thread\_create/1} gives rise to a the behavior
 If the number of system threads has been exceeded.
 
 %----------------
-\ouritem{void xsb\_type\_error(CTXTdeclc char *valid\_type,Cell culprit,char *pred,int arity,int arg) }\index{\texttt{xsb\_type\_error()}}
+\ourCitem{void xsb\_type\_error(CTXTdeclc char *valid\_type,Cell culprit,char *pred,int arity,int arg) }{xsb\_type\_error}
 %
 Used to throw an ISO-style type error from foreign code, indicating
 that {\tt culprit} is not in ISO type {\tt valid\_type} in argument
@@ -1486,7 +1470,7 @@ of predicate atom_length/2)
 
 %----------------
 
-\ouritem{void xsb\_throw(CTXTdeclc prolog\_term Ball)}\index{\texttt{xsb\_throw()}}
+\ourCitem{void xsb\_throw(CTXTdeclc prolog\_term Ball)}{xsb\_throw}
 %
 Used to throw a Prolog term from C code, when an ISO-style error is
 not required.  The term can be caught and handled by the Prolog

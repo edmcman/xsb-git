@@ -350,20 +350,19 @@ which, for a type error, does not interact with tabling in any way.
 
 \index{Prolog flags!{\tt exception\_pre\_action}}
 \index{strongly connected components (SCCs)}
-\index{\texttt{print\_incomplete\_tables/0}}
+\predref{print\_sdg\_subgoal\_info}
 \subsubsection{Obtaining Information about a Tabled Computation after an Exception is Thrown}
 %
 XSB backtraces (Section~\ref{sec:backtrace}) provide information about
 the context in which error is thrown, but in a tabled computation
 additional information is available.  If the Prolog flag {\tt
-  exception\_pre\_action} is set to {\tt print\_incomplete\_tables}
+  exception\_pre\_action} is set to {\tt print\_incomplete\_subgoals}
 (its default setting is {\tt none}), then when an exception is thrown,
 incomplete tables and their SCC information at the time an exception
-is thrown are printed to a file via {\tt print\_incomplete\_tables/1}.
-The file may be obtained through the predicate {\tt
-  get\_scc\_dumpfile/1} in the module {\tt tables}.  No file is
-generated unless the exception is thrown over at least one incomplete
-table.
+is thrown are printed to a file.  The file may be obtained through the
+predicate {\tt get\_scc\_dumpfile/1} in the module {\tt tables}.  No
+file is generated unless the exception is thrown over at least one
+incomplete table.
 
 \section{XSB's Standard Format for Errors} \label{sec:iso-errors}
 \index{ISO!errors}

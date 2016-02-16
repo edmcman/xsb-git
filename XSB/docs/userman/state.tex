@@ -460,10 +460,10 @@ indicating the position in the file at which the syntax error was
 detected. If set to off, then the read predicates will simply throw
 the syntax error message.
 
-\index{\texttt{explain\_u\_val/3}}
-\index{\texttt{explain\_u\_val/6}}
-\index{\texttt{get\_residual\_sccs/3}}
-\index{\texttt{get\_residual\_sccs/5}}
+\predref{explain\_u\_val/3}
+\predref{explain\_u\_val/6}
+\predref{get\_residual\_sccs/3}
+\predref{get\_residual\_sccs/5}
 \index{Prolog flags!{\tt exception\_action}}
 \item {\tt exception\_action} If set to {\tt iso} then ISO-style
   exceptions will be thrown whenever an error condition arises.
@@ -477,12 +477,11 @@ the syntax error message.
   justification system that depends on these predicates.  The default
   for this flag is {\tt iso}
 %
-\index{\texttt{get\_scc\_dumpfile/0}}
+\predref{get\_scc\_dumpfile/0}
 \index{Prolog flags!{\tt exception\_pre\_action}}
 \item {\tt exception\_pre\_action} If set to {\tt
-  print\_incomplete\_tables}, then the predicate {\tt
-  print\_incomplete\_tables/0} is called {\em before} throwing an
-  exception.  The execution of {\tt print\_incomplete\_tables/0}
+  print\_incomplete\_tables}, then the incomplete subgoals are printed
+  {\em before} throwing an exception.  The execution of this action
   causes the stack of incomplete tables to be printed to a temporary
   file in {\tt \$XSBDIR/etc}.  The file can be obtained via the
   predicate {\tt get\_scc\_dumpfile/1}; later, information in the file
@@ -497,8 +496,8 @@ the syntax error message.
   (cf. Section~\ref{sec:suspend-analyze}).
 %
 \index{Prolog flags!{\tt max\_tab\_usage}}
-\index{\texttt{statistics/1}}
-\index{\texttt{statistics/0}}
+\predref{statistics/1}
+\predref{statistics/0}
 \item {\tt max\_tab\_usage} If set to {\tt on}, maintains the maximal
   table usage (in bytes) for display in {\tt statistics/[0,1]}.  This
   information can be useful if a program performs various types of
@@ -511,7 +510,6 @@ The following flags affect only the multi-threaded engine.
 
 \index{Prolog flags!{\tt exception\_pre\_action}}
 \index{tabling!and exceptions}
-\index{\texttt{print\_incomplete\_tables/0}}
 \index{Prolog flags!{\tt thread\_glsize}}
 \index{Prolog flags!{\tt thread\_tcpsize}}
 \index{Prolog flags!{\tt thread\_complsize}}

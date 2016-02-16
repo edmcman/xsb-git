@@ -1081,55 +1081,56 @@ called at that moment.
 \end{small}
 \end{center}
 
-\ourmoditem{print\_incomplete\_tables}{print\_incomplete\_tables/0}{tables}
+\comment{
+%\ourmoditem{print\_incomplete\_tables}{print\_incomplete\_tables/0}{tables}
 %
-{\bf {\em This predicate is obsolescent, and will eventually be
-    replaced by {\tt get\_incomplete\_subgoals/1} and its extensions.}}
+%{\bf {\em This predicate is obsolescent, and will eventually be
+%    replaced by {\tt get\_incomplete\_subgoals/1} and its extensions.}}
 
-These predicates, which can be useful for debugging, print out each
-incomplete subgoal in the current state of the evaluation, followed by
-the ordinal number of the SCC to which that subgoal belongs.  This
-information describes the dependencies among tabled predicates.  In
-local evaluation (the default evaluation method for XSB) all subgoals
-in SCC $m$ depend on all subgoals in SCC $n$ if $m < n$.  Furthermore,
-all subgoals in a given SCC depend on one another~\footnote{This
-  assumes that there is no early completion, which can remove
-  dependencies. In batched evaluation, the dependencies are less exact
-  -- see \cite{SaSw98} for details, as SCCs represent a dag of
-  dependencies rather than a chain as in local evaluation.}.  As its
-name implies, {\tt print\_incomplete\_tables/[0,1]} print out SCC
-information only for incomplete tables; for full information about the
-SCCs of a computation, forest logging must be used
-(cf. Section~\ref{sec:forest-trace}).
+%These predicates, which can be useful for debugging, print out each
+%incomplete subgoal in the current state of the evaluation, followed
+%by the ordinal number of the SCC to which that subgoal belongs.  This
+%information describes the dependencies among tabled predicates.  In
+%local evaluation (the default evaluation method for XSB) all subgoals
+%in SCC $m$ depend on all subgoals in SCC $n$ if $m < n$.  Furthermore,
+%all subgoals in a given SCC depend on one another~\footnote{This
+%  assumes that there is no early completion, which can remove
+%  dependencies. In batched evaluation, the dependencies are less exact
+%  -- see \cite{SaSw98} for details, as SCCs represent a dag of
+%  dependencies rather than a chain as in local evaluation.}.  As its
+%name implies, {\tt print\_incomplete\_tables/[0,1]} print out SCC
+%information only for incomplete tables; for full information about the
+%SCCs of a computation, forest logging must be used
+%(cf. Section~\ref{sec:forest-trace}).
+%
+%In {\tt print\_incomplete\_tables/0}, the information is output to
+%{\tt stdout}.
 
-In {\tt print\_incomplete\_tables/0}, the information is output to
-{\tt stdout}.
-
-{\bf Example:} For the program
+%{\bf Example:} For the program
 %
-\begin{verbatim}
-:- table q/2.
-q(0,_):- !,print_incomplete_tables.
-q(3,A):- q(5,A).
-q(N,A):- N1 is N - 1,q(N1,A).
-\end{verbatim}
-the goal {\tt ?- q(5,foo)} will produce the output 
+%\begin{verbatim}
+%:- table q/2.
+%q(0,_):- !,print_incomplete_tables.
+%q(3,A):- q(5,A).
+%q(N,A):- N1 is N - 1,q(N1,A).
+%\end{verbatim}
+%the goal {\tt ?- q(5,foo)} will produce the output 
 %
-{\small
-\begin{verbatim}
-q(5, foo)- scc(1).
-q(4, foo)- scc(1).
-q(3, foo)- scc(1).
-q(2, foo)- scc(2).
-q(1, foo)- scc(3).
-q(0, foo)- scc(4).
-\end{verbatim}
-}
-%
-%{\bf Error Cases ({\tt print\_incomplete\_tables/1})}
-%\bi
-%\item 	{\tt Stream\_or\_alias} is a variable
-%\bi
+%{\small
+%%\begin{verbatim}
+%q(5, foo)- scc(1).
+%q(4, foo)- scc(1).
+%q(3, foo)- scc(1).
+%q(2, foo)- scc(2).
+%q(1, foo)- scc(3).
+%q(0, foo)- scc(4).
+%\end{verbatim}
+%}
+%%
+%%{\bf Error Cases ({\tt print\_incomplete\_tables/1})}
+%%\bi
+%%\item 	{\tt Stream\_or\_alias} is a variable
+%%\bi
 %\item {\tt instantiation\_error}
 %\ei
 %\item {\tt Stream\_or\_alias} is neither a variable, nor a stream term
@@ -1142,7 +1143,7 @@ q(0, foo)- scc(4).
 %\item 	{\tt existence\_error(stream,Stream\_or\_alias)}
 %\ei
 %\ei
-
+}
 \index{Prolog flags!{\tt exception\_pre\_action}}
 \index{strongly connected components (SCCs)}
 \index{tabling!and exceptions}
@@ -1151,12 +1152,11 @@ q(0, foo)- scc(4).
 If the Prolog flag {\tt exception\_pre\_action} is set to {\tt
   print\_incomplete\_tables} (its default setting is {\tt none}), then
 when an exception is thrown, incomplete tables and their SCC
-information are printed to a ``SCC dumpfile'' via {\tt
-  print\_incomplete\_tables/1}.  Note that the information is output
-for the state of execution where the error was thrown, and so is more
-informative than calling {\tt print\_incomplete\_tables/} when the
-error is caught.  (No file is generated unless the exception is thrown
-over at least one incomplete table.)
+information are printed to a ``SCC dumpfile''.  Note that the
+information is output for the state of execution where the error was
+thrown, and so is more informative than an action taken when the error
+is caught.  (No file is generated unless the exception is thrown over
+at least one incomplete table.)
 
 This predicate returns the name of the last such file generated and
 fails if there is no such file.  Files are written to the {\tt
@@ -1176,140 +1176,140 @@ values for tabled predicates.
 \ei
 \ei
 
-\index{residual program}
-\index{\texttt{get\_residual/2}}
-\index{\texttt{variant\_get\_residual/2}}
-\index{Incremental Dependency Graph (IDG)}
-\index{residual dependency graph}
-\ourrepeatmoditem{get\_residual\_sccs(+Subgoal,+Answer,-SCCList)}{get\_residual\_sccs/3}{tables}
-\ourmoditem{get\_residual\_sccs(+Subgoal,+Answer,-SCCList,-DepList,-SignList)}{get\_residual\_sccs/5}{tables}
+%\index{residual program}
+%\index{\texttt{get\_residual/2}}
+%\index{\texttt{variant\_get\_residual/2}}
+%\index{Incremental Dependency Graph (IDG)}
+%\index{residual dependency graph}
+%\ourrepeatmoditem{get\_residual\_sccs(+Subgoal,+Answer,-SCCList)}{get\_residual\_sccs/3}{tables}
+%\ourmoditem{get\_residual\_sccs(+Subgoal,+Answer,-SCCList,-DepList,-SignList)}{get\_residual\_sccs/5}{tables}
+%%
+%As discussed in Section~\ref{sec:non-strat}, answers that are
+%undefined in the well-founded semantics are stored in XSB along with
+%their delay lists, forming a residual program.  This residual program
+%can be materialized through the various predicates discussed above, in
+%particular {\tt get\_residual/2} and {\tt variant\_get\_residual/2}.
 %
-As discussed in Section~\ref{sec:non-strat}, answers that are
-undefined in the well-founded semantics are stored in XSB along with
-their delay lists, forming a residual program.  This residual program
-can be materialized through the various predicates discussed above, in
-particular {\tt get\_residual/2} and {\tt variant\_get\_residual/2}.
+%At times it can be useful to view the residual program as a directed
+%graph, for instance in order to understand why a given answer might be
+%undefined.  In a manner somewhat analogous to the incremental
+%dependency graph (Section ~\ref{sec:incremental_tabling}) the {\em
+%  residual dependency graph} is a directed graph whose nodes are
+%subgoal/atom pairs and whose edges are labelled with: 1) a sign
+%indicating whether the edge is positive or negative; and 2) the label
+%{\em depends on} or {\em affects}.
 
-At times it can be useful to view the residual program as a directed
-graph, for instance in order to understand why a given answer might be
-undefined.  In a manner somewhat analogous to the incremental
-dependency graph (Section ~\ref{sec:incremental_tabling}) the {\em
-  residual dependency graph} is a directed graph whose nodes are
-subgoal/atom pairs and whose edges are labelled with: 1) a sign
-indicating whether the edge is positive or negative; and 2) the label
-{\em depends on} or {\em affects}.
+%\begin{example} \rm
+%Consider the program 
+%% 
+%{\tt 
+%\begin{tabbing}
+%fooo\=fooooooooooooooooooooooooooooooo\=ooooooooooooo\=\kill
+% \>  :- table p/2. \\
+%\>           p(1,2). \\
+%\%>           p(1,3):- tnot(p(2,3)).  \\
+%\>           p(2,3):- tnot(p(1,3)). \> p(2,3):- r(a).\\
+%\>           r(a):- tnot(r(b)) \\
+%\>           r(b):- tnot(r(a)).   
+%\end{tabbing}
+%}
+%%
+%to which the query {?- p(1,X)} was made, generating the tables:
+%\begin{center}
+%\begin{tabular}{||l|l||}   \hline
+%     {\em Subgoal}                 & {\em Answers} \\ \hline \hline
+%     p(1,X)                     & p(1,2) \\ 
+%                                & p(1,3):- tnot(p(2,3))| \\ \hline
+%     p(1,3)                     & p(1,3):- tnot(p(2,3))| \\ \hline
+%     p(2,3)                     & p(2,3):- tnot(p(1,3))| \\ \hline
+%                                & p(2,3):- tnot(r(a))| \\ \hline
+%     r(a)                       & r(a):- tnot(r(b))| \\ \hline
+%     r(b)                       & r(b):- tnot(r(a))| \\ \hline
+%\%end{tabular}
+%\end{center}
 
-\begin{example} \rm
-Consider the program 
-% 
-{\tt 
-\begin{tabbing}
-fooo\=fooooooooooooooooooooooooooooooo\=ooooooooooooo\=\kill
- \>  :- table p/2. \\
-\>           p(1,2). \\
-\>           p(1,3):- tnot(p(2,3)).  \\
-\>           p(2,3):- tnot(p(1,3)). \> p(2,3):- r(a).\\
-\>           r(a):- tnot(r(b)) \\
-\>           r(b):- tnot(r(a)).   
-\end{tabbing}
-}
+%The residual dependency graph for this program and query would have a
+%node for each subgoal/answer combination with an undefined truth
+%value, and a dependency edge for nodes $S_1/A_1$ and $S_2/A_2$ if
+%$A_2$ occurs in a literal in the delay list for $S_1/A_1$, and the
+%original subgoal for $A_2$ was $S_2$ in the subcomputation for $S_1$.
+%The edge also has a sign indicating whether $A_2$ occurs positively or
+%negatively in the delay list for $A_1$.  In this example, the residual
+%dependency graph could be represented as 
+%%
+%\begin{verbatim}
+%     depends_on(p(1,X),p(1,3),p(2,3),p(2,3),neg).
+%     depends_on(p(1,3),p(1,3),p(2,3),p(2,3),neg).
+%     depends_on(p(2,3),p(2,3),p(1,3),p(1,3),neg).
+%     depends_on(p(2,3),p(2,3),r(a),r(a),pos).
+%     depends_on(r(a),r(a),r(b),r(b),neg).
+%     depends_on(r(b),r(b),r(a),r(a),neg).
+%\end{verbatim}
+%\end{example}
 %
-to which the query {?- p(1,X)} was made, generating the tables:
-\begin{center}
-\begin{tabular}{||l|l||}   \hline
-     {\em Subgoal}                 & {\em Answers} \\ \hline \hline
-     p(1,X)                     & p(1,2) \\ 
-                                & p(1,3):- tnot(p(2,3))| \\ \hline
-     p(1,3)                     & p(1,3):- tnot(p(2,3))| \\ \hline
-     p(2,3)                     & p(2,3):- tnot(p(1,3))| \\ \hline
-                                & p(2,3):- tnot(r(a))| \\ \hline
-     r(a)                       & r(a):- tnot(r(b))| \\ \hline
-     r(b)                       & r(b):- tnot(r(a))| \\ \hline
-\end{tabular}
-\end{center}
-
-The residual dependency graph for this program and query would have a
-node for each subgoal/answer combination with an undefined truth
-value, and a dependency edge for nodes $S_1/A_1$ and $S_2/A_2$ if
-$A_2$ occurs in a literal in the delay list for $S_1/A_1$, and the
-original subgoal for $A_2$ was $S_2$ in the subcomputation for $S_1$.
-The edge also has a sign indicating whether $A_2$ occurs positively or
-negatively in the delay list for $A_1$.  In this example, the residual
-dependency graph could be represented as 
+%\index{termination!radial restraint} 
+%\index{\texttt{u\_not/1}} 
+%%
+%Using the residual dependency graph, a user may be able to determine
+%why an answer $A$ to a subgoal $S$ was unexpectedly undefined either
+%because $S/A$ was involved in or depended on a loop through negation;
+%or because $S/A$ depended on some other answer that was undefined
+%because of the use of bounded rationality
+%(Section~\ref{sec:tabling-termination}) or because of floundering and
+%the use of {\tt u\_not/1}.  
 %
-\begin{verbatim}
-     depends_on(p(1,X),p(1,3),p(2,3),p(2,3),neg).
-     depends_on(p(1,3),p(1,3),p(2,3),p(2,3),neg).
-     depends_on(p(2,3),p(2,3),p(1,3),p(1,3),neg).
-     depends_on(p(2,3),p(2,3),r(a),r(a),pos).
-     depends_on(r(a),r(a),r(b),r(b),neg).
-     depends_on(r(b),r(b),r(a),r(a),neg).
-\end{verbatim}
-\end{example}
-
-\index{termination!radial restraint} 
-\index{\texttt{u\_not/1}} 
+%The residual dependency graph can be constructed in a straightforward
+%way from {\tt variant\_get\_residual/2}.  {\tt
+%  get\_residual\_sccs/[3,5]} provides an alternate view that is
+%slightly higher-level and much faster.  Given a subgoal/answer pair as
+%input, each of these predicates constructs SCC-based information about
+%the residual dependency graph via structures of the form:
+%%
+%\begin{center}
+%{\tt ret(Subgoal,Answer,SCCIndex)}.
+%\end{center}
+%%
+%where {\tt SCC} is a numerical index for the SCCs of Subgoal. Two
+%subgoals are in the same SCC iff they have the same index, however no
+%other dependency information can be otherwise directly inferred from
+%the index~\footnote{The actual number for
+%  each SCC index depends on how the residual dependency graph happens
+%  to be traversed; as a result it is best to rely on the index only as
+%  a ``generated'' name for each SCC.}.
 %
-Using the residual dependency graph, a user may be able to determine
-why an answer $A$ to a subgoal $S$ was unexpectedly undefined either
-because $S/A$ was involved in or depended on a loop through negation;
-or because $S/A$ depended on some other answer that was undefined
-because of the use of bounded rationality
-(Section~\ref{sec:tabling-termination}) or because of floundering and
-the use of {\tt u\_not/1}.  
-
-The residual dependency graph can be constructed in a straightforward
-way from {\tt variant\_get\_residual/2}.  {\tt
-  get\_residual\_sccs/[3,5]} provides an alternate view that is
-slightly higher-level and much faster.  Given a subgoal/answer pair as
-input, each of these predicates constructs SCC-based information about
-the residual dependency graph via structures of the form:
+%To obtain dependency information, {\tt get\_residual\_sccs/5} also returns a
+%list indicating the direct dependencies among the SCCs, along with a
+%list indicating whether given SCCs contain a negative edge.  For the
+%example above, the SCC information would have a form such as:
+%\begin{verbatim}
+%[ ret(p(1,X),p(1,3),1), ret(p(1,3),p(1,3),2), ret(p(2,3),p(2,3),2),
+%  ret(r(a),r(a),3), ret(r(b),r(b),3) ]
+%\end{verbatim}
+%%
+%The dependency list would have a form such as:
+%\begin{verbatim}
+%[ depends(1,2), depends(2,3) ]
+%\end{verbatim}
+%while the sign list would have a form such as:
+%\begin{verbatim}
+%[ sign(1,no_neg), sign(2,neg), sign(3,neg) ]
+%\end{verbatim}
+%If it is necessary to know which subgoal(s) in {\tt SCC1} directly
+%depends on which subgoal(s) in {\tt SCC2}, the information can be
+%easily reconstructed from the output of {\tt
+%  get\_residual\_sccs/[4,5]} using {\tt variant\_get\_residual/2}.  A
+%similar approach can be used to determine the actual edges within a
+%given SCC.
 %
-\begin{center}
-{\tt ret(Subgoal,Answer,SCCIndex)}.
-\end{center}
-%
-where {\tt SCC} is a numerical index for the SCCs of Subgoal. Two
-subgoals are in the same SCC iff they have the same index, however no
-other dependency information can be otherwise directly inferred from
-the index~\footnote{The actual number for
-  each SCC index depends on how the residual dependency graph happens
-  to be traversed; as a result it is best to rely on the index only as
-  a ``generated'' name for each SCC.}.
-
-To obtain dependency information, {\tt get\_residual\_sccs/5} also returns a
-list indicating the direct dependencies among the SCCs, along with a
-list indicating whether given SCCs contain a negative edge.  For the
-example above, the SCC information would have a form such as:
-\begin{verbatim}
-[ ret(p(1,X),p(1,3),1), ret(p(1,3),p(1,3),2), ret(p(2,3),p(2,3),2),
-  ret(r(a),r(a),3), ret(r(b),r(b),3) ]
-\end{verbatim}
-%
-The dependency list would have a form such as:
-\begin{verbatim}
-[ depends(1,2), depends(2,3) ]
-\end{verbatim}
-while the sign list would have a form such as:
-\begin{verbatim}
-[ sign(1,no_neg), sign(2,neg), sign(3,neg) ]
-\end{verbatim}
-If it is necessary to know which subgoal(s) in {\tt SCC1} directly
-depends on which subgoal(s) in {\tt SCC2}, the information can be
-easily reconstructed from the output of {\tt
-  get\_residual\_sccs/[4,5]} using {\tt variant\_get\_residual/2}.  A
-similar approach can be used to determine the actual edges within a
-given SCC.
-
-SCC detection is implemented using Tarjan's algorithm~\cite{Tarj72} in
-C working directly on XSB's data structures.  The algorithm is
-$\cO(|V| + |E|)$ where $|V|$ is the number of vertices and $|E|$ the
-number of edges in the dependency graph.  As a result, {\tt
-  get\_residual\_sccs/3} provides an efficient means to materialize
-the high-level topography of the dependency graph~\footnote{Currently,
-  the materialization of dependency information between SCCs is
-  implemented in a naive manner, so that {\tt get\_residual\_sccs/6}
-  is $\cO(|V|^2)$.}.
+%SCC detection is implemented using Tarjan's algorithm~\cite{Tarj72} in
+%C working directly on XSB's data structures.  The algorithm is
+%%$\cO(|V| + |E|)$ where $|V|$ is the number of vertices and $|E|$ the
+%number of edges in the dependency graph.  As a result, {\tt
+%  get\_residual\_sccs/3} provides an efficient means to materialize
+%the high-level topography of the dependency graph~\footnote{Currently,
+%  the materialization of dependency information between SCCs is
+%  implemented in a naive manner, so that {\tt get\_residual\_sccs/6}
+%  is $\cO(|V|^2)$.}.
 
 %These predicates implement Tarjan's algorithm~\cite{Tarj72} in C
 %working directly on XSB's data structures.  The algorithm is $\cO(|V|
@@ -1317,66 +1317,68 @@ the high-level topography of the dependency graph~\footnote{Currently,
 %edges in the dependency graph.  As a result, these predicates provide
 %an efficient means to materialize the dependency graph, even if SCC
 %information per se is not required
+
+%%%%%%%%%%%% moved to inspection.tex 
   
-\index{radial restraint}
-\index{termination!radial restraint}
-\index{\texttt{u\_not/1}}
-\index{\texttt{get\_residual\_sccs/5}}
-\ourrepeatmoditem{explain\_u\_val(+Subgoal,+Answer,-Reason)}{explain\_u\_val/3}{tables}	
-\ourmoditem{explain\_u\_val(+Subgoal,+Answer,-Sccs,-Deps,-Signs,-Reason)}{explain\_u\_val/6}{tables}	
+%\index{radial restraint}
+%\index{termination!radial restraint}
+%\index{\texttt{u\_not/1}}
+%\index{\texttt{get\_residual\_sccs/5}}
+%\ourrepeatmoditem{explain\_u\_val(+Subgoal,+Answer,-Reason)}{explain\_u\_val/3}{tables}	
+%\ourmoditem{explain\_u\_val(+Subgoal,+Answer,-Sccs,-Deps,-Signs,-Reason)}{explain\_u\_val/6}{tables}	
+%%
+%The XSB predicate
+%%
+%{\tt explain\_u\_val(+Subgoal,+Answer,?Reason)}
+%\noindent
+%can be used to query why {\tt Answer} is undefined when derived in an
+%evaluation of {\tt Subgoal}.  {\tt Reason} may be
+%\begin{itemize}
+%\item {\tt negative\_loops(cycle)} if the derivation of {\tt Answer} involves a
+%  loop through though negation that includes {\tt Answer} itself.
+%%
+%\item {\tt negative\_loops(dependent)} if the derivation of {\tt
+%  Answer} depends on an atom that is involved in a loop through though
+%  negation.
+%%
+%\item {\tt unsafe\_negation} if the derivation of {\tt Answer} depends
+%  on a negative subgoal that is non-ground (XSB does not automatically
+%  perform subgoal reordering).  The action of making a non-ground
+%  subgoal undefined is performed by {\tt u\_not/1}.
+%%
+%\item {\tt bounded\_rationality} if the derivation of answer depends
+%  on bounded rationality based on radial restraint~\cite{GroS13}.
+%\end{itemize}
+%%
+%These reasons are not exclusive, and complex derivations may well
+%involve several of the above reasons.
 %
-The XSB predicate
+%{\tt explain\_u\_val/[3,6]} is based on the structures returned by
+%{\tt get\_residual\_sccs/[3,5]}.  While {\tt
+%  get\_residual\_sccs/[3,5]} is reasonably fast, it can take a
+%peceptable time to analyze large residual programs containing many
+%thousands of SCCs.  Accordingly, {\tt explain\_u\_val/6} can reuse
+%dependency structures returned by {\tt get\_residual\_sccs/[3,5]},
+%which can be useful for justification systems and other applciations.
 %
-{\tt explain\_u\_val(+Subgoal,+Answer,?Reason)}
-\noindent
-can be used to query why {\tt Answer} is undefined when derived in an
-evaluation of {\tt Subgoal}.  {\tt Reason} may be
-\begin{itemize}
-\item {\tt negative\_loops(cycle)} if the derivation of {\tt Answer} involves a
-  loop through though negation that includes {\tt Answer} itself.
+%\begin{example} \rm
+%After executing the query {\tt p} to the program
+%%
+%\begin{verbatim}
+%:- table p/0, q/0, r/0, s/1.
+%p:- q,tnot p.                 p:- s(f(f(f(f(0))))).
 %
-\item {\tt negative\_loops(dependent)} if the derivation of {\tt
-  Answer} depends on an atom that is involved in a loop through though
-  negation.
+%q:- tnot r.                   r:- tnot q.
 %
-\item {\tt unsafe\_negation} if the derivation of {\tt Answer} depends
-  on a negative subgoal that is non-ground (XSB does not automatically
-  perform subgoal reordering).  The action of making a non-ground
-  subgoal undefined is performed by {\tt u\_not/1}.
+%s(f(X)):- s(X).               s(0).
+%\end{verbatim}
+%%
+%where the bounded rationality depth has been set to 3.  The query {\tt
+%  explain\_u\_val(p,P,Reason)} will bind {\tt Reason} to {\tt
+%  negative\_loops(cycle)}, to {\tt negative\_loops(dependent)}, and
+%to {\tt bounded\_rationality} (this ordering is not guaranteed).
+%\end{example}
 %
-\item {\tt bounded\_rationality} if the derivation of answer depends
-  on bounded rationality based on radial restraint~\cite{GroS13}.
-\end{itemize}
-%
-These reasons are not exclusive, and complex derivations may well
-involve several of the above reasons.
-
-{\tt explain\_u\_val/[3,6]} is based on the structures returned by
-{\tt get\_residual\_sccs/[3,5]}.  While {\tt
-  get\_residual\_sccs/[3,5]} is reasonably fast, it can take a
-peceptable time to analyze large residual programs containing many
-thousands of SCCs.  Accordingly, {\tt explain\_u\_val/6} can reuse
-dependency structures returned by {\tt get\_residual\_sccs/[3,5]},
-which can be useful for justification systems and other applciations.
-
-\begin{example} \rm
-After executing the query {\tt p} to the program
-%
-\begin{verbatim}
-:- table p/0, q/0, r/0, s/1.
-p:- q,tnot p.                 p:- s(f(f(f(f(0))))).
-
-q:- tnot r.                   r:- tnot q.
-
-s(f(X)):- s(X).               s(0).
-\end{verbatim}
-%
-where the bounded rationality depth has been set to 3.  The query {\tt
-  explain\_u\_value(p,P,Reason)} will bind {\tt Reason} to {\tt
-  negative\_loops(cycle)}, to {\tt negative\_loops(dependent)}, and
-to {\tt bounded\_rationality} (this ordering is not guaranteed).
-\end{example}
-
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1477,7 +1479,7 @@ will force rederivation of a new table version, rather than using the
 abolished information.
 \index{view consistency}
 
-\index{tabling!conditional answers} \index{\texttt{get\_residual/2}}
+\index{tabling!conditional answers} \predref{get\_residual/2}
 \paragraph{Maintenance of the Residual Program}
 When conditional answers are present, abolishing a specific table or
 call may lead to semantic or implementational complications.  Consider
