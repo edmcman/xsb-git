@@ -1016,8 +1016,8 @@ static int *depth_stack;
       apply_answer_depth_rationality_list(found_flag);			\
     }									\
     else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
-      printf("Debug: suspending on max_table_answer\n");		\
-      tripwire_interrupt(CTXTc "max_table_answer_size_handler");			\
+      /* printf("Debug: suspending on max_table_answer\n");*/		\
+      tripwire_interrupt(CTXTc "max_table_answer_size_handler");	\
       }									\
     else  {  /* error */						\
       sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
@@ -1035,8 +1035,8 @@ static int *depth_stack;
       safe_delete_branch(Paren);                                      \
       resetpdl;                                                       \
       found_flag = 1;                                                 \
-      printf("Debug: suspending on max_table_answer\n"); \
-      tripwire_interrupt(CTXTc "max_table_answer_handler");			\
+      /* printf("Debug: suspending on max_table_answer\n"); */         \
+      tripwire_interrupt(CTXTc "max_table_answer_handler");		\
       return NULL;                                                    \
       }									\
     else { /* error */							\
@@ -2029,13 +2029,13 @@ int vcs_tnot_call = 0;
 	return XSB_FAILURE;						\
       }									\
       else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {	\
-	printf("Debug: suspending on max_table_subgoal\n");		\
-	tripwire_interrupt(CTXTc "max_table_subgoal_size_handler");		\
-	clean_up_subgoal_table_structures_for_throw;				\
+	/* printf("Debug: suspending on max_table_subgoal\n");*/        \
+	tripwire_interrupt(CTXTc "max_table_subgoal_size_handler");	\
+	clean_up_subgoal_table_structures_for_throw;			\
 	return XSB_FAILURE;						\
       }									\
       else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{	\
-	clean_up_subgoal_table_structures_for_throw;				\
+	clean_up_subgoal_table_structures_for_throw;			\
 	if (is_cyclic(CTXTc (Cell)call_arg)) {				\
 	  abort_on_cyclic_subgoal;					\
 	}								\
