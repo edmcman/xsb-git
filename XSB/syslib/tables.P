@@ -1841,6 +1841,27 @@ max_table_answer_size_header:-
   format("  * To abort, enter the command 'abort/0'~n",[]),
   format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]).
 
+%----
+
+:- export max_answers_for_subgoal_handler/0.
+:- import max_answers_for_subgoal_user_handler/0 from usermod.
+:- dynamic max_answers_for_subgoal_user_handler/0. 
+
+max_answers_for_subgoal_handler:- 
+     max_answers_for_subgoal_user_handler,!.
+max_answers_for_subgoal_handler:- 
+    max_answers_for_subgoal_default_handler.
+
+max_answers_for_subgoal_default_handler:- 
+	      break_for_tripwires([tables:max_answers_for_subgoal_header]).
+
+max_answers_for_subgoal_header:- 
+  current_prolog_flag(max_answers_for_subgoal,Max),
+  format("~d answers derived for a tabled subgoal~n",[Max]),
+  format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
+  format("  * To abort, enter the command 'abort/0'~n",[]),
+  format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]).
+
 /*======================================================================*/
 % ANSWER COMPLETION CODE
 /*======================================================================*/
