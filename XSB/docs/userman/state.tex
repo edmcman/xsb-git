@@ -304,120 +304,6 @@ threads in the process.
     written just as variables with their attributes ignored.}.  The
   default behavior is set to the value {\tt portray}.
 
-\index{term depth}
-\index{Prolog flags!{\tt max\_table\_subgoal\_action}}
-\index{Prolog flags!{\tt max\_answer\_term\_action}}
-\index{Prolog flags!{\tt max\_answer\_list\_action}}
-\index{Prolog flags!{\tt max\_table\_subgoal\_depth}}
-\index{Prolog flags!{\tt max\_answer\_term\_depth}}
-\index{Prolog flags!{\tt max\_answer\_list\_depth}}
-\index{termination!subgoal abstraction}
-\index{termination!radial restraint}
-%
-\item {\tt max\_table\_subgoal\_action} The action to take when a
-  tabled subgoal of maximum size is encountered.  To understand the
-  use of this flag, consider that if a predicate such as
-\begin{verbatim}
-p(X):- p(f(X)).
-\end{verbatim}
-  is tabled, it can create subgoals of unbounded size.  When the
-  maximum subgoal depth is reached, XSB can
-\begin{enumerate}
-\item Throw a miscellaneous error, set using the value {\tt error}.
-  This is the default action.
-%
-\item Apply subgoal abstraction, using the value {\tt abstract}.
-%
-\item Suspend the computation and throw it into a break-level CLI,
-  using the value {\tt suspend}
-%
-\item Fail the subgoal, an action that may be valid for
-  certian programs, settable using the value {\tt fail}.
-%
-\end{enumerate}
-
-\item {\tt max\_table\_subgoal\_size} The maximum size of a subgoal
-  argument that can be added to a table: when the size is reached, an
-  action is taken as indicated for the previous flag.  The default
-  value is the value of {\tt maximum\_integer}.
-
-\item {\tt max\_table\_answer\_action} The action to take when a tabled
-  answer of maximum size is encountered.  To understand the use of
-  this flag, consider the program fragment:
-\begin{verbatim}
-:- table p/1.
-p(f(X)):- p(X).          p(a).
-\end{verbatim}
-  is tabled, the model for the goal {\tt ?- p(X)} is infinite, so that
-  this program will not terminate.  When the maximum answer size is
-  reached, XSB can either 
-\begin{enumerate}
-\item Throw a miscellaneous error, set using the value {\tt error}.
-  This is the default action.
-%
-\item Apply answer abstraction through radial restraint, using the
-  value {\tt abstract}.
-%
-\item Suspend the computation and throw it into a break-level CLI,
-  using the value {\tt suspend}
-%
-\end{enumerate}
-%
-%{\bf {\em Note that this flag affects only structures that are not lists (since
-%large lists are more common than other large structures).}}
-
-\item {\tt max\_table\_answer\_size} The maximum depth of an answer
-  argument that can be added to a table: when the depth is reached, an
-  action is taken as indicated for the previous flag.  The default
-  value is the value of {\tt maximum\_integer}.
-
-%{\bf  {\em Note that this flag affects only structures that are not lists
-%    (since large lists are more common than other large structures).
-%  }}
-
-%\item {\tt max\_table\_answer\_list\_action} The action to take when a
-%  tabled answer of maximum list depth is encountered.  To understand
-%  the use of this flag, consider the program fragment:
-%\begin{verbatim}
-%:- table l/1.
-%l([a|X]):- l(X).          l([a]).
-%\end{verbatim}
-%  is tabled, the model for the goal {\tt ?- l(X)} is infinite, so that
-%  this program will not terminate.  When the maximum answer list depth
-%  is reached, XSB can either throw a miscellaneous error (the default
-%  action); emit a warning; or XSB can fail -- an action that may be
-%  valid for certain programs~\footnote{Failure in this case can be
-%    seen as an implicit form of answer abstraction.}.  The action is
-%  set to fail by the value {\tt failure} while the action of throwing
-%  an error can be (re-)set using the value {\tt error}, and the action
-%  of warning is set by the value {\tt warning}.
-%
-%\item {\tt max\_table\_answer\_list\_depth} The maximum list depth of
-%  an answer argument that can be added to a table: when the depth is
-%  reached, an action is taken as indicated for the previous flag.  The
-%  default value is {\tt maximum\_integer}.
-%
-%  {\em Note that this flag affects only structures that are lists
-%    (since large lists are more common than other large structures).
-%  }
-
-\index{Prolog flags!{\tt max\_memory}}
-\item {\tt max\_memory} The maximum amount of memory that an XSB
-  thread (in the single-threaded engine) or all XSB threads (in the
-  multi threaded engine) can use for their combined execution stacks,
-  program space, tables, or any other purpose.  If a query exceeds
-  this amount, XSB will abort the query with a resource exception and
-  then try to reclaim space used by the query.  As with other flags,
-  this flag can be set during an XSB session.
-
-  The maximum amount can be set in two ways.  If given a floating
-  point number $F, 0 \le F \leq 1$, the maximum will be set to $F$
-  times the total amount of RAM for the machine on which XSB is
-  executing.  If given an integer $I$, the maximum will be set to $I$
-  kilobytes.  The value of 0 effectively disables the flag, allowing
-  XSB to allocate as much memory as the underlying OS will grant.  The
-  default value is 0, so that the flag is disabled by default.
-
 \index{Prolog flags!{\tt unify\_with\_occurs\_check}}
 \index{occurs check}
 \index{terms!cyclic}
@@ -479,6 +365,7 @@ the syntax error message.
 %
 \predref{get\_scc\_dumpfile/0}
 \index{Prolog flags!{\tt exception\_pre\_action}}
+\index{tabling!and exceptions}
 \item {\tt exception\_pre\_action} If set to {\tt
   print\_incomplete\_tables}, then the incomplete subgoals are printed
   {\em before} throwing an exception.  The execution of this action
@@ -506,10 +393,207 @@ the syntax error message.
 
 \end{itemize}
 
+%----------------
+
+\index{tripwires}
+\index{term size}
+\index{Prolog flags!{\tt max\_table\_subgoal\_size}}
+\index{Prolog flags!{\tt max\_table\_subgoal\_size\_action}}
+\index{Prolog flags!{\tt max\_incomplete\_subgoals}}
+\index{Prolog flags!{\tt max\_incomplete\_subgoals\_action}}
+\index{Prolog flags!{\tt max\_scc\_subgoals}}
+\index{Prolog flags!{\tt max\_scc\_subgoals\_action}}
+\index{termination!subgoal abstraction}
+\index{termination!radial restraint}
+%\index{Prolog flags!{\tt max\_answer\_list\_depth}}
+%\index{Prolog flags!{\tt max\_answer\_list\_action}}
+%
+\paragraph*{Tripwire Flags}
+The following flags that pertain to tripwires
+(cf. Setion~\ref{sec:tripwire}) are not currently implemented in the
+multi-threaded engine.  Each tripwire has one flag that sets a limit
+on some aspect of derivation along with an action of what to do in
+such a case.
+
+\begin{itemize}
+
+\item {\tt max\_table\_subgoal\_size} A limit set on the size of a
+  subgoal argument that can be added to a table: if the limit is
+  reached, an action is taken as indicated in the following flag.  To
+  understand the use of this flag, consider that if a predicate such
+  as
+\begin{verbatim}
+p(X):- p(f(X)).
+\end{verbatim}
+  is tabled, it can create subgoals of unbounded size.  
+  When the limit is set to 0, this this tripwire is disabled.  The
+  default value is {\tt 0}.
+
+\item {\tt max\_table\_subgoal\_size\_action} The action to take
+  whenever a tabled subgoal of limit size is encountered.  When the
+  maximum subgoal size is reached, XSB can
+\begin{enumerate}
+\item Throw a miscellaneous error, set using the value {\tt error}.
+  This is the default action.
+%
+\item Apply subgoal abstraction, using the value {\tt abstract}.
+%
+\item Suspend the computation and throw it into a break-level CLI,
+  using the value {\tt suspend}
+%
+%\item Fail the subgoal, an action that may be valid for
+%  certian programs, settable using the value {\tt fail}.
+%
+\end{enumerate}
+
+\item {\tt max\_incomplete\_subgoals} A limit set on the maximum
+  number of tabled subgoals that can be incomplete at one time.  If
+  the limit is reached, an action is taken as indicated in the
+  following flag.  Note that subgoals are usually completed during the
+  course of a derivation, so a large number of incomplete subgoals may
+  indicate unfounded recursion or some other mis-specification in a
+  program.  When the limit is set to 0, this this tripwire is
+  disabled.  The default value is {\tt 0}.
+
+\item {\tt max\_incomplete\_subgoals\_action} The action to take
+  whenever the limit number of incomplete subgoals is encountered.
+  XSB can
+\begin{enumerate}
+\item Throw a miscellaneous error, set using the value {\tt error}.
+  This is the default action.
+%
+\item Suspend the computation and throw it into a break-level CLI,
+  using the value {\tt suspend}.
+%
+\end{enumerate}
+
+\item {\tt max\_sccs\_subgoals} A limit set on the maximum number of
+  incomplete tabled subgoals {\em that are mutually recursive}.  If
+  the limit is reached, an action is taken as indicated in the
+  following flag.  Note that a large number of mutually recursive
+  subgoals may indicate a mis-specification in a program, such as an
+  unintended expansion of the search space via meta-predicates or
+  HiLog.  When the limit is set to 0, this this tripwire is disabled.
+  The default value is {\tt 0}.
+
+\item {\tt max\_sccs\_subgoals\_action} The action to take whenever
+  the limit number of incomplete subgoals within a single SCC is
+  encountered.  XSB can
+\begin{enumerate}
+\item Throw a miscellaneous error, set using the value {\tt error}.
+  This is the default action.
+%
+\item Suspend the computation and throw it into a break-level CLI,
+  using the value {\tt suspend}.
+%
+\end{enumerate}
+
+\index{Prolog flags!{\tt max\_table\_answer\_size}}
+\index{Prolog flags!{\tt max\_table\_answer\_size\_action}}
+\index{Prolog flags!{\tt max\_answers\_for\_subgoal}}
+\index{Prolog flags!{\tt max\_answers\_for\_subgoal\_action}}
+
+\item {\tt max\_table\_answer\_size} A limit set on the size of an
+  answer argument that can be added to a table: if the limit is
+  reached, an action is taken as indicated in the following flag.  To
+  understand the use of this flag, consider the program fragment:
+\begin{verbatim}
+:- table p/1.
+p(f(X)):- p(X).          p(a).
+\end{verbatim}
+  is tabled, the model for the goal {\tt ?- p(X)} is infinite, so that
+  this program will not terminate.  When the size is set to 0, this
+  this tripwire is disabled.  The default value is {\tt 0}.
+
+\item {\tt max\_table\_answer\_size\_action} The action to take when a
+  tabled answer of maximum size is encountered.  When the maximum
+  answer size is reached, XSB can
+\begin{enumerate}
+\item Throw a miscellaneous error, set using the value {\tt error}.
+  This is the default action.
+%
+\item Apply answer abstraction through radial restraint, using the
+  value {\tt abstract}.
+%
+\item Suspend the computation and throw it into a break-level CLI,
+  using the value {\tt suspend}
+%
+\end{enumerate}
+
+\item {\tt max\_answers\_for\_subgoal} A limit set on the number of
+  answers that any single tabled subgoal should have: if the limit is
+  reached, an action is taken as indicated in the following flag.
+  Note that in a program with a large number of constant or functor
+  symbols, it is possible to construct can be very many atoms of a
+  fixed size; and if too many such answers are added for a given
+  subgoal, it may indicate a program mis-specification.  When the size
+  is set to 0, this this tripwire is disabled.  The default value is
+  {\tt 0}.
+
+\item {\tt max\_answers\_for\_subgoal\_action} The action to take when
+  a the number of answers for a given subgoal exceeds the limit set in
+  the previous flag.  XSB can
+\begin{enumerate}
+\item Throw a miscellaneous error, set using the value {\tt error}.
+  This is the default action.
+%
+\item Suspend the computation and throw it into a break-level CLI,
+  using the value {\tt suspend}
+%
+\end{enumerate}
+
+\index{Prolog flags!{\tt max\_memory}}
+\item {\tt max\_memory} The maximum amount of memory that an XSB
+  thread (in the single-threaded engine) or all XSB threads (in the
+  multi threaded engine) can use for their combined execution stacks,
+  program space, tables, or any other purpose.  If a query exceeds
+  this amount, XSB will abort the query with a resource exception and
+  then try to reclaim space used by the query.  As with other flags,
+  this flag can be set during an XSB session.
+
+  The maximum amount can be set in two ways.  If given a floating
+  point number $F, 0 \le F \leq 1$, the maximum will be set to $F$
+  times the total amount of RAM for the machine on which XSB is
+  executing.  If given an integer $I$, the maximum will be set to $I$
+  kilobytes.  The value of 0 effectively disables the flag, allowing
+  XSB to allocate as much memory as the underlying OS will grant.  The
+  default value is 0, so that the flag is disabled by default.
+\end{itemize}
+%{\bf  {\em Note that this flag affects only structures that are not lists
+%    (since large lists are more common than other large structures).
+%  }}
+
+%\item {\tt max\_table\_answer\_list\_action} The action to take when a
+%  tabled answer of maximum list depth is encountered.  To understand
+%  the use of this flag, consider the program fragment:
+%\begin{verbatim}
+%:- table l/1.
+%l([a|X]):- l(X).          l([a]).
+%\end{verbatim}
+%  is tabled, the model for the goal {\tt ?- l(X)} is infinite, so that
+%  this program will not terminate.  When the maximum answer list depth
+%  is reached, XSB can either throw a miscellaneous error (the default
+%  action); emit a warning; or XSB can fail -- an action that may be
+%  valid for certain programs~\footnote{Failure in this case can be
+%    seen as an implicit form of answer abstraction.}.  The action is
+%  set to fail by the value {\tt failure} while the action of throwing
+%  an error can be (re-)set using the value {\tt error}, and the action
+%  of warning is set by the value {\tt warning}.
+%
+%\item {\tt max\_table\_answer\_list\_depth} The maximum list depth of
+%  an answer argument that can be added to a table: when the depth is
+%  reached, an action is taken as indicated for the previous flag.  The
+%  default value is {\tt maximum\_integer}.
+%
+%  {\em Note that this flag affects only structures that are lists
+%    (since large lists are more common than other large structures).
+%  }
+
+%----------------
+
+\paragraph{Flags Pertaining to Multi-Threading}
 The following flags affect only the multi-threaded engine.
 
-\index{Prolog flags!{\tt exception\_pre\_action}}
-\index{tabling!and exceptions}
 \index{Prolog flags!{\tt thread\_glsize}}
 \index{Prolog flags!{\tt thread\_tcpsize}}
 \index{Prolog flags!{\tt thread\_complsize}}
@@ -581,11 +665,13 @@ The following flags affect only the multi-threaded engine.
 
 \end{itemize}
     
-Note that the non-standard flags are used only for dynamic XSB
+\predref{xsb\_configuration/2}.  
+%
+Note that the above non-ISO flags are used only for dynamic XSB
 settings, {\it i.e.}, settings that might change between sessions (via
 command line arguments) or within the same session (via modifiable
 flags).  For static configuration information, the predicate {\tt
-  xsb\_configuration/2} is used. {xsb\_configuration/2}.
+  xsb\_configuration/2} should be used.
 
 {\bf Error Cases}
 \bi

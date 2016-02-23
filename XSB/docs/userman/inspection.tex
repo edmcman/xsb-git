@@ -1013,7 +1013,7 @@ A tripwire represents an unexpected property of a derivation: such as
 an excessive use of time or memory; an unexpected number or complexity
 of tabled subgoals or answers; or an unexpected number of mutually
 dependent tabled subgoals.  Depending both on the class of a tripwire
-and on how runtime settings are given for XSB, a tripwire may have
+and on XSB's flags are set, a tripwire may have
 different effects.  Any tripwire may be treated as an error so that it
 throws an exception just as any other error.  {\em Inspectable}
 tripwires may additionally be considered as inspection points, and
@@ -1343,44 +1343,49 @@ indicates the current values of this tripwire.  (Also see the
 %\paragraph*{Tripwire Description
 \begin{itemize}
 
-\item {\em max\_table\_subgoal\_size}. 
+\item {\tt max\_table\_subgoal\_size}. 
 \bi  
-\item {\em Limit:} The maximum size of a given argument in a
- subgoal (cf. Section~\ref{sec:size-metric}).  
+\item {\em Limit:} The maximum size of a given argument in a subgoal
+ (cf. Section~\ref{sec:size-metric}).  A limit of {\tt 0} means that
+ this tripwire is disabled.
 \item{\em  Possible Actions:} {\tt abstract}, {\tt suspend} or {\tt error}.
-\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
 \ei
 
 \item {\tt max\_incomplete\_subgoals}
 \bi  
 \item {\em Limit:} The maximum number of subgoals that are
- incomplete at any given time.
+ incomplete at any given time.  A limit of {\tt 0} means that
+ this tripwire is disabled.
 \item{\em  Possible Actions:} {\tt suspend}, {\tt error} or {\tt warning}.
-\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
 \ei
 
 \item {\tt max\_scc\_subgoals}
 \bi  
-\item {\em Limit:} The maximum number of subgoals that are
- incomplete, and are in the same SCC at any given time.
+\item {\em Limit:} The maximum number of subgoals that are incomplete,
+ and are in the same SCC at any given time.  A limit of {\tt 0} means
+ that this tripwire is disabled.
 \item{\em  Possible Actions:} {\tt suspend}, {\tt error} or {\tt warning}.
-\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
 \ei
 
 \item {\tt max\_table\_answer\_size}
 \bi  
-\item {\em Limit:} The maximum size of a given argument of an
- answer (cf. Section~\ref{sec:size-metric}).  
+\item {\em Limit:} The maximum size of a given argument of an answer
+ (cf. Section~\ref{sec:size-metric}).  A limit of {\tt 0} means that
+ this tripwire is disabled.
 \item{\em  Possible Actions:} {\tt abstract}, {\tt suspend}, or {\tt error}.
-\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
 \ei
 
-\item {\tt max\_answers\_for\_subgoal} (Not yet implemented)
+\item {\tt max\_answers\_for\_subgoal}
 \bi  
-\item {\em Limit:} The maximum number of for any single tabled
- subgoal.
+\item {\em Limit:} The maximum number of answers for any single tabled
+ subgoal.  A limit of {\tt 0} means that
+ this tripwire is disabled.
 \item{\em  Possible Actions:} {\tt suspend}, {\tt error} or {\tt warning}.
-\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
 \ei
 
 \item {\tt max\_memory}
@@ -1388,10 +1393,11 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} If an integer, the limit is the maximum
  amount of memory allowed for a computation, in kilobytes.  If a
  floating-point number, the limit is the proportion of RAM for the
- machine on which XSB is running.
+ machine on which XSB is running.  A limit of {\tt 0} means that
+ this tripwire is disabled.
 \item{\em Possible Actions:} {\tt error}. ({\tt suspend} is not yet
  implemented, and this tripwire may be a little funky.)
-\item {\em Default.} Limit: {\tt MAX\_INT}; Action: {\tt error}.
+\item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
 \ei
 
 \end{itemize}
