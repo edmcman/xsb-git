@@ -135,6 +135,8 @@ interrupt flag
 #define ANSWER_COMPLETION         83   /* amp: Incremental Answer Completion switch */   
 #define MAX_TABLE_SUBGOAL_SIZE    84   /* maximum size for terms in a tabled subgoal */
 #define MAX_TABLE_SUBGOAL_ACTION  85   /* abort/fail/abstract (abstract not yet impld.)*/
+#define MAX_ANSWERS_FOR_SUBGOAL   86
+#define MAX_ANSWERS_FOR_SUBGOAL_ACTION   87
 //#define MAX_TABLE_ANSWER_LIST_DEPTH    86   /* maximum depth for lists in a tabled answer */
 //#define MAX_TABLE_ANSWER_LIST_ACTION   87   /* abort/warn/abstract (abstract not yet impld.)*/
 #define MAXTOINDEX_FLAG           88   /* Experimental only */             
@@ -159,9 +161,10 @@ interrupt flag
 #define MAX_SCC_SUBGOALS                106
 #define MAX_SCC_SUBGOALS_ACTION         107
 #define CYCLIC_CHECK_SIZE               108
-#define MAX_TABLE_SUBGOAL_VAR_NUM               109
-#define MAX_TABLE_ANSWER_VAR_NUM               110
-#define MAX_MEMORY_ACTION 111
+#define MAX_TABLE_SUBGOAL_VAR_NUM       109
+#define MAX_TABLE_ANSWER_VAR_NUM        110
+#define MAX_MEMORY_ACTION               111
+
 #define MAX_FLAGS		 120
 
 #define MAXTOINDEX 20              /* maximum depth in term to go when using deep indexing; 

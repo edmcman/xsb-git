@@ -778,7 +778,20 @@ typedef struct subgoal_frame {
 
 #define SUBG_INCREMENT_CALLSTO_SUBGOAL(subgoal)  (subgoal -> callsto_number)++
 #define INIT_SUBGOAL_CALLSTO_NUMBER(subgoal) subg_callsto_number(subgoal)  = 1
-#define SUBG_INCREMENT_ANSWER_CTR(subgoal) subg_ans_ctr(subgoal)++
+
+#define SUBG_INCREMENT_ANSWER_CTR(subgoal) {	\
+    if (++subg_ans_ctr(subgoal) > flags[MAX_ANSWERS_FOR_SUBGOAL]) {	\
+      if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ERROR) {		\
+	sprint_subgoal(CTXTc forest_log_buffer_1,0, subgoal);		\
+xsb_abort("Tripwire max_answers_for_subgoal hit. The user-set limit on the number of %d answers for a single subgoaol has been exceeded for %s\n",flags[MAX_ANSWERS_FOR_SUBGOAL],forest_log_buffer_1->fl_buffer); \
+      }									\
+      else { /* flags[MAX_SCC_SUBGOALS_ACTION] == XSB_SUSPEND */	\
+	tripwire_interrupt(CTXTc "max_answers_for_subgoal_handler");	\
+      }									\
+    }									\
+  }
+
+
 
 
 /* Subsumptive Producer Subgoal Frame
