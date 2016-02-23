@@ -26,6 +26,7 @@
 %%% add printout of file loaded and time; like load_dyn
 %%% add option to ignore first line (as titles)
 
+:- import catch/3 from standard.
 
 :- comment(load_csv(FileName,PSpec), "loads a comma-separated (csv)
 file, where @var{FileName} is the file to load, @var{PSpec} is either
@@ -163,25 +164,25 @@ cvt_types([],[],[],_) :- !.
 cvt_types([],_,_,Fields) :- !,
 	coninc('__errcnt',ECnt),
 	(ECnt < 10
-	 ->	write(userout,'ERROR: Wrong length line '),
+	 ->	write(user_error,'ERROR: Wrong length line '),
 		conget('__linesread',LinesRead),
-		write(userout,''(LinesRead)),write(userout,': '),
-		writeq(userout,Fields),nl(userout),
-		writeln('Fields from line extended with variables'),nl
+		write(user_error,''(LinesRead)),write(user_error,': '),
+		writeq(user_error,Fields),nl(user_error),
+		writeln(user_error,'\tFields from line extended with variables'),nl(user_error)
 	 ;	ECnt =:= 10
-	 ->	writeln('ERROR: More wrong length lines...')
+	 ->	writeln(user_error,'ERROR: More wrong length lines...')
 	 ;	true
 	).
 cvt_types(_,_,[],Fields) :- !,
 	coninc('__errcnt',ECnt),
 	(ECnt < 10
-	 ->	write(userout,'ERROR: Wrong length line '),
+	 ->	write(user_error,'ERROR: Wrong length line '),
 		conget('__linesread',LinesRead),
-		write(userout,''(LinesRead)),write(userout,': '),
-		writeq(userout,Fields),nl(userout),
-		writeln('Extra fields in line truncated'),nl
+		write(user_error,''(LinesRead)),write(user_error,': '),
+		writeq(user_error,Fields),nl(user_error),
+		writeln(user_error,'\tExtra fields in line truncated')
 	 ;	ECnt =:= 10
-	 ->	writeln('ERROR: More wrong length lines...')
+	 ->	writeln(user_error,'ERROR: More wrong length lines...')
 	 ;	true
 	).
 cvt_types([F|Fs],[T|Ts],[A|As],Fields) :-
@@ -193,21 +194,29 @@ cvt_types([F|Fs],[T|Ts],[A|As],Fields) :-
 	 ->	atom_codes(F,FC),
 		(FC == []
 		 ->	A = 0
-		 ; number_codes(AN,FC)
+		 ; catch(number_codes(AN,FC),_,fail)
 		 ->	A is floor(AN)
-		 ;	write(userout,'Cannot convert to integer: '),
-			writeq(userout,F),nl(userout),
-			A = F
+		 ;
+                    write(user_error,'ERROR: Cannot convert to integer, line '),
+                    conget('__linesread',LinesRead),
+                    write(user_error,''(LinesRead)),write(user_error,': '),
+                    writeq(user_error,F), nl(user_error),
+                    writeln(user_error,'\tConverting to atom instead'),
+                    A = F
 		)
 	 ; T == float
 	 ->	atom_codes(F,FC),
 		(FC == []
 		 ->	A = 0.0
-		 ; number_codes(AN,FC)
+		 ; catch(number_codes(AN,FC),_,fail)
 		 ->	A is float(AN)
-		 ;	write(userout,'Cannot convert to float: '),
-			writeq(userout,F),nl(userout),
-			A = F
+		 ;
+                    write(user_error,'ERROR: Cannot convert to flora, line '),
+                    conget('__linesread',LinesRead),
+                    write(user_error,''(LinesRead)), write(user_error,': '),
+                    writeq(user_error,F), nl(user_error),
+                    writeln(user_error,'\tConverting to atom instead'),
+                    A = F
 		)
 	 ; T == term
 	 ->	atom_to_term(F,A)
@@ -530,7 +539,7 @@ load_with_header(FileNameList,Options) :-
 	 (CodeFields == end_of_file
 	  ->	 close(InStream),
 		 conget('__rec_cnt',NumRecs),
-		 write(userout,NumRecs),writeln(' records'),
+		 write(userout,NumRecs), writeln(userout,' records'),
 		 fail
 	  ;	 atom_codes_list(Fields,CodeFields),
 		 Term =.. [PredName|Fields],
@@ -583,9 +592,9 @@ copy_dsv(InFileName,NumFields,InSep,InDelim,OutFileName,OutSep0,OutDelim0,Option
 	 ;	delim_file_process(InStream,InSep,InDelim,CodeFields),
 		(length(CodeFields,NumFields)
 		 ->	true
-		 ;	write(userout,'ERROR: Wrong length line: '),
+		 ;	write(user_error,'ERROR: Wrong length line: '),
 			atom_codes_list(Fields,CodeFields),
-			writeq(userout,Fields),nl(userout)
+			writeq(user_error,Fields),nl(user_error)
 		)
 	),
 	(CodeFields == end_of_file
