@@ -35,6 +35,8 @@ into.").
 
 load_csv(FileName,PSpec) :-
 	load_dsv(FileName,PSpec,",",0'"',[]).
+load_csv(FileName,PSpec,Options) :-
+	load_dsv(FileName,PSpec,",",0'"',Options).
 
 load_psv(FileName,PSpec) :-
 	load_dsv(FileName,PSpec,"|",0'"',[]).
@@ -94,6 +96,14 @@ returns are converted to the indicated string.  This option can only
 be used with a non-atomic @var{PSpec}, i.e., where the target
 predicate has a fixed arity, greater than 1.  Also order=reverse is
 supported, to use asserta instead of assertz when asserting the facts.
+In addition, pad = N (positive or negative integer) can be specified.
+If N<0, it is assumed that the number of argument in the given template
+predicates is less than the length of the rows in csv by abs(N), so the
+remaning fields will be thrown out.
+If N>0, it is assumed that the number of arguments is greater than the
+number of fields by N. (If this option is not given, N is assumed to be 0.)
+If the number of arguments + N != the number of fields, warnings will
+be issued.
 ").
 
 load_dsv(FileName,PSpec,Sep,Delim,Options) :-
@@ -101,7 +111,8 @@ load_dsv(FileName,PSpec,Sep,Delim,Options) :-
 	process_predspec(PSpec,Spec,Types,Args),
 	dynamic(Spec),
 	retractall(Spec),
-	(read_dsv(FileName,PSpec,Sep,Delim,Options,Types,Args),
+        pad_args(Args,Options,ArgsPatched),
+	(read_dsv(FileName,PSpec,Sep,Delim,Options,Types,ArgsPatched),
 	 (Reverse =:= 0
 	  ->	 assertz(Spec),
 		 fail
@@ -133,10 +144,9 @@ read_dsv(FileName,PSpec,Sep,Delim,Options,Types,Args) :-
 	 ;	coninc('__recsread',RecsRead),
 		(RecsRead =:= 1,member(titles,Options)
 		 ->	fail
-		 ;	 atom_codes_list(Fields,CodeFields),
-			(atom(PSpec)
-			 ->	Args = Fields
-			 ;	cvt_types(Fields,Types,Args,Fields)
+		 ;	atom_codes_list(Fields,CodeFields),
+			(atom(PSpec) ->	Args = Fields
+                        ;	cvt_types(Fields,Types,Args,Fields)
 			)
 		)
 	).
@@ -164,25 +174,25 @@ cvt_types([],[],[],_) :- !.
 cvt_types([],_,_,Fields) :- !,
 	coninc('__errcnt',ECnt),
 	(ECnt < 10
-	 ->	write(user_error,'ERROR: Wrong length line '),
+	 ->	write(user_error,'Warning: Wrong length line '),
 		conget('__linesread',LinesRead),
 		write(user_error,''(LinesRead)),write(user_error,': '),
 		writeq(user_error,Fields),nl(user_error),
 		writeln(user_error,'\tFields from line extended with variables'),nl(user_error)
 	 ;	ECnt =:= 10
-	 ->	writeln(user_error,'ERROR: More wrong length lines...')
+	 ->	writeln(user_error,'Warning: More wrong length lines...')
 	 ;	true
 	).
 cvt_types(_,_,[],Fields) :- !,
 	coninc('__errcnt',ECnt),
 	(ECnt < 10
-	 ->	write(user_error,'ERROR: Wrong length line '),
+	 ->	write(user_error,'Warning: Wrong length line '),
 		conget('__linesread',LinesRead),
 		write(user_error,''(LinesRead)),write(user_error,': '),
 		writeq(user_error,Fields),nl(user_error),
 		writeln(user_error,'\tExtra fields in line truncated')
 	 ;	ECnt =:= 10
-	 ->	writeln(user_error,'ERROR: More wrong length lines...')
+	 ->	writeln(user_error,'Warning: More wrong length lines...')
 	 ;	true
 	).
 cvt_types([F|Fs],[T|Ts],[A|As],Fields) :-
@@ -590,9 +600,8 @@ copy_dsv(InFileName,NumFields,InSep,InDelim,OutFileName,OutSep0,OutDelim0,Option
 	(member(returns=Returns,Options)
 	 ->	delim_file_process_fixed(InStream,InSep,InDelim,Returns,NumFields,CodeFields)
 	 ;	delim_file_process(InStream,InSep,InDelim,CodeFields),
-		(length(CodeFields,NumFields)
-		 ->	true
-		 ;	write(user_error,'ERROR: Wrong length line: '),
+		(length(CodeFields,NumFields) ->	true
+                ;	write(user_error,'Warning: Wrong length line: '),
 			atom_codes_list(Fields,CodeFields),
 			writeq(user_error,Fields),nl(user_error)
 		)
@@ -631,3 +640,16 @@ write_code_field(FieldCodes,Stream,Sep,Delim,DelimA) :-
 	 ;	put_list(Stream,FieldCodes)
 	).
 
+
+pad_args(ArgsIn,Options,ArgsOut) :-
+        (member(pad=N,Options), integer(N) ->
+            length(ArgsIn,LenIn),
+            Take is LenIn+N,
+            (N < 0 -> lists:take_upto(Take,ArgsIn,ArgsOut)
+            ; N > 0 ->
+                length(PatchArgs,N),
+                append(ArgsIn,PatchArgs,ArgsOut)
+            ; ArgsOut = ArgsIn
+            )
+        ; ArgsOut = ArgsIn
+        ).
