@@ -32,17 +32,18 @@ the form:
 
 The {\tt Pattern} and the {\tt Subject} arguments of {\tt pcre:match} must
 be XSB atoms. If there is a match in the subject, then the result is
-returned as a list of the form shown above. \textit{Match} refers to the
-substring which matched the entire pattern. \textit{Prematch} contains part
+returned as a list of the \texttt{match(...)}-elements
+shown above. \textit{Match} refers to the
+substring that matched the entire pattern. \textit{Prematch} contains part
 of the subject-string that precedes the matched substring.
 \textit{Postmatch} contains part of the subject following the matched
 substring. The list of subpatterns (the 4-th argument of the {\tt match}
-data structure) corresponds to the substrings which matched the
+data structure) corresponds to the substrings that matched the
 parenthesized expressions in the given pattern. For example:
 
 \begin{verbatim}
 ?- pcre:match('(\d{5}-\d{4})\ [A-Z]{2}',
-	'Hello12345-6789 NYwalk', X, 'one').
+	'Hello12345-6789 NYwalk', X, one).
 X = [match(12345-6789 NY,Hello,walk,[12345-6789])]
 \end{verbatim}
 
@@ -54,7 +55,7 @@ returned as part of the subpatterns list. Consider another example:
 
 \begin{verbatim}
 ?- pcre:match('[a-z]+@[a-z]+\.(com|net|edu)', 
-              'a@b.com@c.net@d.edu', X, 'bulk').
+              'a@b.com@c.net@d.edu', X, bulk).
 X = [match(a@b.com,,@c.net@d.edu,[com]),
      match(com@c.net,a@b.,@d.edu,[net]),
      match(om@c.net,a@b.c,@d.edu,[net]),
@@ -64,12 +65,13 @@ X = [match(a@b.com,,@c.net@d.edu,[com]),
      match(t@d.edu,a@b.com@c.ne,,[edu])]
 \end{verbatim}
 
-This example uses the bulk match mode of the {\tt pcre\_match/4} to find
-all possible matches which resemble a very basic email address. In case
+This example uses the bulk match mode of the {\tt pcre\_match/4}
+predicate to find
+all possible matches that resemble a very basic email address. In case
 there is no prematch or postmatch to a matched substring, an empty string
 is returned.
 
-In general, there can be any number of parenthesized subtatterns in a given
+In general, there can be any number of parenthesized sub-patterns in a given
 pattern and the subpattern match-list in the 4-th argument of the {\tt
   match} data structure can have 0, 1, 2, or more elements. 
 
@@ -92,45 +94,51 @@ atoms whereas \textit{Result} must be an unbound variable. The following
 example illustrates the use of this predicate:
 
 \begin{verbatim}
-?- pcre:substitute('is','This is a Mississippi issue', 'was', X).
+?- pcre:substitute(is,'This is a Mississippi issue', was, X).
 X = Thwas was a Mwasswassippi wassue
 \end{verbatim}
 
-Note that the predicate {\tt pcre:substitute/4} always works in a bulk
+Note that the predicate {\tt pcre:substitute/4} always works in the bulk
 mode. If one needs to substitute only \emph{one} occurrence of a pattern,
 this is easy to do using the {\tt pcre:match/4} predicate. For instance, if
 one wants to replace the third occurrence of ``{\tt is}'' in the above
 string, we could issue the query
 %% 
 \begin{verbatim}
-?- pcre:match('is','This is a Mississippi issue',X,bulk).
+?- pcre:match(is,'This is a Mississippi issue',X,bulk).
 \end{verbatim}
 %% 
-take the third element in the returned list, which is
+take the third element in the returned list, i.e., 
 %% 
 \begin{verbatim}
     match(is,'This is a M','sissippi issue',[])
 \end{verbatim}
 %% 
-and then concatenate the 2-nd argument with ``{\tt was}'' and with the 3-d
-argument of that {\tt match} data structure. 
+and then concatenate the \emph{Prematch} in the above \texttt{match(...)}
+(i.e., \texttt{'This is a M'}) with the substitute string
+(i.e., {\tt 'was'}) and the \emph{Postmatch} (i.e., \texttt{'sissippi issue'}). 
 
-More examples of the use of the {\tt pcre} package can be found in 
-\begin{verbatim}
-$XSBDIR/examples/pcretest.P
-\end{verbatim}
+Additional examples of the use of the {\tt pcre} package can be found in
+the XSB distribution, in the file \texttt{\$XSBDIR/examples/pcretest.P}.
 
 
 \section{Installation and configuration}
 
 XSB's {\tt pcre} package requires that the {\tt PCRE} library is installed.
 For Windows, the {\tt PCRE} library files are included with the
-installation. For Linux and Mac, the {\tt libpcre} and {\tt libpcre-dev}
+XSB installation. For Linux and Mac, the PCRE and the PCRE-development
 packages must be installed using the distribution's package manager.
+The names of these packages might differ from one Linux distribution to
+the next. For instance, in Ubuntu, these libraries might be called
+\emph{libpcre3} and \texttt{libpcre3-dev}. In contrast, Fedora uses the
+names \texttt{pcre} and \texttt{pcre-devel}.  
+On the Mac, these packages live in the Homebrew add-on, which
+must be installed separately.
 
 \subsection{Configuring for Linux, Mac, and other Unices}
 
-If a particular Linux distribution does not include these libraries they
+In the unlikely case that your Linux distribution
+does not include PCRE as a package they
 must be downloaded and built manually. Please visit 
 %%
 \begin{quote}
@@ -140,7 +148,8 @@ http://www.pcre.org/
 to download the latest distribution and follow the instructions given with
 the package.
 
-To configure {\tt pcre} on Linux, Mac, or on some other Unix variant, switch to the {\tt XSB/build} directory and type:
+To configure {\tt pcre} on Linux, Mac, or on some other Unix variant,
+switch to the {\tt XSB/build} directory and type:
 
 \begin{verbatim}
     cd ../packages/pcre
@@ -151,18 +160,24 @@ To configure {\tt pcre} on Linux, Mac, or on some other Unix variant, switch to 
 
 \subsection{Configuring for Windows}
 
-Configuring {\tt pcre} on Windows requires creating the DLL for Windows. To create the DLL, open the Visual C++ command prompt, switch to the root XSB directory, and type:
-
+If your installation of XSB is not configured with PCRE,
+you will need Microsoft \texttt{nmake} installed. 
+Change to the top XSB directory and type:
+%%
 \begin{verbatim}
-	cd packages\pcre\cc
-	nmake /f NMakefile.mak
+    cd packages\pcre\cc
+    nmake /f NMakefile.mak      <-- if you have the 32 bit version of XSB
+    nmake /f NMakefile64.mak    <-- if you have the 64 bit version of XSB
 \end{verbatim}
-
+%%
 This builds the DLL required by XSB's {\tt pcre} package on Windows. To
-ensure that the build went ahead smoothly, open the directory
+make sure that the build went ahead smoothly, open the directory
+%%
 \begin{verbatim}
-{XSB_DIR}\config\x86-pc-windows\bin
+{XSB_DIR}\config\x86-pc-windows\bin   <-- if using the 32 bit XSB
+{XSB_DIR}\config\x64-pc-windows\bin   <-- if using the 64 bit XSB
 \end{verbatim}
+%%
 and verify that the file {\tt pcre4pl.dll} exists there.
 
 Once the package has been configured, it must be loaded before it can be used:
