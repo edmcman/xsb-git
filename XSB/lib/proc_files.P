@@ -176,8 +176,8 @@ cvt_types([],_,_,Fields) :- !,
 	(ECnt < 10
 	 ->	write(user_error,'Warning: Wrong length line '),
 		conget('__linesread',LinesRead),
-		write(user_error,''(LinesRead)),write(user_error,': '),
-		writeq(user_error,Fields),nl(user_error),
+		write(user_error,''(LinesRead)), write(user_error,': '),
+		writeq(user_error,Fields), nl(user_error),
 		writeln(user_error,'\tFields from line extended with variables'),nl(user_error)
 	 ;	ECnt =:= 10
 	 ->	writeln(user_error,'Warning: More wrong length lines...')
@@ -207,7 +207,7 @@ cvt_types([F|Fs],[T|Ts],[A|As],Fields) :-
 		 ; catch(number_codes(AN,FC),_,fail)
 		 ->	A is floor(AN)
 		 ;
-                    write(user_error,'ERROR: Cannot convert to integer, line '),
+                    write(user_error,'Warning: Cannot convert to integer, line '),
                     conget('__linesread',LinesRead),
                     write(user_error,''(LinesRead)),write(user_error,': '),
                     writeq(user_error,F), nl(user_error),
@@ -221,7 +221,7 @@ cvt_types([F|Fs],[T|Ts],[A|As],Fields) :-
 		 ; catch(number_codes(AN,FC),_,fail)
 		 ->	A is float(AN)
 		 ;
-                    write(user_error,'ERROR: Cannot convert to flora, line '),
+                    write(user_error,'Warning: Cannot convert to float, line '),
                     conget('__linesread',LinesRead),
                     write(user_error,''(LinesRead)), write(user_error,': '),
                     writeq(user_error,F), nl(user_error),
@@ -279,7 +279,9 @@ delim_file_process_fixed(Stream,Sep,Delim,Returns,NumFields,PrevFields,Fields) :
 				delim_file_process_fixed(Stream,Sep,Delim,Returns,NNumFields,NewFields,Fields)
 			 ; Len =:= NumFields
 			 ->	append_fields(PrevFields,Returns,CodeFields,Fields)
-			 ;	writeln(error(CodeFields))
+			 ;
+                            %% MK: What is this? Should it be a throw?
+                            writeln(error(CodeFields))
 			)
 		 ;      Fields = CodeFields
 		)
@@ -603,7 +605,7 @@ copy_dsv(InFileName,NumFields,InSep,InDelim,OutFileName,OutSep0,OutDelim0,Option
 		(length(CodeFields,NumFields) ->	true
                 ;	write(user_error,'Warning: Wrong length line: '),
 			atom_codes_list(Fields,CodeFields),
-			writeq(user_error,Fields),nl(user_error)
+			writeq(user_error,Fields), nl(user_error)
 		)
 	),
 	(CodeFields == end_of_file
