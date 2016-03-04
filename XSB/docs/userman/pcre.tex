@@ -24,7 +24,7 @@ predicate is:
 To find only the first match, the {\tt Mode}  parameter must be set to the atom
 {\tt one}. To find all matches, the {\tt Mode}  parameter is set to the atom
 {\tt bulk}. The result of the matching is returned as a list of 
-the form:
+terms of the form
 
 \begin{center}
 \texttt{match}(\textit{Match},\textit{Prematch},\textit{Postmatch},[\textit{Subpattern1, Subpattern2,\ldots}])
@@ -47,12 +47,16 @@ parenthesized expressions in the given pattern. For example:
 X = [match(12345-6789 NY,Hello,walk,[12345-6789])]
 \end{verbatim}
 
-In this example, the match was found for substring `12345-6789 NY'. The
+In this example, the mode argument is \texttt{one} so only one match is
+returned, 
+the match found for the substring `12345-6789 NY'. The
 prematch is `Hello' and the postmatch is `walk'. The substring
-\textit{`12345-6789'} matched the parenthesized expression $ ( \backslash d
-\lbrace 5 \rbrace - \backslash d \lbrace 4 \rbrace ) $ and hence it is
-returned as part of the subpatterns list. Consider another example:
+\textit{`12345-6789'} matched the parenthesized expression $( \backslash d
+\lbrace 5 \rbrace - \backslash d \lbrace 4 \rbrace )$ and hence it is
+returned as part of the subpatterns list.
 
+Consider another example, one where all matches are returned:
+%%
 \begin{verbatim}
 ?- pcre:match('[a-z]+@[a-z]+\.(com|net|edu)', 
               'a@b.com@c.net@d.edu', X, bulk).
