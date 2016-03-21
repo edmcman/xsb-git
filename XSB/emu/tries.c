@@ -1016,8 +1016,12 @@ static int *depth_stack;
       apply_answer_depth_rationality_list(found_flag);			\
     }									\
     else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
-      /* printf("Debug: suspending on max_table_answer\n");*/		\
+      safe_delete_branch(Paren);                                      \
+      resetpdl;                                                       \
+      found_flag = 1;                                                 \
+      /*      printf("Debug: suspending on max_table_answer -- list\n"); */ \
       tripwire_interrupt(CTXTc "max_table_answer_size_handler");	\
+      return NULL;                                                    \
       }									\
     else  {  /* error */						\
       sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
@@ -1035,8 +1039,8 @@ static int *depth_stack;
       safe_delete_branch(Paren);                                      \
       resetpdl;                                                       \
       found_flag = 1;                                                 \
-      /* printf("Debug: suspending on max_table_answer\n"); */         \
-      tripwire_interrupt(CTXTc "max_table_answer_handler");		\
+      /*      printf("Debug: suspending on max_table_answer -- term\n"); */  \
+      tripwire_interrupt(CTXTc "max_table_answer_size_handler");		\
       return NULL;                                                    \
       }									\
     else { /* error */							\
