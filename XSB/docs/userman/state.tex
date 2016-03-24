@@ -426,7 +426,7 @@ such a case.
 p(X):- p(f(X)).
 \end{verbatim}
   is tabled, it can create subgoals of unbounded size.  
-  When the limit is set to 0, this this tripwire is disabled.  The
+  When the limit is set to 0, this tripwire is disabled.  The
   default value is {\tt 0}.
 
 \item {\tt max\_table\_subgoal\_size\_action} The action to take
@@ -452,7 +452,7 @@ p(X):- p(f(X)).
   following flag.  Note that subgoals are usually completed during the
   course of a derivation, so a large number of incomplete subgoals may
   indicate unfounded recursion or some other mis-specification in a
-  program.  When the limit is set to 0, this this tripwire is
+  program.  When the limit is set to 0, this tripwire is
   disabled.  The default value is {\tt 0}.
 
 \item {\tt max\_incomplete\_subgoals\_action} The action to take
@@ -473,7 +473,7 @@ p(X):- p(f(X)).
   following flag.  Note that a large number of mutually recursive
   subgoals may indicate a mis-specification in a program, such as an
   unintended expansion of the search space via meta-predicates or
-  HiLog.  When the limit is set to 0, this this tripwire is disabled.
+  HiLog.  When the limit is set to 0, this tripwire is disabled.
   The default value is {\tt 0}.
 
 \item {\tt max\_sccs\_subgoals\_action} The action to take whenever
@@ -524,10 +524,10 @@ p(f(X)):- p(X).          p(a).
   answers that any single tabled subgoal should have: if the limit is
   reached, an action is taken as indicated in the following flag.
   Note that in a program with a large number of constant or functor
-  symbols, it is possible to construct can be very many atoms of a
+  symbols, it is possible to construct many answers of a
   fixed size; and if too many such answers are added for a given
   subgoal, it may indicate a program mis-specification.  When the size
-  is set to 0, this this tripwire is disabled.  The default value is
+  is set to 0, this tripwire is disabled.  The default value is
   {\tt 0}.
 
 \item {\tt max\_answers\_for\_subgoal\_action} The action to take when
