@@ -1100,8 +1100,10 @@ key pairs.
 \standarditem{storage\_insert\_keypair\_bt(+StorageName, +Key, +Value, ?Inserted)}
 {storage\_insert\_keypair\_bt/4}
 %%
-A call to this predicate inserts a key pair into {\tt StorageName} as
-does {\tt storage\_insert\_keypair/4}, and the key-value pair may be
+Calling this predicate inserts a key pair into the trie
+represented by {\tt StorageName},
+similarly to
+\texttt{storage\_insert\_keypair/4}, and the key-value pair can then be
 queried via {\tt storage\_find\_keypair/3}, just as with the
 non-backtrackable updates described above.  In addition, the key-value
 pair can be removed from {\tt StorageName} by explicit deletion.
@@ -1121,7 +1123,7 @@ would depend on a given application.
 {storage\_delete\_keypair\_bt/3}
 %%
 Like {\tt storage\_delete\_keypair/3}, but backtrackable as described
-for {\tt storage\_insert\_keypair\_bt/4}.
+for the predicate \texttt{storage\_insert\_keypair\_bt/4}.
 
 \standarditem{storage\_insert\_fact\_bt(+StorageName, +Goal)} {storage\_insert\_fact\_bt/2}
 %%
