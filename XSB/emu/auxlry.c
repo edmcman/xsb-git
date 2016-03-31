@@ -50,7 +50,7 @@ extern int syscall();
 #ifdef WIN_NT
 #include <windows.h>
 #include <winbase.h>
-#include <versionhelpers.h>
+// vanished: #include <versionhelpers.h>
 #include "windows.h"
 #endif
 
@@ -77,7 +77,7 @@ double cpu_time(void)
     } ***/
 
   //  if (win_version == VER_PLATFORM_WIN32_NT) {
-  if (IsWindowsXPOrGreater()) {
+  if (1 /* IsWindowsXPOrGreater() seems obsolete */) {
     HANDLE thisproc;
     FILETIME creation, exit, kernel, user;
     ULONGLONG lkernel, luser;

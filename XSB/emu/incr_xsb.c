@@ -237,6 +237,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
   case INVALIDATE_CALLNODE_TRIE: {
     const int callreg=2;
     int index = (int)ptoc_int(CTXTc callreg);
+    callnodeptr c; // Declare this earlier to please Visual C++ 2010 Express
 
     if (!itrie_array[ptoc_int(CTXTc callreg)].incremental) {
       //      sprint_subgoal(CTXTc forest_log_buffer_1,0,(VariantSF)ptcpreg);  dont think this is relevant
@@ -245,7 +246,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
 
     //    printf("invalidating trie %d callnode w. cn %p\n",index,itrie_array[index].callnode);
 
-    callnodeptr c = itrie_array[index].callnode;
+    c = itrie_array[index].callnode;
     invalidate_call(CTXTc c,NOT_ABOLISHING); 
     break;
   }
