@@ -1862,6 +1862,28 @@ max_answers_for_subgoal_header:-
   format("  * To abort, enter the command 'abort/0'~n",[]),
   format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]).
 
+%----
+
+:- export max_memory_handler/0.
+:- import max_memory_user_handler/0 from usermod.
+:- dynamic max_memory_user_handler/0.
+
+max_memory_handler:- 
+     max_memory_user_handler,!.
+max_memory_handler:- 
+    max_memory_default_handler.
+
+max_memory_default_handler:- 
+	      break_for_tripwires([tables:max_memory_header]).
+
+max_memory_header:- 
+  current_prolog_flag(max_memory,Max_mem),
+  format("~nThe maximum user-set memory of ~d has been exceeded~n",[Max_mem]),
+  format("Details can be seen by typing statistics/0~n",[]),
+  format("To support debugging and diagnosis, the limit has been increased by 20\%.~n",[]),
+  format("~n  * To continue set the flag to allow more memory, and then type Ctrl-d~n",[]),
+  format("  * To abort, enter the command 'abort/0'~n",[]).
+
 /*======================================================================*/
 % ANSWER COMPLETION CODE
 /*======================================================================*/

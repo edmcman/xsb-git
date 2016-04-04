@@ -998,7 +998,8 @@ xsb_flag(max_memory, Max) :-
 	stat_flag(MAX_MEMORY, Max).
 xsb_flag(max_memory_action, Action) :-
 	stat_flag(MAX_MEMORY_ACTION,A),
-	(A == XSB_ERROR -> Action = error).
+	(A == XSB_ERROR -> Action = error
+	; (A == XSB_SUSPEND -> Action = suspend) ).
 xsb_flag(exception_pre_action, Mode) :-
 	stat_flag(EXCEPTION_PRE_ACTION, Flag),
 	( Flag =:= PRINT_INCOMPLETE_ON_ABORT -> 
@@ -1263,8 +1264,10 @@ set_xsb_flag_1(max_memory,Max):-!,
 % TES: Placeholder for now.
 set_xsb_flag_1(max_memory_action, Action) :-!,
 	(Action == error -> 
-	    stat_set_flag(MAX_MEMORY_ACTION, XSB_ERROR)
-          ; domain_error([error],Action,set_prolog_flag/2,2,'max_memory_action clause') ).
+	    stat_set_flag(MAX_MEMORY_ACTION, XSB_ERROR) ; 
+	 (Action == suspend -> 
+	    stat_set_flag(MAX_MEMORY_ACTION, XSB_SUSPEND)
+          ; domain_error([error,suspend],Action,set_prolog_flag/2,2,'max_memory_action clause') ) ).
 
 
 set_xsb_flag_1(ctrace, OnOff) :-!,
