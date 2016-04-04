@@ -34,7 +34,7 @@
 /* for the abstract machine.  The following interface routines are	*/
 /* exported:								*/
 /*	Program area handling:						*/
-/*	    mem_alloc(size,cat):  alloc size bytes (on 8 byte boundary)	*/
+/*	    mem_allocd(size,cat):  alloc size bytes (on 8 byte boundary)	*/
 /*	    mem_dealloc(addr,size,cat):  dealloc space			*/
 /*      Stack area:                                                     */
 /*          tcpstack_realloc(size)                                      */
@@ -62,11 +62,11 @@
 #include "error_xsb.h"
 #include "tab_structs.h"
 #include "thread_xsb.h"
-
 #include "flags_xsb.h"
 #include "subp.h"
 #include "debug_xsb.h"
 #include "trace_xsb.h"
+#include "cinterf.h"
 
 #if defined(GENERAL_TAGGING)
 
@@ -119,9 +119,9 @@ extern char *pspace_cat[];
 #ifdef NON_OPT_COMPILE
 struct memcount_t memcount_gl = {0,0,0};
 
-void print_mem_allocs() {
+void print_mem_allocs(char * String) {
 
-  printf("\nSystem memory interactions since last use:\n");
+  printf("\n(%s)System memory interactions since last use:\n",String);
   printf("Memory Allocations: %d\n",memcount_gl.num_mem_allocs);
   printf("Memory Reallocations: %d\n",memcount_gl.num_mem_reallocs);
   printf("Memory Deallocations: %d\n",memcount_gl.num_mem_deallocs);
@@ -129,7 +129,7 @@ void print_mem_allocs() {
   memcount_gl.num_mem_allocs = memcount_gl.num_mem_reallocs = memcount_gl.num_mem_deallocs = 0;
 }
 #else
-void print_mem_allocs() {
+void print_mem_allocs(char * String) {
 }
 #endif
 
@@ -151,6 +151,32 @@ UInteger pspace_tot_gl = 0;
    cases where we really dont check for them.  These seem pretty
    small, overall however. */
 
+#define CHECK_MAX_MEMORY(STRING) {				\
+    /*     printf("Checking memory %s\n",STRING);		*/	\
+    if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + size)/K > (int) flags[MAX_MEMORY]) { \
+      /*      printf("handling internal memory overflow %s\n",STRING);*/ \
+      flags[MAX_MEMORY] = flags[MAX_MEMORY]*1.2;			\
+      if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			\
+	xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT)); \
+      else {								\
+	tripwire_interrupt(CTXTc "max_memory_handler");		\
+      }									\
+    }									\
+}
+
+#define CHECK_MAX_MEMORY_REALLOC(STRING) {				\
+    /*     printf("Checking memory %s\n",STRING);	*/		\
+    if ((int) flags[MAX_MEMORY] && (pspace_tot_gl/K + newsize - oldsize) > (int) flags[MAX_MEMORY]) { \
+      /*     printf("handling internal memory overflow %s\n",STRING);*/	\
+      flags[MAX_MEMORY] = flags[MAX_MEMORY]*1.2;			\
+      if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			\
+	xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT)); \
+      else {								\
+	tripwire_interrupt(CTXTc "max_memory_handler");		\
+      }									\
+    }									\
+}
+
 DllExport void* call_conv mem_alloc(size_t size, int category)
 {
     byte * ptr;
@@ -162,9 +188,7 @@ DllExport void* call_conv mem_alloc(size_t size, int category)
     SYS_MUTEX_LOCK_NOERROR(MUTEX_MEM);
 #endif
 
-    if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + size)/K > (int) flags[MAX_MEMORY]) {
-      xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT));
-    }
+    CHECK_MAX_MEMORY("mem_alloc");
     ptr = (byte *) malloc(size);
 
 #if defined(GENERAL_TAGGING)
@@ -183,7 +207,7 @@ DllExport void* call_conv mem_alloc(size_t size, int category)
       pspace_tot_gl += size;
     }
 
-    //    printf("mem_alloced %d for tot %d (%s)\n",size,pspace_tot_gl,pspace_cat[category]);
+    //    printf("mem_alloced %d for tot %lu (%s)\n",size,pspace_tot_gl,pspace_cat[category]);
     return ptr;
 }
 
@@ -205,7 +229,7 @@ void *mem_alloc_nocheck(size_t size, int category)
       pspace_tot_gl += size;
     }
 
-    //    printf("mem_alloced (nocheck) %d for tot %d\n",size,pspace_tot_gl);
+    //    printf("mem_alloced (nocheck) %zu for tot %lu\n",size,pspace_tot_gl);
 
 #if defined(GENERAL_TAGGING)
     extend_enc_dec_as_nec(ptr,ptr+size);
@@ -230,10 +254,7 @@ void *mem_calloc(size_t size, size_t occs, int category)
     SYS_MUTEX_LOCK_NOERROR(MUTEX_MEM);
 #endif
 
-    if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + length)/K > (int) flags[MAX_MEMORY]) {
-      xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT));
-
-    }
+    CHECK_MAX_MEMORY("mem_calloc");
 
     ptr = (byte *) calloc(size,occs);
 #if defined(GENERAL_TAGGING)
@@ -302,9 +323,7 @@ DllExport void* call_conv mem_realloc(void *addr, size_t oldsize, size_t newsize
     memcount_gl.num_mem_reallocs++;
     SYS_MUTEX_LOCK_NOERROR(MUTEX_MEM);
 #endif
-    if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + newsize)/K > (int) flags[MAX_MEMORY]) {
-      xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT));
-    }
+    CHECK_MAX_MEMORY_REALLOC("mem_realloc");
 
     pspacesize[category] = pspacesize[category] - oldsize + newsize;
 
@@ -639,13 +658,16 @@ void complstack_realloc (CTXTdeclc size_t new_size) {
      * Increase the size of the data area and push the Completion Stack
      * to its high-memory end.
      */
-    //if (!STACK_USER_MEMORY_LIMIT_OVERFLOW(complstack.size, new_size))
-      new_top = (byte *)realloc(complstack.low, new_size * K);
+    if (STACK_USER_MEMORY_LIMIT_OVERFLOW(complstack.size, new_size)) {
+      flags[MAX_MEMORY] = flags[MAX_MEMORY]*1.2;			
+      if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			
+	xsb_throw_memory_error(encode_memory_error(COMPL_SPACE,USER_MEMORY_LIMIT)); 
+      else {								
+	tripwire_interrupt(CTXTc "max_memory_handler");		
+      }								
+    }
+    new_top = (byte *)realloc(complstack.low, new_size * K);
     if ( IsNULL(new_top) ) {
-      //      printf("new size would be %"Intfmt"\n",pspace_tot_gl + (new_size - complstack.size)*K);
-      if (STACK_USER_MEMORY_LIMIT_OVERFLOW(complstack.size, new_size))
-	xsb_throw_memory_error(encode_memory_error(COMPL_SPACE,USER_MEMORY_LIMIT));
-      else 
 	xsb_throw_memory_error(encode_memory_error(COMPL_SPACE,SYSTEM_MEMORY_LIMIT));
     }
     new_bottom = new_top + new_size * K;

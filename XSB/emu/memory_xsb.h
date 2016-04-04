@@ -138,7 +138,7 @@ extern void *mem_calloc_nocheck(size_t, size_t, int);
 DllExport extern void* call_conv mem_realloc(void *, size_t, size_t, int);
 extern void *mem_realloc_nocheck(void *, size_t, size_t, int);
 extern void mem_dealloc(void *, size_t, int);
-extern void print_mem_allocs(void);
+extern void print_mem_allocs(char *);
 #ifndef MULTI_THREAD
 extern void tcpstack_realloc(size_t);
 extern void complstack_realloc(size_t);

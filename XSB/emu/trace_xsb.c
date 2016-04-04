@@ -996,7 +996,7 @@ void print_statistics(CTXTdeclc int choice) {
 #endif
   case STAT_MUTEX:                  /* mutex use (if PROFILE_MUTEXES is defined) */
     print_mutex_use();
-    print_mem_allocs();
+    print_mem_allocs("stat_mutex");
     break;
   case 5:
     dis(0); 
