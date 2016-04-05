@@ -155,7 +155,7 @@ UInteger pspace_tot_gl = 0;
     /*     printf("Checking memory %s\n",STRING);		*/	\
     if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + size)/K > (int) flags[MAX_MEMORY]) { \
       /*      printf("handling internal memory overflow %s\n",STRING);*/ \
-      flags[MAX_MEMORY] = flags[MAX_MEMORY]*1.2;			\
+      flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2);		\
       if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			\
 	xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT)); \
       else {								\
@@ -168,7 +168,7 @@ UInteger pspace_tot_gl = 0;
     /*     printf("Checking memory %s\n",STRING);	*/		\
     if ((int) flags[MAX_MEMORY] && (pspace_tot_gl/K + newsize - oldsize) > (int) flags[MAX_MEMORY]) { \
       /*     printf("handling internal memory overflow %s\n",STRING);*/	\
-      flags[MAX_MEMORY] = flags[MAX_MEMORY]*1.2;			\
+      flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2);		\
       if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			\
 	xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT)); \
       else {								\
@@ -659,7 +659,7 @@ void complstack_realloc (CTXTdeclc size_t new_size) {
      * to its high-memory end.
      */
     if (STACK_USER_MEMORY_LIMIT_OVERFLOW(complstack.size, new_size)) {
-      flags[MAX_MEMORY] = flags[MAX_MEMORY]*1.2;			
+      flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2);			
       if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			
 	xsb_throw_memory_error(encode_memory_error(COMPL_SPACE,USER_MEMORY_LIMIT)); 
       else {								
