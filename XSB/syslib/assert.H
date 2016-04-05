@@ -35,6 +35,7 @@
 :- export t_assert/2.
 :- export code_to_buff/2. % for message queues
 :- export exchange_definitions/2.
+:- export predicate_defined/1.
 :- export update/4, get_fact_clref/2, update_clref/4.  %% hackery...
 :- export check_dynamic_options/2.
 :- export retract_fact/1.

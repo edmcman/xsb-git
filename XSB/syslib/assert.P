@@ -908,6 +908,24 @@ exchange_definitions(Skel1,Skel2) :-
 	psc_set_type(PSC1,Type2),
 	psc_set_type(PSC2,Type1).
 
+/*======================================================================*/
+/* predicate_defined(+Skel)						*/
+/*	Skel is a predicate term (perhaps modified by mod:).  This	*/
+/*	predicate succeeds if the predicate term is defined as having	*/
+/*	clauses, i.e., could be called.					*/
+/*======================================================================*/
+
+predicate_defined(Spec) :-
+	(Spec = Mod:GSkel, nonvar(GSkel)
+	 ->	term_new_mod(Mod,GSkel,Skel)
+	 ;	Skel = Spec
+	),
+	term_psc(Skel,Psc),
+	psc_type(Psc,Type),
+	Type =\= 0,		%  != T_ORDI
+	Type =\= 12.		%  != T_UDEF, not loaded
+
+
 trie_assert_builtin(_Clause,_PSC,_Arity,_Prref,_Flag) :-
 	'_$builtin'(TRIE_ASSERT).
 
