@@ -136,8 +136,12 @@ cdf_dynamic(dlTable/11).
 
 %:- dynamic isa_ext/2 as intern.  % delete if mti
 %cdf_dynamic(isa_ext/2).  % delete if mti
+cdf_dynamic(isa_ext_12/2).  % delete if not mti
+cdf_dynamic(isa_ext_21/2).  % delete if not mti
 cdf_dynamic(allAttr_ext/3).
 %cdf_dynamic(hasAttr_ext/3).  % delete if mti
+cdf_dynamic(hasAttr_ext_123/3). % delete if not mti
+cdf_dynamic(hasAttr_ext_231/3). % delete if not mti
 cdf_dynamic(classHasAttr_ext/3).
 cdf_dynamic(minAttr_ext/4).
 cdf_dynamic(maxAttr_ext/4).
