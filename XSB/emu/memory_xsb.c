@@ -164,18 +164,21 @@ UInteger pspace_tot_gl = 0;
     }									\
 }
 
-#define CHECK_MAX_MEMORY_REALLOC(STRING) {				\
+//    CHECK_MAX_MEMORY_REALLOC("mem_realloc");
+
+#define TCP_HANDLE_USER_MEMORY_LIMIT_OVERFLOW(CATEGORY,STRING) {		\
     /*     printf("Checking memory %s\n",STRING);	*/		\
-    if ((int) flags[MAX_MEMORY] && (pspace_tot_gl/K + newsize - oldsize) > (int) flags[MAX_MEMORY]) { \
-      /*     printf("handling internal memory overflow %s\n",STRING);*/	\
+    if (flags[MAX_MEMORY_ACTION] == XSB_ERROR) {			\
       flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2);		\
-      if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			\
-	xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT)); \
-      else {								\
-	tripwire_interrupt(CTXTc "max_memory_handler");		\
-      }									\
+      xsb_throw_memory_error(encode_memory_error(CATEGORY,USER_MEMORY_LIMIT)); \
     }									\
-}
+    else {								\
+      tripwire_interrupt(CTXTc "max_memory_handler");			\
+      newsize = tcpstack.size + MIN_TCP_STACK_INCREMENT(tcpstack.size);	\
+      flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2 + MIN_TCP_STACK_INCREMENT(tcpstack.size)); \
+    }									\
+  }
+
 
 DllExport void* call_conv mem_alloc(size_t size, int category)
 {
@@ -323,7 +326,7 @@ DllExport void* call_conv mem_realloc(void *addr, size_t oldsize, size_t newsize
     memcount_gl.num_mem_reallocs++;
     SYS_MUTEX_LOCK_NOERROR(MUTEX_MEM);
 #endif
-    CHECK_MAX_MEMORY_REALLOC("mem_realloc");
+    //    CHECK_MAX_MEMORY_REALLOC("mem_realloc");
 
     pspacesize[category] = pspacesize[category] - oldsize + newsize;
 
@@ -401,11 +404,12 @@ void mem_dealloc(void *addr, size_t size, int category)
 
 /*
  * Re-allocate the space for the trail and choice point stack data area
- * to "new_size" K-byte blocks.
+ * to "newsize" K-byte blocks.
  */
 
-void tcpstack_realloc(CTXTdeclc size_t new_size) {
+void tcpstack_realloc(CTXTdeclc size_t newsize) {
 
+  printf("entering tcp realloc\n");
   byte *cps_top,         /* addr of topmost byte in old CP Stack */
        *trail_top;       /* addr of topmost frame (link field) in old Trail */
 
@@ -429,7 +433,7 @@ Please use -c N or cpsize(N) to start with a larger choice point stack"
 	);
 #endif
 
-  if (new_size == tcpstack.size)
+  if (newsize == tcpstack.size)
     return;
 
   cps_top = (byte *)top_of_cpstack;
@@ -439,7 +443,7 @@ Please use -c N or cpsize(N) to start with a larger choice point stack"
 
   /* Expand the Trail / Choice Point Stack Area
      ------------------------------------------ */
-  if (new_size > tcpstack.size) {
+  if (newsize > tcpstack.size) {
     if (tcpstack.size == tcpstack.init_size) {
       xsb_dbgmsg((LOG_DEBUG, "\tBottom:\t\t%p\t\tInitial Size: %ldK",
 		 tcpstack.low, tcpstack.size));
@@ -454,30 +458,30 @@ Please use -c N or cpsize(N) to start with a larger choice point stack"
      *   from where it was moved and push it to the high end of the newly
      *   allocated region.
      */
-    while (STACK_USER_MEMORY_LIMIT_OVERFLOW(tcpstack.size, new_size) 
-	   && (new_size-tcpstack.size >= MIN_TCP_STACK_INCREMENT(tcpstack.size)) ) {
-      new_size = tcpstack.size + (new_size-tcpstack.size)/2;
-      //      printf("ulimit problem; trying new_size %ld (user limit = %ld)\n",new_size,flags[MAX_MEMORY]);
+    while (STACK_USER_MEMORY_LIMIT_OVERFLOW(tcpstack.size, newsize) 
+	   && (newsize-tcpstack.size >= MIN_TCP_STACK_INCREMENT(tcpstack.size)) ) {
+      newsize = tcpstack.size + (newsize-tcpstack.size)/2;
+      //      printf("ulimit problem; trying newsize %ld (user limit = %ld)\n",newsize,flags[MAX_MEMORY]);
     }
-    if (new_size - tcpstack.size < MIN_TCP_STACK_INCREMENT(tcpstack.size)) {
-      xsb_throw_memory_error(encode_memory_error(TCP_SPACE,USER_MEMORY_LIMIT));
+    if (newsize - tcpstack.size < MIN_TCP_STACK_INCREMENT(tcpstack.size)) {
+      TCP_HANDLE_USER_MEMORY_LIMIT_OVERFLOW(TCP_SPACE,"tcpstack_realloc");
     }
-    while (!new_trail && (new_size-tcpstack.size >= MIN_TCP_STACK_INCREMENT(tcpstack.size)) ) {
-      new_trail = (byte *)realloc(tcpstack.low, new_size * K);
+    while (!new_trail && (newsize-tcpstack.size >= MIN_TCP_STACK_INCREMENT(tcpstack.size)) ) {
+      new_trail = (byte *)realloc(tcpstack.low, newsize * K);
       if (!new_trail) {
-	new_size = tcpstack.size + (new_size-tcpstack.size)/2;
-	//	printf("hard limit problem; trying new_size %ld\n",new_size);
+	newsize = tcpstack.size + (newsize-tcpstack.size)/2;
+	//	printf("hard limit problem; trying newsize %ld\n",newsize);
       }
     }
     if (!new_trail) {
-      xsb_throw_memory_error(encode_memory_error(TCP_SPACE,USER_MEMORY_LIMIT));
+      xsb_throw_memory_error(encode_memory_error(TCP_SPACE,SYSTEM_MEMORY_LIMIT));
     }
     else {
 #ifdef NON_OPT_COMPILE
-      printf("reallocing TCP from %ld to %ld\n",tcpstack.size,new_size);
+      printf("reallocing TCP from %ld to %ld\n",tcpstack.size,newsize);
 #endif
     }
-    new_cps = new_trail + new_size * K;
+    new_cps = new_trail + newsize * K;
 
 #if defined(GENERAL_TAGGING)
     // nec, since GC reverses trail pointers to heap and tags them
@@ -497,12 +501,12 @@ Please use -c N or cpsize(N) to start with a larger choice point stack"
      * Float the Choice Point Stack data up to lower-memory and reduce the
      * size of the data area.
      */
-    memmove(cps_top - (tcpstack.size - new_size) * K,  /* move to */
+    memmove(cps_top - (tcpstack.size - newsize) * K,  /* move to */
 	    cps_top,                                   /* move from */
 	    (tcpstack.high - cps_top) );         /* number of bytes */
-    new_trail = (byte *)realloc(tcpstack.low, new_size * K);
+    new_trail = (byte *)realloc(tcpstack.low, newsize * K);
     trail_offset = (new_trail - tcpstack.low);
-    new_cps = new_trail + new_size * K;
+    new_cps = new_trail + newsize * K;
     cps_offset = (new_cps - tcpstack.high);
   }
 
@@ -584,8 +588,8 @@ Please use -c N or cpsize(N) to start with a larger choice point stack"
      --------------------------- */
   tcpstack.low = new_trail;
   tcpstack.high = new_cps;
-  pspace_tot_gl = pspace_tot_gl + (new_size - tcpstack.size)*K;
-  tcpstack.size = new_size;
+  pspace_tot_gl = pspace_tot_gl + (newsize - tcpstack.size)*K;
+  tcpstack.size = newsize;
   
   trreg = (CPtr *)((byte *)trreg + trail_offset);
   breg = (CPtr)((byte *)breg + cps_offset);
@@ -616,11 +620,11 @@ void handle_tcpstack_overflow(CTXTdecl)
 /* ------------------------------------------------------------------------- */
 
 /*
- * Re-allocate the space for the completion stack data area to "new_size"
+ * Re-allocate the space for the completion stack data area to "newsize"
  * K-byte blocks.
  */
 
-void complstack_realloc (CTXTdeclc size_t new_size) {
+void complstack_realloc (CTXTdeclc size_t newsize) {
 
   byte *new_top = NULL;    /* bottom of new trail area */
   byte *new_bottom;      /* bottom of new choice point stack area */
@@ -638,7 +642,7 @@ void complstack_realloc (CTXTdeclc size_t new_size) {
 #endif
 
   //  printf("reallocing complstack\n");
-  if (new_size == complstack.size)
+  if (newsize == complstack.size)
     return;
   
   cs_top = (byte *)top_of_complstk;
@@ -647,7 +651,7 @@ void complstack_realloc (CTXTdeclc size_t new_size) {
 
   /* Expand the Completion Stack
      --------------------------- */
-  if (new_size > complstack.size) {
+  if (newsize > complstack.size) {
     if (complstack.size == complstack.init_size) { 
       xsb_dbgmsg((LOG_DEBUG, "\tBottom:\t\t%p\t\tInitial Size: %ldK",
 		 complstack.low, complstack.size));
@@ -658,7 +662,7 @@ void complstack_realloc (CTXTdeclc size_t new_size) {
      * Increase the size of the data area and push the Completion Stack
      * to its high-memory end.
      */
-    if (STACK_USER_MEMORY_LIMIT_OVERFLOW(complstack.size, new_size)) {
+    if (STACK_USER_MEMORY_LIMIT_OVERFLOW(complstack.size, newsize)) {
       flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2);			
       if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			
 	xsb_throw_memory_error(encode_memory_error(COMPL_SPACE,USER_MEMORY_LIMIT)); 
@@ -666,11 +670,11 @@ void complstack_realloc (CTXTdeclc size_t new_size) {
 	tripwire_interrupt(CTXTc "max_memory_handler");		
       }								
     }
-    new_top = (byte *)realloc(complstack.low, new_size * K);
+    new_top = (byte *)realloc(complstack.low, newsize * K);
     if ( IsNULL(new_top) ) {
 	xsb_throw_memory_error(encode_memory_error(COMPL_SPACE,SYSTEM_MEMORY_LIMIT));
     }
-    new_bottom = new_top + new_size * K;
+    new_bottom = new_top + newsize * K;
     
     top_offset = (new_top - complstack.low);
     bottom_offset = (new_bottom - complstack.high);
@@ -688,12 +692,12 @@ void complstack_realloc (CTXTdeclc size_t new_size) {
      * Float the Completion Stack data up to lower-memory and reduce the
      * size of the data area.
      */
-    memmove(cs_top - (complstack.size - new_size) * K,  /* move to */
+    memmove(cs_top - (complstack.size - newsize) * K,  /* move to */
 	    cs_top,                                     /* move from */
 	    (complstack.high - cs_top) );         /* number of bytes */
-    new_top = (byte *)realloc(complstack.low, new_size * K);
+    new_top = (byte *)realloc(complstack.low, newsize * K);
     top_offset = (new_top - complstack.low);
-    new_bottom = new_top + new_size * K;
+    new_bottom = new_top + newsize * K;
     bottom_offset = (new_bottom - complstack.high);
   }
 
@@ -728,8 +732,8 @@ void complstack_realloc (CTXTdeclc size_t new_size) {
      --------------------------- */
   complstack.low = new_top;
   complstack.high = new_bottom;
-  pspace_tot_gl = pspace_tot_gl + (new_size - complstack.size)*K;
-  complstack.size = new_size;
+  pspace_tot_gl = pspace_tot_gl + (newsize - complstack.size)*K;
+  complstack.size = newsize;
   
   openreg = (CPtr)((byte *)openreg + bottom_offset);
 
