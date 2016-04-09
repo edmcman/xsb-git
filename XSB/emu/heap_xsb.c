@@ -143,6 +143,7 @@ unmarking marked strings.
 #include "cell_xsb.h"
 #include "memory_xsb.h"
 #include "inst_xsb.h"
+#include "cinterf_defs.h"
 
 /* For Reallocation Routines
    ------------------------- */
@@ -415,6 +416,19 @@ void initialize_glstack(CPtr from, CPtr to)
   }
 }
 
+#define GL_HANDLE_USER_MEMORY_LIMIT_OVERFLOW(CATEGORY,STRING) {		\
+    /*    printf("Checking memory %s\n",STRING);		*/	\
+    if (flags[MAX_MEMORY_ACTION] == XSB_ERROR) {			\
+      flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2);		\
+      xsb_throw_memory_error(encode_memory_error(CATEGORY,USER_MEMORY_LIMIT)); \
+    }									\
+    else {								\
+      tripwire_interrupt(CTXTc "max_memory_handler");			\
+      new_size = glstack.size + MIN_GL_STACK_INCREMENT(glstack.size);	\
+      flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2 + MIN_GL_STACK_INCREMENT(glstack.size)); \
+    }									\
+  }
+
 xsbBool glstack_realloc(CTXTdeclc size_t new_size, int arity)
 {
   CPtr   new_heap_bot=NULL ;       /* bottom of new Global Stack area */
@@ -477,13 +491,13 @@ xsbBool glstack_realloc(CTXTdeclc size_t new_size, int arity)
     local_offset = new_ls_bot - ls_bot ;
   } else { // expanding
       while (STACK_USER_MEMORY_LIMIT_OVERFLOW(glstack.size, new_size) 
-	   && (new_size-glstack.size >= MIN_GL_STACK_INCREMENT(tcpstack.size)) ) {
+	   && (new_size-glstack.size >= MIN_GL_STACK_INCREMENT(glstack.size)) ) {
       new_size = glstack.size + (new_size-glstack.size)/2;
       //      printf("ulimit problem for gl; trying new_size %ld (user limit = %ld)\n",new_size,flags[MAX_MEMORY]);
     }
     if (new_size - glstack.size < MIN_GL_STACK_INCREMENT(glstack.size)) {
       //      return 1;  /* return an error output -- will be picked up later */
-      xsb_throw_memory_error(encode_memory_error(GL_SPACE,USER_MEMORY_LIMIT));
+      GL_HANDLE_USER_MEMORY_LIMIT_OVERFLOW(GL_SPACE,"heap_expansion");
     }
     new_heap_bot = (CPtr)realloc(heap_bot, new_size_in_bytes);
     if (new_heap_bot == NULL) {
@@ -614,7 +628,6 @@ xsbBool glstack_realloc(CTXTdeclc size_t new_size, int arity)
   xsb_dbgmsg((LOG_REALLOC,
 	     "Heap/Local Stack data area expansion - finished in %lf secs\n",
 	     expandtime));
-
   return 0;
 } /* glstack_realloc */
 

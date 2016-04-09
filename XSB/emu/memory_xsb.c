@@ -164,7 +164,18 @@ UInteger pspace_tot_gl = 0;
     }									\
 }
 
-//    CHECK_MAX_MEMORY_REALLOC("mem_realloc");
+#define CHECK_MAX_MEMORY_REALLOC(STRING) {				\
+    /*     printf("Checking memory %s\n",STRING);		*/	\
+    if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + (newsize-oldsize))/K > (int) flags[MAX_MEMORY]) { \
+      /*      printf("handling internal memory overflow %s\n",STRING);*/ \
+      flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2);		\
+      if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			\
+	xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT)); \
+      else {								\
+	tripwire_interrupt(CTXTc "max_memory_handler");		\
+      }									\
+    }									\
+}
 
 #define TCP_HANDLE_USER_MEMORY_LIMIT_OVERFLOW(CATEGORY,STRING) {		\
     /*     printf("Checking memory %s\n",STRING);	*/		\
@@ -326,7 +337,8 @@ DllExport void* call_conv mem_realloc(void *addr, size_t oldsize, size_t newsize
     memcount_gl.num_mem_reallocs++;
     SYS_MUTEX_LOCK_NOERROR(MUTEX_MEM);
 #endif
-    //    CHECK_MAX_MEMORY_REALLOC("mem_realloc");
+
+    CHECK_MAX_MEMORY_REALLOC("mem_realloc");
 
     pspacesize[category] = pspacesize[category] - oldsize + newsize;
 
@@ -338,7 +350,7 @@ DllExport void* call_conv mem_realloc(void *addr, size_t oldsize, size_t newsize
     SYS_MUTEX_UNLOCK_NOERROR(MUTEX_MEM);
 #endif
     if (new_addr == NULL && newsize > 0) {
-      xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT));
+      xsb_throw_memory_error(encode_memory_error(category,SYSTEM_MEMORY_LIMIT));
     }
     else { 
       pspacesize[category] = pspacesize[category] -oldsize + newsize;
@@ -409,7 +421,6 @@ void mem_dealloc(void *addr, size_t size, int category)
 
 void tcpstack_realloc(CTXTdeclc size_t newsize) {
 
-  printf("entering tcp realloc\n");
   byte *cps_top,         /* addr of topmost byte in old CP Stack */
        *trail_top;       /* addr of topmost frame (link field) in old Trail */
 
