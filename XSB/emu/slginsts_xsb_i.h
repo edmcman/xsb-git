@@ -1164,7 +1164,7 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
 	perform_early_completion(CTXTc producer_sf, producer_cpf);
 #if defined(LOCAL_EVAL)
 	flags[PIL_TRACE] = 1;
-	/* do not comment following condition: results in unnecessary recomputation (dsw for Pablo Chico) */
+	/* The following prunes deeper choicepoints at early completion if possible */
 	if (tcp_pcreg(producer_cpf) != (byte *) &answer_return_inst) {
           CPtr b = breg;
 	  //          printf("+++ ec breg: %p, producer %p\n",b,producer_cpf);
