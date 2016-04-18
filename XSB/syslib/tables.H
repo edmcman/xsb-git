@@ -57,6 +57,7 @@
    load_forest_log/1,
    log_all_forest_start/0, log_all_forest_start/1,
    log_all_forest_end/0, 
+   log_all_forest_flush/0, 
    log_forest/1, log_forest/2,
    morph_dep_graph/3,
    print_incomplete_tables/0,print_incomplete_tables/1,
@@ -103,7 +104,10 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 :- export set_forest_logging_for_pred/2.
 
 /***** Other ******/
-:- export start_forest_view/1, stop_forest_view/0.
+:- export
+        start_forest_view/1,
+        flush_forest_view/0,
+        stop_forest_view/0.
 :- export '_$$get_returns'/3.
 :- export '_$$get_returns_and_tvs'/4.
 :- export predicate_has_tables/1.

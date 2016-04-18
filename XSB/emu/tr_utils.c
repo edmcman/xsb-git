@@ -5915,6 +5915,13 @@ case CALL_SUBS_SLG_NOT: {
     }
     break;
   }
+    
+  case FLUSH_FOREST_VIEW: {
+    if (fview_ptr != stdout) {
+      fflush(fview_ptr);
+    }
+    break;
+  }
 
   case TNOT_SETUP: {
     Cell goalTerm;

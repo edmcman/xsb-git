@@ -906,6 +906,8 @@ log_all_forest_start(Options):-
 %% it is necessary in order to stop it
 log_all_forest_end :-
 	stop_forest_view.
+log_all_forest_flush :-
+	flush_forest_view.
 
 log_forest(Call):- 
 	start_forest_view(userout),
@@ -939,6 +941,9 @@ stop_forest_view:-
 	table_inspection_function(STOP_FOREST_VIEW,_,_,_,_),
 	set_prolog_flag(ctrace,off),
 	set_prolog_flag(backtrace_on_error,on).
+
+flush_forest_view:-
+	table_inspection_function(FLUSH_FOREST_VIEW,_,_,_,_).
 
 set_forest_logging_for_pred(PredSpec,Val):- 
  	  (PredSpec = Mod:PredSpec1  -> 

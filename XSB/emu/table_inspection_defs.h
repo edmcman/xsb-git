@@ -33,6 +33,7 @@
 #define EARLY_COMPLETE                           9
 #define START_FOREST_VIEW                        10
 #define STOP_FOREST_VIEW                         11
+//#define FLUSH_FOREST_VIEW                        34   -- placed below
 #define TNOT_SETUP                               12
 #define GET_CURRENT_SCC                          13
 #define PRINT_COMPLETION_STACK                   14
@@ -55,6 +56,7 @@
 #define GET_POS_AFFECTS                          31
 #define GET_NEG_AFFECTS                          32
 #define PSC_IMMUTABLE                            33
+#define FLUSH_FOREST_VIEW                        34
 
 /* added by Bart Demoen & Kostis Sagonas for debugging and convenience */
 #define PRINT_LS                240
