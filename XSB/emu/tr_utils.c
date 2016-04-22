@@ -5613,7 +5613,7 @@ int  get_residual_sccs(CTXTdeclc Cell listterm) {
  VariantSF goalSF = NULL, subsumerSF;
  Cell goalTerm;
 
-FILE * fview_ptr;
+FILE * fview_ptr = NULL;
 
 //----------------------------------------------------------------------
 extern CPtr trie_asserted_clref(CPtr);
@@ -5909,15 +5909,16 @@ case CALL_SUBS_SLG_NOT: {
   }
 
   case STOP_FOREST_VIEW: {
-    if (fview_ptr != stdout) {
+    if (fview_ptr != stdout && fview_ptr != NULL) {
       fflush(fview_ptr);
       fclose(fview_ptr);
     }
+    fview_ptr = NULL;
     break;
   }
     
   case FLUSH_FOREST_VIEW: {
-    if (fview_ptr != stdout) {
+    if (fview_ptr != stdout && fview_ptr != NULL) {
       fflush(fview_ptr);
     }
     break;
