@@ -283,7 +283,7 @@ file_time(FileName, Time) :-
 
 file_size(FileName, Size) :-
 	sys_system(STAT_FILE_SIZE,FileName,[H,L], _,_,_,_),
-	Size is L + (H << 16).
+	Size is L + (H << 24).
 
 
 /************************************************************************
