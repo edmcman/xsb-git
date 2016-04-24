@@ -3732,7 +3732,7 @@ static inline void abolish_table_pred_single(CTXTdeclc TIFptr tif, int cps_check
   }
 
  if (flags[CTRACE_CALLS])  { 
-    fprintf(fview_ptr,"ta(pred(%s/%d),%d).\n",get_name(TIF_PSC(tif)), get_arity(TIF_PSC(tif)),ctrace_ctr++);
+    fprintf(fview_ptr,"ta(pred(%s,%d),%d).\n",get_name(TIF_PSC(tif)), get_arity(TIF_PSC(tif)),ctrace_ctr++);
   }
 
   if (flags[NUM_THREADS] == 1 || !get_shared(TIF_PSC(tif))) {
@@ -3788,7 +3788,7 @@ static inline void abolish_table_pred_transitive(CTXTdeclc TIFptr tif, int cps_c
       xsb_permission_error(CTXTc "abolish",message,0,"abolish_table_pred",1);
     }
  if (flags[CTRACE_CALLS])  { 
-    fprintf(fview_ptr,"ta(pred(%s/%d),%d).\n",get_name(TIF_PSC(tif)), get_arity(TIF_PSC(tif)),ctrace_ctr++);
+    fprintf(fview_ptr,"ta(pred(%s,%d),%d).\n",get_name(TIF_PSC(tif)), get_arity(TIF_PSC(tif)),ctrace_ctr++);
   }
 
     //        printf(" abolishing %s/%d\n",get_name(TIF_PSC(tif)),get_arity(TIF_PSC(tif)));
