@@ -479,23 +479,28 @@ dump_extensional_isa_component_with_backup(IDList,CDFDir,Opts) :-
 	dump_extensional_isa_component(IDList,CDFDir,Opts).
 
 dump_extensional_isa_component(IDList,CDFDir,Opts) :-
+	abolish_table_pred(ancestor(_,_,_)),
+	abolish_table_pred(descendent(_,_,_)),
 	concat_atom([CDFDir,'/cdf_extensional.P'],CDFFile),
 	open(CDFFile,write,OStr),
 	findall(isa_ext(Sub,Sup),isa_anc_desc(IDList,Sub,Sup),Isas0),
 	sort(Isas0,PrimaryIsas),
+	%%(member(PI,PrimaryIsas),writeln(userout,PI),fail ; true),
 	(member(connect_targets,Opts)
 	 ->	findall(isa_ext(Sub,Sup),target_ancestors_for(PrimaryIsas,Sub,Sup),SpecIsas0),
 		append(SpecIsas0,PrimaryIsas,AllIsas0),
 		sort(AllIsas0,AllIsas)
 	 ;	AllIsas = PrimaryIsas
 	),
+	writeln(userout,call_write_cdf_list_All),
 	write_cdf_list(OStr,AllIsas),
+	writeln(userout,call_dump_attrs),
 	dump_attrs(PrimaryIsas,OStr),
 	close(OStr).
 
 dump_attrs(Isas,OStr) :-
-	classes_from_isas(Isas,Classes),
-	(cdf_attr_ext_inst(AttrTerm,Class,_,_),
+	(classes_from_isas(Isas,Classes),
+	 cdf_attr_ext_inst(AttrTerm,Class,_,_),
 	 findall(AttrTerm,(member(Class,Classes),call_c(AttrTerm)),AttrTerms0),
 	 sort(AttrTerms0,AttrTerms),
 	 write_cdf_list(OStr,AttrTerms),
@@ -528,9 +533,10 @@ target_ancestors_for(IsaList,Sub,Sup) :-
 	(ancestor(Rid,Sub,Sup)
 	 ;
 	 cids_in_partype(Cid,Tid),
-	 ancestor(Cid,Sub,Sup)
-	).	
+	 ancestor(Cid,Sub,Sup)   
+	).
 
+:- table ancestor/3.
 ancestor(ID,Sub,Sup) :-
 	isa_ext(ID,IDp),
 	(Sub = ID, Sup = IDp
@@ -552,7 +558,9 @@ cids_in_partype(Cid,cid(PType,_)) :-
 	PType =.. [_|Args],
 	cids_in_partype_list(Cid,Args).
 
+:- import isa/2 from cdf_init_cdf.
 cids_in_partype_list(Cid,[Tid|_]) :-
+	\+ isa(Tid,cid('CDF Primitive Types',cdf)),
 	cids_in_partype(Cid,Tid).
 cids_in_partype_list(Cid,[_|Tids]) :-
 	cids_in_partype_list(Cid,Tids).
