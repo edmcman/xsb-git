@@ -1016,12 +1016,14 @@ static int *depth_stack;
       apply_answer_depth_rationality_list(found_flag);			\
     }									\
     else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
-      safe_delete_branch(Paren);                                      \
-      resetpdl;                                                       \
-      found_flag = 1;                                                 \
+      /*      safe_delete_branch(Paren);			*/	\
+      /*            resetpdl;					*/	\
+      /*      found_flag = 1;                                             */ \
       /*      printf("Debug: suspending on max_table_answer -- list\n"); */ \
+      /*      apply_answer_depth_rationality_list(found_flag);	*/	\
       tripwire_interrupt(CTXTc "max_table_answer_size_handler");	\
-      return NULL;                                                    \
+      ADD_LIST_TO_ANSWER_TRIE;						\
+      /*      return NULL;					*/	\
       }									\
     else  {  /* error */						\
       sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
@@ -1036,13 +1038,14 @@ static int *depth_stack;
       apply_answer_depth_rationality_nonlist(found_flag);		\
     }									\
     else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
-      safe_delete_branch(Paren);                                      \
-      resetpdl;                                                       \
-      found_flag = 1;                                                 \
+      /*      safe_delete_branch(Paren);			*/	\
+      /*      resetpdl;					*/		\
+      /*      found_flag = 1;						*/ \
       /*      printf("Debug: suspending on max_table_answer -- term\n"); */  \
-      tripwire_interrupt(CTXTc "max_table_answer_size_handler");		\
-      return NULL;                                                    \
-      }									\
+      tripwire_interrupt(CTXTc "max_table_answer_size_handler");	\
+      ADD_STRUCTURE_TO_ANSWER_TRIE;					\
+      /*      return NULL;						*/ \
+    }									\
     else { /* error */							\
 	sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
 	safe_delete_branch(Paren);					\
@@ -1093,7 +1096,7 @@ static int *depth_stack;
 	}								\
       }									\
       else {								\
-	/*	printf("about to handle adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit); */ \
+	/*	printf("about to handle adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit);*/ \
 	HANDLE_ANSWER_LIST_DEPTH;					\
       }									\
   }									\
@@ -1259,7 +1262,6 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   if (TIF_AnswerDepth(subg_tif_ptr(subgoal_ptr))) 
     answer_depth_limit = (UInteger) (TIF_AnswerDepth(subg_tif_ptr(subgoal_ptr)));
   else answer_depth_limit = (UInteger) flags[MAX_TABLE_ANSWER_DEPTH];  
-  
   if (interning_terms && answer_depth_limit < MY_MAXINT) 
     xsb_abort("Cannot use explicit answer depth bound when interning terms for table: %s/%d\n",
 	      get_name(TIF_PSC(subg_tif_ptr(subgoal_ptr))),
