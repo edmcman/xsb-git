@@ -990,6 +990,23 @@ XSB_End_Instr()
  *    current subgoal before proceeding.
  */
 
+#define check_tripwire_interrupt {					\
+    if ( !(asynint_val) ) {						\
+      lpcreg = cpreg;							\
+    } else {								\
+      if (asynint_val & THREADINT_MARK) {				\
+	/*printf("Entered thread cancel: proceed\n");*/			\
+        synint_proc(CTXTc true_psc, THREADSIG_CANCEL);			\
+        lpcreg = pcreg;							\
+        asynint_val = 0;						\
+        asynint_code = 0;						\
+      } else {								\
+        lpcreg = cpreg;							\
+        asynint_code = 0;						\
+      }									\
+    }									\
+  }								
+
 
 XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc) 
   Def2ops
@@ -1188,7 +1205,8 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
     ptcpreg = tcp_ptcp(producer_cpf);
     cpreg = *((byte **)ereg-1);
     ereg = *(CPtr *)ereg;
-    lpcreg = cpreg; 
+    check_tripwire_interrupt;
+    //    lpcreg = cpreg; 
 #endif
   }
   else     /* repeat answer -- ignore */
