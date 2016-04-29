@@ -190,7 +190,9 @@ process_query1(X, Vars) :-
 	file_write(STDFDBK, MorePrompt),
 	file_flush(STDFDBK, _),
 	no_more,
-	close_open_tables(non_memory_error),
+	conget('_$break_level', N),
+	(N == 0 -> close_open_tables(non_memory_error) ; true),
+%	close_open_tables(non_memory_error),
 	!,
 	print_final_truth_value(yes),
 	fail.
