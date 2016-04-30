@@ -2046,10 +2046,10 @@ int vcs_tnot_call = 0;
 	/*            print_AbsStack();						*/ \
 }
 
-#define HANDLE_SUBGOAL_SIZE_LIST(xtemp1) {					\
+#define HANDLE_SUBGOAL_SIZE_LIST(xtemp_nonderef,xtemp1,TrieType) {			\
     /* At this point, we've already performed the cycle check:  need to do the full check. */ \
     if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE && !vcs_tnot_call) { \
-      APPLY_SUBGOAL_SIZE_ABSTRACTION(xtemp1);				\
+      APPLY_SUBGOAL_SIZE_ABSTRACTION(xtemp_nonderef);				\
     }									\
     else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_FAILURE) {		\
       clean_up_subgoal_table_structures_for_throw;			\
@@ -2058,8 +2058,9 @@ int vcs_tnot_call = 0;
     else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {		\
       /* printf("Debug: suspending on max_table_subgoal\n");*/		\
       tripwire_interrupt(CTXTc "max_table_subgoal_size_handler");	\
-      clean_up_subgoal_table_structures_for_throw;			\
-      return XSB_FAILURE;						\
+      ADD_LIST_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
+      /* clean_up_subgoal_table_structures_for_throw;		*/	\
+      /* return XSB_FAILURE;					*/	\
     }									\
     else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{ \
       THROW_ERROR_ON_SUBGOAL;						\
@@ -2067,10 +2068,10 @@ int vcs_tnot_call = 0;
   }									
 
 
-#define HANDLE_SUBGOAL_SIZE_STRUCTURE(xtemp1) {					\
+#define HANDLE_SUBGOAL_SIZE_STRUCTURE(xtemp_nonderef,xtemp1,TrieType) {			\
     /* At this point, we've already performed the cycle check:  need to do the full check. */ \
     if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE && !vcs_tnot_call) { \
-      APPLY_SUBGOAL_SIZE_ABSTRACTION(xtemp1);				\
+      APPLY_SUBGOAL_SIZE_ABSTRACTION(xtemp_nonderef);				\
     }									\
     else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_FAILURE) {		\
       clean_up_subgoal_table_structures_for_throw;			\
@@ -2079,8 +2080,9 @@ int vcs_tnot_call = 0;
     else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {		\
       /* printf("Debug: suspending on max_table_subgoal\n");*/		\
       tripwire_interrupt(CTXTc "max_table_subgoal_size_handler");	\
-      clean_up_subgoal_table_structures_for_throw;			\
-      return XSB_FAILURE;						\
+      ADD_STRUCTURE_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
+      /*      clean_up_subgoal_table_structures_for_throw;		*/ \
+      /*      return XSB_FAILURE;						*/ \
     }									\
     else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{ \
       THROW_ERROR_ON_SUBGOAL;						\
@@ -2118,23 +2120,23 @@ int vcs_tnot_call = 0;
   }
 
 /* Cycle check will usually (not always) be done sooner than term depth/size check.  */
-#define CHECK_SUBGOAL_SIZE_LIST(xtemp_bak,xtemp1,TrieType) {		\
+#define CHECK_SUBGOAL_SIZE_LIST(xtemp_nonderef,xtemp1,TrieType) {		\
     if (--subgoal_size_ctr <= 0) {					\
-      subgoal_cyclic_term_check(xtemp_bak);				\
+      subgoal_cyclic_term_check(xtemp_nonderef);				\
     } /* subgoal_size_ctr reset above */				\
     if (subgoal_size_ctr <= 0) {					\
-      HANDLE_SUBGOAL_SIZE_LIST(xtemp_bak);					\
+      HANDLE_SUBGOAL_SIZE_LIST(xtemp_nonderef,xtemp1,TrieType);		\
     } else {								\
       ADD_LIST_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
     }									\
   }
 
-#define CHECK_SUBGOAL_SIZE_STRUCTURE(xtemp_bak,xtemp1,TrieType) {	\
+#define CHECK_SUBGOAL_SIZE_STRUCTURE(xtemp_nonderef,xtemp1,TrieType) {	\
   if (--subgoal_size_ctr <= 0) {					\
-    subgoal_cyclic_term_check(xtemp_bak);					\
+    subgoal_cyclic_term_check(xtemp_nonderef);				\
   } /* subgoal_size_ctr reset above */					\
   if (subgoal_size_ctr <= 0) {						\
-    HANDLE_SUBGOAL_SIZE_STRUCTURE(xtemp_bak);					\
+    HANDLE_SUBGOAL_SIZE_STRUCTURE(xtemp_nonderef,xtemp1,TrieType);		\
     } else {								\
     ADD_STRUCTURE_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
     }									\
@@ -2145,9 +2147,9 @@ int vcs_tnot_call = 0;
   int  j;								\
 									\
   while (!pdlempty) {							\
-    CPtr xtemp_bak;							\
+    CPtr xtemp_nonderef;							\
     xtemp1 = (CPtr) pdlpop;						\
-    xtemp_bak = xtemp1;						\
+    xtemp_nonderef = xtemp1;						\
     XSB_CptrDeref(xtemp1);						\
     switch(tag = cell_tag(xtemp1)) {					\
     case XSB_FREE:							\
@@ -2168,10 +2170,10 @@ int vcs_tnot_call = 0;
       one_btn_chk_ins(flag, EncodeTrieConstant(xtemp1), CZero, TrieType);	\
       break;								\
     case XSB_LIST:							\
-      CHECK_SUBGOAL_SIZE_LIST(xtemp_bak,xtemp1,TrieType);		\
+      CHECK_SUBGOAL_SIZE_LIST(xtemp_nonderef,xtemp1,TrieType);		\
       break;								\
     case XSB_STRUCT:							\
-      CHECK_SUBGOAL_SIZE_STRUCTURE(xtemp_bak,xtemp1,TrieType);		\
+      CHECK_SUBGOAL_SIZE_STRUCTURE(xtemp_nonderef,xtemp1,TrieType);		\
       break;								\
     case XSB_ATTV:							\
       can_abstract = FALSE;						\
