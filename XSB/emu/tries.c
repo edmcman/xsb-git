@@ -1974,6 +1974,27 @@ int vcs_tnot_call = 0;
     }									\
   }
 
+#define THROW_ERROR_ON_SUBGOAL {					\
+    clean_up_subgoal_table_structures_for_throw;			\
+    if (is_cyclic(CTXTc (Cell)call_arg)) {				\
+      abort_on_cyclic_subgoal;						\
+    }									\
+    else {								\
+      if (vcs_tnot_call) {						\
+	vcs_tnot_call = 0;						\
+	sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
+	xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
+			      "Exceeded max table subgoal size of %d in arg %i in tnot(%s)\n", \
+			      (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
+      }									\
+      else {								\
+	sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
+	xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
+			      "Exceeded max table subgoal size of %d in arg %i in %s\n", \
+			      (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
+      }									\
+    }									\
+  }
 #define	clean_up_subgoal_table_structures_for_throw {				\
 	safe_delete_branch(Paren);					\
 	resetpdl;							\
@@ -2025,7 +2046,7 @@ int vcs_tnot_call = 0;
 	/*            print_AbsStack();						*/ \
 }
 
-#define handle_subgoal_size(xtemp1) {					\
+#define HANDLE_SUBGOAL_SIZE_LIST(xtemp1) {					\
     /* At this point, we've already performed the cycle check:  need to do the full check. */ \
     if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE && !vcs_tnot_call) { \
       APPLY_SUBGOAL_SIZE_ABSTRACTION(xtemp1);				\
@@ -2041,25 +2062,28 @@ int vcs_tnot_call = 0;
       return XSB_FAILURE;						\
     }									\
     else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{ \
+      THROW_ERROR_ON_SUBGOAL;						\
+    }									\
+  }									
+
+
+#define HANDLE_SUBGOAL_SIZE_STRUCTURE(xtemp1) {					\
+    /* At this point, we've already performed the cycle check:  need to do the full check. */ \
+    if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE && !vcs_tnot_call) { \
+      APPLY_SUBGOAL_SIZE_ABSTRACTION(xtemp1);				\
+    }									\
+    else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_FAILURE) {		\
       clean_up_subgoal_table_structures_for_throw;			\
-      if (is_cyclic(CTXTc (Cell)call_arg)) {				\
-	abort_on_cyclic_subgoal;					\
-      }									\
-      else {								\
-	if (vcs_tnot_call) {						\
-	  vcs_tnot_call = 0;						\
-	  sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
-	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
-				"Exceeded max table subgoal size of %d in arg %i in tnot(%s)\n", \
-				(int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
-	}								\
-	else {								\
-	  sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
-	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
-				"Exceeded max table subgoal size of %d in arg %i in %s\n", \
-				(int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
-	}								\
-      }									\
+      return XSB_FAILURE;						\
+    }									\
+    else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {		\
+      /* printf("Debug: suspending on max_table_subgoal\n");*/		\
+      tripwire_interrupt(CTXTc "max_table_subgoal_size_handler");	\
+      clean_up_subgoal_table_structures_for_throw;			\
+      return XSB_FAILURE;						\
+    }									\
+    else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{ \
+      THROW_ERROR_ON_SUBGOAL;						\
     }									\
   }									
 
@@ -2099,7 +2123,7 @@ int vcs_tnot_call = 0;
       subgoal_cyclic_term_check(xtemp_bak);				\
     } /* subgoal_size_ctr reset above */				\
     if (subgoal_size_ctr <= 0) {					\
-      handle_subgoal_size(xtemp_bak);					\
+      HANDLE_SUBGOAL_SIZE_LIST(xtemp_bak);					\
     } else {								\
       ADD_LIST_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
     }									\
@@ -2110,7 +2134,7 @@ int vcs_tnot_call = 0;
     subgoal_cyclic_term_check(xtemp_bak);					\
   } /* subgoal_size_ctr reset above */					\
   if (subgoal_size_ctr <= 0) {						\
-    handle_subgoal_size(xtemp_bak);					\
+    HANDLE_SUBGOAL_SIZE_STRUCTURE(xtemp_bak);					\
     } else {								\
     ADD_STRUCTURE_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
     }									\
