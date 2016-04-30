@@ -2063,15 +2063,6 @@ int vcs_tnot_call = 0;
     }									\
   }									
 
-/* Cycle check will usually (not always) be done sooner than term depth/size check.  */
-#define CHECK_SUBGOAL_SIZE(xtemp1)					\
-  if (--subgoal_size_ctr <= 0) {					\
-    subgoal_cyclic_term_check(xtemp1);					\
-  } /* subgoal_size_ctr reset above */					\
-  if (subgoal_size_ctr <= 0) {						\
-    handle_subgoal_size(xtemp1);					\
-  } else
-
 #define	ADD_LIST_TO_SUBGOAL_TRIE(xtemp1,TrieType) {				\
     if (interning_terms && isinternstr(xtemp1)) {			\
       /*printf("obci 3 %X, %X\n",EncodeTrieList(xtemp1), (Cell)xtemp1);*/ \
@@ -2099,6 +2090,29 @@ int vcs_tnot_call = 0;
 	/*	  pdlpush(cell(clref_val(xtemp1)+j));	*/		\
 	pdlpush( (Cell) (clref_val(xtemp1)+j));				\
       }									\
+    }									\
+  }
+
+/* Cycle check will usually (not always) be done sooner than term depth/size check.  */
+#define CHECK_SUBGOAL_SIZE_LIST(xtemp_bak,xtemp1,TrieType) {		\
+    if (--subgoal_size_ctr <= 0) {					\
+      subgoal_cyclic_term_check(xtemp_bak);				\
+    } /* subgoal_size_ctr reset above */				\
+    if (subgoal_size_ctr <= 0) {					\
+      handle_subgoal_size(xtemp_bak);					\
+    } else {								\
+      ADD_LIST_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
+    }									\
+  }
+
+#define CHECK_SUBGOAL_SIZE_STRUCTURE(xtemp_bak,xtemp1,TrieType) {	\
+  if (--subgoal_size_ctr <= 0) {					\
+    subgoal_cyclic_term_check(xtemp_bak);					\
+  } /* subgoal_size_ctr reset above */					\
+  if (subgoal_size_ctr <= 0) {						\
+    handle_subgoal_size(xtemp_bak);					\
+    } else {								\
+    ADD_STRUCTURE_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
     }									\
   }
 
@@ -2130,16 +2144,10 @@ int vcs_tnot_call = 0;
       one_btn_chk_ins(flag, EncodeTrieConstant(xtemp1), CZero, TrieType);	\
       break;								\
     case XSB_LIST:							\
-      CHECK_SUBGOAL_SIZE(xtemp_bak)					\
-      {									\
-	ADD_LIST_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
-      }									\
+      CHECK_SUBGOAL_SIZE_LIST(xtemp_bak,xtemp1,TrieType);		\
       break;								\
     case XSB_STRUCT:							\
-      CHECK_SUBGOAL_SIZE(xtemp_bak)  /* no semi-colon here */		\
-      {									\
-	ADD_STRUCTURE_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
-      } 								\
+      CHECK_SUBGOAL_SIZE_STRUCTURE(xtemp_bak,xtemp1,TrieType);		\
       break;								\
     case XSB_ATTV:							\
       can_abstract = FALSE;						\
