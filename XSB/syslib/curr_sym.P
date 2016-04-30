@@ -945,7 +945,7 @@ xsb_flag(max_table_subgoal_size_action, Action) :-
          ; A == XSB_SUSPEND -> Action = suspend).
 %         ; A == XSB_FAILURE, Action = failure ).
 xsb_flag(max_table_answer_size,Max):- 
-	stat_flag(MAX_TABLE_ANSWER_DEPTH,M),
+	stat_flag(MAX_TABLE_ANSWER_METRIC,M),
 	iso_flag(max_integer,Maxint),
 	(M =:= Maxint -> Max = 0; M = Max).
 xsb_flag(max_table_answer_size_action, Action) :-
@@ -1197,8 +1197,8 @@ set_xsb_flag_1(max_table_subgoal_size_action, Action) :-!,
 set_xsb_flag_1(max_table_answer_size, Size) :-!,
 	(Size =:= 0 -> 
 	  iso_flag(max_integer,MaxInt),
-	  stat_set_flag(MAX_TABLE_ANSWER_DEPTH, MaxInt)
-	; stat_set_flag(MAX_TABLE_ANSWER_DEPTH, Size) ).
+	  stat_set_flag(MAX_TABLE_ANSWER_METRIC, MaxInt)
+	; stat_set_flag(MAX_TABLE_ANSWER_METRIC, Size) ).
 set_xsb_flag_1(max_table_answer_size_action, Action) :-!,
 	(Action == error -> 
 	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_ERROR)
@@ -1215,7 +1215,7 @@ set_xsb_flag_1(max_table_answer_size_action, Action) :-!,
 set_xsb_flag_1(max_incomplete_subgoals, Max) :-!,
 	(Max =:= 0 -> 
 	  iso_flag(max_integer,MaxInt),
-	  stat_set_flag(MAX_TABLE_ANSWER_DEPTH, MaxInt)
+	  stat_set_flag(MAX_TABLE_ANSWER_METRIC, MaxInt)
 	; stat_set_flag(MAX_INCOMPLETE_SUBGOALS, Max) ).
 set_xsb_flag_1(max_incomplete_subgoals_action, Action) :-!,
 	(Action == error -> 
@@ -1229,7 +1229,7 @@ set_xsb_flag_1(max_incomplete_subgoals_action, Action) :-!,
 set_xsb_flag_1(max_scc_subgoals, Max) :-!,
 	(Max =:= 0 -> 
 	  iso_flag(max_integer,MaxInt),
-	  stat_set_flag(MAX_TABLE_ANSWER_DEPTH, MaxInt)
+	  stat_set_flag(MAX_TABLE_ANSWER_METRIC, MaxInt)
 	; stat_set_flag(MAX_SCC_SUBGOALS, Max) ).
 set_xsb_flag_1(max_scc_subgoals_action, Action) :-!,
 	(Action == error -> 
@@ -1243,7 +1243,7 @@ set_xsb_flag_1(max_scc_subgoals_action, Action) :-!,
 set_xsb_flag_1(max_answers_for_subgoal, Max) :-!,
 	(Max =:= 0 -> 
 	  iso_flag(max_integer,MaxInt),
-	  stat_set_flag(MAX_TABLE_ANSWER_DEPTH, MaxInt)
+	  stat_set_flag(MAX_TABLE_ANSWER_METRIC, MaxInt)
 	; stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL, Max) ).
 set_xsb_flag_1(max_answers_for_subgoal_action, Action) :-!,
 	(Action == error -> 

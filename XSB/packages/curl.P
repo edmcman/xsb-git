@@ -290,7 +290,7 @@ post_data(Atom, write) :-
         %% load_page_warn/5 takes the temp file into which we wrote post data
         %% and passes it to the POST action.
         %% Here Doc will be whatever the server returns in response to POST.
-        (Warn \= [] -> writeln(pppp=Warn)
+        (Warn \= [] -> writeln(Warn)
         ; true
         ),
 	Doc \= ''.
