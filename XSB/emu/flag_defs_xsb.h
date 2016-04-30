@@ -142,7 +142,7 @@ interrupt flag
 #define MAXTOINDEX_FLAG           88   /* Experimental only */             
 #define CTRACE_CALLS              89
 #define EC_REMOVE_SCC             90
-#define MAX_TABLE_ANSWER_DEPTH    91   /* maximum depth for non-list terms in a tabled answer */
+#define MAX_TABLE_ANSWER_METRIC    91   /* maximum depth for non-list terms in a tabled answer */
 #define MAX_TABLE_ANSWER_ACTION   92   /* abort/warn/abstract (abstract not yet impld.)*/
 #define UNIFY_WITH_OCCURS_CHECK_FLAG 93   /* make all unifications use occur_check, under development by DSW */
 #define MAX_MEMORY                94

@@ -992,10 +992,10 @@ XSB_End_Instr()
 
 #define check_tripwire_interrupt {					\
     if ( !(asynint_val) ) {						\
-      lpcreg = cpreg;							\
+      Fail1;								\
     } else {								\
       if (asynint_val & THREADINT_MARK) {				\
-	/*printf("Entered thread cancel: proceed\n");*/			\
+	/*	printf("Entered thread cancel: proceed\n");	*/	\
         synint_proc(CTXTc true_psc, THREADSIG_CANCEL);			\
         lpcreg = pcreg;							\
         asynint_val = 0;						\
@@ -1197,7 +1197,8 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
       }
     }
 #ifdef LOCAL_EVAL
-    Fail1;	/* and do not return answer to the generator */
+    check_tripwire_interrupt;
+    //    Fail1;	/* and do not return answer to the generator */
     xsb_dbgmsg((LOG_DEBUG,"Failing from new answer %x to %x (inst %x)\n",
 		breg,tcp_pcreg(breg),*tcp_pcreg(breg)));
 
@@ -1205,8 +1206,7 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
     ptcpreg = tcp_ptcp(producer_cpf);
     cpreg = *((byte **)ereg-1);
     ereg = *(CPtr *)ereg;
-    check_tripwire_interrupt;
-    //    lpcreg = cpreg; 
+    lpcreg = cpreg; 
 #endif
   }
   else     /* repeat answer -- ignore */

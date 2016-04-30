@@ -948,7 +948,7 @@ static int *depth_stack;
 
 #endif
 
-#define apply_answer_depth_rationality_nonlist(flag)  {	\
+#define apply_answer_metric_abstraction_nonlist(flag)  {	\
     int j, isNew;				      \
     Pair undefPair;				      \
     struct Table_Info_Frame * Utip;		      \
@@ -974,7 +974,7 @@ static int *depth_stack;
     }									\
   }
 
-#define apply_answer_depth_rationality_list(flag)  {  \
+#define apply_answer_metric_abstraction_list(flag)  {  \
     int isNew;					      \
     Pair undefPair;				      \
     struct Table_Info_Frame * Utip;		      \
@@ -1010,17 +1010,17 @@ static int *depth_stack;
 	pdlpush(get_list_head(xtemp1));					\
       }									\
 
-#define HANDLE_ANSWER_LIST_DEPTH {					\
+#define HANDLE_ANSWER_LIST_METRIC {					\
     if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_BRAT) {			\
       /*      printf("applying abstraction to list\n");	*/		\
-      apply_answer_depth_rationality_list(found_flag);			\
+      apply_answer_metric_abstraction_list(found_flag);			\
     }									\
     else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
       /*      safe_delete_branch(Paren);			*/	\
       /*            resetpdl;					*/	\
       /*      found_flag = 1;                                             */ \
       /*      printf("Debug: suspending on max_table_answer -- list\n"); */ \
-      /*      apply_answer_depth_rationality_list(found_flag);	*/	\
+      /*      apply_answer_metric_abstraction_list(found_flag);	*/	\
       tripwire_interrupt(CTXTc "max_table_answer_size_handler");	\
       ADD_LIST_TO_ANSWER_TRIE;						\
       /*      return NULL;					*/	\
@@ -1029,13 +1029,13 @@ static int *depth_stack;
       sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
       xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
 			    "Exceeded max answer list depth of %d in call %s\n", \
-			    flags[MAX_TABLE_ANSWER_DEPTH],forest_log_buffer_1->fl_buffer); \
+			    flags[MAX_TABLE_ANSWER_METRIC],forest_log_buffer_1->fl_buffer); \
     }									\
   }
 
-#define HANDLE_ANSWER_TERM_DEPTH	{					\
+#define HANDLE_ANSWER_TERM_METRIC	{					\
     if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_BRAT) {			\
-      apply_answer_depth_rationality_nonlist(found_flag);		\
+      apply_answer_metric_abstraction_nonlist(found_flag);		\
     }									\
     else if (flags[MAX_TABLE_ANSWER_ACTION] == XSB_SUSPEND)  {		\
       /*      safe_delete_branch(Paren);			*/	\
@@ -1059,7 +1059,7 @@ static int *depth_stack;
     }									\
   }									
 
-#define CHECK_ANSWER_TERM_DEPTH {				\
+#define CHECK_ANSWER_TERM_METRIC {				\
   if (answer_depth_ctr >= working_answer_depth_limit) {		\
     if (working_answer_depth_limit == flags[CYCLIC_CHECK_SIZE]) {	\
 	if (is_cyclic(CTXTc (Cell) (cptr -i))) {			\
@@ -1073,7 +1073,7 @@ static int *depth_stack;
 	}								\
       }									\
       else {								\
-	HANDLE_ANSWER_TERM_DEPTH;					\
+	HANDLE_ANSWER_TERM_METRIC;					\
       }									\
   }									\
    else {								\
@@ -1081,7 +1081,7 @@ static int *depth_stack;
    }									\
   }
 
-#define CHECK_ANSWER_LIST_DEPTH {				\
+#define CHECK_ANSWER_LIST_METRIC {				\
   if (++answer_depth_ctr >= working_answer_depth_limit) {		\
     if (working_answer_depth_limit == flags[CYCLIC_CHECK_SIZE]) {	\
       /*      printf("about to cyclecheck adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit);*/ \
@@ -1097,7 +1097,7 @@ static int *depth_stack;
       }									\
       else {								\
 	/*	printf("about to handle adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit);*/ \
-	HANDLE_ANSWER_LIST_DEPTH;					\
+	HANDLE_ANSWER_LIST_METRIC;					\
       }									\
   }									\
   else {								\
@@ -1142,10 +1142,10 @@ static int *depth_stack;
       one_btn_chk_ins(flag, EncodeTrieConstant(xtemp1), CZero, TrieType); \
       break;								\
     case XSB_LIST:							\
-      CHECK_ANSWER_LIST_DEPTH;						\
+      CHECK_ANSWER_LIST_METRIC;						\
       break;								\
     case XSB_STRUCT:							\
-      CHECK_ANSWER_TERM_DEPTH;						\
+      CHECK_ANSWER_TERM_METRIC;						\
       break;								\
     case XSB_ATTV:							\
       /* Now xtemp1 can only be the first occurrence of an attv */	\
@@ -1261,7 +1261,7 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
 
   if (TIF_AnswerDepth(subg_tif_ptr(subgoal_ptr))) 
     answer_depth_limit = (UInteger) (TIF_AnswerDepth(subg_tif_ptr(subgoal_ptr)));
-  else answer_depth_limit = (UInteger) flags[MAX_TABLE_ANSWER_DEPTH];  
+  else answer_depth_limit = (UInteger) flags[MAX_TABLE_ANSWER_METRIC];  
   if (interning_terms && answer_depth_limit < MY_MAXINT) 
     xsb_abort("Cannot use explicit answer depth bound when interning terms for table: %s/%d\n",
 	      get_name(TIF_PSC(subg_tif_ptr(subgoal_ptr))),
@@ -1999,9 +1999,7 @@ int vcs_tnot_call = 0;
     }									\
   }
 
-#define handle_subgoal_size(xtemp1) {				\
-    /* At this point, we've already performed the cycle check:  need to do the full check. */ \
-      if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE && !vcs_tnot_call) { \
+#define APPLY_SUBGOAL_SIZE_ABSTRACTION(xtemp1) {			\
 	Cell newElement;						\
 	CPtr pElement = xtemp1;						\
 	/*	printf("begin abs reg1 dc %d ",subgoal_size_ctr);printterm(stddbg,reg[1],8);printf("\n");*/ \
@@ -2025,42 +2023,44 @@ int vcs_tnot_call = 0;
 	ctr++;								\
 	/*            printf("end abs reg1 ");printterm(stddbg,reg[1],8);printf("\n"); */ \
 	/*            print_AbsStack();						*/ \
+}
+
+#define handle_subgoal_size(xtemp1) {					\
+    /* At this point, we've already performed the cycle check:  need to do the full check. */ \
+    if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ABSTRACT && can_abstract == TRUE && !vcs_tnot_call) { \
+      APPLY_SUBGOAL_SIZE_ABSTRACTION(xtemp1);				\
+    }									\
+    else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_FAILURE) {		\
+      clean_up_subgoal_table_structures_for_throw;			\
+      return XSB_FAILURE;						\
+    }									\
+    else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {		\
+      /* printf("Debug: suspending on max_table_subgoal\n");*/		\
+      tripwire_interrupt(CTXTc "max_table_subgoal_size_handler");	\
+      clean_up_subgoal_table_structures_for_throw;			\
+      return XSB_FAILURE;						\
+    }									\
+    else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{ \
+      clean_up_subgoal_table_structures_for_throw;			\
+      if (is_cyclic(CTXTc (Cell)call_arg)) {				\
+	abort_on_cyclic_subgoal;					\
       }									\
-      else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_FAILURE) {	\
-	/*      char buffer[2*MAXTERMBUFSIZE];				*/ \
-	/*      sprintCyclicTerm(CTXTc buffer,(Cell) (call_arg), MAXTERMBUFSIZE);	*/ \
-	/*      printf("...Cyclic term in arg %d of tabled subgoal %s\n",i+1,buffer);*/ \
-	/*	resetpdl;						*/ \
-	clean_up_subgoal_table_structures_for_throw;				\
-	return XSB_FAILURE;						\
-      }									\
-      else if (flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_SUSPEND)  {	\
-	/* printf("Debug: suspending on max_table_subgoal\n");*/        \
-	tripwire_interrupt(CTXTc "max_table_subgoal_size_handler");	\
-	clean_up_subgoal_table_structures_for_throw;			\
-	return XSB_FAILURE;						\
-      }									\
-      else /*(flags[MAX_TABLE_SUBGOAL_ACTION] == XSB_ERROR) or abstraction & tnot */{	\
-	clean_up_subgoal_table_structures_for_throw;			\
-	if (is_cyclic(CTXTc (Cell)call_arg)) {				\
-	  abort_on_cyclic_subgoal;					\
+      else {								\
+	if (vcs_tnot_call) {						\
+	  vcs_tnot_call = 0;						\
+	  sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
+	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
+				"Exceeded max table subgoal size of %d in arg %i in tnot(%s)\n", \
+				(int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
 	}								\
 	else {								\
-	  if (vcs_tnot_call) {						\
-	    vcs_tnot_call = 0;						\
-	    sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
-	    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
-				  "Exceeded max table subgoal size of %d in arg %i in tnot(%s)\n", \
-				  (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
-	  }								\
-	  else {							\
-	    sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
-	    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
-				  "Exceeded max table subgoal size of %d in arg %i in %s\n", \
-				  (int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
-	  }								\
+	  sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); \
+	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
+				"Exceeded max table subgoal size of %d in arg %i in %s\n", \
+				(int) flags[MAX_TABLE_SUBGOAL_SIZE],i+1,forest_log_buffer_1->fl_buffer); \
 	}								\
       }									\
+    }									\
   }									
 
 /* Cycle check will usually (not always) be done sooner than term depth/size check.  */
@@ -2071,6 +2071,36 @@ int vcs_tnot_call = 0;
   if (subgoal_size_ctr <= 0) {						\
     handle_subgoal_size(xtemp1);					\
   } else
+
+#define	ADD_LIST_TO_SUBGOAL_TRIE(xtemp1,TrieType) {				\
+    if (interning_terms && isinternstr(xtemp1)) {			\
+      /*printf("obci 3 %X, %X\n",EncodeTrieList(xtemp1), (Cell)xtemp1);*/ \
+      one_btn_chk_ins(flag, EncodeTrieList(xtemp1), (Cell)xtemp1, TrieType); \
+    } else {								\
+      one_btn_chk_ins(flag, EncodeTrieList(xtemp1), CZero, TrieType);	\
+      /*	pdlpush( cell(clref_val(xtemp1)+1) );			\
+		pdlpush( cell(clref_val(xtemp1)) );		*/	\
+      /*	printf("pushing L1 %p\n",clref_val(xtemp1)+1);	*/	\
+      /*	printf("pushing L2 %p\n",clref_val(xtemp1));	*/	\
+      /* note address of tail and head, not tail and head themselve! */ \
+      pdlpush( (Cell) (clref_val(xtemp1)+1) );				\
+      pdlpush( (Cell) clref_val(xtemp1) );				\
+    }									\
+  }
+
+#define	ADD_STRUCTURE_TO_SUBGOAL_TRIE(xtemp1,TrieType) {		\
+    psc = get_str_psc(xtemp1);						\
+    item = makecs(psc);							\
+    if (interning_terms && isinternstr(xtemp1)) {			\
+      one_btn_chk_ins(flag, item, (Cell)xtemp1, TrieType);		\
+    } else {								\
+      one_btn_chk_ins(flag, item, CZero, TrieType);			\
+      for (j=get_arity(psc); j>=1; j--) {				\
+	/*	  pdlpush(cell(clref_val(xtemp1)+j));	*/		\
+	pdlpush( (Cell) (clref_val(xtemp1)+j));				\
+      }									\
+    }									\
+  }
 
 /* xtemp1 is a register */
 #define recvariant_call(flag,TrieType,xtemp1) {				\
@@ -2102,35 +2132,13 @@ int vcs_tnot_call = 0;
     case XSB_LIST:							\
       CHECK_SUBGOAL_SIZE(xtemp_bak)					\
       {									\
-	if (interning_terms && isinternstr(xtemp1)) {					\
-	  /*printf("obci 3 %X, %X\n",EncodeTrieList(xtemp1), (Cell)xtemp1);*/ \
-	  one_btn_chk_ins(flag, EncodeTrieList(xtemp1), (Cell)xtemp1, TrieType); \
-	} else {							\
-	  one_btn_chk_ins(flag, EncodeTrieList(xtemp1), CZero, TrieType); \
-	  /*	pdlpush( cell(clref_val(xtemp1)+1) );			\
-		pdlpush( cell(clref_val(xtemp1)) );		*/	\
-	  /*	printf("pushing L1 %p\n",clref_val(xtemp1)+1);	*/	\
-	  /*	printf("pushing L2 %p\n",clref_val(xtemp1));	*/	\
-	/* note address of tail and head, not tail and head themselve! */ \
-	  pdlpush( (Cell) (clref_val(xtemp1)+1) );			\
-	  pdlpush( (Cell) clref_val(xtemp1) );				\
-	} 								\
+	ADD_LIST_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
       }									\
       break;								\
     case XSB_STRUCT:							\
-      CHECK_SUBGOAL_SIZE(xtemp_bak)  /* no semi-colon here */	\
+      CHECK_SUBGOAL_SIZE(xtemp_bak)  /* no semi-colon here */		\
       {									\
-	psc = get_str_psc(xtemp1);					\
-	item = makecs(psc);						\
-	if (interning_terms && isinternstr(xtemp1)) {					\
-	  one_btn_chk_ins(flag, item, (Cell)xtemp1, TrieType);		\
-	} else {							\
-	  one_btn_chk_ins(flag, item, CZero, TrieType);			\
-	  for (j=get_arity(psc); j>=1; j--) {				\
-	    /*	  pdlpush(cell(clref_val(xtemp1)+j));	*/ \
-	    pdlpush( (Cell) (clref_val(xtemp1)+j));			\
-	  }								\
-	}								\
+	ADD_STRUCTURE_TO_SUBGOAL_TRIE(xtemp1,TrieType);			\
       } 								\
       break;								\
     case XSB_ATTV:							\
@@ -2579,7 +2587,7 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
 	  sprintTerm(forest_log_buffer_1,term);		\
 	  xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,	\
 				"Exceeded max trie_intern size of %d for %s\n",	\
-				(int)flags[MAX_TABLE_ANSWER_DEPTH],forest_log_buffer_1->fl_buffer); \
+				(int)flags[MAX_TABLE_ANSWER_METRIC],forest_log_buffer_1->fl_buffer); \
 	}								\
       }									\
     }									\
@@ -2609,7 +2617,7 @@ BTNptr trie_intern_chk_ins(CTXTdeclc Cell term, BTNptr *hook, int *flagptr, int 
     VarEnumerator_trail_top = (CPtr *)(& VarEnumerator_trail[0]) - 1;
     ctr = attv_ctr = 0;
 
-    trie_intern_depth_limit = (UInteger) flags[MAX_TABLE_ANSWER_DEPTH];
+    trie_intern_depth_limit = (UInteger) flags[MAX_TABLE_ANSWER_METRIC];
     if (flags[CYCLIC_CHECK_SIZE] < trie_intern_depth_limit) 
       working_trie_intern_depth_limit = flags[CYCLIC_CHECK_SIZE];
     else working_trie_intern_depth_limit = trie_intern_depth_limit;
