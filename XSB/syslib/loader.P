@@ -317,7 +317,13 @@ load_pred1(PSC) :-
 	    psc_type(ModPSC, ModType), 
 	    (ModType =:= T_MODU
 	     ->	    true   % module loaded
-	     ;	    load(ModName)	% might abort here 
+	     ;	    load(ModName),	% might abort here 
+	     %%% TES: adding the assert so that ensure_loaded will recognize when 
+	     %%% a file was loaded lazily.  This would only happen if an unloaded predicate were 
+	     %%% called via explict module qualification -- e.g., via bar:pred(A,B)
+	            search_module(ModName, _Dir, _Mod, _SExt, _Base, Obj),
+		    expand_filename(Obj,ExpObj),
+		    assert(consult_file_loaded(ExpObj))
 	    ),
 	    (	psc_type(PSC, NType),
 		(   NType =:= T_PRED; NType =:= T_FORN; NType =:= T_DYNA ), 

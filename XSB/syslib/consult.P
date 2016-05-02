@@ -121,8 +121,10 @@ consult(Path, Options) :- \+ (\+ (reconsult(Path, Options))).
 
 /*======================================================================*/
 /*======================================================================*/
+
 :- thread_shared consult_file_loaded(_).
 :- dynamic consult_file_loaded(_).
+:- export consult_file_loaded/1.
 
 reconsult(Path) :- reconsult(Path, []).
 
