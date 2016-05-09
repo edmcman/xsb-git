@@ -1,6 +1,7 @@
 :- import numbervars/1 from num_vars.
 :- import xsb_error_get_message/2 from error_handler.
 :- import between/3 from basics.
+:- compiler_options([spec_off]).
 
 test:- 
 	test_mss,
@@ -19,7 +20,6 @@ test_mss:-
 	fail.
 test_mss:- 
 	mss(20),
-	writeln(mss(20)),
 	fail.
 test_mss.
 
@@ -61,6 +61,7 @@ test_mis:-
 test_mis.
 
 :- table mis/1.
+mis(0).
 mis(N):- N > 0,N1 is N-1,
 	%writeln(mis(N1)),
 	mis(N1).
