@@ -1000,6 +1000,12 @@ XSB_End_Instr()
         lpcreg = pcreg;							\
         asynint_val = 0;						\
         asynint_code = 0;						\
+      } else if (asynint_val & KEYINT_MARK) {				\
+	printf("Caught Keyint here\n");					\
+	  synint_proc(CTXTc true_psc, MYSIG_KEYB);			\
+        lpcreg = pcreg;							\
+        asynint_val = asynint_val & ~KEYINT_MARK;			\
+        asynint_code = 0;						\
       } else {								\
         lpcreg = cpreg;							\
         asynint_code = 0;						\
