@@ -990,7 +990,8 @@ XSB_End_Instr()
  *    current subgoal before proceeding.
  */
 
-#define check_tripwire_interrupt {					\
+
+#define check_new_answer_interrupt {					\
     if ( !(asynint_val) ) {						\
       Fail1;								\
     } else {								\
@@ -1001,13 +1002,19 @@ XSB_End_Instr()
         asynint_val = 0;						\
         asynint_code = 0;						\
       } else if (asynint_val & KEYINT_MARK) {				\
-	printf("Caught Keyint here\n");					\
-	  synint_proc(CTXTc true_psc, MYSIG_KEYB);			\
-        lpcreg = pcreg;							\
+		printf("Entered keyb handle: new_answer_dealloc\n");  \
+	synint_proc(CTXTc true_psc, MYSIG_KEYB);			\
+	lpcreg = pcreg;							\
         asynint_val = asynint_val & ~KEYINT_MARK;			\
         asynint_code = 0;						\
+      } else if (asynint_val & TIMER_MARK) {				\
+	/*	printf("Entered timer handle: new_answer_dealloc\n"); */ \
+	synint_proc(CTXTc true_psc, TIMER_INTERRUPT);			\
+        lpcreg = pcreg;							\
+        asynint_val = 0;						\
+        asynint_code = 0;						\
       } else {								\
-        lpcreg = cpreg;							\
+	lpcreg = pcreg;							\
         asynint_code = 0;						\
       }									\
     }									\
@@ -1203,7 +1210,7 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
       }
     }
 #ifdef LOCAL_EVAL
-    check_tripwire_interrupt;
+   check_new_answer_interrupt;
     //    Fail1;	/* and do not return answer to the generator */
     xsb_dbgmsg((LOG_DEBUG,"Failing from new answer %x to %x (inst %x)\n",
 		breg,tcp_pcreg(breg),*tcp_pcreg(breg)));
