@@ -1013,25 +1013,27 @@ A tripwire represents an unexpected property of a derivation: such as
 an excessive use of time or memory; an unexpected number or complexity
 of tabled subgoals or answers; or an unexpected number of mutually
 dependent tabled subgoals.  Depending both on the class of a tripwire
-and on XSB's flags are set, a tripwire may have
-different effects.  Any tripwire may be treated as an error so that it
-throws an exception just as any other error.  {\em Inspectable}
-tripwires may additionally be considered as inspection points, and
-when hit may suspend the derivation and create a break
-point.~\footnote{Note that such a suspension makes available for
-  inspection the state of the derivation at the point the tripwire was
-  activated.  If inspection points were implemented using ISO errors,
-  state could only be made available at the point where the error was
-  {\em caught}, whose state may differ greatly from the point where
-  the error occurred (i.e., where the tripwire was hit).}
+and on how ©©XSB's flags are set, a tripwire may have different effects.
+Any tripwire may be treated as an error so that it throws an exception
+just as any other error.  {\em Inspectable} tripwires may additionally
+be considered as inspection points, and when hit may suspend the
+derivation and create a break point.~\footnote{Note that such a
+  suspension makes available for inspection the state of the
+  derivation at the point the tripwire was activated.  If inspection
+  points were implemented using ISO errors, state could only be made
+  available at the point where the error was {\em caught}, whose state
+  may differ greatly from the point where the error occurred (i.e.,
+  where the tripwire was hit).}
 %
 In such a case, a short explanation will be made of how a tripwire was
 encountered, along with suggestions about how to further inspect the
-suspended derivation.  {\em Correctable} tripwires are a subset of
+suspended derivation.\footnote{This is the default behavior for XSB:
+  handling of tripwires can be overridden by the user,
+  cf. Section~\ref{}.}  {\em Correctable} tripwires are a subset of
 inspectable tripwires for which an automatic action may be taken to
 remedy the situation, such as rewriting a subgoal or an answer whose
-size is more than a given level via subgoal abstraction or answer
-restraint.
+size is greater than a given limit, by using subgoal abstraction or
+answer restraint.
 
 Tripwires may be set in various ways: most can be set and viewed at a
 session level using Prolog flags, others can also be set at the
@@ -1079,14 +1081,14 @@ can be changed whenever the timed call is suspended by {\tt
   timed\_call\_modify/1}.  See Section~\ref{sec:timed-call} for more
 details.
 
-\index{tripwires!max\_memory}
-A memory-based resource tripwire can be set via the Prolog flag {\tt
-  tripwire(max\_memory)}, so that an error will be thrown whenever XSB
-uses more than a given total amount of memory.  This amount can be set
-either as an integer, representing an absolute number of kilobytes or
-as a floating point number indicating a percentate of the RAM of the
-platform upon which XSB is executing.  Currently, a memory-based
-tripwire can only throw an error.
+\index{tripwires!max\_memory} An inspectable memory-based resource
+tripwire can be set via the Prolog flag {\tt tripwire(max\_memory)},
+so that the tripwire will be hit whenever XSB uses more than a given
+total amount of memory.  This amount can be set either as an integer,
+representing an absolute number of kilobytes or as a floating point
+number indicating a percentate of the RAM of the platform upon which
+XSB is executing.  Currently, a memory-based tripwire can only throw
+an error.
 
 \paragraph{Guidelines for Analysis of Resource-based Tripwires}  \ \\
 
@@ -1141,9 +1143,10 @@ starts with viewing the output of {\tt statistics/[0,1]}.
   46210 answer check/insert ops: 46210 unique inserts, 0 redundant.
 \end{verbatim} } 
 
-This indicates that there are 1065417 subgoals (complete or incomplete)
-tabled with call variance, and 12 subgoals tabled with call
-subsumption.  Among all subgoals there are 46210 ansewrs.  
+This indicates that there are 1,065,417 subgoals (complete or
+ incomplete) tabled with call variance, and 12 subgoals tabled with
+ call subsumption.  Among all subgoals there are 46,210 ansewrs.  
+%
 \bi
 \item To understand details of overall table space usage, {\tt
   table\_dump/[2,3]} can be called to provide further information
@@ -1167,7 +1170,9 @@ Currently 501688 incremental subgoals, 781432 dependency edges
   (Section~\ref{sec:idg-preds}) can be used to obtain a global view of
   the IDG.  Note that incremental tabling does require more memory for
   completed tables than non-incremental tabling, due to the need to
-  retain the IDG.  
+  retain the IDG so that tables can be updated when dynamic code
+  changes.
+%
 \ei
 \item {\em Check whether there are a large number of answers whose
   truth value is {\em undefined}}.  This is indicated, for instance,
@@ -1189,26 +1194,26 @@ If there is indication that there are a large number of answers with
 
 \subsubsection{Tripwires Based on Properties of a Tabled Derivation}
 %
-Theoretically speaking, if a tabled derivation is not terminating it
-is because there are an unbounded number of SLG trees, or because one
-or more of the SLG trees is of unbounded size.  The former case
-indicates that a computation has an unbounded number of subgoals,
-while the latter indicates that one or more subgoals has an unbounded
-number of answers.  In a similar manner, terminating but expensive
-derivations also may have too many subgoals, too many answers, or too
-many dependencies among incomplete subgoals.  We consider these cases
-in turn.
+Theoretically speaking, in a pure logic program if a tabled derivation
+ is not terminating it is because there are an unbounded number of SLG
+ trees, or because one or more of the SLG trees is of unbounded size.
+  The former case indicates that a computation has an unbounded number
+ of subgoals, while the latter indicates that one or more subgoals has
+ an unbounded number of answers.  In a similar manner, terminating but
+ expensive derivations also may have too many subgoals, too many
+ answers, or too many dependencies among incomplete subgoals.  We
+ consider these cases in turn.
 
 \bi
 \item {\em There are too many tabled subgoals} 
 \bi
-\item {\em There are a potentially unbounded number of tabled
- subgoals.}\/ In this case, there must be a potentially unbounded
- number of {\em distinct} tabled subgoals in the derivation.  If this
- happens using call variance, this situation can sometimes be
- addressed by using call subsumption instead.  However termination can
- always be ensured by using subgoal abstraction, as long as a
- derivation produces only a finite number of answers
+\item {\em There are a potentially unbounded number of tabled subgoals
+ in a pure program.}\/ In this case, there must be a potentially
+ unbounded number of {\em distinct} tabled subgoals in the derivation.
+  If this happens using ca`v`vll variance, this situation can
+ sometimes be addressed by using call subsumption instead.  However
+ termination can {\em always} be ensured by using subgoal abstraction,
+ as long as a derivation produces only a finite number of answers
  (cf. Section~\ref{sec:tabling-termination} and \cite{RigS14}).  XSB
  allows subgoal abstraction to be applied based on term size either
  globally through the tripwire {\tt max\_table\_subgoal\_size}, or on
@@ -1219,52 +1224,52 @@ in turn.
  most -- cases, the best action is simply to abstract $S_{big}$.
   However it is also possible to suspend and inspect the derivation so
  that the causes that led to $S_{big}$ can be analyzed.  As a final
- alternative, an error can be thrown, which may be useful in certain
- cases and which is the default action.
+ alternative, an error can be thrown, which is the default action.
 
-\item {\em There are a finite but large number of tabled
-  subgoals.}\/ Checking for the size of a subgoal may not catch certain
-  causes of inefficency. If a program is written over a language that
-  has a finite but large number of constant symbols, then a program
-  that generates subgoals of the form
+\item {\em There are a potentially infinite number of subgoals in a
+ program with arithmetic.}.  Due to the manner in which numbers are
+ represented in XSB, XSB's size metric would permit a potentially
+ infinite number of subgoals if numbers occurred within these
+ subgoals.  The tripwire {\tt max\_incomplete\_subgoals} allows a
+ limit to be set on the maximal number of incomplete subgoals.  If a
+ derivation exceeds that limit, the computation may be suspended, or
+ an error thrown.
+
+\item {\em There are a finite but large number of tabled subgoals.}\/
+ A separate problem from those above can happen as follows.  If a
+ program is written over a language that has a finite but large number
+ of constant symbols, then a program that generates subgoals of the
+ form
 \[
    p(c_i,c_j,c_k,X)
 \]
   will theoretically terminate, but may be too inefficient for
-  practical purposes.  
+ practical purposes.  This problem can be addressed by the tripwrite
+ {\tt max\_incomplete\_subgoals} just discussed, but it is often
+ helpful to have a different size limit for cases where there are a
+ large number of subgoals within the {\em same} SCC.
 
-  To address such situations XSB has two further tripwires.
-\bi
-\item {\em The derivation has a state in which there are a large
- number of incomplete subgoals that do not necessarily occur in the
- same recursive component.}\/ The tripwire {\tt
- max\_incomplete\_subgoals} allows a limit to be set on the maximal
- number of incomplete subgoals.  If a derivation exceeds that limit,
- the computation may be suspended, or an error thrown.
+ The tripwire {\tt max\_scc\_subgoals} allows such a limit to be set
+ on the maximal number of incomplete subgoals in any recursive
+ component.  If a derivation exceeds that limit, the computation may
+ be suspended, or an error thrown.  This situation is similar to that
+ of simply having too many incomplete subgoals, but may suggest a
+ different focus when analyzing a suspended computation.  In addition,
+ the number of dependencies can rise quadratically with the absolute
+ size of an SCC.  As a result, it often makes sense to have different
+ limit for the size of a single (incomplete) SCC and for the number of
+ incomplete subgoals overall.
+%
 
-\item The derivation has a state in which there is a large number of
- incomplete subgoals in the {\em same} recurive component.  The
- tripwire {\tt max\_scc\_subgoals} allows a limit to be set on the
- maximal number of incomplete subgoals in any recursive component.  If
- a derivation exceeds that limit, the computation may be suspended, or
- an error thrown.  This situation is similar to the previous one, but
- may suggest a different focus when analyzing a suspended computation.
-  In addition, the number of dependencies can rise quadratically with
- the absolute size of an SCC.  As a result, it often makes sense to
- have different limit for the size of a single (incomplete) SCC and
- for the number of incomplete subgoals overall
-%
-\ei 
-%
 {\em Guidelines for Analysis} If the computation is producing too many
  tabled subgoals the suspension may have been triggered by one of the
  tripwires: {\tt max\_table\_subgoal\_size}, {\tt
  max\_incomplete\_subgoals} or {\tt max\_scc\_size}.  In any of these
  cases, the suspension or error message will indicate the tripwire
  that has been hit.  The number of incomplete subgoals can be seen
- from the output of {\tt statistics/0}.  By using the inspection
- predicates of Section~\ref{sec:dep-graph} can be used to examine these
- subgoals and their dependencies.
+ from the output of {\tt statistics/0}.  The inspection predicates of
+ Section~\ref{sec:dep-graph} can be used to examine these subgoals and
+ their dependencies.
 %
 \ei
 \ei 
@@ -1326,6 +1331,69 @@ in turn.
 
  \ei
 
+\subsubsection{The Suspend Action for Flag-Based Tripwires}
+
+If the action {\tt suspend} is specified for a given flag-based
+ tripwire $T$, (i.e., a tripwire other than one based on {\tt
+ timed\_call/2}), then hitting $T$ causes XSB to take a given action.
+  By default, this action is to enter a break level from which the
+ computation can be inspected. (This default action for {\tt suspend}
+ can be overridden.)  A preamble to the break level is also presented
+ that describes certian values pertaining to the state of the
+ computation, along with an attempt to summarize what the situation
+ means.  The preamble for the tripwire {\tt max\_incomplete\_subgoals}
+ appears as follows.
+
+%----------------------------------------------------------------------------------------
+\begin{small}
+\begin{verbatim}
+There are currently 11 incomplete tabled subgoals, which exceeds the limit set by the 
+flag 'max_incomplete_subgoals'.  These subgoals are in 11 separate recursive components.
+
+The number of incomplete recursive components is close to the number of incomplete 
+subgoals, and furthermore, nearly all of these recursive components are trivial.
+
+This information indicates a likelihood that the program is performing some sort of 
+structural recursion using tabling (i.e., recursing through a list, performing numeric 
+iteration, etc.)
+
+To remedy, check that the recursion is well-founded.  If so, consider executing the 
+recursion using a non-tabled predicate, or consider using hash-cons tabling to reduce 
+the space required for tables, then increase the value of the flag.
+
+  * To continue, reset the flag and then type Ctrl-d
+  * To abort the suspended derivation, enter the command 'abort/0'
+  * To inspect the incomplete tabled subgoals, enter the command 'print_sdg_info/0'
+\end{verbatim}
+\end{small}
+%----------------------------------------------------------------------------------------
+
+From within a break level thrown by a tripwire, a user can perform
+ most queries and commands with two important exceptions.
+
+\begin{itemize}
+\item No tabled goals or subgoals may be executed.  Of course once the
+ break is exited, the original comptuation can be continued, and
+ tabled subgoals can be executed as usual.
+\item Reconsulting a file containing code upon which the original
+ query depends may throw an error.
+\end{itemize}
+
+There are situations where the action of breaking to allow a user can
+ inspect a query isn't suitable -- if XSB is embedded into a process,
+ for instance, or is part of some other application.  In such a case,
+ the user can override XSB's default behavior by asserting into the
+ {\tt user} module a {\em tripwire handler}, which will be executed
+ when a given tripwire is hit.  For instance, the tripwire {\tt
+ max\_table\_subgoal\_size} would use the tripwire {\tt
+ max\_table\_subgoal\_size\_user\_handler/0}.  Subject to the
+ constraints above, the handler may perform any actions desired,
+ including increasing the tripwire limit, adjusting its action,
+ changing runtime tabling properties, or simply writing to a
+ log.\footnote{As a further example, when XSB supports the language
+ Ergo the tripwire may set on forest logging to support termination
+ analysis via the Terminyzer tool.}
+
 \subsubsection{Summary of Flag-Based Tripwires}
 %
 Each of the tripwires described below can be queried and set via
@@ -1348,8 +1416,9 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum size of a given argument in a subgoal
  (cf. Section~\ref{sec:size-metric}).  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em  Possible Actions:} {\tt abstract}, {\tt suspend} or {\tt error}.
+\item{\em  Possible actions:} {\tt abstract}, {\tt suspend} or {\tt error}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
+\item {\em User handler for suspend}: {\tt max\_table\_subgoal\_size\_handler}.
 \ei
 
 \item {\tt max\_incomplete\_subgoals}
@@ -1357,8 +1426,9 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum number of subgoals that are
  incomplete at any given time.  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em  Possible Actions:} {\tt suspend}, {\tt error} or {\tt warning}.
+\item{\em  Possible actions:} {\tt suspend}, {\tt error} or {\tt warning}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
+\item {\em User handler for suspend}: {\tt max\_incomplete\_subgoals\_user\_handler}.
 \ei
 
 \item {\tt max\_scc\_subgoals}
@@ -1366,8 +1436,9 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum number of subgoals that are incomplete,
  and are in the same SCC at any given time.  A limit of {\tt 0} means
  that this tripwire is disabled.
-\item{\em  Possible Actions:} {\tt suspend}, {\tt error} or {\tt warning}.
+\item{\em  Possible actions:} {\tt suspend}, {\tt error} or {\tt warning}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
+\item {\em User handler for suspend}: {\tt max\_scc\_subgoals\_user\_handler}.
 \ei
 
 \item {\tt max\_table\_answer\_size}
@@ -1375,8 +1446,9 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum size of a given argument of an answer
  (cf. Section~\ref{sec:size-metric}).  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em  Possible Actions:} {\tt abstract}, {\tt suspend}, or {\tt error}.
+\item{\em  Possible actions:} {\tt abstract}, {\tt suspend}, or {\tt error}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
+\item {\em User handler for suspend}: {\tt max\_table\_answer\_size\_user\_handler}.
 \ei
 
 \item {\tt max\_answers\_for\_subgoal}
@@ -1384,8 +1456,9 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum number of answers for any single tabled
  subgoal.  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em  Possible Actions:} {\tt suspend}, {\tt error} or {\tt warning}.
+\item{\em  Possible actions:} {\tt suspend}, {\tt error} or {\tt warning}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
+\item {\em User handler for suspend}: {\tt max\_answers\_for\_subgoal\_user\_handler}.
 \ei
 
 \item {\tt max\_memory}
@@ -1395,9 +1468,9 @@ indicates the current values of this tripwire.  (Also see the
  floating-point number, the limit is the proportion of RAM for the
  machine on which XSB is running.  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em Possible Actions:} {\tt error}. ({\tt suspend} is not yet
- implemented, and this tripwire may be a little funky.)
+\item{\em Possible actions:} {\tt suspend} or {\tt error}. 
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
+\item {\em User handler for suspend}: {\tt max\_memory\_user\_handler}.
 \ei
 
 \end{itemize}
