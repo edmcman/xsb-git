@@ -4841,7 +4841,6 @@ void remove_incomplete_tries(CTXTdeclc CPtr bottom_parameter)
   xsbBool warned = FALSE;
   VariantSF CallStrPtr;
   TIFptr tif;
-
   while (openreg < bottom_parameter) {
     CallStrPtr = (VariantSF)compl_subgoal_ptr(openreg);
     if (!is_completed(CallStrPtr)) {
@@ -4864,6 +4863,7 @@ void remove_incomplete_tries(CTXTdeclc CPtr bottom_parameter)
     }
     openreg += COMPLFRAMESIZE;
   }
+  level_num = compl_level(openreg);
 }
 
 
