@@ -581,7 +581,9 @@ struct completion_stack_frame {
  */
 
 #define check_incomplete_subgoals_tripwire {	    \
-    if ((UInteger)level_num > flags[MAX_INCOMPLETE_SUBGOALS] -1) { /* account for 0-index */ \
+    /*    printf("Level num %d active goals %d flag %d\n",level_num,COMPLSTACKSIZE,flags[MAX_INCOMPLETE_SUBGOALS]);*/ \
+    /*    if ((UInteger)level_num > flags[MAX_INCOMPLETE_SUBGOALS] -1) { */ /* account for 0-index */ \
+    if (COMPLSTACKSIZE > flags[MAX_INCOMPLETE_SUBGOALS]) { \
       if (flags[MAX_INCOMPLETE_SUBGOALS_ACTION] == XSB_ERROR)		\
 	xsb_abort("Tripwire max_incomplete_subgoals hit.  The user-set limit of %d incomplete subgoals within a derivation" \
 		  " has been exceeded\n",				\
