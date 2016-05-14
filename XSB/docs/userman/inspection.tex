@@ -1394,6 +1394,16 @@ There are situations where the action of breaking to allow a user can
  Ergo the tripwire may set on forest logging to support termination
  analysis via the Terminyzer tool.}
 
+A handler that is called when a tripwire is hit has some resemblences
+ to a handler called when an error is caught, but there are important
+ differences.  A condition triggering a tripwire might or might not
+ reflect an error in a program.  So the handler is invoked when the
+ tripwire is hit, rather than after exiting portions of that
+ derivation as is the case when an error is caught.  If the user wants
+ to exit some or all of a derivation when a tripwire is hit, it is
+ simple to change the tripwire's action to error, and arrange to catch
+ the error with a suitable handler.
+
 \subsubsection{Summary of Flag-Based Tripwires}
 %
 Each of the tripwires described below can be queried and set via
