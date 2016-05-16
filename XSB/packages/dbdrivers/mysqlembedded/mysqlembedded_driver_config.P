@@ -26,7 +26,6 @@
 :- import search_module/6 from consult.
 :- import xsb_configuration/2 from xsb_configuration.
 :- import mysqlembedded_info/2 from mysqlembedded_init.
-:- import rename/2 from shell.
 :- import compile_so/3, runtime_loader_flag/3 from foreign.
 :- import path_sysop/3, path_sysop/2 from file_io.
 
@@ -46,15 +45,24 @@ make_mysqlembedded_driverH(CC, CC_opts) :-
 	('_$_mysqlembed_running_under'(cygwin) ->
 				% cygwin specific stuff
 
-	    xsb_configuration(config_bindir, ConfigBindir),
+	    xsb_configuration(config_bindir, ConfigBinDir),
 	    fmt_write_string(LD_flags,
 			     ' %s %s%sdriver_manager.dll -lmysqld -lWS2_32 -s -lz -lm -lcrypt -lpthread ',
-			     f(EmbedMySQL_libdir_flag, ConfigBindir, Slash))
+			     f(EmbedMySQL_libdir_flag, ConfigBinDir, Slash))
 	; %% windows specific stuff
 	    '_$_mysqlembed_running_under'(windows) -> true
-	; %% other unixes
+        ; %% MacOS
+	    '_$_mysqlembed_running_under'(darwin) -> 
+            %% probably needs -lsupc++ to avoid undefined symbol error
 	    fmt_write_string(LD_flags,
-			     ' %s %s  -lmysqld -s -lz -lm -lcrypt -lpthread %s%sdriver_manager.so %s%smysqlembedded_driver.so',
+			     ' %s %s  -lmysqld -s -lz -lm -lcrypt -lpthread %s%sdriver_manager.dylib %s%smysqlembedded_driver.dylib',
+			     f(EmbedMySQLRunpathFlag, EmbedMySQL_libdir_flag, 
+			       ConfigLibDir, Slash, ConfigLibDir, Slash))	   
+
+	; %% other unixes
+            %% -lsupc++ is needed to avoid undefined symbol error
+	    fmt_write_string(LD_flags,
+			     ' %s %s  -lmysqld -lsupc++ -s -lz -lm -lcrypt -lpthread %s%sdriver_manager.so %s%smysqlembedded_driver.so',
 			     f(EmbedMySQLRunpathFlag, EmbedMySQL_libdir_flag, 
 			       ConfigLibDir, Slash, ConfigLibDir, Slash))	   
 	),
@@ -85,16 +93,15 @@ make_mysqlembedded_driverH(CC, CC_opts) :-
     Basename = mysqlembedded_driver,
     fmt_write_string(Module,
 		     '%s%scc%s%s', f(EmbedMySQLDriverDir, Slash, Slash, Basename)),
+    xsb_configuration(compiler, CC),
     xsb_configuration(config_bindir, ConfigBinDir),
     xsb_configuration(config_libdir, ConfigLibDir),
     str_cat(Module, '.xwam', ObjfileX),
     fmt_write_string(LibObjFileX,
 			 '%s%s%s.xwam', a(ConfigLibDir, Slash, Basename)),
-    (('_$_mysqlembed_running_under'(windows) ; '_$_mysqlembed_running_under'(cygwin))
-	->
+    (('_$_mysqlembed_running_under'(windows) ; '_$_mysqlembed_running_under'(cygwin)) ->
 	    fmt_write_string(ConfigSharedMod, '%s%s%s.dll', f(ConfigBinDir, Slash, Basename))
-     ; '_$_mysqlembed_running_under'(darwin)
-	->
+     ; '_$_mysqlembed_running_under'(darwin) ->
 	    fmt_write_string(ConfigSharedMod, '%s%s%s.dylib',  f(ConfigLibDir, Slash, Basename))
      ;
 	    fmt_write_string(ConfigSharedMod, '%s%s%s.so',  f(ConfigLibDir, Slash, Basename))
@@ -110,7 +117,7 @@ make_mysqlembedded_driverH(CC, CC_opts) :-
 	time(ST1,ST2) @< time(CT1,CT2)
     %% module compiled and is current, so just load
     -> [Basename]
-    ;('_$_mysqlembed_running_under'(cygwin) ->
+    ; ('_$_mysqlembed_running_under'(cygwin) ->
 		%% cygwin specific stuff
 		fmt_write_string(DBDriversDir, '%s%sdbdrivers%scc', 
 				 f(PackagesDir, Slash, Slash)),
@@ -141,7 +148,7 @@ make_mysqlembedded_driverH(CC, CC_opts) :-
 	        [Basename],
         	'_$_mysqlembed_force_rename'(ObjfileX, LibObjFileX)
       
-    ; %% Module isn't compiled or is old -- recompile
+    ; %% unix and the module isn't compiled or is old -- recompile
 	xsb_configuration(compiler, CC),
 	mysqlembedded_info(ccflags, CCflags),
 	mysqlembedded_info(ldflags, LDflags),
@@ -153,12 +160,19 @@ make_mysqlembedded_driverH(CC, CC_opts) :-
 			 f(CCflags, ConfigDir, DBDriversDir)),
 	make_mysqlembedded_driverH(CC, CC_opts),
 	compile_so(Module, [cc(CC), cc_opts(CC_opts)], LDflags),
-	str_cat(Module, '.so', SharedLib),
-	fmt_write_string(LibMod, '%s%s%s.so', a(ConfigLibDir,Slash,Basename)),
+		
+        ('_$_mysqlembed_running_under'(darwin) -> LibrarySuffix='.dylib'
+        ;  LibrarySuffix='.so'
+        ),
+
+	str_cat(Module, LibrarySuffix, SharedLib),
+	fmt_write_string(LibMod, '%s%s%s%s',
+                         a(ConfigLibDir,Slash,Basename,LibrarySuffix)),
 	rename(SharedLib, LibMod),
 	consult(Module, [cc(CC), cc_opts(CC_opts)]),
 	fmt_write_string(LibSharedObjFile,
-			 '%s%s%s.so', a(ConfigLibDir, Slash, Basename)),
+			 '%s%s%s%s',
+                         a(ConfigLibDir, Slash, Basename,LibrarySuffix)),
 	rename(SharedLib, LibSharedObjFile),
 	rename(ObjfileX, LibObjFileX)
      )).

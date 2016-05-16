@@ -150,7 +150,7 @@ typedef struct Deleted_Table_Frame {
 
 #define Free_Private_DelTF_Subgoal(pDTF,pTIF) {				\
   if (DTF_PrevDTF(pDTF) == 0) {						\
-    private_deltf_chain_begin = DTF_NextDTF(pDTF);				\
+    private_deltf_chain_begin = DTF_NextDTF(pDTF);			\
   }									\
   else {								\
     DTF_NextDTF(DTF_PrevDTF(pDTF)) = DTF_NextDTF(pDTF);			\
@@ -471,7 +471,7 @@ struct TDispBlkHdr_t {
     if (!tip) {								\
       /* this may not be possible, as it may always be initted in get_tip? */\
       tip = New_TIF(CTXTc tdispblk->psc_ptr);			\
-      TDB_PrivateTIF(tdispblk,xsb_thread_entry) = tip;				\
+      TDB_PrivateTIF(tdispblk,xsb_thread_entry) = tip;			\
     }									\
   }
 
@@ -545,7 +545,7 @@ struct completion_stack_frame {
 		  flags[MAX_SCC_SUBGOALS]);				\
       else { /* flags[MAX_SCC_SUBGOALS_ACTION] == XSB_SUSPEND */	\
 	/* printf("Debug: suspending on max_scc_subgoals\n"); */        \
-	tripwire_interrupt(CTXTc "max_scc_subgoals_handler");			\
+	tripwire_interrupt(CTXTc "max_scc_subgoals_handler");		\
       }									\
     }									\
   }
@@ -590,7 +590,7 @@ struct completion_stack_frame {
 		  flags[MAX_INCOMPLETE_SUBGOALS]);			\
       else { /* flags[MAX_INCOMPLETE_SUBGOALS_ACTION] == XSB_SUSPEND */	\
 	/* printf("Debug: suspending on max_incomplete_subgoals\n"); */	\
-	tripwire_interrupt(CTXTc "max_incomplete_subgoals_handler");		\
+	tripwire_interrupt(CTXTc "max_incomplete_subgoals_handler");	\
       }									\
     }									\
   }
@@ -1012,7 +1012,7 @@ void tstCreateTSIs(struct th_context *,TSTNptr);
    CallTrieLeaf_SetSF(Leaf,pNewSF);				\
    conssf_producer(pNewSF) = (SubProdSF)Producer;		\
    if ( ! ProducerSubsumesSubgoals(Producer) )			\
-     tstCreateTSIs_handle((TSTNptr)subg_ans_root_ptr(Producer));		\
+     tstCreateTSIs_handle((TSTNptr)subg_ans_root_ptr(Producer));	\
    subg_ans_list_ptr(pNewSF) = empty_return_handle(pNewSF);		\
    conssf_timestamp(pNewSF) = CONSUMER_SF_INITIAL_TS;		\
    conssf_consumers(pNewSF) = subg_consumers(Producer);		\
@@ -1212,7 +1212,7 @@ void tstCreateTSIs(struct th_context *,TSTNptr);
     CPtr temp_pdlreg = pdlreg;				\
     while (!(temp_pdlreg == (CPtr)(pdl.high) - 1)) {			\
       print_cp_cell("pdl", temp_pdlreg, *(temp_pdlreg+1));		\
-      temp_pdlreg++;								\
+      temp_pdlreg++;							\
     }						  \
   }						 
 

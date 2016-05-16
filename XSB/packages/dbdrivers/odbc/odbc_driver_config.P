@@ -56,8 +56,7 @@ make_odbc_driverH(CC, CC_opts) :-
 	; %% windows specific stuff
 	    '_$_odbc_running_under'(windows) -> true
 	; %% MacOS
-	    '_$_odbc_running_under'(darwin)
-	->
+	    '_$_odbc_running_under'(darwin) ->
 	    fmt_write_string(LD_flags,
 			     ' %s %s %s%sdriver_manager.dylib %s%sodbc_driver.dylib -lodbc ',
 			     f(OdbcRunpathFlag, ODBC_libdir_flag, 
@@ -105,11 +104,9 @@ make_odbc_driverH(CC, CC_opts) :-
 	str_cat(Module, XSB_OBJ_EXTENSION_ATOM, ObjfileX),
 	odbc_info(ccflags, CCflags),
 	odbc_info(ldflags, LDflags),
-	(('_$_odbc_running_under'(windows) ; '_$_odbc_running_under'(cygwin))
-	->
+	(('_$_odbc_running_under'(windows) ; '_$_odbc_running_under'(cygwin)) ->
 	    fmt_write_string(ConfigSharedMod, '%s%s%s.dll', f(ConfigBinDir, Slash, Basename))
-	; '_$_odbc_running_under'(darwin)
-	->
+	; '_$_odbc_running_under'(darwin) ->
 	    fmt_write_string(ConfigSharedMod, '%s%s%s.dylib',  f(ConfigLibDir, Slash, Basename))
 	;
 	    fmt_write_string(ConfigSharedMod, '%s%s%s.so',  f(ConfigLibDir, Slash, Basename))
@@ -159,8 +156,7 @@ make_odbc_driverH(CC, CC_opts) :-
 				 f(CCflags, ConfigDir, DBDriversDir)),
 		compile_so(Module, [cc(CC), cc_opts(CC_opts)], LDflags),
 		
-		('_$_odbc_running_under'(darwin)
-		-> LibrarySuffix='.dylib'
+		('_$_odbc_running_under'(darwin) -> LibrarySuffix='.dylib'
 		;  LibrarySuffix='.so'
 		),
 
