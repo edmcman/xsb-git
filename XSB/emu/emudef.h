@@ -273,13 +273,14 @@ unsigned long dec[8] = {_FULL_ULONG_BITS,_FULL_ULONG_BITS,_FULL_ULONG_BITS,_FULL
       bld_boxedfloat(CTXTc &ignore_addr, float_val(OP1));		\
     else if (isointeger(OP1)) 						\
       {bld_oint(&ignore_addr, oint_val(OP1));}				\
+    else Fail1;								\
     flag = READFLAG;							\
     sreg = hreg - 3;							\
   } else if (isattv(OP1)) {						\
-    xsb_dbgmsg((LOG_ATTV,">>>> ATTV nunify_with_str, interrupt needed\n"));	\
+    xsb_dbgmsg((LOG_ATTV,">>>> ATTV nunify_with_str, interrupt needed\n"));    \
     /* add_interrupt(OP1, makecs(hreg)); */				\
-    add_interrupt(CTXTc cell(((CPtr)dec_addr(op1) + 1)),makecs(hreg+INT_REC_SIZE));	\
-    bind_copy((CPtr)dec_addr(op1), makecs(hreg));                       \
+    add_interrupt(CTXTc cell(((CPtr)dec_addr(OP1) + 1)),makecs(hreg+INT_REC_SIZE));	\
+    bind_copy((CPtr)dec_addr(OP1), makecs(hreg));                       \
     new_heap_functor(hreg, (Psc)OP2);					\
     flag = WRITE;							\
   }									\
