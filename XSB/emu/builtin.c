@@ -1601,8 +1601,8 @@ int builtin_call(CTXTdeclc byte number)
     /* used in file_read.P, array.P, array1.P */
     //    int  disp = ptoc_int(CTXTc 2);
   //    Cell term = ptoc_tag(CTXTc 1);
-    int  disp = (int) iso_ptoc_int(CTXTc 2,"setarg/3");
-    Cell term = iso_ptoc_callable(CTXTc 1,"setarg/3");
+    int  disp = (int) iso_ptoc_int(CTXTc 2,"term_set_arg/3");
+    Cell term = iso_ptoc_callable(CTXTc 1,"term_set_arg/3");
     CPtr arg_loc = clref_val(term)+disp;
     Cell new_val = cell(reg+3);
     int perm_flag = (int)ptoc_int(CTXTc 4);

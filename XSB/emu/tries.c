@@ -1486,7 +1486,7 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
 
      This should be simple enough to fix, but since the limit is about
      40000 variables in an answer, we should be ok for now. */
-  if (AnsVarCtr >   flags[MAX_TABLE_ANSWER_VAR_NUM]) {
+  if (AnsVarCtr > (int)flags[MAX_TABLE_ANSWER_VAR_NUM]) {
   sprint_subgoal(CTXTc forest_log_buffer_1,0, subgoal_ptr);
 //    sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); 
     safe_delete_branch(Paren);					
@@ -2454,7 +2454,7 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
   vcs_tnot_call = 0;
 
   //  printf("ctr %d attvs %d allAbsStk_index %d\n",ctr,attv_ctr,callAbsStk_index);
-  if (ctr > flags[MAX_TABLE_SUBGOAL_VAR_NUM]) { 
+  if (ctr > (int)flags[MAX_TABLE_SUBGOAL_VAR_NUM]) { 
     clean_up_subgoal_table_structures_for_throw;			
     sprintNonCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info))); 
     xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer,		

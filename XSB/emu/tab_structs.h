@@ -710,7 +710,7 @@ typedef struct subgoal_frame {
   unsigned int ans_ctr:32;
 #else
   Integer callsto_number;    /* if 64 bits double-use call_ans_ctr */
-  Integer ans_ctr; 
+  UInteger ans_ctr; 
 #endif
 
 
@@ -782,7 +782,7 @@ typedef struct subgoal_frame {
 #define INIT_SUBGOAL_CALLSTO_NUMBER(subgoal) subg_callsto_number(subgoal)  = 1
 
 #define SUBG_INCREMENT_ANSWER_CTR(subgoal) {	\
-    if (++subg_ans_ctr(subgoal) > flags[MAX_ANSWERS_FOR_SUBGOAL]) {	\
+    if (++subg_ans_ctr(subgoal) > (unsigned) flags[MAX_ANSWERS_FOR_SUBGOAL]) { \
       if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ERROR) {		\
 	sprint_subgoal(CTXTc forest_log_buffer_1,0, subgoal);		\
 xsb_abort("Tripwire max_answers_for_subgoal hit. The user-set limit on the number of %d answers for a single subgoaol has been exceeded for %s\n",flags[MAX_ANSWERS_FOR_SUBGOAL],forest_log_buffer_1->fl_buffer); \
