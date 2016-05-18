@@ -3,7 +3,7 @@
 
 ?- set_prolog_flag(max_table_answer_size,25).
 ?- set_prolog_flag(max_table_subgoal_size,25).
-?- set_prolog_flag(max_table_subgoal_action,error).
+?- set_prolog_flag(max_table_subgoal_size_action,error).
 ?- set_prolog_flag(write_depth,64).
 
 test:- make_term(50,X),
