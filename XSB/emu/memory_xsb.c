@@ -151,6 +151,15 @@ UInteger pspace_tot_gl = 0;
    cases where we really dont check for them.  These seem pretty
    small, overall however. */
 
+#ifdef MULTI_THREAD
+#define CHECK_MAX_MEMORY(STRING) {				\
+    if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + size)/K > (int) flags[MAX_MEMORY]) { \
+      flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2);		\
+      if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			\
+	xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT)); \
+    }									\
+}
+#else
 #define CHECK_MAX_MEMORY(STRING) {				\
     /*     printf("Checking memory %s\n",STRING);		*/	\
     if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + size)/K > (int) flags[MAX_MEMORY]) { \
@@ -163,7 +172,19 @@ UInteger pspace_tot_gl = 0;
       }									\
     }									\
 }
+#endif
 
+#ifdef MULTI_THREAD
+#define CHECK_MAX_MEMORY_REALLOC(STRING) {				\
+    /*     printf("Checking memory %s\n",STRING);		*/	\
+    if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + (newsize-oldsize))/K > (int) flags[MAX_MEMORY]) { \
+      /*      printf("handling internal memory overflow %s\n",STRING);*/ \
+      flags[MAX_MEMORY] = (int) (flags[MAX_MEMORY]*1.2);		\
+      if (flags[MAX_MEMORY_ACTION] == XSB_ERROR)			\
+	xsb_throw_memory_error(encode_memory_error(category,USER_MEMORY_LIMIT)); \
+    }									\
+  }
+#else
 #define CHECK_MAX_MEMORY_REALLOC(STRING) {				\
     /*     printf("Checking memory %s\n",STRING);		*/	\
     if ((int) flags[MAX_MEMORY] && (pspace_tot_gl + (newsize-oldsize))/K > (int) flags[MAX_MEMORY]) { \
@@ -176,6 +197,7 @@ UInteger pspace_tot_gl = 0;
       }									\
     }									\
 }
+#endif
 
 #define TCP_HANDLE_USER_MEMORY_LIMIT_OVERFLOW(CATEGORY,STRING) {		\
     /*     printf("Checking memory %s\n",STRING);	*/		\
