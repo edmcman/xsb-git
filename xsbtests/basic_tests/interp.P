@@ -9,7 +9,8 @@
 %interp(G) :- abolish_table_info,interp1(G).
 
 /* trying to abstract too much can abstract out the input numbers */
-:- set_prolog_flag(max_table_subgoal_depth,20).
+%:- set_prolog_flag(max_table_subgoal_depth,20).
+:- set_prolog_flag(max_table_subgoal_size,20).
 
 :- table(interp1/1).
 %:- table(ssh/2).
