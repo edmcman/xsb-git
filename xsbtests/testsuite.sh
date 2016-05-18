@@ -281,7 +281,8 @@ $GREP "syntax error" $LOG_FILE >> $RES_FILE
 $GREP "cannot find" $LOG_FILE >> $RES_FILE
 $GREP "predicate undefined" $LOG_FILE >> $RES_FILE
 $GREP "Memory violation" $LOG_FILE >> $RES_FILE
-
+#dont want -i here
+grep Error $LOG_FILE >> $RES_FILE
 echo "-----------------------------------------"
 
 if test "$Mac_DATE" = 1; then
