@@ -30,18 +30,27 @@
 			 f(ConfigLibDir, Slash, Basename, XSB_OBJ_EXTENSION_ATOM)),
 	fmt_write_string(DriverManagerObj, '%s%s',
 			 f(Module, XSB_OBJ_EXTENSION_ATOM)),
-	((running_under(windows) ; running_under(cygwin))
-	->
+        ('_$dbd_running_under'(windows64) -> PkgDlls = 'dbdrivers\cc\windows64'
+        ; PkgDlls = 'dbdrivers\cc\windows'
+        ),
+	(('_$dbd_running_under'(windows) ; '_$dbd_running_under'(cygwin)) ->
+	    fmt_write_string(WindSavedDll,
+			     '%s%s%s%s%s.dll',
+                             f(PackageDir,Slash,PkgDlls,Slash,Basename)),
+	    fmt_write_string(WindSavedLib,
+			     '%s%s%s%s%s.lib',
+                             f(PackageDir,Slash,PkgDlls,Slash,Basename)),
 	    fmt_write_string(ConfigSharedMod,
 			     '%s%s%s.dll', f(ConfigBinDir, Slash, Basename))
-	    ; running_under(darwin)
-	->
+        ; '_$dbd_running_under'(darwin) ->
 	    fmt_write_string(ConfigSharedMod,
-			     '%s%s%s.dylib',  f(ConfigLibDir, Slash, Basename))
-	    ;
+			     '%s%s%s.dylib',
+                             f(ConfigLibDir, Slash, Basename))
+        ;
 	    fmt_write_string(ConfigSharedMod,
-			     '%s%s%s.so',  f(ConfigLibDir, Slash, Basename))
-	    ),
+			     '%s%s%s.so',
+                             f(ConfigLibDir, Slash, Basename))
+        ),
 	( %% avoid recompilation: check if driver_manager.xwam exists and 
 	    %% is newer than driver_manager.c.
 	    search_module(Basename,Dir,_Mod,_Ext,BaseDir,ModuleO),
@@ -54,39 +63,48 @@
 	    path_sysop(unlink,ModuleO), !
 	    ; true
 	    ),
-	    [Basename],
-	    (running_under(cygwin) -> 
+	    ('_$dbd_running_under'(cygwin) -> 
+                shell(['copy /B /Y ', '"', WindSavedDll, '"', ' ', '"', ConfigBinDir, '"']),
+                shell(['copy /B /Y ', '"', WindSavedLib, '"', ' ', '"', ConfigBinDir, '"']),
+                [Basename],
 		%% cygwin specific stuff
 		fmt_write_string(DriverManagerDll, '%s.dll',
 				 f(Module)),
 		fmt_write_string(ConfigBinDll, '%s%s%s.dll', 
 				 f(ConfigBinDir, Slash, Basename)),  
-		force_rename(DriverManagerDll, ConfigBinDll),
+		'_$dbd_force_rename'(DriverManagerDll, ConfigBinDll),
 		fmt_write_string(DriverManagerO, '%s.o',
 				 f(Module)),
 		fmt_write_string(ConfigBinO, '%s%s%s.o',
 				 f(ConfigBinDir, Slash, Basename)),
-		force_rename(DriverManagerO, ConfigBinO),
+		'_$dbd_force_rename'(DriverManagerO, ConfigBinO),
 		fmt_write_string(DriverManagerA, '%s.a',
 				 f(Module)),
 		fmt_write_string(ConfigBinA, '%s%s%s.a',
 				 f(ConfigBinDir, Slash, Basename)),
-		force_rename(DriverManagerA, ConfigBinA),
+		'_$dbd_force_rename'(DriverManagerA, ConfigBinA),
 		fmt_write_string(DriverManagerDef, '%s.def',
 				 f(Module)),
 		fmt_write_string(ConfigBinDef, '%s%s%s.def',
 				 f(ConfigBinDir, Slash, Basename)),
-		force_rename(DriverManagerDef, ConfigBinDef),
-		force_rename(DriverManagerObj, ConfigLibObj)
+		'_$dbd_force_rename'(DriverManagerDef, ConfigBinDef),
+		'_$dbd_force_rename'(DriverManagerObj, ConfigLibObj)
 	    ; %% windows specific stuff
-		running_under(windows) ->
-		force_rename(DriverManagerObj, ConfigLibObj)
+		'_$dbd_running_under'(windows) ->
+                shell(['copy /B /Y ', '"', WindSavedDll, '"', ' ', '"', ConfigBinDir, '"']),
+                shell(['copy /B /Y ', '"', WindSavedLib, '"', ' ', '"', ConfigBinDir, '"']),
+                [Basename],
+                (path_sysop(exists,DriverManagerObj) ->
+                    '_$dbd_force_rename'(DriverManagerObj, ConfigLibObj)
+                ; true
+                )
+
 	    ; %% else unix specific stuff 
+                [Basename],
 		fmt_write_string(DriverManagerDir, '%s%sdbdrivers', 
 				 f(PackageDir, Slash)),
 
-		(running_under(darwin)
-		-> LibrarySuffix='.dylib'
+		('_$dbd_running_under'(darwin) -> LibrarySuffix='.dylib'
 		;  LibrarySuffix='.so'
 		),
 
@@ -94,29 +112,34 @@
 				 f(DriverManagerDir, Slash, Slash, Basename,LibrarySuffix)),
 		fmt_write_string(LibDriverManager, '%s%s%s%s',
 				 f(ConfigLibDir, Slash, Basename,LibrarySuffix)),
-		force_rename(SharedLibDriverManager, LibDriverManager),
-		force_rename(DriverManagerObj, ConfigLibObj)
+		'_$dbd_force_rename'(SharedLibDriverManager, LibDriverManager),
+		'_$dbd_force_rename'(DriverManagerObj, ConfigLibObj)
 	    )
 	),
 	initialise.
 
 
-running_under(cygwin) :-
+'_$dbd_running_under'(cygwin) :-
 	xsb_configuration(architecture, A),
 	str_sub(cygwin, A),
 	!.
-running_under(windows) :-
+'_$dbd_running_under'(windows) :-
 	xsb_configuration(architecture, A),
 	str_sub(windows, A),
 	!.
-running_under(darwin) :-
+'_$dbd_running_under'(windows64) :-
+	xsb_configuration(architecture, A),
+	str_sub(windows, A),
+	str_sub(x64, A),
+	!.
+'_$dbd_running_under'(darwin) :-
 	xsb_configuration(architecture, A),
 	str_sub(darwin, A),
 	!.
-running_under(unix) :-
-	\+ running_under(cygwin),
-	\+ running_under(darwin),
-        \+ running_under(windows).
+'_$dbd_running_under'(unix) :-
+	\+ '_$dbd_running_under'(cygwin),
+	\+ '_$dbd_running_under'(darwin),
+        \+ '_$dbd_running_under'(windows).
 
 
 load_driver(Driver) :- [Driver]. 
@@ -124,7 +147,7 @@ load_driver(Driver) :- [Driver].
 
 %% Windows semantics for renaming is such that the op fails, 
 %% if the target exists
-force_rename(Orig,Target) :-
+'_$dbd_force_rename'(Orig,Target) :-
 	(path_sysop(unlink,Target), !; true),
 	path_sysop(rename,Orig,Target).
 
