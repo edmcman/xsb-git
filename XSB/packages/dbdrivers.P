@@ -53,14 +53,14 @@
         ),
 	( %% avoid recompilation: check if driver_manager.xwam exists and 
 	    %% is newer than driver_manager.c.
-	    search_module(Basename,Dir,_Mod,_Ext,BaseDir,ModuleO),
+	    search_module(Basename,Dir,_Mod,_Ext,_BaseDir,ModuleO),
 	    str_cat(Module, '.c', ModuleSourceFile),
 	    path_sysop(newerthan,ModuleO,ModuleSourceFile),
 	    path_sysop(newerthan,ConfigSharedMod,ModuleSourceFile)
 	%% module compiled and is current, so just load
 	-> [Basename]
-	;   (search_module(Basename,Dir,_Mod,_Ext,BaseDir,ModuleO),
-	    path_sysop(unlink,ModuleO), !
+	;   (search_module(Basename,Dir,_Mod,_Ext,_BaseDir,ModuleO),
+                path_sysop(unlink,ModuleO), !
 	    ; true
 	    ),
 	    ('_$dbd_running_under'(cygwin) -> 

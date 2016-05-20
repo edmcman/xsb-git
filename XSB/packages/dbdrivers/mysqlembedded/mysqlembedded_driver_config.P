@@ -188,9 +188,13 @@ make_mysqlembedded_driverH(CC, CC_opts) :-
                 ),
 
                 str_cat(Module, LibrarySuffix, SharedLib),
+                %% this is needed because compile_so above creates a shared lib
+                %% and we need to move it to where XSB can find it.
                 '_$_mysqlembed_force_rename'(SharedLib, ConfigSharedMod),
                 make_mysqlembedded_driverH(CC, CC_opts),
                 consult(Module, [cc(CC), cc_opts(CC_opts)]),
+                %% move again after generation
+                '_$_mysqlembed_force_rename'(SharedLib, ConfigSharedMod),
                 '_$_mysqlembed_force_rename'(ObjfileX, LibObjFileX)
                 )
         ).

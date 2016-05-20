@@ -229,7 +229,7 @@ DllExport int call_conv pl_trymatch()
       postmatch = (char *)alloca(strlen(subject));
                 
       substring_start = subject + ovector[0];
-      substring_start = substring_start;  // to pacify the compiler
+      SQUASH_LINUX_COMPILER_WARN(substring_start);  // to pacify the compiler
       substring_length = ovector[1] - ovector[0];
                 
       strncpy(match,subject+ovector[0],substring_length);
@@ -434,7 +434,7 @@ DllExport int call_conv pl_substitute()
     match = (char *)alloca(strlen(subject));
           
     substring_start = subject + ovector[0];
-    substring_start = substring_start;  // to pacify the compiler
+    SQUASH_LINUX_COMPILER_WARN(substring_start);  // to pacify the compiler
     substring_length = ovector[1] - ovector[0];         
     strncpy(match,subject+ovector[0],substring_length);
     match[substring_length]='\0';

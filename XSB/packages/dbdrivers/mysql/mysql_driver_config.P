@@ -184,9 +184,13 @@ make_mysql_driverH(CC, CC_opts) :-
                 ),
 
                 str_cat(Module, LibrarySuffix, SharedLib),
-                '_$_mysql_force_rename'(SharedLib, ConfigSharedMod),
                 make_mysql_driverH(CC, CC_opts),
+                %% this is needed because compile_so above creates a shared lib
+                %% and we need to move it to where XSB can find it.
+                '_$_mysql_force_rename'(SharedLib, ConfigSharedMod),
                 consult(Module, [cc(CC), cc_opts(CC_opts)]),
+                %% move it again after it gets generated
+                '_$_mysql_force_rename'(SharedLib, ConfigSharedMod),
                 '_$_mysql_force_rename'(ObjfileX, LibObjFileX)
             )
         ).
