@@ -164,7 +164,7 @@ test_properties_auth(OutPath) :-
 	told.
 
 test_get_redir_url :-
-	get_redir_url(url('http://www.cs.sunysb.edu/~cse532/'), UrlNew1), 
+	get_redir_url(url('http://www.cs.stonybrook.edu/~cse532/'), UrlNew1), 
 	writeln(UrlNew1), 
 	get_redir_url(file('test.html'), UrlNew2), 
 	writeln(UrlNew2).
@@ -181,7 +181,7 @@ test_post :-
 	close(url('http://www.zend.com/en/')).
 
 test_read_and_close :- 
-	open(url('http://ringlord.com/latex-to-pdf-howto.html'),read, X), 
+	open(url('http://ringlord.com/latex-to-pdf-howto.html'),read, X,[secure(true)]), 
 	get_char(X, _), 
 	close(url('http://ringlord.com/latex-to-pdf-howto.html')).
 
