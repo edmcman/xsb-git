@@ -23,6 +23,7 @@
 :- compiler_options([xpp_on]).
 #include "extensions_xsb.h"
 
+:- import xsb_running_under/1, force_rename_file/2 from packaging.
 :- import slash/1, str_cat/3 from machine.
 :- import fmt_write_string/3, file_time/2 from file_io.
 :- import search_module/6 from consult.
@@ -43,16 +44,16 @@ make_odbc_driverH(CC, CC_opts) :-
         package_configuration(dir(odbc_driver), ODBCDriverDir),
         %% Creates something like -Wl,-rpath,<libdir>
         runtime_loader_flag(CC, ODBC_libdir, OdbcRunpathFlag),
-        ('_$_odbc_running_under'(cygwin) -> %% cygwin specific stuff
+        (xsb_running_under(cygwin) -> %% cygwin specific stuff
             xsb_configuration(config_bindir, ConfigBinDir),
             fmt_write_string(LD_flags,
                              ' %s %s%sdriver_manager.dll -lodbc32 -lodbccp32 ',
                              f(ODBC_libdir_flag, ConfigBinDir, Slash))
 
         ; %% windows specific stuff
-            '_$_odbc_running_under'(windows) -> true
+            xsb_running_under(windows) -> true
         ; %% MacOS
-            '_$_odbc_running_under'(darwin) ->
+            xsb_running_under(darwin) ->
             fmt_write_string(LD_flags,
                              ' %s %s %s%sdriver_manager.dylib %s%sodbc_driver.dylib -lodbc ',
                              f(OdbcRunpathFlag, ODBC_libdir_flag, 
@@ -101,11 +102,11 @@ make_odbc_driverH(CC, CC_opts) :-
         odbc_info(ccflags, CCflags),
         odbc_info(ldflags, LDflags),
 
-        ('_$_odbc_running_under'(windows64) -> PkgDlls = 'cc\windows64'
+        (xsb_running_under(windows64) -> PkgDlls = 'cc\windows64'
         ; PkgDlls = 'cc\windows'
         ),
 
-        (('_$_odbc_running_under'(windows) ; '_$_odbc_running_under'(cygwin)) ->
+        ((xsb_running_under(windows) ; xsb_running_under(cygwin)) ->
             fmt_write_string(WindSavedDll,
                              '%s%s%s%s%s.dll',
                              f(ODBCDriverDir,Slash,PkgDlls,Slash,Basename)),
@@ -115,7 +116,7 @@ make_odbc_driverH(CC, CC_opts) :-
             fmt_write_string(ConfigSharedMod,
                              '%s%s%s.dll',
                              f(ConfigBinDir, Slash, Basename))
-        ; '_$_odbc_running_under'(darwin) ->
+        ; xsb_running_under(darwin) ->
             fmt_write_string(ConfigSharedMod,
                              '%s%s%s.dylib',
                              f(ConfigLibDir, Slash, Basename))
@@ -134,7 +135,7 @@ make_odbc_driverH(CC, CC_opts) :-
         -> [Basename]
         ;
             %% Cygwin isn't supported: XSB's C interface no longer works with it
-            ('_$_odbc_running_under'(cygwin) -> %% cygwin specific stuff
+            (xsb_running_under(cygwin) -> %% cygwin specific stuff
                 fmt_write_string(DBDriversDir,
                                  '%s%sdbdrivers%scc', 
                                  f(PackagesDir, Slash, Slash)),
@@ -145,31 +146,31 @@ make_odbc_driverH(CC, CC_opts) :-
                 shell(['copy /B /Y ', '"', WindSavedLib, '"', ' ', '"', ConfigBinDir, '"']),
                 make_odbc_driverH(CC, CC_opts),
                 consult(Module, [cc(CC), cc_opts(CC_opts)]),
-                '_$_odbc_force_rename'(ObjfileX, LibObjFileX),
+                force_rename_file(ObjfileX, LibObjFileX),
                 str_cat(Module, '.o', ObjfileO),
                 fmt_write_string(LibObjFileO,
                                  '%s%s%s.o',
                                  f(ConfigBinDir, Slash, Basename)),
-                '_$_odbc_force_rename'(ObjfileO, LibObjFileO),
+                force_rename_file(ObjfileO, LibObjFileO),
                 str_cat(Module, '.a', ObjfileA),
                 fmt_write_string(LibObjFileA,
                                  '%s%s%s.a',
                                  f(ConfigBinDir, Slash, Basename)),
-                '_$_odbc_force_rename'(ObjfileA, LibObjFileA),
+                force_rename_file(ObjfileA, LibObjFileA),
                 str_cat(Module, '.def', ObjfileDef),
                 fmt_write_string(LibObjFileDef,
                                  '%s%s%s.def',
                                  f(ConfigBinDir, Slash, Basename)),
-                '_$_odbc_force_rename'(ObjfileDef, LibObjFileDef)
+                force_rename_file(ObjfileDef, LibObjFileDef)
 
         ; %% windows - don't compile; supposed to be compiled already
-                '_$_odbc_running_under'(windows) ->
+                xsb_running_under(windows) ->
                 shell(['copy /B /Y ', '"', WindSavedDll, '"', ' ', '"', ConfigBinDir, '"']),
                 shell(['copy /B /Y ', '"', WindSavedLib, '"', ' ', '"', ConfigBinDir, '"']),
                 make_odbc_driverH(CC, ''),
                 [Basename],
                 (path_sysop(exists,ObjfileX) ->
-                    '_$_odbc_force_rename'(ObjfileX, LibObjFileX)
+                    force_rename_file(ObjfileX, LibObjFileX)
                 ; true
                 )
         ; %% unix and the module isn't compiled or is old -- recompile
@@ -181,44 +182,15 @@ make_odbc_driverH(CC, CC_opts) :-
                                  f(CCflags, ConfigDir, DBDriversDir)),
                 compile_so(Module, [cc(CC), cc_opts(CC_opts)], LDflags),
                 
-                ('_$_odbc_running_under'(darwin) -> LibrarySuffix='.dylib'
+                (xsb_running_under(darwin) -> LibrarySuffix='.dylib'
                 ;  LibrarySuffix='.so'
                 ),
 
                 str_cat(Module, LibrarySuffix, SharedLib),
-                '_$_odbc_force_rename'(SharedLib, ConfigSharedMod),
+                force_rename_file(SharedLib, ConfigSharedMod),
                 make_odbc_driverH(CC, CC_opts),
                 consult(Module, [cc(CC), cc_opts(CC_opts)]),
-                '_$_odbc_force_rename'(ObjfileX, LibObjFileX)
+                force_rename_file(ObjfileX, LibObjFileX)
             )
         ).
-
-
-'_$_odbc_running_under'(cygwin) :-
-        xsb_configuration(architecture, A),
-        str_sub(cygwin, A),
-        !.
-'_$_odbc_running_under'(windows) :-
-        xsb_configuration(architecture, A),
-        str_sub(windows, A),
-        !.
-'_$_odbc_running_under'(windows64) :-
-        xsb_configuration(architecture, A),
-        str_sub(windows, A),
-        str_sub(x64, A),
-        !.
-'_$_odbc_running_under'(darwin) :-
-        xsb_configuration(architecture, A),
-        str_sub(darwin, A),
-        !.
-'_$_odbc_running_under'(unix) :-
-        \+ '_$_odbc_running_under'(cygwin),
-        \+ '_$_odbc_running_under'(darwin),
-        \+ '_$_odbc_running_under'(windows).
-
-%% Windows semantics for renaming is such that the op fails, 
-%% if the target exists
-'_$_odbc_force_rename'(Orig,Target) :-
-        (path_sysop(unlink,Target), !; true),
-        path_sysop(rename,Orig,Target).
 
