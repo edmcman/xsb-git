@@ -228,10 +228,14 @@ term_to_codes(Term,Structure,Var0,Var,Codes0,Codes) :-
          ->	Term=[Term1|Terms],
 	        get_listcode(Term1,Terms,Structure,Var0,Var,Codes0,Codes)
 	 ;	structure(Term)
-	 ->	Term =.. [Fun,Arg1|Args],
-		extern_atom_codes(Fun,Structure,Codes0,[0'(|Codes2]),
-		term_to_codes(Arg1,Structure,Var0,Var1,Codes2,Codes3),
-		cvt_termlist_to_codes(Args,Structure,Var1,Var,Codes3,[0')|Codes])
+	 ->	Term =.. List,
+	 	(List = [Fun,Arg1|Args] ->
+	 		extern_atom_codes(Fun,Structure,Codes0,[0'(|Codes2]),
+			term_to_codes(Arg1,Structure,Var0,Var1,Codes2,Codes3),
+			cvt_termlist_to_codes(Args,Structure,Var1,Var,Codes3,[0')|Codes])
+			; 
+			List = [Fun],
+			extern_atom_codes(Fun,Structure,Codes0,[0'(,0')|Codes]))
 	).
 
 cvt_termlist_to_codes([],_Structure,Var,Var,Codes,Codes).
