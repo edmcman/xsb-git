@@ -42,5 +42,6 @@ test:-
 	term_to_atom(f(a,1,['3cpio',d(3)]),F,[ignore_ops(true)]),writeln(F),fail.
 test:- 
 	term_to_atom(f(a,1,['3cpio',d(3)]),F,[ignore_ops(true),quoted(true)]),writeln(F),fail.
-
+test:-  
+	term_to_atom(foo(),F),writeln(F),fail.
 test.
