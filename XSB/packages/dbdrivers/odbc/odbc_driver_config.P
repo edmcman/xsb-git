@@ -189,6 +189,7 @@ make_odbc_driverH(CC, CC_opts) :-
                 str_cat(Module, LibrarySuffix, SharedLib),
                 force_rename_file(SharedLib, ConfigSharedMod),
                 make_odbc_driverH(CC, CC_opts),
+                %% this will regenerate SharedLib in cc/ - needed by Mac
                 consult(Module, [cc(CC), cc_opts(CC_opts)]),
                 force_rename_file(ObjfileX, LibObjFileX)
             )
