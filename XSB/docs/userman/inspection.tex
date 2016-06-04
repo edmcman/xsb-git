@@ -209,10 +209,10 @@ where all elements are as before.  Finally $Status$ is
   descendent of $M_{SCC}$: i.e., subgoals in SCC $M_{SCC}$ depend on
   subgoals in SCC $N_{SCC}$.  However, these numbers should only be
   used relatively: at a given state in the computation there may be
-  fewer than $M_{SCC}$ Sccs~\footnote{XSB keeps track of SCCs through
+  fewer than $M_{SCC}$ Sccs.\footnote{XSB keeps track of SCCs through
     an algorithm similar to depth-first search: the numbers associated
     with subgoals are the depth-first numbers of the minimal
-    back-dependency of a subgoal (cf.~\cite{SaSw98})}.
+    back-dependency of a subgoal (cf.~\cite{SaSw98})}
 \ei
 
 
@@ -550,9 +550,9 @@ negative dependence.\footnote{An alternative definition of the RDG has
   in Section~\ref{sec:dependency-graph-manipulation}.}
 %
   A pair $(S,A)$ and its incident edges are removed from the RDG when
-  the truth value of $A$ changes, and of course when $S$ is abolished.
-\footnote{The truth value of an atom for a given subgoal may change
-  when a suspended state is further evaluated, so that depending when
+  the truth value of $A$ changes, and of course when $S$ is
+  abolished.\footnote{The truth value of an atom for a given subgoal may
+    change when a suspended state is further evaluated, so that depending when
   a computation is suspended, it is possible though rare that a given
   atom may have a definite truth value when associated with one
   subgoal, but the truth value may not have been propiaged to another
@@ -1013,11 +1013,11 @@ A tripwire represents an unexpected property of a derivation: such as
 an excessive use of time or memory; an unexpected number or complexity
 of tabled subgoals or answers; or an unexpected number of mutually
 dependent tabled subgoals.  Depending both on the class of a tripwire
-and on how ©©XSB's flags are set, a tripwire may have different effects.
+and on how XSB's flags are set, a tripwire may have different effects.
 Any tripwire may be treated as an error so that it throws an exception
 just as any other error.  {\em Inspectable} tripwires may additionally
 be considered as inspection points, and when hit may suspend the
-derivation and create a break point.~\footnote{Note that such a
+derivation and create a break point.\footnote{Note that such a
   suspension makes available for inspection the state of the
   derivation at the point the tripwire was activated.  If inspection
   points were implemented using ISO errors, state could only be made
@@ -1027,9 +1027,14 @@ derivation and create a break point.~\footnote{Note that such a
 %
 In such a case, a short explanation will be made of how a tripwire was
 encountered, along with suggestions about how to further inspect the
-suspended derivation.\footnote{This is the default behavior for XSB:
+suspended derivation.\footnote{
+  %% 
+  This is the default behavior for XSB:
   handling of tripwires can be overridden by the user,
-  cf. Section~\ref{}.}  {\em Correctable} tripwires are a subset of
+  as explained later in this section.
+}
+%%
+{\em Correctable} tripwires are a subset of
 inspectable tripwires for which an automatic action may be taken to
 remedy the situation, such as rewriting a subgoal or an answer whose
 size is greater than a given limit, by using subgoal abstraction or
