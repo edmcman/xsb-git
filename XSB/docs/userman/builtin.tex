@@ -5155,15 +5155,18 @@ fail, instantiates {\tt TV} with either {\tt true} or {\tt undefined},
 depending on the truth value of {\tt Goal} in the well-founded
 semantics.  {\tt Goal} need not be tabled itself.  Note that {\tt
   Goal} might succeed with truth value {\tt undefined} before
-succeeding with truth value {\tt true}, so that to avoid confusion,
-{\tt call\_tv/2} should usually be invoked as a top-level goal.
+succeeding with truth value {\tt true}.
+%, so that to avoid confusion,
+%{\tt call\_tv/2} should usually be invoked as a top-level goal.
 
-Since {\tt call\_tv/2} actually calls {\tt Goal}, if {\tt Goal} fails,
-{\tt call\_tv/2} will fail; if {\tt Goal} succeeds unconditionally (is
-true in the well-founded semantics), {\tt call\_tv/2} will succeed
-unconditionally; and if if {\tt Goal} succeeds conditionally (is
-neither true nor false int the well-founded semantics) {\tt
-  call\_tv/2} will itself succeed unconditionally.
+Since {\tt call\_tv/2} is a meta-preducate that actually calls {\tt
+  Goal}, {\tt call\_tv/2} will have the same truth value as {\tt
+  Goal}.  In other words, if {\tt Goal} fails, {\tt call\_tv/2} will
+fail; if {\tt Goal} succeeds unconditionally (is true in the
+well-founded semantics), {\tt call\_tv/2} will succeed
+unconditionally; and if {\tt Goal} succeeds conditionally (is neither
+true nor false in the well-founded semantics) {\tt call\_tv/2} will
+itself succeed conditionally.
 
 An alternative approach would be to call {\tt
   get\_residual(Goal,DelayList)}: {\tt Goal} is true at a given state
@@ -5172,6 +5175,34 @@ of an evaluation iff {\tt get\_residual(Goal,DelayList)} succeeds with
 truth value {\tt true}; however if {\tt Goal} is not completed,
 calling {\tt get\_residual(Goal,DelayList)} may lead to confusing
 results.
+
+{\bf Examples}
+
+The following example shows that {\tt call\_tv/2} propagates the truth
+value of {\tt Goal}:
+\begin{small}
+\begin{verbatim}
+| ?-  call_tv(undefined,_TV),writeln(has_value(_TV)).
+has_value(undefined)
+
+undefined
+\end{verbatim}
+\end{small}
+
+The second example shows that {\tt call\_tv/2} shows the truth value
+of {\tt Goal} alone, regardless of where in larger derivation {\tt
+  Goal} is called.
+%
+\begin{small}
+\begin{verbatim}
+call_tv(undefined,_TV1),writeln(call1(_TV1)),call_tv(true,_TV2),writeln(call2(_TV2)).
+call1(undefined)
+call2(true)
+
+undefined   << top-level conjunctive query is undefined.
+\end{verbatim}
+\end{small}
+
 
 Error cases are the same as {\tt call/1}.
 
@@ -5546,7 +5577,7 @@ behavior of the suspended derivation.
   timed\_call(Goal,OldOptions)} at interpreter index $N-1$, {\tt Goal}
   is made to behave as if it had been called with {\tt
     timed\_call(Goal,NewOptions)}.  I.e., {\tt NewOptions} rather than
-  {\tt OldOptions} takes effect as soon as the suspended goalß is
+  {\tt OldOptions} takes effect as soon as the suspended goal is
   resumed.  If {\tt NewOptions} is the empty list, this has the effect
   of removing any interrupts that would be due to the timed call.
 %
