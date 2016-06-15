@@ -1517,9 +1517,10 @@ call(G,A1,A2,A3,A4,A5,A6,A7,A8,A9) :- calln(9,A1,A2,A3,A4,A5,A6,A7,A8,A9,G).
 call(G,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10) :- calln(10,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,G).
 
 call_tv(Call,Ans):-
+	xwam_state(2,DelayReg1),
         call(Call),
-	xwam_state(2,DelayReg),
-        (DelayReg =:= 0
+	xwam_state(2,DelayReg2),
+        (DelayReg1 =:= DelayReg2
          ->     Ans = true
          ;      Ans = undefined
         ).
