@@ -2599,7 +2599,7 @@ current_timed_call(Index,[repeating(Rep_interval,Rep_handler),max(Max_interval,M
 %	get_interpreter_index(Index),
        '_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime,_Orig).
 
-:- export remove_timed_call_state/1.
+%:- export remove_timed_call_state/1.
 remove_timed_call_state(Index):- 
 	retractall('_$timed_call_rep_handler'(Index,_,_)),
 	retractall('_$timed_call_max_handler'(Index,_,_,_,_)),
@@ -2625,6 +2625,26 @@ timed_call_modify(Options):-
             ;  machine:stat_walltime(Walltime),
 %	       writeln('_$timed_call_rep_max_handler'(UpIndex,Rep_handl,Rep_int,Max_handl,Max_int,Walltime,Orig)),
 	       assert('_$timed_call_rep_max_handler'(UpIndex,Rep_handl,Rep_int,Max_handl,Max_int,Walltime,Max_int)) ) ).
+
+:- export timed_call_cancel/0.
+timed_call_cancel:- 
+	get_interpreter_index(Index),
+	Cancel_index is Index-1,
+	timed_call_cancel_1(Cancel_index),
+	cancel_sleeper_thread.
+
+timed_call_cancel_1(Index):- 
+	'_$timed_call_rep_handler'(Index,_Rep_handler,_Rep_interval),!,
+	retractall('_$timed_call_rep_handler'(Index,_,_)).
+%        assert('_$timed_call_max_handler'(Index,true,0,0,0)).
+timed_call_cancel_1(Index):- 
+	'_$timed_call_max_handler'(Index,_Max_handler,_Max_interval,_Walltime,_Orig_interval),!,
+	retractall('_$timed_call_max_handler'(Index,_,_,_,_)).
+%        assert('_$timed_call_max_handler'(Index,true,0,0,0)).
+timed_call_cancel_1(Index):- 
+        '_$timed_call_rep_max_handler'(Index,_Rep_handler,_Rep_int,_Max_handler,_Max_int,_Walltime,_Orig),!,
+	retractall('_$timed_call_rep_max_handler'(Index,_,_,_,_,_,_)).
+%        assert('_$timed_call_max_handler'(Index,true,0,0,0)).
 
 bounded_call(Goal,MaxMemory,MaxTime,Handler):-
 	check_pos_integer(MaxMemory,bounded_call/4,2),
