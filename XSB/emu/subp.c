@@ -1024,14 +1024,16 @@ executeSleeperThread(void * interval) {
 
 xsbBool cancelSleeperThread(void) {
 #ifdef WIN_NT
-  //  if (executing_sleeper_thread){
-  //    if (TerminateThread(executing_sleeper_thread,NULL) {
-  //	xsb_warn(CTXTc "could not kill sleeper thread\n");
-  //      }
-  //    CloseHandle(executing_sleeper_thread);
-  //    executing_sleeper_thread = (HANDLE) NULL;
-  //  }
-  return FALSE;  // should be defined??
+  /*
+  */
+  if (executing_sleeper_thread){
+    if (!TerminateThread(executing_sleeper_thread,0)) {
+      xsb_warn(CTXTc "could not kill sleeper thread\n");
+    }
+    CloseHandle(executing_sleeper_thread);
+    executing_sleeper_thread = (HANDLE) NULL;
+  }
+  //return FALSE;  // should be defined??
 #else
   if (executing_sleeper_thread) { // previous sleeper
     int killrc;
