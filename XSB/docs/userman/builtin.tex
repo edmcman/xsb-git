@@ -5540,7 +5540,7 @@ also throws these other errors.
 
 %-------------------------------------------------------
 
-\ourmoditem{current\_timed\_call(?Index,?DisplayOptions)}{current\_timed\_call/2}{standard}
+\ourstandarditem{current\_timed\_call(?Index,?DisplayOptions)}{current\_timed\_call/2}{}
 %
 If there is an active timed call, invoked by {\tt
   timed\_call(Goal,Options)}, at interpreter index {\tt Index}, this
@@ -5641,6 +5641,16 @@ also throws the following error.
 \ei
 \ei
 %
+
+\ourstandarditem{timed\_call\_cancel}{timed\_call\_cancel/0}{}
+%
+When called at interpreter index $N$ removes any handlers for a timed
+call invoked at level $N-1$.  That is, if {\tt Goal} was called at
+interpreter level $N$ via {\tt timed\_call/2}, cancelling will remove
+any repeating or maximum interrupts.  When interpreter level $N-1$ is
+later resumed, {\tt Goal} will continue execution as if it were called
+via the normall calling mechanism.  If there is no timed call active
+at level $N-1$, the predicate succeeds with no effects.
 
 %-------------------------------------------------------
 
