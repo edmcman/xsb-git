@@ -93,6 +93,8 @@
 :- export timer_interrupt_trap/2.
 :- export timed_call/2,timed_call_modify/1.
 :- export current_timed_call/2.
+:- export remove_timed_call_state/1.
+:- export timed_call_cancel/0.
 
 :- export memory_bounded_call/3.
 
@@ -160,9 +162,10 @@
 	  psc_name/2, psc_type/2, psc_set_shared/2,
 	  stat_set_flag/2, stat_flag/2, term_compare/3,
 	  stat_sta/1, stat_cputime/1, stat_walltime/1,
-%str_len/2,
+          %%str_len/2,
           term_psc/2, term_new/2, term_new_mod/3, term_type/2,
-   verify_attribute_handler/4, conget/2
+          cancel_sleeper_thread/0,
+          verify_attribute_handler/4, conget/2
 	  from machine.
 :- import calln/3,calln/4,calln/5,calln/6,calln/7,calln/8,calln/9,calln/10,calln/11,calln/12 from machine.
 :- import sys_syscall/5,sys_syscall/9 from machine.
