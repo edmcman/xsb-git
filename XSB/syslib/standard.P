@@ -2599,6 +2599,7 @@ current_timed_call(Index,[repeating(Rep_interval,Rep_handler),max(Max_interval,M
 %	get_interpreter_index(Index),
        '_$timed_call_rep_max_handler'(Index,Rep_handler,Rep_interval,Max_handler,Max_interval,_Walltime,_Orig).
 
+% needs to be exported for use in call_cleanup handlers.
 remove_timed_call_state(Index):- 
 	retractall('_$timed_call_rep_handler'(Index,_,_)),
 	retractall('_$timed_call_max_handler'(Index,_,_,_,_)),
