@@ -333,11 +333,13 @@ static int mark_cell(CTXTdeclc CPtr cell_ptr)
       cell_val = *cell_ptr;
       arity = get_arity((Psc)(cell_val)) ;
       p = ++cell_ptr ;
-      if (mark_overflow)
-	{ while (--arity)
-	    { m += mark_cell(CTXTc ++p) ; }
-	}
-      else while (--arity) push_to_mark(++p) ;
+      if (arity > 0) {
+	if (mark_overflow )
+	  { while (--arity)
+	      { m += mark_cell(CTXTc ++p) ; }
+	  }
+	else while (--arity) push_to_mark(++p) ;
+      }
       goto mark_more ;
     }
   }
