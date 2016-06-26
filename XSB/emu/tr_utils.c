@@ -4849,17 +4849,20 @@ void remove_incomplete_tries(CTXTdeclc CPtr bottom_parameter)
 	//	check_table_cut = FALSE;  /* permit cuts over tables */
 	warned = TRUE;
       }
-      //     printf("---- ");print_subgoal(CTXTc stdout, CallStrPtr) ; printf("\n");
-      /* TLS: will need to change when incr combined with subsumptive */
-      //     else if (IsVariantSF(CallStrPtr)) {
-      if (IsVariantSF(CallStrPtr)) {
-       SET_TRIE_ALLOCATION_TYPE_SF(CallStrPtr); // set smBTN to private/shared
-       tif = subg_tif_ptr(CallStrPtr);
-       delete_branch(CTXTc CallStrPtr->leaf_ptr, &tif->call_trie,VARIANT_EVAL_METHOD); /* delete call */
-       //       delete_variant_call(CTXTc CallStrPtr,FALSE); // delete answers + subgoal
-       maybe_detach_incremental_call_single(CTXTc CallStrPtr,DONT_INVALIDATE);
-       abolish_table_call_single_nocheck_no_nothin(CTXTc CallStrPtr,SHOULDNT_COND_WARN);
-     } else remove_calls_and_returns(CTXTc CallStrPtr);  // not sure why this is used, and not delete_subsumptive_predicate_table
+  if (flags[CTRACE_CALLS] && !subg_forest_log_off(CallStrPtr))  {		\
+    sprint_subgoal(CTXTc forest_log_buffer_1,0,(VariantSF)CallStrPtr);	\
+    fprintf(fview_ptr,"abort(%s,%d).\n",forest_log_buffer_1->fl_buffer,ctrace_ctr++);  
+  }
+  /* TLS: will need to change when incr combined with subsumptive */
+  //     else if (IsVariantSF(CallStrPtr)) {
+  if (IsVariantSF(CallStrPtr)) {
+    SET_TRIE_ALLOCATION_TYPE_SF(CallStrPtr); // set smBTN to private/shared
+    tif = subg_tif_ptr(CallStrPtr);
+    delete_branch(CTXTc CallStrPtr->leaf_ptr, &tif->call_trie,VARIANT_EVAL_METHOD); /* delete call */
+    //       delete_variant_call(CTXTc CallStrPtr,FALSE); // delete answers + subgoal
+    maybe_detach_incremental_call_single(CTXTc CallStrPtr,DONT_INVALIDATE);
+    abolish_table_call_single_nocheck_no_nothin(CTXTc CallStrPtr,SHOULDNT_COND_WARN);
+  } else remove_calls_and_returns(CTXTc CallStrPtr);  // not sure why this is used, and not delete_subsumptive_predicate_table
     }
     openreg += COMPLFRAMESIZE;
   }
