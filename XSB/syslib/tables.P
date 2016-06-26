@@ -1739,12 +1739,16 @@ subgoal_scc_member([_|R],Subgoal,Index):-
 :- dynamic max_incomplete_subgoals_user_handler/0.
 
 max_incomplete_subgoals_handler:- 
-     max_incomplete_subgoals_user_handler,!.
+   max_incomplete_subgoals_user_handler,!.
+max_incomplete_subgoals_handler:- 
+   clause(max_incomplete_subgoals_user_handler,_),
+   warning('max_incomplete_subgoals_user_handler was called, but did not succeed.'),
+   !.
 max_incomplete_subgoals_handler:- 
     max_incomplete_subgoals_default_handler.
 
 max_incomplete_subgoals_default_handler:- 
-	      break_for_tripwires([tables:max_incomplete_subgoals_header]).
+   break_for_tripwires([tables:max_incomplete_subgoals_header]).
 
 max_incomplete_subgoals_header:- 
   inc_subg_analysis_info(SubgNum,SCCNumber),
@@ -1770,9 +1774,13 @@ inc_subg_analysis_info(SubgNum,SCCNum):-
 :- dynamic max_scc_subgoals_user_handler/0.
 
 max_scc_subgoals_handler:- 
-     max_scc_subgoals_user_handler,!.
+   max_scc_subgoals_user_handler,!.
 max_scc_subgoals_handler:- 
-    max_scc_subgoals_default_handler.
+   clause(max_scc_subgoals_user_handler,_),
+   warning('max_scc_subgoals_user_handler was called, but did not succeed.'),
+   !.
+max_scc_subgoals_handler:- 
+   max_scc_subgoals_default_handler.
 
 max_scc_subgoals_default_handler:- 
 	      break_for_tripwires([tables:max_scc_subgoals_header]).
@@ -1811,6 +1819,10 @@ format(Msg):- format(Msg,[]).
 max_table_subgoal_size_handler:- 
      max_table_subgoal_size_user_handler,!.
 max_table_subgoal_size_handler:- 
+   clause(max_table_subgoal_size_user_handler,_),
+   warning('max_table_subgoal_size_user_handler was called, but did not succeed.'),
+   !.
+max_table_subgoal_size_handler:- 
     max_table_subgoal_size_default_handler.
 
 max_table_subgoal_size_default_handler:- 
@@ -1832,6 +1844,10 @@ max_table_subgoal_size_header:-
 
 max_table_answer_size_handler:- 
      max_table_answer_size_user_handler,!.
+max_table_answer_size_handler:- 
+   clause(max_table_answer_size_user_handler,_),
+   warning('max_table_answer_size_user_handler was called, but did not succeed.'),
+   !.
 max_table_answer_size_handler:- 
     max_table_answer_size_default_handler.
 
@@ -1855,6 +1871,10 @@ max_table_answer_size_header:-
 max_answers_for_subgoal_handler:- 
      max_answers_for_subgoal_user_handler,!.
 max_answers_for_subgoal_handler:- 
+   clause(max_answers_for_subgoal_user_handler,_),
+   warning('max_answers_for_subgoal_user_handler was called, but did not succeed.'),
+   !.
+max_answers_for_subgoal_handler:- 
     max_answers_for_subgoal_default_handler.
 
 max_answers_for_subgoal_default_handler:- 
@@ -1875,6 +1895,10 @@ max_answers_for_subgoal_header:-
 
 max_memory_handler:- 
      max_memory_user_handler,!.
+max_memory_handler:- 
+   clause(max_memory_user_handler,_),
+   warning('max_memory_user_handler was called, but did not succeed.'),
+   !.
 max_memory_handler:- 
     max_memory_default_handler.
 

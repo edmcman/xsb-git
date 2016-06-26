@@ -120,6 +120,8 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 	t_assert_2/2
    from assert.
 
+:- import clause/2 from assert.
+
 :- import list_to_assoc/2,get_assoc/3 from assoc_xsb.
 
 :- import reverse/2 from basics.
@@ -166,6 +168,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 :- import is_most_general_term/1 from standard.
 :- import call/3 from standard.
 :- import writeq/1 from standard.
+:- import warning/1 from standard.
 
 :- import variant/2 from subsumes.
 :- import invalidate_table_for/2 from usermod.
