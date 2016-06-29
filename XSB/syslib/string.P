@@ -539,7 +539,15 @@ read_atom_to_term(Atom,Term) :-
 	read_atom_to_term(Atom,Term,_).
 
 read_atom_to_term(Atom,Term,Vars) :-
-	file_open([Atom,'.'],sr,FileDes),
+	(atom(Atom)
+	 ->	true
+	 ;	type_error(atom,Atom,read_atom/2,1)
+	),
+	(Atom == [] % hack to handle [] treatment as '' ambiguity in ptoc_longstring.
+	 ->	atom_codes(Atom1,"'[]'")
+	 ;	Atom1 = Atom
+	),
+	file_open([Atom1,'.'],sr,FileDes),
 	(file_read_foe(FileDes,Term,Vars)
 	 ->	file_close(FileDes)
 	 ;	file_close(FileDes),
@@ -547,7 +555,15 @@ read_atom_to_term(Atom,Term,Vars) :-
 	).
 
 read_atom_to_term_print_on_error(Atom,Term,Vars) :-
-	file_open([Atom,'.'],sr,FileDes),
+	(atom(Atom)
+	 ->	true
+	 ;	type_error(atom,Atom,read_atom_to_term_print_on_error/3,1)
+	),
+	(Atom == []  % hack to handle [] treatment as '' in ptoc_longstring.
+	 ->	atom_codes(Atom1,"'[]'")
+	 ;	Atom1 = Atom
+	),
+	file_open([Atom1,'.'],sr,FileDes),
 	(standard:catch(file_read(FileDes,Term,Vars),E,read_handler(E))
 	 ->	file_close(FileDes)
         ;
