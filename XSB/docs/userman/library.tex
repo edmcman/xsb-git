@@ -2783,6 +2783,12 @@ Given an arbitrary Prolog term, {\tt Term}, that is to be hashed into
 a table of {\tt HashSize} buckets, this predicate returns a hash value
 for {\tt Term} that is between {\tt 0} and {\tt HashSize -1}.
 
+\ourmoditem{crypto\_hash(+Type,+Input,-Output)}{crypto\_hash/3}{machine}
+%
+Given an atom {\tt Input}, produces an encrypted string {\tt Output}
+according to the algorithm specified in {\tt Type}, which currently
+can be {\tt sha1} or {\tt md5}.
+
 \ourrepeatmoditem{pretty\_print(+ClausePairs)}{pretty\_print/1}{pretty\_print}
 \ourmoditem{pretty\_print(+Stream,+ClausePairs)}{pretty\_print/2}{pretty\_print}
 
