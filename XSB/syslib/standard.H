@@ -167,6 +167,7 @@
           cancel_sleeper_thread/0,
           verify_attribute_handler/4, conget/2
 	  from machine.
+:- import cancel_sleeper_thread/0 from machine.
 :- import calln/3,calln/4,calln/5,calln/6,calln/7,calln/8,calln/9,calln/10,calln/11,calln/12 from machine.
 :- import sys_syscall/5,sys_syscall/9 from machine.
 
