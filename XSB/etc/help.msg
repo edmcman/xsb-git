@@ -42,8 +42,8 @@ Flags:
            --quietload : don't show the `module loaded' messages
             --noprompt : don't show prompt (for non-interactive use)
                     -S : set default tabling method to call-subsumption
- --max_subgoal_depth N : set maximum tabled subgoal depth to N (default is maximum integer)
---max_subgoal_action A : set action on maximum subgoal depth: e(rror)/a(bstract)/w(arn)
+ --max_subgoal_size  N : set maximum tabled subgoal size to N (default is maximum integer)
+--max_subgoal_action A : set action on maximum subgoal size: e(rror)/a(bstract)/w(arn)
          --max_tries N : allow up to N tries for interning terms
        --max_threads N : maintain information for up to N threads (MT engine only)
        --max_mqueues N : allow up to N message queues (MT engine only)
