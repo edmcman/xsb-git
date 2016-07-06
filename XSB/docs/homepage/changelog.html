@@ -18,6 +18,84 @@
 
 <h1>ChangeLog</h1>
 
+<h2> Version 3.7 (Two-Buck Chuck)</h2> 
+
+<ul>
+<li><b> Enhancements </b></li>
+<ul>
+<li> XSB now supports a novel set of related debugging techniques that
+allow dynamic inspection of a logical derivation.<ul>
+<li> A derivation may be suspended and inspected via its table state,
+its subgoal dependency graph, its incremental dependency graph, and
+its residual dependency graph.  The graph views may also be abstracted
+using homomorphisms.  Each of these views displays aspects of a
+computation that can be useful for different purposes.</li>
+<li> A derivation may be suspended using
+dynamically-modifiable <i>tripwires</i> which are activiated when a
+derivation takes more time or space than expected or allowed. Tripwire
+conditions include derivation time, amount of memory used, size of
+goal, size of answer, number of non-completed tabled calls, and
+recursive component size.  Tripwires are quite general, and can also
+be used to apply abstraction to a subgoal or answer, or simply to
+throw an error.</li>
+<li> During a debugging session a derivation can also be suspended
+via <tt>ctrl-c</tt>, and then inspected in the same manner.</li>
+<li> XSB's handling of break levels has been extended to safely
+support inspection of suspended tabled derivations.</li>
+</ul></li>
+<li> XSB's computation of the well-founded semantics (WFS) now
+automatically performs the answer completion operation, which makes
+XSB's resolution method complete for WFS.  (This is currently
+available in the single-threaded engine only.)</li>
+<li> Answer Subsumption now works correctly and efficiently with
+undefined answers.  (Also, miscellaneous bugs in declarations for
+answer subsumption have been fixed.)  </li>
+<li> There is now better support for 64-bit Cygwin as well as better
+support for XSB's packages under Windows.</li>
+<li> Performance improvements for tabling with call subsumption are
+available using a new <tt>table_index</tt> directive to specify
+alternate indexing of tables.</li>
+<li> XSB's <tt>timed_call/1</tt> is now more powerful and supports a
+mixture of co-routining capabilities.  These capabilities can be
+modified or cancelled during the course of inspecting a suspended
+derivation.</li>
+<li> A new predicate, <tt>crypto_hash/3</tt> encrypts atoms according
+to the <tt>md5</tt> or <tt>ssh1</tt> algorithms.
+</ul>
+
+<li><b> Bug fixes and minor changes </b></li>
+<ul>
+<li>Numerous fixes and enhancements for abstracting tabled subgoals
+and answers as well as for checking their size.  
+<ul><li>Enhancements were also made to tabling routines to handle very
+large subgoal or answer terms.  Term sizes in the tens of thousands
+with many thousands of variables are now supported for
+subgoals, and sizes in the hundred thousands with tens of thousands of
+variables are supported for answers.</li>
+<li>  Such sizes may indicate errors in many applications, so
+these sizes may be restricted via tripwires.</li></ul></li>
+<li> Various fixes for obscure but important errors in heap garbage
+collection, in <tt>get_residual/2</tt>; in repeatedly asserting and
+retracting the same dynamic clauses; and in compiler register
+allocation.  In addition, various memrory problems uncovered by Valgrind were fixed.</li>
+<li> <tt>statistics/0</tt> now displays better consistency for various
+categories of memory usage. For <tt>statistics/2</tt>,
+a <tt>table_ops</tt> key has been added, and <tt>statistics/2</tt> now
+includes an SCC count for the <tt>incomplete_tables</tt> key.</li>
+<li> Various packages have been made more robust.  ODBC now closes
+cursors on abort.  Socket handling has been improved in several ways,
+such as when XSB catches signals.</li>
+<li> Minor improvements to forest logging including stream flushing
+and better designation of incomplete tables closed due to a
+throw.</li>
+<li> Structures for tabled subgoals now require less space.</li> 
+<li> Handling has been improved for terms of the form functor() by
+system predicates.</li>
+</ul>
+</ul>
+
+
+
 <h2> Version 3.6 (Gazpatcho)</h2> 
 
 <ul>
