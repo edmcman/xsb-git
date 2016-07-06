@@ -5,7 +5,7 @@ maintenance.  Here are the notes from putting out version 2.2.
 To update the web page do the following steps.
 
 -- make whatever changes you need in docs/newpages, and when you are
-   done update cvs.
+   done update svn.
 
 -- log in to shell.sourceforge.net as xsb. This is done as:
 
