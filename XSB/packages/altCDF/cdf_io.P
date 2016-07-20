@@ -35,7 +35,7 @@
 :- import component_table_int/3 from usermod.
 :- import caching_cdf/1 from usermod.
 
-:- import pretty_print/1 from newpp.
+%%:- import pretty_print/1 from newpp.
 :- import newIntRule/3,newDLRule/3,newDLTableFact/2,
 	 newExtTermBatch/2,transform_intensional_rules/4,
 	 abolish_cdf_tables/0, cdf_id_fields/4, cdf_root/1 from cdf_init_cdf.
@@ -225,7 +225,11 @@ write_component_intensional_1(Comp,Call,Head,SrcArg):-
 	Call =..[_|L],
 	NewHead =.. [Head|L],
 	\+ is_dl_rule(Comp,NewHead,Body),
-	pretty_print(clause(NewHead,Body)).
+	%% pretty_print calls write_term, which currently writes (most)
+	%%   operators with enclosing parens, which all reads choke on...
+	%%pretty_print(clause(NewHead,Body)).
+	%% so replace it with the following...
+	writeq((NewHead:-Body)), writeln('.').
 
 
 is_dl_rule(Comp,Head,Body):- 
@@ -492,9 +496,7 @@ dump_extensional_isa_component(IDList,CDFDir,Opts) :-
 		sort(AllIsas0,AllIsas)
 	 ;	AllIsas = PrimaryIsas
 	),
-	writeln(userout,call_write_cdf_list_All),
 	write_cdf_list(OStr,AllIsas),
-	writeln(userout,call_dump_attrs),
 	dump_attrs(PrimaryIsas,OStr),
 	close(OStr).
 
