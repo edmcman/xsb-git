@@ -159,7 +159,7 @@ extern byte *inst_begin_gl;       /* ptr to beginning of instruction array. */
 extern byte *current_inst;
 #endif
 
-extern Cell answer_return_inst, hash_handle_inst,
+extern Cell answer_return_inst, hash_handle_inst,continue_consumer_inst,
 	    resume_compl_suspension_inst, fail_inst, dynfail_inst, 
   halt_inst, proceed_inst, trie_fail_inst,
   resume_compl_suspension_inst2,completed_trie_member_inst,
