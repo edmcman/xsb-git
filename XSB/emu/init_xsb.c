@@ -168,6 +168,7 @@ Cell dynfail_inst;
 Cell halt_inst;
 Cell proceed_inst;
 Cell completed_trie_member_inst;
+Cell continue_consumer_inst;
 byte *check_interrupts_restore_insts_addr;
 
 /* these three are from orient_xsb.c */
@@ -1540,6 +1541,7 @@ void init_symbols(CTXTdecl)
   cell_opcode(&hash_handle_inst) = hash_handle;
   cell_opcode(&trie_fail_inst) = trie_fail;
   cell_opcode(&completed_trie_member_inst) = completed_trie_member;    
+  cell_opcode(&continue_consumer_inst) = continue_consumer;
 
   check_interrupts_restore_insts_addr = calloc((3+1),sizeof(Integer));
   write_byte(check_interrupts_restore_insts_addr,&Loc,check_interrupt);

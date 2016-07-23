@@ -1294,7 +1294,7 @@ XSB_Start_Instr(resume_compl_suspension,_resume_compl_suspension)
   if (csf_pcreg(breg) == (pb)(&resume_compl_suspension_inst)) {
     CPtr csf = breg;
     
-    //     printf(">>>> csf\n");
+    //    printf(">>>> old_rcsi\n");
 
     /* Switches the environment to a frame of a subgoal that was	*/
     /* suspended on completion, and sets the continuation pointer.	*/
@@ -1312,7 +1312,7 @@ XSB_Start_Instr(resume_compl_suspension,_resume_compl_suspension)
     breg = csf_prevcsf(csf);
     lpcreg = cpreg;
   } else {
-    //     printf(">>>> csp\n");
+    //    printf(">>>> new_recs\n");
     CPtr csf = cs_compsuspptr(breg);
     /* Switches the environment to a frame of a subgoal that was	*/
     /* suspended on completion, and sets the continuation pointer.	*/
@@ -1336,6 +1336,48 @@ XSB_Start_Instr(resume_compl_suspension,_resume_compl_suspension)
   }
   //  print_local_stack_nonintr(CTXTc "resume_cs");
 
+}
+XSB_End_Instr()
+
+XSB_Start_Instr(continue_consumer,_continue_consumer)
+
+  //       printf(">>>> continue_consumer is called %d\n",infcounter);
+  //      print_local_stack_nonintr(CTXTc "resume_cs");
+  //       print_instr = 1;
+  //   alt_dis();
+{
+    Pair undefPair;				      
+    struct Table_Info_Frame * Utip;		      
+    int isNew;				     
+
+    printf(">>>> continue consumer\n");
+
+    //    if (csf_pcreg(breg) == (pb)(&resume_compl_suspension_inst)) {
+      CPtr conscp = breg;
+    
+      /* Switches the environment to a frame of a subgoal that was	*/
+      /* suspended on completion, and sets the continuation pointer.	*/
+      check_glstack_overflow(0,lpcreg,OVERFLOW_MARGIN);
+      freeze_and_switch_envs(conscp, NLCP_SIZE);
+      ptcpreg = nlcp_ptcp(conscp);
+      //    neg_delay = (nlcp_neg_loop(conscp) != FALSE);
+      delayreg = nlcp_pdreg(conscp);
+      cpreg = nlcp_cpreg(conscp); 
+      ereg = nlcp_ereg(conscp);
+      ebreg = nlcp_ebreg(conscp);
+      hbreg = nlcp_hreg(conscp);
+      save_find_locx(ereg);
+      hbreg = hreg;
+      breg = nlcp_prevbreg(conscp);
+      set_gfp_state(conscp);
+      nlcp_pcreg(conscp) = (pb) &answer_return_inst;
+      undefPair = insert("brat_undefined", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
+      Utip = get_tip(CTXTc pair_psc(undefPair));				
+      delay_negatively(TIF_Subgoals(Utip));				
+
+      lpcreg = cpreg;
+      printf("done with continue consumer\n");
+      //    }
 }
 XSB_End_Instr()
 
