@@ -1223,15 +1223,28 @@ void tstCreateTSIs(struct th_context *,TSTNptr);
 /*----------------------------------------------------------------------*/
 
 #ifdef CALL_ABSTRACTION
+
+/* TES: fix for 32 bits*/
 #define get_var_and_attv_nums(var_num, attv_num, abstr_size, tmp_int)   \
   var_num = (int)tmp_int & 0xffff;					\
   abstr_size = ((int)tmp_int & 0x3f0000) >>16;				\
-  attv_num = (int)tmp_int >> 27
+  /*  gfp_state = (int) tmp_int & 0x800000;			*/	\
+  attv_num = (int)tmp_int >> 28
 
 #define get_template_size(var_num,tmp_int)   var_num = tmp_int & 0xffff
 
+#define get_gfp_state(ccp,gfp_state) {		    \
+    CPtr answer_template_heap = nlcp_template(ccp); \
+    gfp_state =  (cell(answer_template_heap)) & 800000; /* bit 28 */ \
+  }
+
+#define set_gfp_state(ccp) {			\
+    CPtr answer_template_heap = nlcp_template(ccp);			\
+    cell(answer_template_heap) =   (cell(answer_template_heap)) | 800000; /* bit 28 */ \
+  }
+
 #define encode_ansTempl_ctrs(Attvars,AbstractSize,Ctr)   \
-  makeint((Attvars << 27) | (AbstractSize << 16) | Ctr)
+  makeint((Attvars << 28) | (AbstractSize << 16) | Ctr)
 #else
 #define get_var_and_attv_nums(var_num, attv_num, tmp_int)	\
   var_num = (int) (tmp_int & 0xffff);				\
