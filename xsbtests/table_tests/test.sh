@@ -177,6 +177,8 @@ rm test_ec.xwam
 ../gentest.sh "$XEMU -l $options" test_large_tabled_terms "test."
 #--------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_unknown "test."
+#--------------------------------------------------
+../gentest.sh "$XEMU -l $options" test_wcs "test."
 
 #VALGRIND
 if test "$valgrind" = "true"; then
