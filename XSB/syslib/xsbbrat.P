@@ -4,6 +4,7 @@
 % obsolescent.
 :- export brat_undefined/0.
 :- export floundered_undefined/1.
+:- export l3_undef/0.
 
 :- table brat_undefined/0 as opaque.
 brat_undefined :- tnot(brat_undefined).
@@ -11,14 +12,18 @@ brat_undefined :- tnot(brat_undefined).
 :- table floundered_undefined/1 as opaque.
 floundered_undefined(a) :- tnot(floundered_undefined(a)).
 
-%:- import writeln/1 from standard.
+:- table l3_undef/0 as opaque.
+l3_undef:- tnot(l3_undef).
 
+%-------------
 % there will probably be more types of undefineds.
 reinitialize_undefineds:- 
 %	writeln(reinitializing),
 	brat_undefined,fail.    % fail for batched; otw cut over table
 reinitialize_undefineds:- 
 	floundered_undefined(a),fail. 
+reinitialize_undefineds:- 
+	l3_undef,fail. 
 reinitialize_undefineds.
 
 ?- reinitialize_undefineds.

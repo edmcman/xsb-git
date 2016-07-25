@@ -1023,6 +1023,16 @@ xsb_flag(character_set,Mode):-
 	 ->	Mode = cp1252
 	 ;	Mode = utf_8
 	).
+xsb_flag(alt_semantics,Mode):- 
+	stat_flag(ALTERNATE_SEMANTICS, Flag),
+	(Flag =:= NAF_L3
+	 ->	Mode = l3
+	 ; Flag =:= WEAK_L3
+	 ->	Mode = weak_l3
+	 ; Flag =:= GFP_SEMANTICS
+	 ->	Mode = gfp
+         ;      Mode = off
+	).
 xsb_flag(errors_with_position,Mode):- 
 	stat_flag(ERRORS_WITH_POSITION, Flag),
 	( Flag =:= 0 -> Mode = off ; Mode = on ).
@@ -1261,14 +1271,24 @@ set_xsb_flag_1(max_memory,Max):-!,
 	     Ram is floor(Ram1/1024),
 	     stat_set_flag(MAX_MEMORY,Ram)
 	 ;  domain_error(positive_number,Max,set_prolog_flag/2,2,max_memory_clause) ).
-% TES: Placeholder for now.
 set_xsb_flag_1(max_memory_action, Action) :-!,
 	(Action == error -> 
 	    stat_set_flag(MAX_MEMORY_ACTION, XSB_ERROR) ; 
 	 (Action == suspend -> 
 	    stat_set_flag(MAX_MEMORY_ACTION, XSB_SUSPEND)
           ; domain_error([error,suspend],Action,set_prolog_flag/2,2,'max_memory_action clause') ) ).
-
+set_xsb_flag_1(alt_semantics,Mode):- 
+        (Mode == l3 -> 
+   	    stat_set_flag(ALTERNATE_SEMANTICS, NAF_L3) ; 
+        (Mode == weak_l3 -> 
+   	    stat_set_flag(ALTERNATE_SEMANTICS, WEAK_L3),
+            set_prolog_flag(unknown,undefined) ; 
+        (Mode == gfp -> 
+   	    stat_set_flag(ALTERNATE_SEMANTICS, GFP_SEMANTICS) ; 
+        (Mode == off -> 
+   	    stat_set_flag(ALTERNATE_SEMANTICS, WFS_SEMANTICS),
+            set_prolog_flag(unknown,error) ; 
+          domain_error([l3,weak_l3,gfp,off],Mode,set_prolog_flag/2,2,'alt_semantics clause') ) ) ) ).
 
 set_xsb_flag_1(ctrace, OnOff) :-!,
 	((OnOff == on ; OnOff == full) -> stat_set_flag(CTRACE_CALLS, 2)
