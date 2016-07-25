@@ -882,6 +882,7 @@ XSB_Start_Instr(answer_return,_answer_return)
     tmp = int_val(cell(answer_template));
 #ifdef CALL_ABSTRACTION
     get_var_and_attv_nums(template_size, attv_num, abstr_size,tmp);
+    altsem_dbg(("template size %d attv_num %d abstr_size %d tmp %lx\n",template_size, attv_num, abstr_size,tmp));
 #else
     get_var_and_attv_nums(template_size, attv_num, tmp);
 #endif
@@ -1285,11 +1286,6 @@ XSB_End_Instr()
 /*-------------------------------------------------------------------------*/
 
 XSB_Start_Instr(resume_compl_suspension,_resume_compl_suspension)
-
-  //       printf(">>>> resume_compl_suspension is called %d\n",infcounter);
-  //      print_local_stack_nonintr(CTXTc "resume_cs");
-  //       print_instr = 1;
-  //   alt_dis();
 {
   if (csf_pcreg(breg) == (pb)(&resume_compl_suspension_inst)) {
     CPtr csf = breg;
@@ -1312,7 +1308,7 @@ XSB_Start_Instr(resume_compl_suspension,_resume_compl_suspension)
     breg = csf_prevcsf(csf);
     lpcreg = cpreg;
   } else {
-    //    printf(">>>> new_recs\n");
+    //     printf(">>>> new_recs\n");
     CPtr csf = cs_compsuspptr(breg);
     /* Switches the environment to a frame of a subgoal that was	*/
     /* suspended on completion, and sets the continuation pointer.	*/
@@ -1339,45 +1335,39 @@ XSB_Start_Instr(resume_compl_suspension,_resume_compl_suspension)
 }
 XSB_End_Instr()
 
-XSB_Start_Instr(continue_consumer,_continue_consumer)
-
-  //       printf(">>>> continue_consumer is called %d\n",infcounter);
-  //      print_local_stack_nonintr(CTXTc "resume_cs");
-  //       print_instr = 1;
-  //   alt_dis();
+XSB_Start_Instr(continue_consumer,_continue_consumer) 
 {
     Pair undefPair;				      
     struct Table_Info_Frame * Utip;		      
     int isNew;				     
 
-    printf(">>>> continue consumer\n");
+    altsem_dbg(">>>> continue consumer\n");
 
-    //    if (csf_pcreg(breg) == (pb)(&resume_compl_suspension_inst)) {
-      CPtr conscp = breg;
+    CPtr conscp = breg;
     
-      /* Switches the environment to a frame of a subgoal that was	*/
-      /* suspended on completion, and sets the continuation pointer.	*/
-      check_glstack_overflow(0,lpcreg,OVERFLOW_MARGIN);
-      freeze_and_switch_envs(conscp, NLCP_SIZE);
-      ptcpreg = nlcp_ptcp(conscp);
-      //    neg_delay = (nlcp_neg_loop(conscp) != FALSE);
-      delayreg = nlcp_pdreg(conscp);
-      cpreg = nlcp_cpreg(conscp); 
-      ereg = nlcp_ereg(conscp);
-      ebreg = nlcp_ebreg(conscp);
-      hbreg = nlcp_hreg(conscp);
-      save_find_locx(ereg);
-      hbreg = hreg;
-      breg = nlcp_prevbreg(conscp);
-      set_gfp_state(conscp);
-      nlcp_pcreg(conscp) = (pb) &answer_return_inst;
-      undefPair = insert("brat_undefined", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
-      Utip = get_tip(CTXTc pair_psc(undefPair));				
-      delay_negatively(TIF_Subgoals(Utip));				
-
-      lpcreg = cpreg;
-      printf("done with continue consumer\n");
-      //    }
+    /* Switches the environment to a frame of a subgoal that was	*/
+    /* suspended on completion, and sets the continuation pointer.	*/
+    check_glstack_overflow(0,lpcreg,OVERFLOW_MARGIN);
+    freeze_and_switch_envs(conscp, NLCP_SIZE);
+    ptcpreg = nlcp_ptcp(conscp);
+    //    neg_delay = (nlcp_neg_loop(conscp) != FALSE);
+    delayreg = nlcp_pdreg(conscp);
+    cpreg = nlcp_cpreg(conscp); 
+    ereg = nlcp_ereg(conscp);
+    ebreg = nlcp_ebreg(conscp);
+    hbreg = nlcp_hreg(conscp);
+    save_find_locx(ereg);
+    hbreg = hreg;
+    breg = nlcp_prevbreg(conscp);
+    set_gfp_state(conscp);
+    nlcp_pcreg(conscp) = (pb) &answer_return_inst;
+    undefPair = insert("l3_undef", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
+    Utip = get_tip(CTXTc pair_psc(undefPair));				
+    delay_negatively(TIF_Subgoals(Utip));				
+    //      printf("list %p ret %s\n",ALN_Answer(subg_ans_list_ptr(TIF_Subgoals(Utip))),get_ret_psc(0));
+    //      delay_positively(TIF_Subgoals(Utip),ALN_Answer(subg_ans_list_ptr(TIF_Subgoals(Utip))),get_ret_psc(0));		
+    lpcreg = cpreg;
+    altsem_dbg("done with continue consumer\n");
 }
 XSB_End_Instr()
 

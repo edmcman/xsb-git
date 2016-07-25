@@ -144,6 +144,15 @@ int wam_initialized = FALSE ;
 #include "tr_delay.h"
 #include "tr_code_xsb_i.h"
 
+//#define DEBUG_ALT_SEMANTICS 1
+#ifdef DEBUG_ALT_SEMANTICS
+#define altsem_dbg(X) printf X
+#define altsem_print_subgoal(X) print_subgoal(stdout,X)
+#else
+#define altsem_dbg(X) 
+#define altsem_print_subgoal(X)
+#endif
+
 /*----------------------------------------------------------------------*/
 /* indirect threading-related stuff                                     */
 

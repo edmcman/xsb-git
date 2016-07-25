@@ -1234,13 +1234,22 @@ void tstCreateTSIs(struct th_context *,TSTNptr);
 #define get_template_size(var_num,tmp_int)   var_num = tmp_int & 0xffff
 
 #define get_gfp_state(ccp,gfp_state) {		    \
+    Integer tmp_int;							\
     CPtr answer_template_heap = nlcp_template(ccp); \
-    gfp_state =  (cell(answer_template_heap)) & 800000; /* bit 28 */ \
+    tmp_int = int_val(cell(answer_template_heap));			\
+    altsem_dbg(("answer_template_heap get_gfp %lx\n",tmp_int));		\
+    gfp_state =  (tmp_int & 0x800000)? 1 : 0; /* bit 24 */	 \
   }
 
 #define set_gfp_state(ccp) {			\
+    Integer tmp_int;							\
     CPtr answer_template_heap = nlcp_template(ccp);			\
-    cell(answer_template_heap) =   (cell(answer_template_heap)) | 800000; /* bit 28 */ \
+    tmp_int = int_val(cell(answer_template_heap));			\
+    altsem_dbg(("answer_template_heap before %lx\n",tmp_int));		\
+    tmp_int = tmp_int | 0x800000;					\
+    altsem_dbg(("answer_template_heap before %lx iv %lx\n",tmp_int,makeint(tmp_int))); \
+    cell(answer_template_heap) =   makeint(tmp_int); /* bit 24 */ \
+    altsem_dbg(("answer_template_heap after %lx\n",cell(answer_template_heap))); \
   }
 
 #define encode_ansTempl_ctrs(Attvars,AbstractSize,Ctr)   \

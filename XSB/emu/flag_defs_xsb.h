@@ -164,6 +164,7 @@ interrupt flag
 #define MAX_TABLE_SUBGOAL_VAR_NUM       109
 #define MAX_TABLE_ANSWER_VAR_NUM        110
 #define MAX_MEMORY_ACTION               111
+#define ALTERNATE_SEMANTICS             112
 
 #define MAX_FLAGS		 120
 
@@ -203,3 +204,9 @@ interrupt flag
 #define XSB_ABSTRACT         4
 #define XSB_BRAT             5
 #define XSB_SUSPEND          6
+
+/* for ALTERNATE_SEMANTICS */
+#define WFS_SEMANTICS        0
+#define GFP_SEMANTICS        1
+#define NAF_L3               2
+#define WEAK_L3              3

@@ -182,10 +182,12 @@ XSB_Start_Instr(check_complete,_check_complete)
       /* schedule completion suspensions if any */
       cc_tbreg = ProcessSuspensionFrames(CTXTc cc_tbreg, cs_ptr);
       FailIfAnswersFound((cc_tbreg == orig_breg ? 0 : cc_tbreg));
-      //      printf("got through suspension frames for negation\n");
+      altsem_dbg(("got through suspension frames for negation\n"));
 
-      //      FailIfAnswersFound(ProcessWCSReturns(CTXTc cs_ptr));
-      
+      if (flags[ALTERNATE_SEMANTICS] == NAF_L3) {
+	FailIfAnswersFound(ProcessL3Returns(CTXTc cs_ptr));
+      }
+
       CompleteSimplifyAndReclaim(CTXTc cs_ptr);
 /*
 #ifdef SHARED_COMPL_TABLES

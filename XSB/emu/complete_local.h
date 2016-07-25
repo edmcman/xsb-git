@@ -270,35 +270,34 @@ static inline CPtr ProcessSuspensionFrames(CTXTdeclc CPtr cc_tbreg_in,
   return cc_tbreg;
 }
 
-static inline CPtr ProcessWCSReturns(CTXTdeclc CPtr cs_ptr) {
+static inline CPtr ProcessL3Returns(CTXTdeclc CPtr cs_ptr) {
   CPtr ComplStkFrame = cs_ptr;
   VariantSF compl_subg;
-  CPtr answer_template_heap;
   int state;
   CPtr first_sched_cons, last_sched_cons, ccp;
   first_sched_cons = last_sched_cons = NULL;
 
-  printf("in ProcessWCSReturns: ComplStkFrame %p openreg %p breg %p\n",ComplStkFrame,openreg,breg);
+  altsem_dbg(("in ProcessL3Returns: ComplStkFrame %p openreg %p breg %p\n",ComplStkFrame,openreg,breg));
   /* check from leader up to the youngest subgoal */
   while (ComplStkFrame >= openreg) {
-    printf("in loop: ComplStkFrame %p openreg %p (",ComplStkFrame,openreg);
+    altsem_dbg(("in loop: ComplStkFrame %p openreg %p (",ComplStkFrame,openreg));
     compl_subg = compl_subgoal_ptr(ComplStkFrame);
-    print_subgoal(stddbg,compl_subg);printf(")\n");
+    altsem_print_subgoal(compl_subg);altsem_dbg(")\n");
 
     if (!is_completed(compl_subg)) { /* not early completed */
-      printf("not ec\n");
+      altsem_dbg(("not ec\n"));
       if ((ccp = subg_pos_cons(compl_subg)) != NULL) {
 
 	/* check each consumer choice point for appropriate action.
 	 * If it has not already been continued put it on the chain
 	 * o/w skip over it.	 */
 	while (ccp && *nlcp_pcreg(ccp) != check_complete)	  {
-	  printf("Pret:   inner loop ccp %p %x %s\n",ccp,*nlcp_pcreg(ccp),(char *)inst_table[*nlcp_pcreg(ccp)][0]);
+	  altsem_dbg(("Pret:   inner loop ccp %p %x %s\n",ccp,*nlcp_pcreg(ccp),(char *)inst_table[*nlcp_pcreg(ccp)][0]));
 	  get_gfp_state(ccp,state);
-	  printf("state %d\n",state);
+	  altsem_dbg(("state %d\n",state));
 	  if (state != TRUE) {  /* Continuation has already been done for this CCP */
 	    nlcp_pcreg(ccp) = (pb) &continue_consumer_inst;
-	    printf("reset  ccp %p %x %s\n",ccp,*nlcp_pcreg(ccp),(char *)inst_table[*nlcp_pcreg(ccp)][0]);
+	    altsem_dbg(("reset  ccp %p %x %s\n",ccp,*nlcp_pcreg(ccp),(char *)inst_table[*nlcp_pcreg(ccp)][0]));
 	    ScheduleConsumer(ccp,first_sched_cons,last_sched_cons);
 	  }
 	  ccp = nlcp_prevlookup(ccp);
@@ -312,7 +311,7 @@ static inline CPtr ProcessWCSReturns(CTXTdeclc CPtr cs_ptr) {
     nlcp_prevbreg(last_sched_cons) = breg ;
   } /* While tabled subgoal. */
 
-  printf("finished ProcessWCSReturns first_sched_cons: %p\n",first_sched_cons);
+  altsem_dbg(("finished ProcessL3Returns first_sched_cons: %p\n",first_sched_cons));
   return first_sched_cons;
 }
 
