@@ -31,7 +31,7 @@
 
 /*======================================================================*/
 /* parse(+Modname, +PFile, +HFile,					*/
-/*	 -module(-SymTab,-DcList,-ClList,-QrList))			*/
+/*	 -module(-SymTab,-DcList,-ClList,-QrList,-Pars))		*/
 /*======================================================================*/
 
 %-----------------------------------------------------------------------
@@ -77,7 +77,7 @@ parse(Modname, PFile, HFile, Module) :-
 	filestack_reset,
 	!.
 
-set_symbol_hash_table_size(FileSize,module(sym_tab(_,_,HashTab),_,_,_)) :-
+set_symbol_hash_table_size(FileSize,module(sym_tab(_,_,HashTab),_,_,_,_)) :-
 	EstSyms is FileSize // 50,
 	(prime(Prime), EstSyms < Prime -> true),
 	log_ith(0,HashTab,Prime). % store hashtable size in 0th pos.
@@ -479,9 +479,9 @@ set_preprocessing_done   :- conset(xpp_preprocessing_done,1).
 unset_preprocessing_done :- conset(xpp_preprocessing_done,0).
 preprocessing_is_done    :- conget(xpp_preprocessing_done,1).
 
-/*======================================================================*/
-/* parse_clauses(+ModName, #module(#SymTab,#DcList,#ClList,#QrList))	*/
-/*======================================================================*/
+/*=========================================================================*/
+/* parse_clauses(+ModName, #module(#SymTab,#DcList,#ClList,#QrList,#Pars)) */
+/*=========================================================================*/
 parse_clauses(ModName, Module) :-
 	my_read(Clause, VariableList),
 	singleton_check(Clause, VariableList),
@@ -581,7 +581,7 @@ get_p_mod(P, ModName, P_Mod) :-
 %-------------------------------------------------------------------------
 /*======================================================================*/
 /* parse_clause(+Clause,						*/
-/*		#module(#SymTab,#DcList,#ClList,#QrList),ModName)	*/
+/*		#module(#SymTab,#DcList,#ClList,#QrList,#Pars),ModName)	*/
 /*======================================================================*/
 :- import console_writeln/1 from standard.
 
@@ -589,14 +589,14 @@ parse_clause([], _,_) :- !.
 parse_clause([Cl|Cls], Module,ModName) :- !,
 	parse_clause(Cl, Module,ModName),
 	parse_clause(Cls, Module,ModName).
-parse_clause(Cl, module(SymTab,DcList,ClList,QrList),ModName) :-
+parse_clause(Cl, module(SymTab,DcList,ClList,QrList,Pars),ModName) :-
 	(Cl = (':-'(H, B))
 	 ->	parse_preddef_chk_dyn(H, B, ClList, QrList, ModName, SymTab)
 	 ; Cl = (':-'(Directive))
 	 ->	transform_directive(Directive,ModName,SymTab,PDirective),
 	        
 		parse_directive(PDirective,QrList,SymTab,ModName, 
-		                  module(SymTab,DcList,ClList,QrList))
+		                  module(SymTab,DcList,ClList,QrList,Pars))
 	 ; Cl = ('?-'(Q))
 	 ->	parse_query(Q,QrList,SymTab)
 	 ;	parse_preddef_chk_dyn(Cl, true, ClList, QrList, ModName, SymTab)
@@ -690,7 +690,7 @@ parse_directive(endif, _QrList,_SymTab,_ModName,_ModStruct):- !,
 parse_directive(module(ModIn,X,_Dialect), _QrList,SymTab,ModName,_ModStruct) :- !, 	
 	parse_directive(module(ModIn,X), _QrList,SymTab,ModName,_ModStruct).
 parse_directive(module(ModIn,X), _QrList,SymTab,ModName,_ModStruct) :- !, 	
-	(ModIn == ModName -> 
+	(functor(ModName,ModIn,_) -> 
 	    parse_list(X, SymTab, [ex], (export))
 	  ; misc_error(('Declared module name (',ModIn,') must be the same as file base (',ModName,').')) ).
 parse_directive(export(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
@@ -704,8 +704,9 @@ parse_directive(document_import(from(P/A, _Mod)), _QrList,_SymTab,_ModName,_ModS
 parse_directive(import(from(X, Mod)), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	(var(Mod)
 	 ->	error(('Module cannot be a variable. Importing: ',X))
-	 ;	parse_comma_list_import(X, Mod, SymTab),
-		sym_insert(Mod, 0, [module], SymTab, _)
+	 ;	term_to_atom(Mod,PMod,[quoted(true)]),
+		parse_comma_list_import(X, PMod, SymTab),
+		sym_insert(PMod, 0, [module], SymTab, _)
 	).
 parse_directive(import(as(from(PredIn, Mod),PredAs)), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	(var(Mod)
@@ -717,8 +718,9 @@ parse_directive(import(as(from(PredIn, Mod),PredAs)), _QrList,SymTab,_ModName,_M
 		 ->	error(('Predicate specifier must be of the form PredName/Arity. Importing as: ',PredAs))
 		 ; A \== A2
 		 ->	error(('Predicate arities must be the same. Importing: ',P/A,' as ',P2/A2))
-		 ;	sym_insert(Mod, 0, [module], SymTab, _),
-			sym_insert(P2,A2,[pred,defined(Mod,P)],SymTab,_)
+		 ;	term_to_atom(Mod,PMod,[quoted(true)]),
+			sym_insert(PMod, 0, [module], SymTab, _),
+			sym_insert(P2,A2,[pred,defined(PMod,P)],SymTab,_)
 		)
 	 ;	error(('Predicate specifiers must be of the form PredName/Arity. Importing (as): ',PredIn,' and ',PredAs))
 	).
@@ -726,13 +728,24 @@ parse_directive(use_module(ModIm,X), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	(var(ModIm)
 	 ->	error(('Module cannot be a variable. Importing: ',X))
 	 ;	(ModIm = library(Mod1) -> Mod = Mod1 ; Mod = ModIm),
-	        parse_list(X, SymTab, [im(Mod)], (import)),
-		sym_insert(Mod, 0, [module], SymTab, _)
+		term_to_atom(Mod,PMod,[quoted(true)]),
+	        parse_list(X, SymTab, [im(PMod)], (import)),
+		sym_insert(PMod, 0, [module], SymTab, _)
 	).
 parse_directive(document_import(from(X, Mod)), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	(var(Mod)
 	 ->	error(('Module cannot be a variable. Document_importing: ',X))
-	 ;	parse_comma_list(X, SymTab, [docim(Mod)], (document_import))
+	 ;	term_to_atom(Mod,PMod,[quoted(true)]),
+		parse_comma_list(X, SymTab, [docim(PMod)], (document_import))
+	).
+parse_directive(ModPars,_Qr,_ST,_ModName,Module) :-
+	functor(ModPars,module_parameters,_),
+	!,
+	Module = module(_,_,_,_,Pars),
+	ModPars =.. [module_parameters|Pars1],
+	(Pars = Pars1
+	 ->	true
+	 ;	error('Multiple declarations of module_parameters')
 	).
 
 :- import current_prolog_flag/2 from curr_sym.
@@ -1217,14 +1230,15 @@ parse_list_element(X, _, _, Directive) :-
 /*	completes the symbol table.					*/
 /*======================================================================*/
 
-module_close(module(SymTab,DcList,ClList0,QrList0),
-	     module(SymTab,DcList,ClList,QrList)) :-
+module_close(module(SymTab,DcList,ClList0,QrList0,Pars),
+	     module(SymTab,DcList,ClList,QrList,Pars)) :-
 	closetail(DcList), 
 	closeup_cllist(ClList0,ClList),
 	parse_preddef('_$main', true, QrList0, SymTab),
 	closeup_cllist(QrList0,QrList),
 	sym_complete(SymTab),
-	!. %, standard:writeln(userout,module(SymTab,DcList,ClList,QrList)).
+	(Pars=[] -> true ; true),
+	!. %, standard:writeln(userout,module(SymTab,DcList,ClList,QrList,Pars)).
 
 closeup_cllist(ClList0,ClList) :-
 	clause_listify(ClList0,AllClauses),
@@ -1256,7 +1270,7 @@ filter_out_number([pred(_,PS,CS,T)|Prs],[pred(PS,CS,T)|FPrs]) :-
 /* auxiliary routines							*/
 /*======================================================================*/
 
-get_symtab(module(SymTab,_,_,_), SymTab).
+get_symtab(module(SymTab,_,_,_,_), SymTab).
 
 /*======================================================================*/
 /* parse_mode(+Modes, +SymTab)						*/

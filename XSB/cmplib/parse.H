@@ -116,7 +116,7 @@
 :- import standard_symbol/3 from std_xsb.
 :- import standard_metapredicate/3 from std_xsb.
 
-:- import concat_atom/2 from string.
+   :- import concat_atom/2, term_to_atom/3 from string.
 
 :- import sym_insert/5, sym_propin/2, sym_complete/1, sym_prop/2,
 	  add_new_clause/3, clause_listify/2

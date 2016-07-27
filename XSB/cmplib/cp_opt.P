@@ -23,8 +23,8 @@
 */
 
 
-cp_opt(module(Symtab,DcList,ClList,QrList),
-       module(Symtab,DcList,ClList1,QrList)) :-
+cp_opt(module(Symtab,DcList,ClList,QrList,Par),
+       module(Symtab,DcList,ClList1,QrList,Par)) :-
 	cp_opt0(ClList, ClList1, Symtab).
 
 cp_opt0([], [],_Symtab).
@@ -88,18 +88,6 @@ cp_opt_block1(_,pred(Sym,_Pscs,_Oth),pred(Sym1,Pscs1,Oth1),Symtab):-
 	cp_opt_table_body(Sym,Head, NewCall,ClList, Symtab),
 	ClList =[pred(_Sym1,Pscs1,Oth1)|_T].
 
-/*
-cp_opt_block1(_,pred(Sym,_Pscs,_Oth),pred(Sym1,Pscs1,Oth1),Symtab):-
-	sym_name(Sym,Pred,Arity),
-	transform_pred(Pred,Pred1),
-	functor(Head,Pred,Arity),
-	functor(Body,Pred1,Arity),
-	bind_args(Arity,Head,Body),
-	parse_preddef(Body,Head, ClList1, Symtab),
-	ClList1 =[pred(Sym1,_Pscs1,_Oth1)|_T],
-	parse_preddef(Head, Body, ClList, Symtab),
-	ClList =[pred(_Sym1,Pscs1,Oth1)|_T].
-*/
 %:- import console_writeln/1 from standard.
 cp_opt_table_body(Sym,_,_,ClList1, Symtab):-
 	sym_type(Sym,approximation(ApproxSpec)),!,
@@ -121,9 +109,7 @@ cp_opt_table_body(_Sym,Head,NewCall, ClList1, Symtab):-
 get_calling_proc(use_first(N),Breg,early_complete_on_nth(Breg,N)).
 
 transform_pred(Pred,Pred1):-
-	atom_codes(Pred,Predlist),
-	append("_$",Predlist,Predlist1),
-	atom_codes(Pred1,Predlist1).
+	concat_atom([Pred,'_$'],Pred1).
 
 bind_args(0,_,_):-!.
 bind_args(N,Head,Body):-
@@ -193,8 +179,8 @@ perform_tabling_transforms(Mod1,Mod2):-
 	aggregation_transform(Mod1,Mod2).
 %	approximation_transform(Mod2,Mod2).
 
-aggregation_transform(module(Symtab,DcList,ClList,QrList),
-		      module(Symtab,DcList,ClList1,QrList)) :-
+aggregation_transform(module(Symtab,DcList,ClList,QrList,Par),
+		      module(Symtab,DcList,ClList1,QrList,Par)) :-
 	aggr_trans(ClList,ClList1,Symtab).
 
 aggr_trans([],[],_SymTab).
@@ -236,7 +222,9 @@ aggr_trans_pred(Sym,Pscs,Oth,ArgNo,ExistArgList,AggSpec,[pred(Sym1,Pscs,Oth)|ClL
 	!,
 	parse_preddef_closed(NewTerm,true,[pred(Sym1,_,_)],SymTab).
 
-% only for debugging
+
+
+%% only for debugging
 :- export mywriteln/1.
 %mywriteln(Term):- standard:writeln(Term).
 mywriteln(_Term).
@@ -457,6 +445,7 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	ensure_imported('_$$get_returns_and_tvs'/4,tables,SymTab),
 	ensure_imported('_$$get_returns'/3,tables,SymTab),
 	ensure_imported(delete_return/2,tables,SymTab),
+	ensure_imported(undefined/0,tables,SymTab),
 	ensure_imported(xwam_state/2,machine,SymTab),
 	ensure_imported('_$member'/2,basics,SymTab),
 	% TLS: for approximations (whether or not used)
@@ -480,7 +469,7 @@ generate_agg_clauses(_OpSpec,_Sym,PredTerm,_Var1,_ExistVarList,_Pred1Term,_Var,_
 	functor(PredTerm,Pred,Arity),
 	syntax_error(['Improper join specification in tabling declaration for ',Pred,'/',Arity]).
 
-%---
+%%---
 
 get_return_w_tv(Cs,OSkel,Leaf,TV):- 
 	xwam_state(2,DelayReg_start),mywriteln(start(DelayReg_start)),
@@ -903,8 +892,8 @@ add_tail(Clause,[_|Clauses]) :- add_tail(Clause,Clauses).
 
 end_of_file.
 
-approximation_transform(module(Symtab,DcList,ClList,QrList),
-		      module(Symtab,DcList,ClList,QrList)):-
+approximation_transform(module(Symtab,DcList,ClList,QrList,Par),
+		      module(Symtab,DcList,ClList,QrList,Par)):-
 	approx_transform(ClList,Symtab).
 
 approx_transform([],_Symtab).

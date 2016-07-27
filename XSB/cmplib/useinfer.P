@@ -50,7 +50,7 @@
 /*======================================================================*/
 
 useinfer(Module, IsModule, ExportList) :-
-	Module = module(SymTab,_DcList,ClList,_QrList),
+	Module = module(SymTab,_DcList,ClList,_QrList,_Pars),
 	extract_symlist(ex, ExSymList, SymTab),
 	sym_insert('_$main', 0, [], SymTab, SymMain),
 	extract_syms(ClList,ClSyms),
@@ -81,7 +81,7 @@ extract_syms([pred(Sym,_,_)|Ps],[Sym|Syms]) :-
 
 /*
 useinfer(Module, IsModule, ExportList) :-
-	Module = module(SymTab,_DcList,ClList,_QrList),
+	Module = module(SymTab,_DcList,ClList,_QrList,_Pars),
 	extract_symlist(ex, ExSymList, SymTab),
 	sym_insert('_$main', 0, [], SymTab, SymMain),
 	( ExSymList == [] -> 
@@ -153,7 +153,7 @@ infer_usage([Sym|Rest], Module,Ps_or_real) :-
 
 infer_usage_of_symbol(Sym, InList, OutList, Module,Ps_or_real) :-
 %	message(symcheck(Sym)),
-	Module = module(SymTab,_DcList,ClList,QrList),
+	Module = module(SymTab,_DcList,ClList,QrList,_Pars),
 	( sym_prop(used, Sym) -> OutList = InList	% already checked
 	; sym_name(Sym, '_$main', 0) -> 
 		( QrList == [] -> OutList = InList
