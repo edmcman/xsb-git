@@ -870,6 +870,11 @@ Cell read_canonical_return_var(CTXTdeclc int code) {
     op1 = get_str_arg(op,1);
     XSB_Deref(op1);
     return op1;
+  } else if (code == 3) { /* from loader, use r5 */
+    Cell op;
+    op = ptoc_tag(CTXTc 5);
+    XSB_Deref(op);
+    return op;
   } else return (Cell)NULL;
 }
 

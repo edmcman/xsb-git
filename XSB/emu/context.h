@@ -130,6 +130,7 @@ typedef struct Message_Queue_Cell {
 #include "odbc_def_xsb.h"
 #include "findall.h"
 #include "struct_manager.h"
+#include "xsb_config.h"
 
 //BELOW INCLUDES ARE FOR SQL Interfaces
 #ifdef CYGWIN

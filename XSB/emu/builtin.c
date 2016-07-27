@@ -1546,6 +1546,9 @@ int builtin_call(CTXTdeclc byte number)
     break;
   case TERM_NEW_MOD: {  /* R1: +ModName, R2: +Term, R3: -NewTerm */
     int new, disp;
+    int import_from_usermod = FALSE;
+    char *modname;
+    char usermodfile[MAXFILENAME+1];
     Psc termpsc, modpsc, newtermpsc;
     Cell arg, term = ptoc_tag(CTXTc 2);
     /* XSB_Deref(term); not nec since ptoc_tag derefs */
@@ -1554,7 +1557,13 @@ int builtin_call(CTXTdeclc byte number)
       break;
     }
     termpsc = term_psc(term);
-    modpsc = pair_psc(insert_module(0,ptoc_string(CTXTc 1)));
+    modname = ptoc_string(CTXTc 1);
+    if (get_usermod_filename(modname,usermodfile)) {
+      import_from_usermod = TRUE;
+      modpsc = global_mod;
+    } else {
+      modpsc = pair_psc(insert_module(0,modname));
+    }
     /*    if (!colon_psc) colon_psc = pair_psc(insert(":",2,global_mod,&new));*/
     while (termpsc == colon_psc) {
       term = get_str_arg(term,2);
@@ -1562,7 +1571,16 @@ int builtin_call(CTXTdeclc byte number)
       termpsc = term_psc(term);
     }
     newtermpsc = pair_psc(insert(get_name(termpsc),get_arity(termpsc),modpsc,&new));
-    if (new) {
+    if (import_from_usermod) {
+      if (new) printf("ERROR: shouldn't be new\n");
+      //printf("usermod predicate: %s/%d type: %x, env: %x\n",get_name(newtermpsc),get_arity(newtermpsc),get_type(newtermpsc),get_env(newtermpsc));
+      if (!(isstring(get_data(newtermpsc)) && strcmp(string_val(get_data(newtermpsc)),usermodfile) == 0)) {
+	set_data(newtermpsc, (Psc)makestring(string_find(usermodfile,1)));
+	set_env(newtermpsc,T_UNLOADED);  // force reload if diff/new File
+	//printf("set env to T_UNLOADED\n");
+      }
+      //      env_type_set(CTXTc newtermpsc, T_IMPORTED, T_ORDI, (xsbBool)new);
+    } else if (new) {
       set_data(newtermpsc, modpsc);
       env_type_set(CTXTc newtermpsc, T_IMPORTED, T_ORDI, (xsbBool)new);
     }
@@ -1965,8 +1983,11 @@ int builtin_call(CTXTdeclc byte number)
 				/* R2: -int, addr of 1st instruction;	     */
 				/*	0 indicates an error                 */
 				/* R3 = 1 if exports to be exported, 0 otw   */
+				/* R4 = Prolog list of module parameters     */
+				/*      as atoms.			     */
     SYS_MUTEX_LOCK( MUTEX_LOADER );
-    ctop_int(CTXTc 2, (Integer)loader(CTXTc ptoc_longstring(CTXTc 1), (int)ptoc_int(CTXTc 3)));
+    ctop_int(CTXTc 2, (Integer)loader(CTXTc ptoc_longstring(CTXTc 1), (int)ptoc_int(CTXTc 3),
+				      (prolog_term)ptoc_tag(CTXT 4)));
     SYS_MUTEX_UNLOCK( MUTEX_LOADER );
     break;
 
@@ -2000,14 +2021,24 @@ int builtin_call(CTXTdeclc byte number)
      * don't already exist) and links the predicate into usermod.
      */
     int  value;
-    Psc  psc = pair_psc(insert_module(0, ptoc_string(CTXTc 3)));
-    Pair sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), psc, &value);
-    if (value)       /* if predicate is new */
-      set_data(pair_psc(sym), (psc));
+    Psc  mod_psc;
+    Pair sym;
+    char mod_file[MAXFILENAME+1];
+    char *mod_name = ptoc_string(CTXTc 3);
+    if (get_usermod_filename(mod_name,mod_file)) { // import from usermmod(filename)
+      sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), global_mod, &value);
+      init_psc_ep_info(pair_psc(sym)); // reset to reload
+      set_data(pair_psc(sym),(Psc)makestring(string_find(mod_file,1)));
+    } else {
+      mod_psc = pair_psc(insert_module(0, mod_name));
+      sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), mod_psc, &value);
+      if (value)       /* if predicate is new */
+	set_data(pair_psc(sym), (mod_psc));
+      if (flags[CURRENT_MODULE]) /* in case before flags is initted */
+	link_sym(CTXTc pair_psc(sym), (Psc)flags[CURRENT_MODULE]);
+      else link_sym(CTXTc pair_psc(sym), global_mod);
+    }
     env_type_set(CTXTc pair_psc(sym), T_IMPORTED, T_ORDI, (xsbBool)value);
-    if (flags[CURRENT_MODULE]) /* in case before flags is initted */
-      link_sym(CTXTc pair_psc(sym), (Psc)flags[CURRENT_MODULE]);
-    else link_sym(CTXTc pair_psc(sym), global_mod);
     break;
   }
 

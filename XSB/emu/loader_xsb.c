@@ -71,6 +71,8 @@
 
 #include "debug_xsb.h"
 #include "cinterf.h"
+#include "deref.h"
+#include "ptoc_tag_xsb_i.h"
 
 #include "wind2unix.h"
  
@@ -704,14 +706,99 @@ inline static void get_obj_atom(FILE *fd, VarString *atom)
 
 /*----------------------------------------------------------------------*/
 
-static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
+/* contents of string name is changed; it MUST be large enough to hold any expansion */
+/* if whole thing is quoted string, unquote it.*/
+void replace_form_by_act(char *name, prolog_term modformals, prolog_term modactuals) {
+  char *formalstr, *actualstr, *loc;
+  int i, arity;
+  size_t namelen, formallen, actuallen;
+
+  if (isinteger(modactuals) || isinteger(modformals)) return;
+  if (isstring(modactuals) || isstring(modformals)) {
+    size_t name_len = strlen(name);
+    if (name[0] == '\'' && name[name_len-1] == '\'') {
+      /* cheat for now, at some point remove one on internal double single quotes */
+      memmove(name,name+1,name_len-2);
+      name[name_len-2] = '\0';
+    }
+    return;
+  }
+
+  arity = get_arity(get_str_psc(modformals));
+
+  //printf("starting repl loop: %s\n",name);
+  for (i = 1; i <= arity; i++) {
+    formalstr = string_val(get_str_arg(modformals,i));
+    actualstr = string_val(get_str_arg(modactuals,i));
+    actuallen = strlen(actualstr);
+    
+    if (strcmp(name,formalstr) == 0) {
+      memmove(name,actualstr,actuallen);
+      *(name+actuallen) = '\0';
+    } else {
+      loc = name;
+      //printf("try to find: %s in %s\n",formalstr,name);
+      while (loc != NULL) {
+	loc = strstr(loc,formalstr);
+	if (loc != NULL) {
+	  //printf("found match of %s from %s\n",formalstr,name);
+	  formallen = strlen(formalstr);
+	  if ((*(loc-1) == '(' || *(loc-1) == ',') &&
+	      (*(loc+formallen) == ')' || *(loc+formallen) == ',')) {
+	    namelen = strlen(name);
+	    actuallen = strlen(actualstr);
+	    memmove(loc+actuallen,loc+formallen,
+		    namelen-((loc-name)+formallen)+1);
+	    memmove(loc,actualstr,actuallen);
+	    //printf("after repl: %s\n",name);
+	    loc = loc + actuallen; // no recursive rewriting...
+	  } else loc++;
+	}
+      }
+    }
+  }
+}
+
+/* --------------------------------------------------------------------	*/
+
+int get_usermod_filename(const char *mod_name, char *mod_file) {
+  size_t mod_name_len;
+  char *mod_file_end;
+  mod_name_len = strlen(mod_name);
+  if (mod_name_len <= 8 || strncmp("usermod(",mod_name,8) != 0) {
+    return FALSE;
+  }
+  //printf("usermod: %s\n",mod_name);
+  mod_name_len -= 9;
+  if (mod_name[8] == '\'') { // really should handle embedded doubled single quotes
+    memmove(mod_file,mod_name+9,mod_name_len); // include final ' and paren
+    mod_file_end = mod_file+mod_name_len;
+    mod_file = strchr(mod_file,'\'');
+    /*    while (*(mod_file+1) == '\'') {
+      memmove(mod_file+1,mod_file+2,mod_name_end-m);
+      mod_file = strchr(mod_file+1,'\'');
+      } */
+    *(mod_file) = '\0';
+  } else {
+    memmove(mod_file,mod_name+8,mod_name_len);
+    mod_file[mod_name_len] = '\0';
+  }
+  return TRUE;
+}
+
+/*----------------------------------------------------------------------*/
+
+static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp,
+			    prolog_term modformals, prolog_term modpars) // add act and form parlists
 {
   static XSB_StrDefine(str);
   int  is_new, def_is_new;
+  int import_from_usermod = FALSE;
   byte t_arity, t_type, t_env, t_defined, t_definedas;
   Pair temp_pair, usermod_pair, defas_pair = NULL;
   Psc  mod;
   Integer dummy; /* used to squash warnings */
+  char usermodfile[MAXFILENAME+1];
 
   dummy = get_obj_byte(&t_env);
   /* this simple check can avoid worse situations in case of compiler bugs */
@@ -724,9 +811,10 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
   t_definedas = t_type & T_DEFA; t_type = t_type & ~T_DEFA;  /* next check if its a defined-as */
   dummy = get_obj_byte(&t_arity);
   get_obj_atom(fd, &str);
-  if (t_type == T_MODU)
+  if (t_type == T_MODU) {
+    replace_form_by_act(str.string,modformals,modpars);
     temp_pair = insert_module(0, str.string);
-  else {  
+  } else {  
     if ((t_env&0x7) == T_IMPORTED || t_definedas) {
       byte t_modlen;
       char modname[MAXFILENAME+1];
@@ -734,8 +822,14 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
       dummy = get_obj_byte(&t_modlen);
       dummy = get_obj_string(modname, t_modlen);
       modname[t_modlen] = '\0';
-      temp_pair = insert_module(0, modname);
-      mod = temp_pair->psc_ptr;
+      replace_form_by_act(modname,modformals,modpars);
+      if (get_usermod_filename(modname,usermodfile)) {
+	import_from_usermod = TRUE;
+	mod = global_mod;
+      } else {
+	temp_pair = insert_module(0, modname);
+	mod = temp_pair->psc_ptr;
+      }
       if (t_definedas) {
 	byte t_defaslen;
 	char defasname[MAXFILENAME+1];
@@ -750,18 +844,16 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
 	}
 	mod = cur_mod;  /* mod of this symbol is cur_mod */
       }
-    }  /* ((t_env&0x7) == T_IMPORTED || t_definedas) */
-    else if ((t_env&0x7) == T_GLOBAL) 
+    } else if ((t_env&0x7) == T_GLOBAL) 
       mod = global_mod;
-    else 
-      mod = cur_mod;
+    else mod = cur_mod;
+
     temp_pair = insert(str.string, t_arity, mod, &is_new);
 
     if (t_definedas) {
       set_psc_ep_to_psc(CTXTc temp_pair->psc_ptr,defas_pair->psc_ptr);
       t_type = T_PRED;
     }
-   
 
     /* make sure all data fields of predicates PSCs point to 
        their corresponding module */
@@ -819,6 +911,12 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
       link_sym(CTXTc temp_pair->psc_ptr, (Psc)flags[CURRENT_MODULE]);
     }
   } 
+  if (import_from_usermod) {
+    set_data(pair_psc(temp_pair), (Psc)makestring(string_find(usermodfile,1)));
+    //printf("imp from usermod: %s/%d t=%x,e=%x\n",get_name(pair_psc(temp_pair)),get_arity(pair_psc(temp_pair)),get_type(pair_psc(temp_pair)),get_env(pair_psc(temp_pair)));
+    // how to tell if it's defined?
+    set_env(pair_psc(temp_pair),T_UNLOADED);  // if already have def, prob wont get to test this?
+  }
 
   if (!temp_pair) return FALSE;
   
@@ -847,7 +945,8 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp)
 *                                                                       *
 ************************************************************************/
 
-static xsbBool load_syms(CTXTdeclc FILE *fd, int psc_count, int count, Psc cur_mod, int exp)
+static xsbBool load_syms(CTXTdeclc FILE *fd, int psc_count, int count, Psc cur_mod, int exp,
+			 prolog_term modformals, prolog_term modpars) // add act and form parlists
 {
   int i;
   
@@ -855,8 +954,8 @@ static xsbBool load_syms(CTXTdeclc FILE *fd, int psc_count, int count, Psc cur_m
   reloc_table_size = psc_count*sizeof(pw);
   /* xsb_dbgmsg(("reloc_table %x,psc_count %d",reloc_table,psc_count)); */
 
-  for (i = count; i < psc_count; i++) {
-    if (!load_one_sym(CTXTc fd, cur_mod, i, exp)) return FALSE;
+  for (i = count; i < psc_count; i++) { // add act and form parlists
+    if (!load_one_sym(CTXTc fd, cur_mod, i, exp, modformals, modpars)) return FALSE;
   }
   return TRUE;
 }
@@ -939,9 +1038,9 @@ int has_generated_prefix(char *name) {
   return 1;
 }
 
-
 /************************************************************************/
-static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
+static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
+		     prolog_term modpars)  // add arg of actual par list
 {
   char name[FOREIGN_NAMELEN], arity;
   byte name_len;
@@ -953,6 +1052,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
   Pair ptr;
   TIFptr *instruct_tip;
   Integer dummy; /* used to squash warnings */
+  prolog_term modformals;
  
   seg_count = 0; first_inst = 0;
   dummy = get_obj_byte(&name_len);
@@ -969,6 +1069,34 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
     }
   }
   else {
+    //printf("C loading module: %s\n",name);
+    if (name[0] == '\'' || strstr(name,")") != NULL) {
+    // parse and build formal par list
+      STRFILE strfile;
+      strfile.strcnt = strlen((char *)name);
+      strfile.strptr = strfile.strbase = name;
+      iostrs[0] = &strfile;
+      bld_ref(reg+5,hreg);  // where read returns answer with code=3
+      new_heap_free(hreg);
+      read_canonical_term(CTXTc iostrdecode(0),3); // 3 gets answer in r5
+      modformals = ptoc_tag(CTXTc 5);
+      if (isstring(modformals) && !isstring(modpars)) {
+	xsb_error("Module %s is not parameterized, but %d actual parameters provided",
+		  name,get_arity(get_str_psc(modpars)));
+		  }
+      if (!((isstring(modformals) && isstring(modpars)) ||
+	    (isstr(modformals) && isstr(modpars) &&
+	     get_arity(get_str_psc(modformals)) == get_arity(get_str_psc(modpars))))) {
+	xsb_error("Module %s, inconsistent number of formal and actual parameters",name);
+	}
+      replace_form_by_act(name,modformals,modpars);  // formal pars by actual pars in name to name
+    } else {
+      if (!isinteger(modpars) && !isstring(modpars)) {
+	xsb_error("Module %s in not parameterized, but %d actual parameters provided",
+		  name,get_arity(get_str_psc(modpars)));
+		  }
+      modformals = modpars;
+    }
     ptr = insert_module(T_MODU, name);
     if (immutable) {
       if (get_ep(ptr->psc_ptr) == 0) {
@@ -980,10 +1108,10 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp,int immutable)
       }
     }
     cur_mod = ptr->psc_ptr;
-    set_ep(ptr->psc_ptr,(byte *)makestring(filename)); //!!!DSWDSW filename for module goes here?
+    set_ep(ptr->psc_ptr,(byte *)makestring(filename)); // psc->filename for module.
   }
   get_obj_word_bb(&psc_count);
-  if (!load_syms(CTXTc fd, (int)psc_count, 0, cur_mod, exp)) 
+  if (!load_syms(CTXTc fd, (int)psc_count, 0, cur_mod, exp, modformals, modpars ))
     return FALSE;
   /*	xsb_dbgmsg(("symbol table of module %s loaded", name));	*/
   do {
@@ -1145,7 +1273,7 @@ static byte *loader_foreign(CTXTdeclc char *filename, FILE *fd, int exp,int immu
   }
   cur_mod = ptr->psc_ptr;
   get_obj_word_bb(&psc_count);
-  if (!load_syms(CTXTc fd, (int)psc_count, 0, cur_mod, exp)) return FALSE;
+  if (!load_syms(CTXTc fd, (int)psc_count, 0, cur_mod, exp, makenil, makenil)) return FALSE;
   instr = load_obj(CTXTc filename, cur_mod, ldoption.string);
 
   SQUASH_LINUX_COMPILER_WARN(dummy) ; 
@@ -1166,7 +1294,7 @@ static byte *loader_foreign(CTXTdeclc char *filename, FILE *fd, int exp,int immu
 static int warned_old_obj = 0;	/* warned the user about old object files ? */
 
 /* See description of magic numbers in foreign.P -- Is ...5 obsolete? */
-byte *loader(CTXTdeclc char *file, int exp)
+byte *loader(CTXTdeclc char *file, int exp, prolog_term modpars) // add arg of actual parameter list (prolog list of atoms)
 {
   FILE *fd;	      /* file descriptor */
   unsigned int magic_num;
@@ -1219,7 +1347,7 @@ byte *loader(CTXTdeclc char *file, int exp)
     char *efilename = expand_filename(file);
     char *filename = string_find(efilename,1);
     mem_dealloc(efilename,MAXPATHLEN,OTHER_SPACE);
-    first_inst = loader1(CTXTc fd,filename,exp,is_immutable);
+    first_inst = loader1(CTXTc fd,filename,exp,is_immutable,modpars);  // pass actual par list as arg
   } else if (magic_num == 0x11121308 || magic_num == 0x11121309 || magic_num == 0x1112130b || magic_num == 0x1112130c) {
 #ifdef FOREIGN
       //      printf("foreign magic num 0x%x\n",magic_num);
