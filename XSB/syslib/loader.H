@@ -31,7 +31,7 @@
 
 :- import assert/1 from assert.
 :- import not_exists/1 from tables.
-:- import catch/3,throw/1,warning/1 from standard.
+   :- import catch/3,throw/1,warning/1,(=..)/2 from standard.
 :- import default_error_handler/1,existence_error/4 from error_handler.
 %:- import conset/2 from gensym.
 :- import consult_file_loaded/1 from consult.
@@ -42,12 +42,12 @@
 :- import library_directory/1 from usermod.
 :- import xsb_configuration/2 from xsb_configuration.
 :- import term_type/2, term_psc/2, psc_name/2, psc_arity/2, psc_env/2,
-	  psc_type/2, 
+   psc_type/2, psc_data/2, 
           % psc_set_type/2, 
           psc_mod/2, psc_set_prop/2,
 	  psc_insert/4, psc_import/3, conpsc/2, str_cat/3,
 	  str_match/5,
-	  code_call/3, code_load/3, intern_string/2,
+	  code_call/3, code_load/4, intern_string/2,
 	  stat_flag/2, stat_set_flag/2, expand_filename/2,
      	  tilde_expand_filename/2, is_absolute_filename/1,
 	  unload_seg/1, call0/1,
@@ -56,6 +56,7 @@
 %%:- import call_xsb_hook/3, xsb_undefined_predicate_hook/1 from xsb_hook.
 :- import xsb_sys_mutex_unlock/1 from thread.
 :- import current_prolog_flag/2 from curr_sym.
+:- import atom_to_term/2, term_to_atom/3 from string.
 %:- import shell_to_list/3 from shell.
 %:- import memberchk/2 from
 %:- import putenv/1 from machine.

@@ -2247,7 +2247,7 @@ use_module(Mod,Syms,_):-
 	import(from(Syms, Mod)).
 
 import(from(Syms, Mod)) :- !, 
-	conname(Mod, MName),
+	term_to_atom(Mod,MName,[quoted(true)]),
 	import(Syms, MName).
 
 import([], _) :- !.
@@ -2688,6 +2688,29 @@ handle_timer_interrupt(MaxMemorySize,Handler) :-
 	 ->	call(Handler)
 	 ;	true
 	).
+
+
+do_all(SetGoal,DoGoal0) :-
+	term_variables(DoGoal0,Vars),
+	findall(Vars,SetGoal,List0),
+	(DoGoal0 = if_none(DoGoal,ElseGoal)
+	 ->	(List0 == []
+		 ->	call(ElseGoal),
+			fail
+		 ;	true
+		)
+	 ;	DoGoal = DoGoal0
+	),		 
+	sort(List0,List),
+	member(Vars,List),
+	call(DoGoal),
+	fail.
+do_all(_SetGoal,_DoGoal).
+
+do_all(Goal) :-
+	call(Goal),
+	fail.
+do_all(_Goal).
 
 
 /* --------------------- end of file standard.P ----------------------- */

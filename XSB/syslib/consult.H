@@ -65,7 +65,7 @@
 :- import conset/2, conget/2, coninc/1, coninc/2, gensym/2  from gensym.
 :- import add_hilog_symbol/1 from hilogsym.
 :- import libpath/1 from loader.
-:- import code_load/3, code_call/3, file_read_canonical/3,
+:- import code_load/4, code_call/3, file_read_canonical/3,
 	  expand_filename/2, unload_seg/1, 
 	  assert_code_to_buff/1, assert_buff_to_clref/6,
 	  conpsc/2, psc_type/2, slash/1, psc_arity/2, 

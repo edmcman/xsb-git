@@ -71,18 +71,16 @@ compile0(Path, Options) :-
 	search_module(Path, Dir, Mod, SExt, Base, _Obj),
 	!,
 	(SExt \== XSB_OBJ_EXTENSION_ATOM_SANS_DOT
-	 ->	
-	    compile_f(SExt, Base, Options, _, Mod, Dir)
-	 ;
-	    permission_error(compile,'file/module',Path,compile/[1,2])
+	 ->	compile_f(SExt, Base, Options, _, Mod, Dir)
+	 ;	permission_error(compile,'file/module',Path,compile/[1,2])
 	).
 compile0(Path, _) :-
-	(var(Path) -> 
-	    instantiation_error(compile/[1,2],1)
-	  ; (\+ atom(Path) -> 
-	        type_error(atom,Path,compile/[1,2],1)
-	      ; 
-	        existence_error('file/module',Path,compile/[1,2],1) ) ).
+	(var(Path)
+	 ->	instantiation_error(compile/[1,2],1)
+	 ; \+ atom(Path)
+	 ->	type_error(atom,Path,compile/[1,2],1)
+	 ;	existence_error('file/module',Path,compile/[1,2],1)
+	).
 
 compile_f(XSB_SRC_EXTENSION_ATOM_SANS_DOT, Base, Opts, ExList, Mod, _) :- !,
 	compile(Mod, Base, XSB_SRC_EXTENSION_ATOM, Opts, ExList).
@@ -153,11 +151,11 @@ reconsult0(Path, Options, Ensure_loaded) :-
 	         compile_load_user(Options))
 	 ;	(search_module(Path, Dir, Mod, SExt, Base, Obj)
 		 ->	expand_filename(Obj,ExpObj),
-			((SExt \== XSB_OBJ_EXTENSION_ATOM_SANS_DOT,
-			  i_want_compile(SExt, Base, Obj))
+			(SExt \== XSB_OBJ_EXTENSION_ATOM_SANS_DOT,
+			 i_want_compile(SExt, Base, Obj)
  		          ->    check_one_thread_w_override,
 			        compile_f(SExt,Base,Options,_ExList,Mod,Dir),
-				load_exec(Obj, Mod),
+				load_exec(Obj, Mod), % Mod would be atomized ModTerm
 				(consult_file_loaded(ExpObj)
 				 ->	true
 				 ;	assert(consult_file_loaded(ExpObj))
@@ -302,7 +300,7 @@ get_magic_num(ObjFile,[One,Two,Three,Four]) :-
 /*  search_module(+FileName, -Dir, -Mod, -SExt, -Base, -Obj)	        */
 /*                                                                      */
 /*	Given a FileName (must be an atom), search_module/6 finds the	*/
-/*	location of the corresponding module and returns:		            */
+/*	location of the corresponding module and returns:		*/
 /*		1) the directory (Dir),					*/
 /*		2) the module name (Mod),				*/
 /*		3) the extension (SExt) of the source file		*/
@@ -349,15 +347,15 @@ real_search_module(ModName, Dir, Base, Ext) :-
 
 /*======================================================================*/
 /* load_exec(+File, +ModName)						*/
-/*	Changed to use the C loader (code_load/3) that automatically	*/
+/*	Changed to use the C loader (code_load/4) that automatically	*/
 /*	imports all exported predicates of the module into the current	*/
 /*	working module when its third argument is 1.  - Kostis (4/3/93)	*/
-/* The loader returns int 4 when a foreign file has been loaded.  
+/* The loader returns int 4 when a foreign file has been loaded.  	*/
 /*======================================================================*/
 
 load_exec(File, ModName) :-	
 	cputime(LoadStartTime),
-	code_load(File, Init, 1),	% use the changed C loader.
+	code_load(File, Init, 1, ModName),	% use the changed C loader.
 	% jf: for Windows a valid segment pointer might be negative
 	( Init =\= 0			% load succeeded
 	; Init =:= 0,

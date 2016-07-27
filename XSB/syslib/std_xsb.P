@@ -173,6 +173,8 @@ standard_symbol(compile, 1, consult).
 standard_symbol(compile, 2, consult).
 standard_symbol(consult, 1, consult).
 standard_symbol(consult, 2, consult).
+standard_symbol(add_lib_dir, 1, consult).
+standard_symbol(add_lib_dir, 2, consult).
 standard_symbol(copy_term, 2, basics).                       % ISO
 standard_symbol(ground, 1, basics).                          % ISO
 standard_symbol(ground_or_cyclic, 1, machine).               % checks cycles
@@ -615,6 +617,11 @@ standard_metapredicate_template((','),2,(0,0)).
 
 standard_symbol(('->'), 2, standard).
 standard_metapredicate_template(('->'),2,(0->0)).
+
+standard_symbol((do_all), 1, standard).
+standard_metapredicate_template((do_all),1,(0)).
+standard_symbol((do_all), 2, standard).
+standard_metapredicate_template((do_all),2,(0,0)).
 
 standard_symbol((:), 2, standard).
 standard_metapredicate((:),2,2).

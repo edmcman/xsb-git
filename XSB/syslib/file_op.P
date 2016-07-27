@@ -111,6 +111,11 @@ deactivate_op(T, S) :-
 '_$op1'(1150,fx,(dynamic)).
 '_$op1'(1150,fx,(multifile)).
 '_$op1'(1150,fx,meta_predicate).
+
+'_$op1'(1150,xfy,(do_all)).
+'_$op1'(1150,fx,(do_all)).
+'_$op1'(1150,xfy,(if_none)).
+
 '_$op1'(1100,xfy,';').
 '_$op1'(1100,fx,(table)).	% Added for tabling
 '_$op1'(1100,fx,(use_variant_tabling)).		% Added for tabling

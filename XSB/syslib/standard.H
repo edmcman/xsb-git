@@ -124,6 +124,7 @@
 :- export bounded_call/4.
 :- export bounded_call/3.
 :- export get_interpreter_index/1.
+:- export (do_all)/1, (do_all)/2.
 
 :- import (dynamic)/1, asserta/1, assert0/4, retract/1 from assert.
 :- import member/2,append/3,comma_member/2,memberchk/2 from basics.
@@ -178,14 +179,14 @@
 %:- import numbervars/1 from num_vars.
 :- import numbervars/4 from num_vars.
 :- import calculate_singleton/3 from singlton.
-:- import concat_atom/2  from string.
+:- import concat_atom/2, term_to_atom/3  from string.
 :- import file_read/2, file_read/3 from xsb_read.
 :- import file_write0/2, file_write/2, file_write_prolog/2, l_write/3,
 	  file_write_quoted/2, file_write_canonical/2, file_nl/1
      from xsb_writ.
 :- import xsb_thread_self/1 from thread.
 :- import (thread_shared)/1, (thread_private)/1 from consult.
-:- import findall/3 from setof.
+:- import findall/3, term_variables/2, sort/2 from setof.
 :- import (use_variant_tabling)/1, (use_subsumptive_tabling)/1 from tables.
 
 :- import (:-)/2 from usermod.

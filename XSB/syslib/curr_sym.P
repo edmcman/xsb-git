@@ -328,7 +328,7 @@ check_current_predicate_argument(Term) :-
 	(	var(Term) ->
 		true
 	;	Term = Module:Functor/Arity ->
-		(	nonvar(Module), \+ atom(Module) ->
+		(	nonvar(Module), \+ atom(Module), \+ structure(Module) ->
 			type_error(predicate_indicator,Term,current_predicate/1,1)
 		;	nonvar(Functor), \+ atom(Functor) ->
 			type_error(predicate_indicator,Term,current_predicate/1,1)
@@ -371,8 +371,8 @@ current_predicate_global(Functor,N):-
 current_predicate_module(Module,Functor,N) :-
 	get_first_psc_pair(PSC_Pair),
 	module_scan(PSC_Pair, ModuleName, ModulePSC),
-	ModuleName = Module,
-	psc_prop(ModulePSC, First_PSC_Pair),	% get the first psc_pair 
+	atom_to_term(ModuleName,Module),
+	psc_prop(ModulePSC, First_PSC_Pair), % get the first psc_pair 
 						% of this module
 	( First_PSC_Pair =:= 1 ->	% We are dealing with a global module!
 		current_predicate(Functor/N)
@@ -469,7 +469,7 @@ current_predicate(Name, Term_Indicator) :-
 current_module(Module) :- 
 	get_first_psc_pair(PSC_Pair),
 	scan_modules(PSC_Pair, ModuleName),
-	Module = ModuleName.
+	atom_to_term(ModuleName,Module).
 
 scan_modules(PSC_Pair, _) :-
 	PSC_Pair =:= 0,		% PSC_Pair == NULL
@@ -493,7 +493,7 @@ scan_modules(PSC_Pair, NextModuleName) :-
 
 current_module(Module, ObjectFile) :- 
 	current_module(Module),
-	module_file(Module, ObjectFile).
+	module_file(Module,ObjectFile).
 
 module_file('xsbrc', File) :-
 	!,
@@ -504,15 +504,23 @@ module_file('xsbrc', File) :-
 	fmt_write_string(FileName, '%s%s.xsb%sxsbrc.%s',
 			 arg(HomeDir, Slash, Slash,XSB_OBJ_EXTENSION_ATOM)),
 	FileName = File.
-module_file(ModuleName, File) :-
+module_file(Module, File) :-
+	psc_insertmod(Module,0,ModPsc),
+	ModPsc \== 0,
+	psc_ep(ModPsc,File),
+	atom(File),		% has been loaded
+	!.
+module_file(Module, File) :-
+	functor(Module,ModuleName,_),
 	str_cat(ModuleName, XSB_OBJ_EXTENSION_ATOM, OFile),
-	libpath(Lib),
-	str_cat(Lib, OFile, FileName),
-	machine_file_exists(FileName),
-	!,	% This cut is needed so that we get only one filename
-		% as an answer (exactly the one that corresponds to the
-		% file that would be consulted when using the loader).
-	FileName = File.
+	once((libpath(Lib),
+	      str_cat(Lib, OFile, FileName),
+	      machine_file_exists(FileName)
+		% This once is needed so that we get only one filename
+		% as an answer, exactly the one that corresponds to the
+		% file that would be consulted when using the loader (ATBE).
+	     )),
+	FileName = File.  % maybe standardize filename?
 
 
 /* ===== predicate_property/2 ========================================= */
