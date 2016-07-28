@@ -1987,7 +1987,7 @@ int builtin_call(CTXTdeclc byte number)
 				/*      as atoms.			     */
     SYS_MUTEX_LOCK( MUTEX_LOADER );
     ctop_int(CTXTc 2, (Integer)loader(CTXTc ptoc_longstring(CTXTc 1), (int)ptoc_int(CTXTc 3),
-				      (prolog_term)ptoc_tag(CTXT 4)));
+				      (prolog_term)ptoc_tag(CTXTc 4)));
     SYS_MUTEX_UNLOCK( MUTEX_LOADER );
     break;
 
