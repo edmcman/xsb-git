@@ -958,11 +958,11 @@ static int *depth_stack;
     one_btn_chk_ins(flag, item, CZero, BASIC_ANSWER_TRIE_TT);		\
     for (j = get_arity(psc); j>=1 ; j--) {				\
       bld_free(hreg);      xtemp1 = hreg++;				\
-      StandardizeAndTrailVariable(xtemp1,ctr);				\
+      StandardizeAndTrailVariable(xtemp1,varIndexCtr);				\
       /*    printf("standardizing VET_T %p\n",VarEnumerator_trail_top);	*/ \
-      one_btn_chk_ins(flag,EncodeNewTrieVar(ctr), CZero,BASIC_ANSWER_TRIE_TT);	\
+      one_btn_chk_ins(flag,EncodeNewTrieVar(varIndexCtr), CZero,BASIC_ANSWER_TRIE_TT);	\
       /* printf("standardized VET_T %p\n",VarEnumerator_trail_top);*/	\
-      ctr++;								\
+      varIndexCtr++;								\
       /*      depth_stack_pop;						*/ \
     /*    pdlreg++;	*/						\
   }									\
@@ -981,11 +981,11 @@ static int *depth_stack;
     						      \
     one_btn_chk_ins(found_flag, EncodeTrieList(xtemp1), CZero, BASIC_ANSWER_TRIE_TT); \
     bld_free(hreg);    xtemp1 = hreg++;							\
-    StandardizeAndTrailVariable(xtemp1,ctr);				\
-    one_btn_chk_ins(flag,EncodeNewTrieVar(ctr), CZero,BASIC_ANSWER_TRIE_TT); ctr++;\
+    StandardizeAndTrailVariable(xtemp1,varIndexCtr);				\
+    one_btn_chk_ins(flag,EncodeNewTrieVar(varIndexCtr), CZero,BASIC_ANSWER_TRIE_TT); varIndexCtr++;\
     bld_free(hreg);    xtemp1 = hreg++;							\
-    StandardizeAndTrailVariable(xtemp1,ctr);				\
-    one_btn_chk_ins(flag,EncodeNewTrieVar(ctr), CZero,BASIC_ANSWER_TRIE_TT); ctr++;\
+    StandardizeAndTrailVariable(xtemp1,varIndexCtr);				\
+    one_btn_chk_ins(flag,EncodeNewTrieVar(varIndexCtr), CZero,BASIC_ANSWER_TRIE_TT); varIndexCtr++;\
     if (!bratted) {							\
       undefPair = insert("brat_undefined", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); \
       Utip = get_tip(CTXTc pair_psc(undefPair));			\
@@ -1118,16 +1118,16 @@ static int *depth_stack;
     case XSB_FREE:							\
     case XSB_REF1:							\
       depth_stack_pop;							\
-      /*      printf("ctr %d xtemp1 %p\n",ctr,xtemp1);		*/	\
+      /*      printf("varIndexCtr %d xtemp1 %p\n",varIndexCtr,xtemp1);		*/	\
       if (! IsStandardizedVariable(xtemp1)){				\
 	bld_free(hreg);							\
 	bind_ref(xtemp1, hreg);						\
 	xtemp1 = hreg++;						\
-	StandardizeAndTrailVariable(xtemp1,ctr);			\
+	StandardizeAndTrailVariable(xtemp1,varIndexCtr);			\
 	/*	printf("standardizing VET_T %p\n",VarEnumerator_trail_top);*/ \
-	one_btn_chk_ins(flag,EncodeNewTrieVar(ctr), CZero,TrieType);	\
+	one_btn_chk_ins(flag,EncodeNewTrieVar(varIndexCtr), CZero,TrieType);	\
 	/*	printf("standardized VET_T %p\n",VarEnumerator_trail_top);	*/ \
-	ctr++;								\
+	varIndexCtr++;								\
       } else {								\
 	/*	printf("already standardized\n");		*/	\
 	one_btn_chk_ins(flag,						\
@@ -1151,9 +1151,9 @@ static int *depth_stack;
       /* Now xtemp1 can only be the first occurrence of an attv */	\
       /* *(hreg++) = (Cell) xtemp1;	*/				\
       xtemp1 = clref_val(xtemp1); /* the VAR part of the attv */	\
-      StandardizeAndTrailVariable(xtemp1, ctr);				\
-      one_btn_chk_ins(flag, EncodeNewTrieAttv(ctr), CZero, TrieType);		\
-      attv_ctr++; ctr++;						\
+      StandardizeAndTrailVariable(xtemp1, varIndexCtr);				\
+      one_btn_chk_ins(flag, EncodeNewTrieAttv(varIndexCtr), CZero, TrieType);		\
+      attv_ctr++; varIndexCtr++;						\
       pdlpush(cell(xtemp1+1));	/* the ATTR part of the attv */		\
       break;								\
     default:								\
@@ -1249,7 +1249,7 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   int   i, j, found_flag = 1, tag = XSB_FREE;
   Cell  item, tmp_var;
   ALNptr answer_node;
-  int ctr, attv_ctr;
+  int varIndexCtr, attv_ctr;
   BTNptr Paren, *ChildPtrOfParen;
   Cell answer_depth_ctr;
   UInteger answer_depth_limit,working_answer_depth_limit;
@@ -1274,7 +1274,7 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   VarEnumerator_trail_top = ((CPtr *)(& VarEnumerator_trail[0])) - 1;
   //  printf(">>>>VAS VET %p\n",  VarEnumerator_trail_top);
   AnsVarCtr = 0;
-  ctr = 0;
+  varIndexCtr = 0;
   if ( IsNULL(subg_ans_root_ptr(subgoal_ptr)) ) {
     Cell retSymbol;
     if ( sf_size > 0 )
@@ -1316,12 +1316,12 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
       if (isattv(tmp_var)) {
 	xtemp1 = clref_val(tmp_var); /* the VAR part */
 	if (xtemp1 == (CPtr) cell(xtemp1)) { /* this attv is not changed */
-	  StandardizeAndTrailVariable(xtemp1, ctr);
+	  StandardizeAndTrailVariable(xtemp1, varIndexCtr);
 	}
-	ctr++;
+	varIndexCtr++;
       }
     }
-    /* now ctr should be equal to attv_num */
+    /* now varIndexCtr should be equal to attv_num */
   }
   attv_ctr = attv_num;
 
@@ -1350,9 +1350,9 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
 	 * full SLG-WAM trailing.  Thus, if this is the first
 	 * occurrence of this variable, then: 
 	 *
-	 * 	StandardizeAndTrailVariable(xtemp1, ctr)
+	 * 	StandardizeAndTrailVariable(xtemp1, varIndexCtr)
 	 * 			||
-	 * 	bld_ref(xtemp1, VarEnumerator[ctr]);
+	 * 	bld_ref(xtemp1, VarEnumerator[varIndexCtr]);
 	 * 	*(++VarEnumerator_trail_top) = xtemp1
 	 *
 	 * By doing this, all the variables appearing in the answer
@@ -1373,11 +1373,11 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
 	xtemp1 = hreg++;
 #endif
 	//	printf("VAS abt to std %p\n",VarEnumerator_trail_top);
-	StandardizeAndTrailVariable(xtemp1,ctr);
+	StandardizeAndTrailVariable(xtemp1,varIndexCtr);
 	//	printf("VAS just std %p\n",VarEnumerator_trail_top);
-	item = EncodeNewTrieVar(ctr);
+	item = EncodeNewTrieVar(varIndexCtr);
 	one_btn_chk_ins(found_flag, item, CZero, BASIC_ANSWER_TRIE_TT);
-	ctr++;
+	varIndexCtr++;
       } else {
 	item = IndexOfStdVar(xtemp1);
 	item = EncodeTrieVar(item);
@@ -1440,13 +1440,13 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
       //      *(hreg++) = (Cell) xtemp1;
       xtemp1 = clref_val(xtemp1); /* the VAR part of the attv */
       /*
-       * Bind the VAR part of this attv to VarEnumerator[ctr], so all the
+       * Bind the VAR part of this attv to VarEnumerator[varIndexCtr], so all the
        * later occurrences of this attv will look like a regular variable
        * (after dereferencing).
        */
-      StandardizeAndTrailVariable(xtemp1, ctr);	
-      one_btn_chk_ins(found_flag, EncodeNewTrieAttv(ctr), CZero, BASIC_ANSWER_TRIE_TT);
-      attv_ctr++; ctr++;
+      StandardizeAndTrailVariable(xtemp1, varIndexCtr);	
+      one_btn_chk_ins(found_flag, EncodeNewTrieAttv(varIndexCtr), CZero, BASIC_ANSWER_TRIE_TT);
+      attv_ctr++; varIndexCtr++;
       pdlpush(cell(xtemp1+1));	/* the ATTR part of the attv */
       recvariant_trie_ans_subsf(found_flag, BASIC_ANSWER_TRIE_TT);
       //recvariant_trie_no_ans_subsf(found_flag, BASIC_ANSWER_TRIE_TT);
@@ -1468,15 +1468,15 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
    * and head variable numbers must be used in body.
    */
 
-  if (ctr == 0)
+  if (varIndexCtr == 0)
     bld_int(ans_var_pos_reg, 0);
   else	
-    bld_functor(ans_var_pos_reg, get_ret_psc(ctr));
+    bld_functor(ans_var_pos_reg, get_ret_psc(varIndexCtr));
 
   /* Save the number of variables in the answer, i.e. the sf_size of
    * the substitution factor of the answer, into `AnsVarCtr'.
    */
-  AnsVarCtr = ctr;		
+  AnsVarCtr = varIndexCtr;		
 
 
   /* TES: Added check for adding into a table an answer with a large number
