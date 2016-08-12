@@ -9,6 +9,9 @@
 :- table brat_undefined/0 as opaque.
 brat_undefined :- tnot(brat_undefined).
 
+:- table restraint_number_of_answers/0 as opaque.
+restraint_number_of_answers :- tnot(restraint_number_of_answers).
+
 :- table floundered_undefined/1 as opaque.
 floundered_undefined(a) :- tnot(floundered_undefined(a)).
 
@@ -20,6 +23,9 @@ l3_undef:- tnot(l3_undef).
 reinitialize_undefineds:- 
 %	writeln(reinitializing),
 	brat_undefined,fail.    % fail for batched; otw cut over table
+reinitialize_undefineds:- 
+%	writeln(reinitializing),
+	restraint_number_of_answers,fail.    % fail for batched; otw cut over table
 reinitialize_undefineds:- 
 	floundered_undefined(a),fail. 
 reinitialize_undefineds:- 
