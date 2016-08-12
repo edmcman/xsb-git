@@ -1050,7 +1050,7 @@ static int *depth_stack;
     else { /* error */							\
 	sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
 	safe_delete_branch(Paren);					\
-	if (is_cyclic(CTXTc (Cell) (cptr -i))) {			\
+	if (is_cyclic(CTXTc (Cell) (ans_sf_ptr -i))) {			\
 	  xsb_abort("Cyclic term in arg %d of tabled answer %s\n",i+1,forest_log_buffer_1->fl_buffer); \
 	}								\
 	else								\
@@ -1063,7 +1063,7 @@ static int *depth_stack;
 #define CHECK_ANSWER_TERM_METRIC {				\
   if (answer_depth_ctr >= working_answer_depth_limit) {		\
     if (working_answer_depth_limit == flags[CYCLIC_CHECK_SIZE]) {	\
-	if (is_cyclic(CTXTc (Cell) (cptr -i))) {			\
+	if (is_cyclic(CTXTc (Cell) (ans_sf_ptr -i))) {			\
 	  sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
 	  safe_delete_branch(Paren);					\
 	  xsb_abort("Cyclic term in arg %d of tabled answer %s\n",i+1,forest_log_buffer_1->fl_buffer); \
@@ -1086,7 +1086,7 @@ static int *depth_stack;
   if (++answer_depth_ctr >= working_answer_depth_limit) {		\
     if (working_answer_depth_limit == flags[CYCLIC_CHECK_SIZE]) {	\
       /*      printf("about to cyclecheck adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit);*/ \
-      if (is_cyclic(CTXTc (Cell) (cptr -i))) {				\
+      if (is_cyclic(CTXTc (Cell) (ans_sf_ptr -i))) {				\
 	  sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
 	  safe_delete_branch(Paren);					\
 	  xsb_abort("Cyclic term in arg %lu of tabled answer %s\n",i+1,forest_log_buffer_1->fl_buffer); \
@@ -1229,9 +1229,9 @@ static inline int handle_incrementally_rederived_answer(CTXTdeclc VariantSF subg
     
 
 /*
- * Called in SLG instruction `new_answer_dealloc', variant_answer_search()
+ * Called in SLG instruction `new_answer_dealloc', v`ariant_answer_search()
  * checks if the answer has been returned before and, if not, inserts it
- * into the answer trie.  Here, `sf_size' is the number of variables in the
+ * into the answer trie.  Here, `ans_sf_size' is the number of variables in the
  * substitution factor of the called subgoal, `attv_num' is the number of
  * attributed variables in the call, `cptr' is the pointer to the
  * substitution factor, and `subgoal_ptr' is the subgoal frame of the
@@ -1241,7 +1241,7 @@ static inline int handle_incrementally_rederived_answer(CTXTdeclc VariantSF subg
  * The returned value of this function is the leaf of the answer trie.
  */
 
-BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
+BTNptr variant_answer_search(CTXTdeclc int ans_sf_size, int attv_num, CPtr ans_sf_ptr,
 			     VariantSF subgoal_ptr, xsbBool *rederived_ptr, xsbBool *flagptr,
 			     xsbBool *uncond_or_hasASI) {
 
@@ -1279,8 +1279,8 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   varIndexCtr = 0;
   if ( IsNULL(subg_ans_root_ptr(subgoal_ptr)) ) {
     Cell retSymbol;
-    if ( sf_size > 0 )
-      retSymbol = EncodeTriePSC(get_ret_psc(sf_size));
+    if ( ans_sf_size > 0 )
+      retSymbol = EncodeTriePSC(get_ret_psc(ans_sf_size));
     else
       retSymbol = EncodeTrieConstant(makestring(get_ret_string()));
     subg_ans_root_ptr(subgoal_ptr) =
@@ -1313,8 +1313,8 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
    * the call (attv_num > 0).  ¹
    */
   if (attv_num > 0) {
-    for (i = 0; i < sf_size; i++) {
-      tmp_var = cell(cptr - i);
+    for (i = 0; i < ans_sf_size; i++) {
+      tmp_var = cell(ans_sf_ptr - i);
       if (isattv(tmp_var)) {
 	xtemp1 = clref_val(tmp_var); /* the VAR part */
 	if (xtemp1 == (CPtr) cell(xtemp1)) { /* this attv is not changed */
@@ -1328,12 +1328,12 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   attv_ctr = attv_num;
 
   //  printf("\n");
-  for (i = 0; i < sf_size; i++) {
+  for (i = 0; i < ans_sf_size; i++) {
     //    printf("starting again i %d\n",i);
     if (flags[CYCLIC_CHECK_SIZE] < answer_depth_limit) working_answer_depth_limit = flags[CYCLIC_CHECK_SIZE];
     else working_answer_depth_limit = answer_depth_limit;
     answer_depth_ctr = 0;  
-    xtemp1 = (CPtr) (cptr - i); /* One element of VarsInCall.  It might
+    xtemp1 = (CPtr) (ans_sf_ptr - i); /* One element of VarsInCall.  It might
 				 * have been bound in the answer for
 				 * the call.
 				 */
@@ -1460,7 +1460,7 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   resetpdl;                                                   
 
   /* Put the substitution factor of the answer into a term ret/n (if 
-   * the sf_size of the substitution factor is 0, then put integer 0
+   * the ans_sf_size of the substitution factor is 0, then put integer 0
    * into cell ans_var_pos_reg).
    *
    * Notice that undo_answer_bindings in pre-1.9 version of XSB
@@ -1475,7 +1475,7 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   else	
     bld_functor(ans_var_pos_reg, get_ret_psc(varIndexCtr));
 
-  /* Save the number of variables in the answer, i.e. the sf_size of
+  /* Save the number of variables in the answer, i.e. the ans_sf_size of
    * the substitution factor of the answer, into `AnsVarCtr'.
    */
   AnsVarCtr = varIndexCtr;		
@@ -1499,13 +1499,13 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
 
   
   /* if there is no term to insert, an ESCAPE node has to be created/found */
-  if (sf_size == 0) {
+  if (ans_sf_size == 0) {
     one_btn_chk_ins(found_flag, ESCAPE_NODE_SYMBOL, CZero, BASIC_ANSWER_TRIE_TT);
     Instr(Paren) = trie_proceed;
   }
  
   if(IsIncrSF(subgoal_ptr)){
-    rederived_flag = handle_incrementally_rederived_answer(CTXTc subgoal_ptr,Paren,tag,found_flag,sf_size,uncond_or_hasASI);
+    rederived_flag = handle_incrementally_rederived_answer(CTXTc subgoal_ptr,Paren,tag,found_flag,ans_sf_size,uncond_or_hasASI);
     
   } else
   /*  If an insertion was performed, do some maintenance on the new leaf,
