@@ -61,6 +61,7 @@
 #include "loader_xsb.h" /* for XOOM_FACTOR */
 #include "struct_intern.h"
 #include "residual.h"
+#include "slgdelay.h"
 
 extern Integer intern_term_size(CTXTdeclc Cell);
 extern xsbBool is_cyclic(CTXTdeclc Cell);
@@ -1167,14 +1168,12 @@ static int *depth_stack;
 #include "ptoc_tag_xsb_i.h"
 extern void abolish_release_all_dls(CTXTdeclc ASI);
 
-static inline void handle_incrementally_rederived_answer(CTXTdeclc VariantSF subgoal_ptr,BTNptr Paren,
-						  int tag,
-						  xsbBool found_flag,xsbBool * uncond_or_hasASI) {
-
+static inline int handle_incrementally_rederived_answer(CTXTdeclc VariantSF subgoal_ptr,BTNptr Paren,int tag,
+							 xsbBool found_flag,int ans_subst_size,xsbBool * uncond_or_hasASI) {
+  xsbBool rederived_flag = FALSE;
   byte choicepttype;  /* for incremental evaluation */ 
   byte typeofinstr;   /* for incremental evaluation */ 
   ALNptr answer_node;
-
   /* If a new answer is inserted, the call is changed */
     if((IsNonNULL(subgoal_ptr->callnode->prev_call))&&(found_flag==0)){
       subgoal_ptr->callnode->prev_call->changed=1;
@@ -1190,7 +1189,7 @@ static inline void handle_incrementally_rederived_answer(CTXTdeclc VariantSF sub
        paths, adding delay lists and/or simplifying
     */
     if((found_flag==1) && (IsDeletedNode(Paren))){
-      
+      //      printf("hira found_flag and deleted\n");
       if (is_conditional_answer(Paren) && delayreg) {
 	abolish_release_all_dls(CTXTc Delay(Paren));
 	//	print_pdes(asi_pdes(Delay(Paren)));
@@ -1208,12 +1207,13 @@ static inline void handle_incrementally_rederived_answer(CTXTdeclc VariantSF sub
       MakeStatusValid(Paren);
       
       found_flag=0;
+      //      SUBG_INCREMENT_ANSWER_CTR(subgoal_ptr,ans_subst_size);
 
       subgoal_ptr->callnode->prev_call->no_of_answers--;
       
       New_ALN(subgoal_ptr,answer_node,Paren,NULL);
       SF_AppendNewAnswer(subgoal_ptr,answer_node);	
-      
+      rederived_flag  = TRUE;
     } else
       if ( found_flag == 0 ) {
 	MakeTSTNLeafNode(Paren);
@@ -1224,6 +1224,7 @@ static inline void handle_incrementally_rederived_answer(CTXTdeclc VariantSF sub
 	New_ALN(subgoal_ptr,answer_node,Paren,NULL);
 	SF_AppendNewAnswer(subgoal_ptr,answer_node);
       }
+    return rederived_flag;
 }
     
 
@@ -1241,9 +1242,10 @@ static inline void handle_incrementally_rederived_answer(CTXTdeclc VariantSF sub
  */
 
 BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
-			     VariantSF subgoal_ptr, xsbBool *flagptr,
+			     VariantSF subgoal_ptr, xsbBool *rederived_ptr, xsbBool *flagptr,
 			     xsbBool *uncond_or_hasASI) {
 
+  xsbBool rederived_flag = FALSE;
   Psc   psc;
   CPtr  xtemp1;
   int   i, j, found_flag = 1, tag = XSB_FREE;
@@ -1287,7 +1289,7 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   Paren = subg_ans_root_ptr(subgoal_ptr);
   ChildPtrOfParen = &BTN_Child(Paren);
 
-  /* Documentation rewritten by TLS: 
+  /* Documentation rewritten by TES: 
    * To properly generate instructions for attributed variables, you
    * need to know which attributed variables are identical to those in
    * the call, and which represent new bindings to attributed or vanilla
@@ -1503,8 +1505,8 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
   }
  
   if(IsIncrSF(subgoal_ptr)){
-    handle_incrementally_rederived_answer(CTXTc subgoal_ptr,Paren,tag,found_flag,
-					  uncond_or_hasASI);
+    rederived_flag = handle_incrementally_rederived_answer(CTXTc subgoal_ptr,Paren,tag,found_flag,sf_size,uncond_or_hasASI);
+    
   } else
   /*  If an insertion was performed, do some maintenance on the new leaf,
    *  and place the answer handle onto the answer list.
@@ -1518,8 +1520,9 @@ BTNptr variant_answer_search(CTXTdeclc int sf_size, int attv_num, CPtr cptr,
     New_ALN(subgoal_ptr,answer_node,Paren,NULL);
     SF_AppendNewAnswer(subgoal_ptr,answer_node);
   }
-
+  //  printf("vas: found flag %d rederived flag %d\n",found_flag,rederived_flag);
   *flagptr = found_flag;	
+  *rederived_ptr = rederived_flag;
   return Paren;
 }
 
@@ -1673,6 +1676,55 @@ BTNptr delay_chk_insert(CTXTdeclc int arity, CPtr cptr, CPtr *hook)
  
     xsb_dbgmsg((LOG_BD, "----------------------------- Exit\n"));
     return Paren;
+}
+
+void add_positive_delay(char * predicate ) {
+  int isNew;
+  BTNptr NodePtr;
+  Pair undefPair;				      
+  struct Table_Info_Frame * Utip;		      
+
+  undefPair = insert(predicate, 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
+  Utip = get_tip(CTXTc pair_psc(undefPair));				
+  NodePtr = subg_ans_root_ptr(TIF_Subgoals(Utip));
+  while (!IsLeafNode(NodePtr)) {
+    NodePtr = Child(NodePtr);
+  }
+  //  print_delay_list(CTXTc stddbg,delayreg);fprintf(stddbg,"\n");
+  delay_positively(TIF_Subgoals(Utip),NodePtr,makestring(get_ret_string()));
+}
+
+void add_empty_conditional_answer (int ans_subst_size,VariantSF subgoal_ptr) {
+  int   i, found_flag = 1, tag = XSB_FREE, varIndexCtr;
+  BTNptr Paren, *ChildPtrOfParen;
+  Cell  item;                ALNptr answer_node;
+  xsbBool  uncond_or_hasASI; 
+  //  printf("adding empty conditional answer\n");
+  VarEnumerator_trail_top = ((CPtr *)(& VarEnumerator_trail[0])) - 1;
+  varIndexCtr = 0;
+  Paren = subg_ans_root_ptr(subgoal_ptr);
+  ChildPtrOfParen = &BTN_Child(Paren);
+  for (i = 0; i < ans_subst_size; i++) {
+    item = EncodeNewTrieVar(varIndexCtr);
+    one_btn_chk_ins(found_flag, item, CZero, BASIC_ANSWER_TRIE_TT);
+    varIndexCtr++;
+  }
+  schedule_ec(subgoal_ptr); 
+  //Handle incremental
+  if(IsIncrSF(subgoal_ptr)){
+    handle_incrementally_rederived_answer(CTXTc subgoal_ptr,Paren,tag,found_flag,ans_subst_size,&uncond_or_hasASI);
+  } else {
+  /*  If an insertion was performed, do some maintenance on the new leaf,
+   *  and place the answer handle onto the answer list. */
+    MakeLeafNode(Paren);
+    TN_UpgradeInstrTypeToSUCCESS(Paren,tag);
+    //#if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
+    //    ans_inserts++;
+    New_ALN(subgoal_ptr,answer_node,Paren,NULL);
+    SF_AppendNewAnswer(subgoal_ptr,answer_node);
+  }
+    add_positive_delay("restraint_number_of_answers");
+    do_delay_stuff(CTXTc Paren, subgoal_ptr, FALSE);
 }
 
 /*----------------------------------------------------------------------*/

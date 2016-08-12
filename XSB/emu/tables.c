@@ -241,6 +241,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
       old_answer_table_gl=NULL;
       
       sf=CallTrieLeaf_GetSF(Paren);
+      subg_ans_ctr(sf) = 0;  // Reset answer counter for incremental recomputation
       c=sf->callnode;
 
       /* TLS: if falsecount == 0 && call_found_flag, we know that call
@@ -487,11 +488,10 @@ int table_call_search_incr(CTXTdeclc TabledCallInfo *call_info,
  ***********************************************************************/
 
 BTNptr table_answer_search(CTXTdeclc VariantSF producer, int size, int attv_num,
-			   CPtr templ, xsbBool *is_new) {
+			   CPtr templ, xsbBool *rederived_flag,xsbBool *is_new) {
 
   void *answer;
-  xsbBool wasFound = TRUE;
-  xsbBool hasASI = TRUE;
+  xsbBool wasFound = TRUE; xsbBool hasASI = TRUE; xsbBool rederived_flag_loc = TRUE;
 
   if ( IsSubsumptiveProducer(producer) ) {
 
@@ -522,21 +522,21 @@ BTNptr table_answer_search(CTXTdeclc VariantSF producer, int size, int attv_num,
     
     ans_var_pos_reg = hreg++;	/* Leave a cell for functor ret/n */
 
-    if (NULL != (answer = variant_answer_search(CTXTc size,attv_num,templ,producer,&wasFound,
-						&hasASI))) {
+    if (NULL != (answer = variant_answer_search(CTXTc size,attv_num,templ,producer,&rederived_flag_loc,&wasFound,&hasASI))) {
+      // TES: I dont see why these two cases need to be made distinct
       if (!IsIncrSF(producer)) {
 	//	printf("wasFound %d delay %p\n",wasFound,delayreg);
 	do_delay_stuff(CTXTc (NODEptr)answer, producer, wasFound);
 	*is_new = ! wasFound;
       }
       else {
-	//	printf("hasASI %d delay %p\n",hasASI,delayreg);
+	//	printf("hasASI %d found %d delay %p\n",hasASI,delayreg,wasFound);
 	do_delay_stuff(CTXTc (NODEptr)answer, producer, (hasASI & wasFound));
 	*is_new = ! wasFound;
       }
     }
-
     *is_new = ! wasFound;
+    *rederived_flag = rederived_flag_loc;
     undo_answer_bindings;
 
   }

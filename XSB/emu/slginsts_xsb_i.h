@@ -147,6 +147,30 @@
 	      ctrace_ctr++);						\
   }
 
+
+#define LOG_NEW_ANSWER(producer_sf,answer_template,template_size)	\
+  if (flags[CTRACE_CALLS] && !subg_forest_log_off(producer_sf))  {	\
+    memset(forest_log_buffer_1->fl_buffer,0,MAXTERMBUFSIZE);		\
+    memset(forest_log_buffer_2->fl_buffer,0,MAXTERMBUFSIZE);		\
+    memset(forest_log_buffer_3->fl_buffer,0,MAXTERMBUFSIZE);		\
+    /*    sprint_registers(CTXTc  buffera,TIF_PSC(subg_tif_ptr(producer_sf)),flags[MAX_TABLE_SUBGOAL_SIZE]); */ \
+    /*    printAnswerTemplate(stddbg,answer_template ,(int) template_size); */ \
+    sprintAnswerTemplate(CTXTc forest_log_buffer_1, answer_template, template_size);\
+    if (ptcpreg)							\
+      sprint_subgoal(CTXTc forest_log_buffer_2,0,(VariantSF)producer_sf); \
+    else sprintf(forest_log_buffer_2->fl_buffer,"null");		\
+    if (delayreg) {							\
+      sprint_delay_list(CTXTc forest_log_buffer_3, delayreg);		\
+      fprintf(fview_ptr,"nda(%s,%s,%s,%d).\n",forest_log_buffer_1->fl_buffer, \
+	      forest_log_buffer_2->fl_buffer,forest_log_buffer_3->fl_buffer, \
+	      ctrace_ctr++);						\
+    }									\
+    else								\
+      fprintf(fview_ptr,"na(%s,%s,%d).\n",forest_log_buffer_1->fl_buffer, \
+	      forest_log_buffer_2->fl_buffer,ctrace_ctr++);		\
+  }
+
+
 /* need to test if ground (or better, but harder, if goals are
    identical) since p(X) :- p(X) is different from p(X) :- p(Y), yet
    they have the same goals. */
@@ -1028,6 +1052,7 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
   int template_size, attv_num; Integer tmp;
   VariantSF producer_sf;
   xsbBool isNewAnswer = FALSE;
+  xsbBool wasRederived = FALSE;
   BTNptr answer_leaf;
 #ifdef CALL_ABSTRACTION
   int abstr_size;
@@ -1042,7 +1067,7 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
 
   ADVANCE_PC(size_xxx);
 
-  xsb_dbgmsg((LOG_COMPLETION,"starting new_answer breg %x\n",breg));
+  //  printf("-----starting new answer\n");
   producer_sf = (VariantSF)cell(ereg-Yn);
   producer_cpf = subg_cp_ptr(producer_sf);
 
@@ -1108,98 +1133,87 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
 
   SET_TRIE_ALLOCATION_TYPE_SF(producer_sf); /* No-op in seq engine */
   answer_leaf = table_answer_search( CTXTc producer_sf, template_size, attv_num,
-				     answer_template, &isNewAnswer );
+				     answer_template, &wasRederived,&isNewAnswer );
+
+//printf("completion status %d isnew %d wasRederived %d\n",subg_is_complete(producer_sf),isNewAnswer,wasRederived);
+
+if (wasRederived) {
+  LOG_NEW_ANSWER(producer_sf,answer_template,template_size);
+  SUBG_INCREMENT_ANSWER_CTR(producer_sf,template_size);
+  if (subg_is_ec_scheduled(producer_sf) ) {  // See comment below
+    perform_early_completion(CTXTc producer_sf, producer_cpf);
+  }
+ }
 
   if ( isNewAnswer ) {   /* go ahead -- look for more answers */
 
-  if (flags[CTRACE_CALLS] && !subg_forest_log_off(producer_sf))  { 
-    memset(forest_log_buffer_1->fl_buffer,0,MAXTERMBUFSIZE);
-    memset(forest_log_buffer_2->fl_buffer,0,MAXTERMBUFSIZE);
-    memset(forest_log_buffer_3->fl_buffer,0,MAXTERMBUFSIZE);
-    //    sprint_registers(CTXTc  buffera,TIF_PSC(subg_tif_ptr(producer_sf)),flags[MAX_TABLE_SUBGOAL_SIZE]);
-    //    printAnswerTemplate(stddbg,answer_template ,(int) template_size);
-    sprintAnswerTemplate(CTXTc forest_log_buffer_1, 
-			 answer_template, template_size);
-    if (ptcpreg)
-      sprint_subgoal(CTXTc forest_log_buffer_2,0,(VariantSF)producer_sf);     
-    else sprintf(forest_log_buffer_2->fl_buffer,"null");
-    if (delayreg) {
-      sprint_delay_list(CTXTc forest_log_buffer_3, delayreg);
-      fprintf(fview_ptr,"nda(%s,%s,%s,%d).\n",forest_log_buffer_1->fl_buffer,
-	      forest_log_buffer_2->fl_buffer,forest_log_buffer_3->fl_buffer,
-	      ctrace_ctr++);
-    }
-    else 
-      fprintf(fview_ptr,"na(%s,%s,%d).\n",forest_log_buffer_1->fl_buffer,
-	      forest_log_buffer_2->fl_buffer,ctrace_ctr++);
-  }
+    LOG_NEW_ANSWER(producer_sf,answer_template,template_size);
+
 #ifdef DEBUG_ABSTRACTION
-  printf("AT (na) %p size %d\n",answer_template,template_size);
-  print_heap_abstraction(answer_template-2*(abstr_size)-(template_size-1),abstr_size);
-  printAnswerTemplate(stddbg,answer_template,template_size);
-  print_registers(stddbg, TIF_PSC(subg_tif_ptr(producer_sf)),flags[MAX_TABLE_SUBGOAL_SIZE]);
+    printf("AT (na) %p size %d\n",answer_template,template_size);
+    print_heap_abstraction(answer_template-2*(abstr_size)-(template_size-1),abstr_size);
+    printAnswerTemplate(stddbg,answer_template,template_size);
+    print_registers(stddbg, TIF_PSC(subg_tif_ptr(producer_sf)),flags[MAX_TABLE_SUBGOAL_SIZE]);
 #endif
 
-    SUBG_INCREMENT_ANSWER_CTR(producer_sf);
+    SUBG_INCREMENT_ANSWER_CTR(producer_sf,template_size);
     /* incremental evaluation */
-    if(IsIncrSF(producer_sf))
-      subg_callnode_ptr(producer_sf)->no_of_answers++;
-    
-    
+    if(IsIncrSF(producer_sf)) subg_callnode_ptr(producer_sf)->no_of_answers++;
+
     delayreg = tcp_pdreg(producer_cpf);      /* restore delayreg of parent */
-    if (is_conditional_answer(answer_leaf)) {	/* positive delay */
+    if (is_conditional_answer(answer_leaf)) {   /* positive delay */
 #ifndef LOCAL_EVAL
 #ifdef DEBUG_DELAYVAR
       fprintf(stddbg, ">>>> delay_positively in new_answer_dealloc\n");
 #endif
-      /*
+      /*                                                                                                      
        * The new answer for this call is a conditional one, so add it
        * into the delay list for its root subgoal.  Notice that
-       * delayreg has already been restored to the delayreg of parent.
-       *
-       * This is the new version of delay_positively().  Here,
-       * ans_var_pos_reg is passed from variant_answer_search().  It is a
-       * pointer to the heap where the substitution factor of the
-       * answer was saved as a term ret/n (in variant_answer_search()).
+       * delayreg has already been restored to the delayreg of parent.                                             
+       *                                                                                                          
+       * This is the new version of delay_positively().  Here,     
+       * ans_var_pos_reg is passed from variant_answer_search().  It is a                                             
+       * pointer to the heap where the substitution factor of the                        
+       * answer was saved as a term ret/n (in variant_answer_search()).                                                      
        */
 #ifndef IGNORE_DELAYVAR
       fail_if_direct_recursion(producer_sf);
       if (isinteger(cell(ans_var_pos_reg))) {
-	delay_positively(producer_sf, answer_leaf,
-			 makestring(get_ret_string()));
+        delay_positively(producer_sf, answer_leaf,
+                         makestring(get_ret_string()));
       }
-      else 
-	delay_positively(producer_sf, answer_leaf, makecs(ans_var_pos_reg));
+      else
+        delay_positively(producer_sf, answer_leaf, makecs(ans_var_pos_reg));
 #else
-	delay_positively(producer_sf, answer_leaf,
-			 makestring(get_ret_string()));
+      delay_positively(producer_sf, answer_leaf,
+		       makestring(get_ret_string()));
 #endif /* IGNORE_DELAYVAR */
 #endif /* ! LOCAL_EVAL */
     }
     else {
       if (template_size == 0 || subg_is_ec_scheduled(producer_sf) ) {
-	/*
-	 *  The table is for a ground call which we just proved true.
-	 *  (We entered an ESCAPE Node, above, to note this fact in the
-	 *  table.)  As we only need to do this once, we perform "early
-	 *  completion" by ignoring the other clauses of the predicate
-	 *  and setting the failure continuation (next_clause) field of
-	 *  the CPF to a check_complete instr.
-	 *
-	 */
-	/*		
-		printf("performing early completion for: (%d)",subg_is_complete(producer_sf));
-		print_subgoal(CTXTc stddbg, producer_sf);
-		printf("(breg: %x pcpf %x\n",breg,producer_cpf);alt_print_cp(CTXTc"ec");
-	 */
+        /*                                                                                                                     
+         *  The table is for a ground call which we just proved true.                                                           
+         *  (We entered an ESCAPE Node, above, to note this fact in the                                                         
+         *  table.)  As we only need to do this once, we perform "early                                                         
+         *  completion" by ignoring the other clauses of the predicate                                                          
+         *  and setting the failure continuation (next_clause) field of                                                         
+         *  the CPF to a check_complete instr.                                                                               
+         *                                                                                                                      
+         */
+        /*                                                                                                                      
+                printf("performing early completion for: (%d)",subg_is_complete(producer_sf));                                 
+                print_subgoal(CTXTc stddbg, producer_sf);                                                                      
+                printf("(breg: %x pcpf %x\n",breg,producer_cpf);alt_print_cp(CTXTc"ec");                                      
+	*/
 	perform_early_completion(CTXTc producer_sf, producer_cpf);
 #if defined(LOCAL_EVAL)
-	flags[PIL_TRACE] = 1;
-	/* The following prunes deeper choicepoints at early completion if possible */
-	if (tcp_pcreg(producer_cpf) != (byte *) &answer_return_inst) {
+        flags[PIL_TRACE] = 1;
+        /* The following prunes deeper choicepoints at early completion if possible */
+        if (tcp_pcreg(producer_cpf) != (byte *) &answer_return_inst) {
           CPtr b = breg;
-	  //          printf("+++ ec breg: %p, producer %p\n",b,producer_cpf);
-          while (b < producer_cpf) {
+          //          printf("+++ ec breg: %p, producer %p\n",b,producer_cpf);                                                 
+          while (b < producer_cpf) { 
 	    //            printf("+++ unwind %p\n",b);
             CHECK_TRIE_ROOT(CTXTc b);
             CHECK_CALL_CLEANUP(CTXTc b);

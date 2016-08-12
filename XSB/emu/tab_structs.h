@@ -709,7 +709,7 @@ typedef struct subgoal_frame {
   unsigned int callsto_number:32;
   unsigned int ans_ctr:32;
 #else
-  Integer callsto_number;    /* if 64 bits double-use call_ans_ctr */
+  Integer callsto_number;    
   UInteger ans_ctr; 
 #endif
 
@@ -738,7 +738,6 @@ typedef struct subgoal_frame {
 #define subg_compl_stack_ptr(b)	( ((VariantSF)(b))->compl_stack_ptr )
 #define subg_compl_susp_ptr(b)	( ((VariantSF)(b))->compl_suspens_ptr )
 #define subg_nde_list(b)	( ((VariantSF)(b))->nde_list )
-#define subg_call_ans_ctr(b)	( ((VariantSF)(b))->call_ans_ctr )
 
 #define subg_tid(b)		( ((VariantSF)(b))->tid )
 #define subg_tag(b)		( ((VariantSF)(b))->tag )
@@ -781,9 +780,15 @@ typedef struct subgoal_frame {
 #define SUBG_INCREMENT_CALLSTO_SUBGOAL(subgoal)  (subgoal -> callsto_number)++
 #define INIT_SUBGOAL_CALLSTO_NUMBER(subgoal) subg_callsto_number(subgoal)  = 1
 
-#define SUBG_INCREMENT_ANSWER_CTR(subgoal) {	\
-    if (++subg_ans_ctr(subgoal) > (unsigned) flags[MAX_ANSWERS_FOR_SUBGOAL]) { \
-      if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ERROR) {		\
+extern void add_empty_conditional_answer (int,VariantSF);
+
+#define SUBG_INCREMENT_ANSWER_CTR(subgoal,template_size) {				\
+    /*    printf("number of calls is %d\n",subg_ans_ctr(subgoal));*/	\
+    if (subg_ans_ctr(subgoal)++ == (unsigned) flags[MAX_ANSWERS_FOR_SUBGOAL]) { \
+      if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ABSTRACT) {	\
+	add_empty_conditional_answer(template_size,subgoal);		\
+      }									\
+      else if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ERROR) {	\
 	sprint_subgoal(CTXTc forest_log_buffer_1,0, subgoal);		\
 xsb_abort("Tripwire max_answers_for_subgoal hit. The user-set limit on the number of %d answers for a single subgoaol has been exceeded for %s\n",flags[MAX_ANSWERS_FOR_SUBGOAL],forest_log_buffer_1->fl_buffer); \
       }									\

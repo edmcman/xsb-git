@@ -369,7 +369,7 @@ extern BTNptr   trie_assert_chk_ins(CPtr, BTNptr, int *);
 extern BTNptr   trie_intern_chk_ins(Cell, BTNptr *, int *, int, int);
 extern BTNptr	get_next_trie_solution(ALNptr *);
 extern BTNptr	variant_answer_search(int, int, CPtr, struct subgoal_frame *,
-				      xsbBool *,xsbBool *);
+				      xsbBool *,xsbBool *,xsbBool *);
 extern BTNptr   delay_chk_insert(int, CPtr, CPtr *);
 //extern void     undo_answer_bindings(void);
 extern void	load_delay_trie(int, CPtr, BTNptr);
@@ -398,7 +398,7 @@ extern BTNptr   trie_assert_chk_ins(struct th_context *, CPtr, BTNptr, int *);
 extern BTNptr   trie_intern_chk_ins(struct th_context *, Cell, BTNptr *, int *, int, int);
 extern BTNptr	get_next_trie_solution(ALNptr *);
 extern BTNptr	variant_answer_search(struct th_context *, int, int, CPtr, 
-				      struct subgoal_frame *, xsbBool *, xsbBool *);
+				      struct subgoal_frame *, xsbBool *, xsbBool *,xsbBool *);
 extern BTNptr   delay_chk_insert(struct th_context *, int, CPtr, CPtr *);
 //extern void     undo_answer_bindings(struct th_context *);
 extern void	load_delay_trie(struct th_context *, int, CPtr, BTNptr);
