@@ -685,7 +685,7 @@ the high-level topography of the dependency graph~\footnote{Currently,
 %an efficient means to materialize the dependency graph, even if SCC
 %information per se is not required
   
-\index{radial restraint}
+\index{restraint!radial}
 \index{termination!radial restraint}
 \predref{u\_not/1}
 \predref{get\_residual\_sccs/5}
@@ -1315,10 +1315,13 @@ Theoretically speaking, in a pure logic program if a tabled derivation
   will theoretically terminate, but may be too inefficient for
   practical purposes.  
 
-  To address such situations, XSB has the tripwire {\tt
-    max\_answers\_for\_subgoal} which is hit if any subgoal has more
-  than the specified number of answers.  If a derivation exceeds that
-  limit, the computation may be suspended, or an error thrown.
+ To address such situations, XSB has the tripwire {\tt
+ max\_answers\_for\_subgoal} which is hit if any subgoal has more than
+ the specified number of answers.  If a derivation exceeds that limit,
+ the subgoal may be eagerly completed while maintaining soundness, the
+ the computation may be suspended, or an error thrown
+ (cf. Section~\ref{sec:answer-count-restraint} for a discussion of how
+ a subgoal may be completed early while preserving soundness).
 %
  \ei {\em Guidelines for Analysis} If the computation is producing too
  many tabled answers, a suspension may be triggered by one of the
@@ -1426,6 +1429,7 @@ indicates the current values of this tripwire.  (Also see the
 %\paragraph*{Tripwire Description
 \begin{itemize}
 
+\index{tripwires!max\_table\_subgoal\_size} 
 \item {\tt max\_table\_subgoal\_size}. 
 \bi  
 \item {\em Limit:} The maximum size of a given argument in a subgoal
@@ -1436,6 +1440,7 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em User handler for suspend}: {\tt max\_table\_subgoal\_size\_handler}.
 \ei
 
+\index{tripwires!max\_incomplete\_subgoals} 
 \item {\tt max\_incomplete\_subgoals}
 \bi  
 \item {\em Limit:} The maximum number of subgoals that are
@@ -1446,6 +1451,7 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em User handler for suspend}: {\tt max\_incomplete\_subgoals\_user\_handler}.
 \ei
 
+\index{tripwires!max\_scc\_subgoals} 
 \item {\tt max\_scc\_subgoals}
 \bi  
 \item {\em Limit:} The maximum number of subgoals that are incomplete,
@@ -1456,6 +1462,7 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em User handler for suspend}: {\tt max\_scc\_subgoals\_user\_handler}.
 \ei
 
+\index{tripwires!max\_table\_answer\_size} 
 \item {\tt max\_table\_answer\_size}
 \bi  
 \item {\em Limit:} The maximum size of a given argument of an answer
@@ -1466,12 +1473,14 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em User handler for suspend}: {\tt max\_table\_answer\_size\_user\_handler}.
 \ei
 
+\index{tripwires!max\_answers\_for\_subgoal} 
 \item {\tt max\_answers\_for\_subgoal}
 \bi  
 \item {\em Limit:} The maximum number of answers for any single tabled
  subgoal.  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em  Possible actions:} {\tt suspend}, {\tt error} or {\tt warning}.
+\item{\em Possible actions:} {\tt suspend}, {\tt error}, {\tt warning}
+ or {\tt complete\_soundly}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
 \item {\em User handler for suspend}: {\tt max\_answers\_for\_subgoal\_user\_handler}.
 \ei
