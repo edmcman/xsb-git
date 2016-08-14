@@ -5,6 +5,7 @@
 :- export brat_undefined/0.
 :- export floundered_undefined/1.
 :- export l3_undef/0.
+:- export restraint_number_of_answers/0.
 
 :- table brat_undefined/0 as opaque.
 brat_undefined :- tnot(brat_undefined).
