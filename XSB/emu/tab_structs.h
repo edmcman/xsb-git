@@ -205,16 +205,24 @@ typedef struct {
 #define PrRef_Mark(PRREF)           ( (PRREF)->mark )
 #define PrRef_DelCF(PRREF)          ( (PRREF)->delcf )
 
+typedef struct Table_Info_Frame *TIFptr;
+
 /* Can't use CTXTdeclc here because its included early in context.h */
 #ifdef MULTI_THREAD
+extern TIFptr New_TIF(struct th_context *,Psc);
 extern xsbBool assert_buff_to_clref_p(struct th_context *, prolog_term, byte, PrRef, int, prolog_term, int, ClRef *);
 extern void c_assert_code_to_buff(struct th_context *, prolog_term);
-
+extern void add_empty_conditional_answer (struct th_context *, int,VariantSF);
 #else
+extern TIFptr New_TIF(Psc);
 extern xsbBool assert_buff_to_clref_p(prolog_term, byte, PrRef, int, prolog_term, int, ClRef *);
-
 extern void c_assert_code_to_buff(prolog_term);
+extern void add_empty_conditional_answer (int,VariantSF);
 #endif
+
+extern struct tif_list  tif_list;
+
+
 
 
 /*===========================================================================*/
@@ -285,7 +293,6 @@ typedef struct Deleted_Clause_Frame {
 
 typedef byte TabledEvalMethod;
 
-typedef struct Table_Info_Frame *TIFptr;
 typedef struct Table_Info_Frame {
   Psc  psc_ptr;			/* pointer to the PSC record of the subgoal */
   byte method;	                /* eval pred using variant or subsumption? */
@@ -350,15 +357,8 @@ struct tif_list {
   TIFptr first;
   TIFptr last;
 };
-extern struct tif_list  tif_list;
 
 /* TLS: New_TIF is now a function in tables.c */
-
-#ifdef MULTI_THREAD
-extern TIFptr New_TIF(struct th_context *,Psc);
-#else
-extern TIFptr New_TIF(Psc);
-#endif
 
 /* TLS: as of 8/05 tifs are freed only when abolishing a dynamic
    tabled predicate, (or when exiting a thread to abolish
@@ -780,13 +780,11 @@ typedef struct subgoal_frame {
 #define SUBG_INCREMENT_CALLSTO_SUBGOAL(subgoal)  (subgoal -> callsto_number)++
 #define INIT_SUBGOAL_CALLSTO_NUMBER(subgoal) subg_callsto_number(subgoal)  = 1
 
-extern void add_empty_conditional_answer (int,VariantSF);
-
 #define SUBG_INCREMENT_ANSWER_CTR(subgoal,template_size) {				\
     /*    printf("number of calls is %d\n",subg_ans_ctr(subgoal));*/	\
     if (subg_ans_ctr(subgoal)++ == (unsigned) flags[MAX_ANSWERS_FOR_SUBGOAL]) { \
       if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ABSTRACT) {	\
-	add_empty_conditional_answer(template_size,subgoal);		\
+	add_empty_conditional_answer(CTXTc template_size,subgoal);		\
       }									\
       else if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ERROR) {	\
 	sprint_subgoal(CTXTc forest_log_buffer_1,0, subgoal);		\

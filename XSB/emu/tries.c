@@ -1670,23 +1670,23 @@ BTNptr delay_chk_insert(CTXTdeclc int arity, CPtr cptr, CPtr *hook)
    restraint, Luk3, etc.  It makes an assumption that the first
    subgoal of predicate is the one we want, as well as the leftmost
    answer of that subgoal. */
-void add_positive_delay(char * predicate ) {
+void add_positive_delay(CTXTdeclc char * predicate ) {
   int isNew;
-  BTNptr NodePtr;
+  BTNptr LocNodePtr;  // NodePtr is a global and redefined in MT, so need a different name.
   Pair undefPair;				      
   struct Table_Info_Frame * Utip;		      
 
   undefPair = insert(predicate, 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
   Utip = get_tip(CTXTc pair_psc(undefPair));				
   /* Find answer so we can point to it.*/
-  NodePtr = subg_ans_root_ptr(TIF_Subgoals(Utip));
-  while (!IsLeafNode(NodePtr)) {
-    NodePtr = Child(NodePtr);
+  LocNodePtr = subg_ans_root_ptr(TIF_Subgoals(Utip));
+  while (!IsLeafNode(LocNodePtr)) {
+    LocNodePtr = Child(LocNodePtr);
   }
-  delay_positively(TIF_Subgoals(Utip),NodePtr,makestring(get_ret_string()));
+  delay_positively(TIF_Subgoals(Utip),LocNodePtr,makestring(get_ret_string()));
 }
 
-void add_empty_conditional_answer (int ans_subst_size,VariantSF subgoal_ptr) {
+void add_empty_conditional_answer (CTXTdeclc int ans_subst_size,VariantSF subgoal_ptr) {
   int   i, found_flag = 1, tag = XSB_FREE, varIndexCtr;
   BTNptr Paren, *ChildPtrOfParen;
   Cell  trie_symbol;                ALNptr answer_node;
@@ -1716,7 +1716,7 @@ void add_empty_conditional_answer (int ans_subst_size,VariantSF subgoal_ptr) {
     New_ALN(subgoal_ptr,answer_node,Paren,NULL);
     SF_AppendNewAnswer(subgoal_ptr,answer_node);
   }
-    add_positive_delay("restraint_number_of_answers");
+    add_positive_delay(CTXTc "restraint_number_of_answers");
     do_delay_stuff(CTXTc Paren, subgoal_ptr, FALSE);
 }
 
