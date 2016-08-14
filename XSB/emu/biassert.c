@@ -3966,19 +3966,19 @@ xsbBool dynamic_code_function( CTXTdecl )
   }
 
   case LOCK_TRIE_MUTEX: {
-    int index, type, tid;
+    int index,tid;
 
     tid = iso_ptoc_int(CTXTc 2, "lock_trie_mutex/1");
-    SPLIT_TRIE_ID(tid,index,type);
+    GET_TRIE_INDEX(tid,index);
     pthread_mutex_lock(&(shared_itrie_array[index].trie_mutex));
     break;
   }
 
   case UNLOCK_TRIE_MUTEX: {
-    int index, type, tid;
+    int index, tid;
 
     tid = iso_ptoc_int(CTXTc 2, "unlock_trie_mutex/1");
-    SPLIT_TRIE_ID(tid,index,type);
+    GET_TRIE_INDEX(tid,index);
     pthread_mutex_unlock(&(shared_itrie_array[index].trie_mutex));
     break;
   }
