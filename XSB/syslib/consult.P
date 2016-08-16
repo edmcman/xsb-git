@@ -422,6 +422,9 @@ add_lib_dir1(Path) :-
 add_lib_dir(Root,(A,B)) :- !,
 	add_lib_dir(Root,A),
 	add_lib_dir(Root,B).
+add_lib_dir(ancestordir(AncName),Path) :- !,
+	path_sysop(cwd_ancestordir,AncName,Root),
+	add_lib_dir1([Root,'/',Path]).
 add_lib_dir(Root,Path) :-
 	add_lib_dir1([Root,'/',Path]).
 
