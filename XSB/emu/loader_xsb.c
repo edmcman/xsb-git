@@ -41,6 +41,7 @@
 
 #ifdef WIN_NT
 #include <direct.h>
+#include <ctype.h>
 #else
 #include <unistd.h>
 #endif
@@ -764,6 +765,7 @@ void replace_form_by_act(char *name, prolog_term modformals, prolog_term modactu
 int get_usermod_filename(const char *mod_name, char *mod_file) {
   size_t mod_name_len;
   char *mod_file_end;
+  char *lmod_file = mod_file;
   mod_name_len = strlen(mod_name);
   if (mod_name_len <= 8 || strncmp("usermod(",mod_name,8) != 0) {
     return FALSE;
@@ -771,22 +773,47 @@ int get_usermod_filename(const char *mod_name, char *mod_file) {
   //printf("usermod: %s\n",mod_name);
   mod_name_len -= 9;
   if (mod_name[8] == '\'') { // really should handle embedded doubled single quotes
-    memmove(mod_file,mod_name+9,mod_name_len); // include final ' and paren
-    mod_file_end = mod_file+mod_name_len;
-    mod_file = strchr(mod_file,'\'');
-    /*    while (*(mod_file+1) == '\'') {
-      memmove(mod_file+1,mod_file+2,mod_name_end-m);
-      mod_file = strchr(mod_file+1,'\'');
-      } */
-    *(mod_file) = '\0';
+    memmove(lmod_file,mod_name+9,mod_name_len); // include final ' and paren
+    mod_file_end = lmod_file+mod_name_len;
+    lmod_file = strchr(lmod_file,'\'');
+    *(lmod_file) = '\0';
   } else {
-    memmove(mod_file,mod_name+8,mod_name_len);
-    mod_file[mod_name_len] = '\0';
+    memmove(lmod_file,mod_name+8,mod_name_len);
+    lmod_file[mod_name_len] = '\0';
   }
   return TRUE;
 }
 
-/*----------------------------------------------------------------------*/
+  /*----------------------------------------------------------------------*/
+#if defined(WIN_NT) || defined(CYGWIN)
+#define file_strcmp(fn1,fn2) strcasecmp(fn1,fn2)
+#define isslash(c) ((c) == '/' || (c) == '\\')
+int file_strncmp(char *fn1, char *fn2, size_t len) {
+  size_t i;
+  for (i = 0; i < len; i++) {
+    if (!(isslash(fn1[i]) && isslash(fn2[i])) &&
+	(toupper(fn1[i]) != toupper(fn2[i])))
+	return 1;
+  }
+  return 0;
+}
+#else
+#define file_strcmp(fn1,fn2) strcmp(fn1,fn2)
+#define file_strncmp(fn1,fn2,len) strncmp(fn1,fn2,len)
+#endif
+
+int nec_different_xwam_files(char *datafilename, char *currfilename) {
+  size_t dlen, slen;
+  if (file_strcmp(datafilename,currfilename) == 0) return FALSE;
+  dlen = strlen(datafilename);
+  slen = strlen(currfilename);
+  if (dlen < slen+5) return TRUE;
+  if (file_strcmp(datafilename+dlen-5,".xwam") == 0 &&
+      file_strncmp(datafilename+dlen-5-slen,currfilename,slen) == 0)
+    return FALSE;
+  return TRUE;
+}
+  /*----------------------------------------------------------------------*/
 
 static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp,
 			    prolog_term modformals, prolog_term modpars) // add act and form parlists
@@ -911,15 +938,23 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp,
       link_sym(CTXTc temp_pair->psc_ptr, (Psc)flags[CURRENT_MODULE]);
     }
   } 
-  if (import_from_usermod) {
-    set_data(pair_psc(temp_pair), (Psc)makestring(string_find(usermodfile,1)));
-    //printf("imp from usermod: %s/%d t=%x,e=%x\n",get_name(pair_psc(temp_pair)),get_arity(pair_psc(temp_pair)),get_type(pair_psc(temp_pair)),get_env(pair_psc(temp_pair)));
-    // how to tell if it's defined?
-    set_env(pair_psc(temp_pair),T_UNLOADED);  // if already have def, prob wont get to test this?
-  }
 
   if (!temp_pair) return FALSE;
   
+  if (import_from_usermod) {
+    Psc tpsc = pair_psc(temp_pair);
+    if (get_data(tpsc) != global_mod && get_data(tpsc) != NULL &&
+	nec_different_xwam_files(string_val(get_data(tpsc)),usermodfile)) {
+      xsb_warn(CTXTc "Ignoring import of usermod:%s/%d from %s; already defined from %s\n",
+	       get_name(tpsc),get_arity(tpsc),usermodfile,string_val(get_data(tpsc)));
+    } else {
+    set_data(tpsc, (struct psc_rec *)makestring(string_find(usermodfile,1)));
+    set_env(tpsc,T_UNLOADED);
+    if (get_type(tpsc) == 0)
+      set_type(tpsc,T_UDEF);
+    }
+  }
+
   reloc_table[count] = (pw)temp_pair;
   SQUASH_LINUX_COMPILER_WARN(dummy) ; 
   return TRUE;
@@ -1152,7 +1187,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
 	  add_prog_seg(ptr->psc_ptr, (pb)seg_first_inst, /*text_bytes*/ seg_size(seg_first_inst)-SIZE_SEG_HDR);
 	}
       }
-      if (get_data(ptr->psc_ptr) == global_mod) {
+      if (get_data(ptr->psc_ptr) == global_mod || isstring(get_data(ptr->psc_ptr))) {
 	set_data(ptr->psc_ptr,(struct psc_rec *)makestring(filename)); // filename already interned
       }
       instruct_tip = get_tip_or_tdisp(ptr->psc_ptr);
@@ -1179,15 +1214,11 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
 	}
 	if (isstring(get_data(ptr->psc_ptr)) && 
 	    !has_generated_prefix(name) &&
-#if defined(WIN_NT) || defined(CYGWIN)
-	    strcasecmp(string_val(get_data(ptr->psc_ptr)),filename)) {
-#else
-	    strcmp(string_val(get_data(ptr->psc_ptr)),filename)) {
-#endif
+	    nec_different_xwam_files(filename,string_val(get_data(ptr->psc_ptr)))) {
 	  xsb_warn(CTXTc "Redefining: %s/%d from file %s; Previously defined from file %s",
 		   get_name(ptr->psc_ptr),get_arity(ptr->psc_ptr),
 		   filename, string_val(get_data(ptr->psc_ptr)));
-	  set_data(ptr->psc_ptr,(struct psc_rec *)makestring(string_find(filename,1)));
+	  set_data(ptr->psc_ptr,(struct psc_rec *)makestring(filename)); // already intern
 	}
 	unload_seg((pseg)get_ep(ptr->psc_ptr));
 	set_ep(ptr->psc_ptr, (pb)seg_first_inst);
