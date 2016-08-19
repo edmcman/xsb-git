@@ -794,7 +794,6 @@ void do_delay_stuff_shared(CTXTdeclc NODEptr as_leaf, VariantSF subgoal, xsbBool
 #ifdef MULTI_THREAD
 void do_delay_stuff_private(CTXTdeclc NODEptr as_leaf, VariantSF subgoal, xsbBool sf_exists)
 {
-    ASI	asi;
     DL dl = NULL;
 
     if (delayreg && (!sf_exists || is_conditional_answer(as_leaf))) {

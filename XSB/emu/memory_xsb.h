@@ -148,6 +148,7 @@ struct th_context ;
 extern void tcpstack_realloc(struct th_context *, size_t);
 extern void complstack_realloc(struct th_context *, size_t);
 extern void handle_tcpstack_overflow(struct th_context *);
+//extern void mem_dealloc(struct th_context *, void *, size_t, int);
 #endif
 
 
