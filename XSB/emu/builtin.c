@@ -218,8 +218,8 @@ extern xsbBool str_sub(void);
 extern xsbBool str_match(CTXTdecl);
 
 // For force_truth_value (which may not be used much)
-extern void force_answer_true(BTNptr);
-extern void force_answer_false(BTNptr);
+extern void force_answer_true(CTXTdeclc BTNptr);
+extern void force_answer_false(CTXTdeclc BTNptr);
 
 // catch/throw.
 extern int set_scope_marker(CTXTdecl);
@@ -3215,9 +3215,9 @@ case WRITE_OUT_PROFILE:
     BTNptr as_leaf = (BTNptr)ptoc_addr(1);
     char *tmpstr = ptoc_string(CTXTc 2);
     if (!strcmp(tmpstr, "true"))
-      force_answer_true(as_leaf);
-    else if (!strcmp(tmpstr, "false"))
-      force_answer_false(as_leaf);
+      force_answer_true(CTXTc as_leaf);
+    else if (!strcmp(tmpstr, "false")) 
+      force_answer_false(CTXTc as_leaf);
     else xsb_abort("[FORCE_TRUTH_VALUE] Argument 2 has unknown truth value (%s)",tmpstr);
     break;
   }

@@ -284,9 +284,9 @@ static void init_flags(CTXTdecl)
   flags[WRITE_DEPTH] = 64;
   //  flags[UNIFY_WITH_OCCURS_CHECK_FLAG] = 0;
   flags[ALTERNATE_SEMANTICS] = 0;
+  flags[ANSWER_COMPLETION] = 1;
 #ifndef MULTI_THREAD
   // not (yet) tested with multi-threaded, so leave off if MT
-  flags[ANSWER_COMPLETION] = 1;
 #endif
 }
 
