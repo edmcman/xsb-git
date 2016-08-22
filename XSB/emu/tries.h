@@ -348,6 +348,7 @@ typedef struct Call_Check_Insert_Results {
 /*-- exported trie functions ------------------------------------------*/
 
 #ifndef MULTI_THREAD
+extern void add_positive_delay(char * );
 extern int unify_abstractions_from_AT(CPtr , int);
 extern void unify_abstractions_from_absStk(void);
 extern void copy_abstractions_to_AT(CPtr ,int);
@@ -376,9 +377,10 @@ extern void	load_delay_trie(int, CPtr, BTNptr);
 extern xsbBool  bottom_up_unify(void);
 extern BTHTptr  New_BTHT(Structure_Manager *, int);
 extern int trie_path_heap_size(BTNptr pLeaf);
-#else
+#else  // MULTI_THREAD
 struct th_context ;
 
+extern void add_positive_delay(struct th_context *,  char * );
 extern int unify_abstractions_from_AT(struct th_context *, CPtr , int);
 extern void unify_abstractions_from_absStk(struct th_context *);
 extern void copy_abstractions_to_AT(struct th_context *, CPtr, int);

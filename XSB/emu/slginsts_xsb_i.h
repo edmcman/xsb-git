@@ -1351,10 +1351,6 @@ XSB_End_Instr()
 
 XSB_Start_Instr(continue_consumer,_continue_consumer) 
 {
-    Pair undefPair;				      
-    struct Table_Info_Frame * Utip;		      
-    int isNew;				     
-
     altsem_dbg(">>>> continue consumer\n");
 
     CPtr conscp = breg;
@@ -1375,9 +1371,10 @@ XSB_Start_Instr(continue_consumer,_continue_consumer)
     breg = nlcp_prevbreg(conscp);
     set_gfp_state(conscp);
     nlcp_pcreg(conscp) = (pb) &answer_return_inst;
-    undefPair = insert("l3_undef", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
-    Utip = get_tip(CTXTc pair_psc(undefPair));				
-    delay_negatively(TIF_Subgoals(Utip));				
+    add_positive_delay(CTXTc "l3_undef");
+    //    undefPair = insert("l3_undef", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
+    //    Utip = get_tip(CTXTc pair_psc(undefPair));				
+    //    delay_negatively(TIF_Subgoals(Utip));				
     //      printf("list %p ret %s\n",ALN_Answer(subg_ans_list_ptr(TIF_Subgoals(Utip))),get_ret_psc(0));
     //      delay_positively(TIF_Subgoals(Utip),ALN_Answer(subg_ans_list_ptr(TIF_Subgoals(Utip))),get_ret_psc(0));		
     lpcreg = cpreg;
