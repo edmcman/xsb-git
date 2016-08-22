@@ -44,8 +44,8 @@
 
 #define setup_to_return_completed_answers(SGF,tsize)			\
   do {									\
-    if (!subg_is_answer_completed(SGF) && flags[ANSWER_COMPLETION]) {	\
-      flags[ANSWER_COMPLETION] = 0;					\
+    if (!subg_is_answer_completed(SGF) && pflags[ANSWER_COMPLETION]) {	\
+      pflags[ANSWER_COMPLETION] = 0;					\
       reg[1] = makeint(SGF);						\
       reg[2] = build_ret_term_reverse(CTXTc tsize, trieinstr_unif_stk);	\
       /*      lpcreg = (byte *) subg_ans_root_ptr(SGF);	*/		\
@@ -186,6 +186,7 @@ XSB_Start_Instr(check_complete,_check_complete)
 
       if (flags[ALTERNATE_SEMANTICS] == NAF_L3) {
 	FailIfAnswersFound(ProcessL3Returns(CTXTc cs_ptr));
+	PerformL3Simplification(CTXTc cs_ptr);
       }
 
       CompleteSimplifyAndReclaim(CTXTc cs_ptr);

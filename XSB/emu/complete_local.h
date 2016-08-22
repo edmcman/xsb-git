@@ -315,6 +315,10 @@ static inline CPtr ProcessL3Returns(CTXTdeclc CPtr cs_ptr) {
   return first_sched_cons;
 }
 
+// Stub for later
+void PerformL3Simplification(CTXTdeclc CPtr cs_ptr) {
+}
+
 static inline void CompleteSimplifyAndReclaim(CTXTdeclc CPtr cs_ptr)
 {
   VariantSF compl_subg;
@@ -329,7 +333,7 @@ static inline void CompleteSimplifyAndReclaim(CTXTdeclc CPtr cs_ptr)
 
   while (ComplStkFrame >= openreg) {
     if (neg_simplif_possible(compl_subgoal_ptr(ComplStkFrame))) {
-      flags[SIMPLIFICATION_DONE] = 1;
+      pflags[SIMPLIFICATION_DONE] = 1; // for answer completion (I think)
       simplification_required = 1;
       break;
     }
