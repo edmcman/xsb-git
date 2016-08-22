@@ -1271,7 +1271,7 @@ set_xsb_flag_1(max_answers_for_subgoal_action, Action) :-!,
 	       stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION, XSB_ERROR)
              ; (Action == suspend ->  
 	          stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION, XSB_SUSPEND)
-                ; domain_error([error,', ',suspend],
+                ; domain_error([error,', ',suspend,', ',complete_soundly],
                                Action,set_prolog_flag/2,2,'max_answers_for_subgoal_action clause') ) ) ).
 set_xsb_flag_1(max_memory,Max):-!,
 	(integer(Max),Max >= 0 -> 
