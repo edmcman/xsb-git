@@ -807,15 +807,21 @@ int nec_different_xwam_files(char *datafilename, char *currfilename) {
   if (file_strcmp(datafilename,currfilename) == 0) return FALSE;
   dlen = strlen(datafilename);
   slen = strlen(currfilename);
+  if (dlen == 0) printf("datafile len=0, addr=%p\n",datafilename);
   if (dlen < slen+5) return TRUE;
   if (file_strcmp(datafilename+dlen-5,".xwam") == 0 &&
       file_strncmp(datafilename+dlen-5-slen,currfilename,slen) == 0)
+    return FALSE;
+  if (file_strncmp(datafilename+8,currfilename,slen) == 0) // skip "usermod("
+    return FALSE;
+  if (file_strcmp(datafilename+dlen-5,".xwam") == 0 &&
+      file_strncmp(datafilename+dlen-5-(slen-9),currfilename+8,slen-9) == 0)
     return FALSE;
   return TRUE;
 }
   /*----------------------------------------------------------------------*/
 
-static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp,
+static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int count, int exp,
 			    prolog_term modformals, prolog_term modpars) // add act and form parlists
 {
   static XSB_StrDefine(str);
@@ -826,6 +832,7 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp,
   Psc  mod;
   Integer dummy; /* used to squash warnings */
   char usermodfile[MAXFILENAME+1];
+  char modname[MAXFILENAME+1];
 
   dummy = get_obj_byte(&t_env);
   /* this simple check can avoid worse situations in case of compiler bugs */
@@ -844,7 +851,6 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp,
   } else {  
     if ((t_env&0x7) == T_IMPORTED || t_definedas) {
       byte t_modlen;
-      char modname[MAXFILENAME+1];
 
       dummy = get_obj_byte(&t_modlen);
       dummy = get_obj_string(modname, t_modlen);
@@ -943,15 +949,19 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp,
   
   if (import_from_usermod) {
     Psc tpsc = pair_psc(temp_pair);
-    if (get_data(tpsc) != global_mod && get_data(tpsc) != NULL &&
+    if (get_data(tpsc) != global_mod && isstring(get_data(tpsc)) &&
 	nec_different_xwam_files(string_val(get_data(tpsc)),usermodfile)) {
-      xsb_warn(CTXTc "Ignoring import of usermod:%s/%d from %s; already defined from %s\n",
-	       get_name(tpsc),get_arity(tpsc),usermodfile,string_val(get_data(tpsc)));
+      xsb_warn(CTXTc "Ignoring import of usermod:%s/%d from %s in %s; already imported from %s\n",
+	       get_name(tpsc),get_arity(tpsc),usermodfile,filename,string_val(get_data(tpsc)));
+    } else if (!isstring(get_data(tpsc)) && get_data(tpsc) != NULL && get_data(tpsc) != global_mod) {
+      xsb_error("Importing symbol %s/%d from usermod, but was defined in module %s\n",
+		get_name(tpsc),get_arity(tpsc),get_name(get_data(tpsc)) );
     } else {
-    set_data(tpsc, (struct psc_rec *)makestring(string_find(usermodfile,1)));
-    set_env(tpsc,T_UNLOADED);
-    if (get_type(tpsc) == 0)
-      set_type(tpsc,T_UDEF);
+      //    set_data(tpsc, (struct psc_rec *)makestring(string_find(usermodfile,1)));
+      set_data(tpsc, (struct psc_rec *)makestring(string_find(modname,1)));
+      set_env(tpsc,T_UNLOADED);
+      if (get_type(tpsc) == 0)
+	set_type(tpsc,T_UDEF);
     }
   }
 
@@ -980,7 +990,7 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, Psc cur_mod, int count, int exp,
 *                                                                       *
 ************************************************************************/
 
-static xsbBool load_syms(CTXTdeclc FILE *fd, int psc_count, int count, Psc cur_mod, int exp,
+static xsbBool load_syms(CTXTdeclc FILE *fd, char *filename, int psc_count, int count, Psc cur_mod, int exp,
 			 prolog_term modformals, prolog_term modpars) // add act and form parlists
 {
   int i;
@@ -990,7 +1000,7 @@ static xsbBool load_syms(CTXTdeclc FILE *fd, int psc_count, int count, Psc cur_m
   /* xsb_dbgmsg(("reloc_table %x,psc_count %d",reloc_table,psc_count)); */
 
   for (i = count; i < psc_count; i++) { // add act and form parlists
-    if (!load_one_sym(CTXTc fd, cur_mod, i, exp, modformals, modpars)) return FALSE;
+    if (!load_one_sym(CTXTc fd, filename, cur_mod, i, exp, modformals, modpars)) return FALSE;
   }
   return TRUE;
 }
@@ -1146,7 +1156,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
     set_ep(ptr->psc_ptr,(byte *)makestring(filename)); // psc->filename for module.
   }
   get_obj_word_bb(&psc_count);
-  if (!load_syms(CTXTc fd, (int)psc_count, 0, cur_mod, exp, modformals, modpars ))
+  if (!load_syms(CTXTc fd, filename, (int)psc_count, 0, cur_mod, exp, modformals, modpars ))
     return FALSE;
   /*	xsb_dbgmsg(("symbol table of module %s loaded", name));	*/
   do {
@@ -1304,7 +1314,7 @@ static byte *loader_foreign(CTXTdeclc char *filename, FILE *fd, int exp,int immu
   }
   cur_mod = ptr->psc_ptr;
   get_obj_word_bb(&psc_count);
-  if (!load_syms(CTXTc fd, (int)psc_count, 0, cur_mod, exp, makenil, makenil)) return FALSE;
+  if (!load_syms(CTXTc fd, filename, (int)psc_count, 0, cur_mod, exp, makenil, makenil)) return FALSE;
   instr = load_obj(CTXTc filename, cur_mod, ldoption.string);
 
   SQUASH_LINUX_COMPILER_WARN(dummy) ; 
