@@ -1926,17 +1926,17 @@ answer_completion(SGF,Template) :-
 	ac_loop(SGF,Template),	% iterate answer-completion
 	fail.			% not strictly nec since ac_loop will fail
 answer_completion(SGF,Template) :-
-	stat_set_flag(83,1),	% turn ANSWER_COMPLETION back on,
+	stat_set_flag(ANSWER_COMPLETION,1),	% turn ANSWER_COMPLETION back on,
 				% was turned off in C before entry
 	trie_get_return(SGF,Template,1).
 
 ac_loop(SGF,Tmp) :-
 	%%print_residual_pgm(SGF,Tmp),
 	abolish_table_pred(eval_subgoal_in_residual(_,_),[abolish_tables_singly]),
-	stat_set_flag(103,0),  % reset SIMPLIFICATION_DONE
+	stat_set_flag(SIMPLIFICATION_DONE,0),  % reset SIMPLIFICATION_DONE
 	(eval_subgoal_in_residual(SGF,Tmp),fail ; true),
 	delete_answers_for_failing_calls,
-	stat_flag(103,SimpFlg),
+	stat_flag(SIMPLIFICATION_DONE,SimpFlg),
 	(SimpFlg =:= 1
 	 ->	%%writeln(userout,iterate),
 		ac_loop(SGF,Tmp)
