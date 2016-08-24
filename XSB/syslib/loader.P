@@ -350,7 +350,7 @@ load_pred1(PSC) :-
 	    psc_type(ModPSC, ModType), 
 	    (ModType =:= T_MODU
 	     ->	    (ModName == usermod, psc_data(PSC,FileName),atom(FileName)
-		     ->	    %%local_fmt_write(STDMSG, "loading %s\n", arg(FileName)),
+		     ->	    local_fmt_write(STDMSG, "loading usermod file %S\n", arg(FileName)),
 			    load(FileName)
 		     ;	    true
 		    )
@@ -369,7 +369,7 @@ load_pred1(PSC) :-
 		%% '_$cutto'(B)
 		!
 		;
-	     psc_type(PSC,NType),local_fmt_write(STDMSG, "error type: %d, modname: %s\n", arg(NType,ModName)),
+	     psc_type(PSC,NType),local_fmt_write(STDMSG, "error %s/%d,psc: %d, type: %d, modname: %S\n", arg(PSC,NType,ModName)),
 	     conset('_$load_pred_action',1)
 %	        handle_undefined_pred(ModName,Name,Arity)
 	    )
@@ -462,7 +462,7 @@ not_handling_undef_pred :- conget('_$_$_undefhook',0).
 load(PModName) :-
 	stat_flag(DEBUG_ON, Debug_on),
 	(Debug_on =:= 1, atom(PModName)
-	 ->	local_fmt_write(STDMSG, "[ load module %s ]\n", arg(PModName))
+	 ->	local_fmt_write(STDMSG, "[ load module %S ]\n", arg(PModName))
 	 ;	true
 	),
 	unstructure_modname(PModName,ModName,ModPars),
@@ -532,6 +532,9 @@ check_times_and_load(FileName_O,FileName_P,FileName_PL,FileName_PROLOG,FileName_
 		)
 	 ;	load_object_file(FileName_O,ModPars) % load byte-code, no source-file
 	).
+
+load_object_file(FileName_O) :-
+	load_object_file(FileName_O,dummypars).
 
 % actually load the byte-code file
 load_object_file(FileName_O,ModPars) :-
