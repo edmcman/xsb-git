@@ -297,6 +297,11 @@ DynamicStack  _tstTrail;
   Integer _simplify_neg_fails_stack_top;
   int _in_simplify_neg_fails;
 
+  /************ Table Abolishing ************/
+  int _done_tif_stack_top;
+  TIFptr * _done_tif_stack;
+  int _done_tif_stack_size;
+
   /* Variables for table traversal for abolishing tables */
   int _trans_abol_answer_stack_top;
   BTNptr * _trans_abol_answer_stack;
@@ -310,10 +315,6 @@ int      _trans_abol_answer_array_size;
   VariantSF * _ta_done_subgoal_stack;
   int _ta_done_subgoal_stack_size;
   //  int _ta_done_subgoal_stack_current_pos;
-
-  int _done_tif_stack_top;
-  TIFptr * _done_tif_stack;
-  int _done_tif_stack_size;
 
   /********* Variables for array of interned tries *********/
   int _itrie_array_first_free;
@@ -381,12 +382,13 @@ int    _i_have_dyn_mutex;	/* This thread has dynamic mutex, for asserted code re
 
 struct random_seeds_t *_random_seeds;	/* struct containing seeds for random num gen */
 
+  /*********** private structure managers ***********/
+
   /* Pointers to common structure managers (table vs. assert) */
   struct Structure_Manager *_smBTN;
   struct Structure_Manager *_smBTHT;
 
-  /* private structure managers */
-  /* for tables */
+  /* Tables */
   Structure_Manager *_private_smTableBTN;
   Structure_Manager *_private_smTableBTHT;
   Structure_Manager *_private_smAssertBTN;
@@ -401,10 +403,11 @@ struct random_seeds_t *_random_seeds;	/* struct containing seeds for random num 
   Structure_Manager *_private_smALN;
   Structure_Manager *_private_smASI;
 
-  /* for dynamic code */
   Structure_Manager *_private_smDelCF;
 
   int    _threads_current_sm;
+
+  /* SMs for dynamic code */
 
   char *_private_current_de_block;
   char *_private_current_dl_block;
@@ -478,11 +481,11 @@ ThreadDepList TDL ;
 pthread_cond_t cond_var ;
 #endif
 
+/* Heap realloc and garbage collection stuff */
+
 int _num_gc;
 double _total_time_gc;
 UInteger _total_collected;
-
-/* Heap realloc and garbage collection stuff */
 
 CPtr	_heap_bot;
 CPtr	_heap_top;
@@ -517,6 +520,18 @@ unsigned int	to_be_cancelled :  1 ;
 
 /* allowing blocked threads to be wake up by signals */
 pthread_cond_t * cond_var_ptr ;
+
+  /* Incremental tabling */
+calllistptr _assumption_list_gl; 
+callnodeptr _old_call_gl;              // used to compare new to previous tables.
+BTNptr      _old_answer_table_gl;      // is this needed?  Can we use the root ptr from SF?
+calllistptr _lazy_affected;
+int         _incr_table_update_safe_gl;
+int         _unchanged_call_gl;
+int         _current_call_edge_count_gl;
+int         _current_call_node_count_gl;
+int         _total_call_node_count_gl;  
+
 } ;
 
 typedef struct th_context th_context ;
@@ -830,6 +845,16 @@ typedef struct th_context th_context ;
 #define gc_scan			(th->_gc_scan)
 #define gc_next			(th->_gc_next)
 
+// Incremental tabling
+#define assumption_list_gl            (th->_assumption_list_gl)
+#define old_call_gl                   (th->_old_call_gl)
+#define old_answer_table_gl           (th->_old_answer_table_gl)
+#define lazy_affected                 (th->_lazy_affected)
+#define incr_table_update_safe_gl     (th->_incr_table_update_safe_gl)
+#define unchanged_call_gl             (th->_unchanged_call_gl)
+#define current_call_node_count_gl    (th-> _current_call_node_count_gl)
+#define current_call_edge_count_gl    (th-> _current_call_edge_count_gl)
+#define total_call_node_count_gl      (th-> _total_call_node_count_gl) 
 
 #define CTXT			th
 #define CTXTc			th ,
@@ -840,7 +865,7 @@ typedef struct th_context th_context ;
 #define CTXTdecltype		th_context *
 #define CTXTdecltypec		th_context *,
 
-#else
+#else  // not multi-thread
 
 #define CTXT
 #define CTXTc

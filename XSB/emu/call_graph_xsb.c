@@ -83,26 +83,27 @@ Terminology: outedge -- pointer to calls that depend on call
 
 // affected_gl drives create_call_list and eager updates
 //calllistptr affected_gl=NULL;
-calllistptr lazy_affected= NULL;
-
-int incr_table_update_safe_gl = TRUE;
-
 // derives return_changed_call_list which reports those calls changed in last update
 //calllistptr changed_gl=NULL;
 
-// used to compare new to previous tables.
-callnodeptr old_call_gl=NULL;
-// is this needed?  Can we use the root ptr from SF?
-BTNptr old_answer_table_gl=NULL;
+#ifndef MULTI_THREAD
 
 calllistptr assumption_list_gl=NULL;  /* required for abolishing incremental calls */ 
+callnodeptr old_call_gl=NULL;         // used to compare new to previous tables.
+BTNptr old_answer_table_gl=NULL;      // is this needed?  Can we use the root ptr from SF?
+calllistptr lazy_affected= NULL;
+int incr_table_update_safe_gl = TRUE;
+int unchanged_call_gl=0;
 
 // current number of incremental subgoals / edges
-int current_call_node_count_gl=0,current_call_edge_count_gl=0;
+int current_call_node_count_gl=0;
+int current_call_edge_count_gl=0;
 // total number of incremental subgoals in session.
-int  total_call_node_count_gl=0;  
+int total_call_node_count_gl=0;  
 // not used much -- for statistics
-int unchanged_call_gl=0;
+
+#endif
+
 
 // This array does not need to be resized -- just needs to be > max_arity
 static Cell cell_array1[500];
@@ -175,7 +176,7 @@ static int equalkeys(void *k1, void *k2)
 
 
 /* Creates a call node */
-callnodeptr makecallnode(VariantSF sf){
+callnodeptr makecallnode(CTXTdeclc VariantSF sf){
   
   callnodeptr cn;
 
@@ -368,7 +369,7 @@ void deleteoutedges(CTXTdeclc callnodeptr callnode){
 //---------------------------------------------------------------------------
 
 /* used for abolishes -- its known that outcount is 0 */
-void deletecallnode(callnodeptr callnode){
+void deletecallnode(CTXTdeclc callnodeptr callnode){
   current_call_node_count_gl--;
  
   if(callnode->outcount==0){
@@ -384,7 +385,7 @@ void deletecallnode(callnodeptr callnode){
 }
 
 
-void deallocate_previous_call(callnodeptr callnode){
+void deallocate_previous_call(CTXTdeclc callnodeptr callnode){
   
   calllistptr tmpin,in;
   
@@ -497,7 +498,7 @@ static void inline addcalledge_1(calllistptr *list, outedgeptr item){
   *list=temp;  
 }
 
-void addcalledge(callnodeptr fromcn, callnodeptr tocn){
+void addcalledge(CTXTdeclc callnodeptr fromcn, callnodeptr tocn){
   KEY *k1;
   SM_AllocateStruct(smKey, k1);
   k1->goal = tocn->id;
@@ -735,8 +736,8 @@ static void dfs_outedges(CTXTdeclc callnodeptr call1,xsbBool inval_context){
  * */
 // TLS: factored out this warning because dfs_inedges is recursive and
 // this makes the stack frames too big. 
-void dfs_inedges_warning(CTXTdeclc callnodeptr call1,calllistptr *lazy_affected) {
-  deallocate_call_list(CTXTc *lazy_affected);
+void dfs_inedges_warning(CTXTdeclc callnodeptr call1,calllistptr *lazy_affected_ptr) {
+  deallocate_call_list(CTXTc *lazy_affected_ptr);
   sprint_subgoal(CTXTc forest_log_buffer_1,0,call1->goal);
     xsb_warn(CTXTc "%d Choice point(s) exist to the table for %s -- cannot incrementally update (dfs_inedges)\n",
 	     subg_visitors(call1->goal),forest_log_buffer_1->fl_buffer);
@@ -844,7 +845,7 @@ void throw_dfs_inedges_error(CTXTdeclc callnodeptr call1) {
 
 /* If ret != 0 (= CANNOT_UPDATE) then we'll use the old table, and we
    wont lazily update at all. */
-int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected, int flag ){
+int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected_ptr, int flag ){
   calllistptr inedge_list;
   VariantSF subgoal;
   int ret = 0;
@@ -852,7 +853,7 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected, int fl
   if(IsNonNULL(call1->goal)) {
     if (!subg_is_completed((VariantSF)call1->goal)){
 
-      deallocate_call_list(CTXTc *lazy_affected);
+      deallocate_call_list(CTXTc *lazy_affected_ptr);
       throw_dfs_inedges_error(CTXTc call1);
 
     }
@@ -860,7 +861,7 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected, int fl
       #ifdef ISO_INCR_TABLING
       find_the_visitors(CTXTc call1->goal);
       #else
-      dfs_inedges_warning(CTXTc call1,lazy_affected);
+      dfs_inedges_warning(CTXTc call1,lazy_affected_ptr);
       return CANNOT_UPDATE;
       #endif
     }
@@ -878,7 +879,7 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected, int fl
     if(IsNonNULL(subgoal)){ /* fact check */
       //      count++;
       if (inedge_list->inedge_node->callnode->falsecount > 0)  {
-	ret = ret | dfs_inedges(CTXTc inedge_list->inedge_node->callnode, lazy_affected,flag);
+	ret = ret | dfs_inedges(CTXTc inedge_list->inedge_node->callnode, lazy_affected_ptr,flag);
       }
       else {
 	; //	printf(" dfs_i non_affected "); print_subgoal(stddbg,subgoal);printf("\n");
@@ -888,7 +889,7 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected, int fl
   }
   if(IsNonNULL(call1->goal) & !ret){ /* fact check */
     //    printf(" dfs_i adding "); print_subgoal(stddbg,call1->goal);printf("\n");
-    add_callnode(lazy_affected,call1);		
+    add_callnode(lazy_affected_ptr,call1);		
   }
   return ret;
 }

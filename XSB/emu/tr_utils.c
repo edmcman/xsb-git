@@ -87,7 +87,9 @@ void  abolish_incremental_call_single_nocheck_deltf(CTXTdeclc VariantSF, int, in
 void  abolish_incremental_call_single_nocheck_no_nothin(CTXTdeclc VariantSF subgoal, int);
 void  abolish_subsumptive_call_single_nocheck_deltf(CTXTdeclc SubProdSF, int);
 
+#ifndef MULTI_THREAD
 extern int incr_table_update_safe_gl;
+#endif
 
 #if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
 double total_table_gc_time = 0;
@@ -1614,7 +1616,7 @@ Integer new_private_trie(CTXTdeclc int props) {
     itrie_array_first_trie = index;
 
     if IS_INCREMENTAL_TRIE(props) {
-	itrie_array[index].callnode = makecallnode(NULL);
+	itrie_array[index].callnode = makecallnode(CTXTc NULL);
 	(itrie_array[index].callnode)->is_incremental_trie = 1;
 	//	printf("callnode %p\n",itrie_array[index].callnode);
 	initoutedges(CTXTc (callnodeptr)itrie_array[index].callnode);
@@ -1760,7 +1762,7 @@ int private_trie_interned(CTXTdecl) {
     if(IsIncrSF(sf)){
       thiscallnode = itrie_array[index].callnode;
       if(IsNonNULL(thiscallnode)){
-	addcalledge(thiscallnode,sf->callnode);  
+	addcalledge(CTXTc thiscallnode,sf->callnode);  
       }
     }
   }
@@ -4586,7 +4588,7 @@ int index =  itrie_array_first_trie;
  if (index >= 0) {
    do {
      if (itrie_array[index].incremental == 1) {
-       itrie_array[index].callnode = makecallnode(NULL);
+       itrie_array[index].callnode = makecallnode(CTXTc NULL);
        //       printf("reinitizlizing incremental trie %d %p\n",index,itrie_array[index].callnode);
        initoutedges(CTXTc (callnodeptr)itrie_array[index].callnode);
      }
@@ -4776,7 +4778,7 @@ void maybe_detach_incremental_call_single(CTXTdeclc VariantSF goal, int invalida
   }
   deleteoutedges(CTXTc callnode);
   deleteinedges(CTXTc callnode);
-  deletecallnode(callnode);
+  deletecallnode(CTXTc callnode);
   //  SET_TRIE_ALLOCATION_TYPE_SF(goal); // set smBTN to private/shared
   //  tif = subg_tif_ptr(goal);
   //  delete_branch(CTXTc goal->leaf_ptr, &tif->call_trie,VARIANT_EVAL_METHOD); /* delete call */
@@ -4866,6 +4868,7 @@ void remove_incomplete_tries(CTXTdeclc CPtr bottom_parameter)
     }
     openreg += COMPLFRAMESIZE;
   }
+  //  printf("new complstacksize %d\n",COMPLSTACKSIZE);
   level_num = compl_level(openreg);
 }
 

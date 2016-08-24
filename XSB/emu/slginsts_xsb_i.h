@@ -317,7 +317,7 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
       /* adding called-by graph edge */
       if(IsNonNULL(producer_sf)){
 	if(IsIncrSF(producer_sf)){
-	  addcalledge(producer_sf->callnode,parent_table_sf->callnode);  
+	  addcalledge(CTXTc producer_sf->callnode,parent_table_sf->callnode);  
 	} 
 	else{
 	  if(!get_opaque(TIF_PSC(CallInfo_TableInfo(callInfo))))
@@ -379,7 +379,7 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
 
     if(parent_table_is_incr){  
       if(IsIncrSF(producer_sf)){
-	addcalledge(producer_sf->callnode,parent_table_sf->callnode);  
+	addcalledge(CTXTc producer_sf->callnode,parent_table_sf->callnode);  
       }else{
 	if(!get_opaque(TIF_PSC(CallInfo_TableInfo(callInfo))))
 	  xsb_abort("Predicate %s:%s/%d not declared incr_table\n",
@@ -809,7 +809,7 @@ XSB_Start_Instr(tabletrysinglenoanswers,_tabletrysinglenoanswers)
       if(IsIncrSF(sf)){
 	cn=(callnodeptr)BTN_Child(CallLUR_Leaf(lookupResults));
 	if(IsNonNULL(cn)) {
-	  addcalledge(cn,sf->callnode);  
+	  addcalledge(CTXTc cn,sf->callnode);  
 	}
       }
     }
