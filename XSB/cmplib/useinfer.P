@@ -59,7 +59,8 @@ useinfer(Module, IsModule, ExportList) :-
 		IsModule = 0,		% No export list, is a global module
 		sym_propin(global, SymMain), 
 		infer_export_fill(SymTab, SymTab, ClBT, global),
-       		extract_symlist(docex, DocExSymList, SymTab),
+		%% assume multifile pred would be used from another component if not here
+       		extract_symlist([docex,(multifile)], DocExSymList, SymTab),
 %		message(DocExSymList),
 	        (DocExSymList == [] -> 
 			true 
@@ -67,7 +68,9 @@ useinfer(Module, IsModule, ExportList) :-
 			infer_fillunused(SymTab))
 	; IsModule = 1,
 	  ( sym_prop(im(_Mod),SymMain) -> true ; sym_propin((local),SymMain) ),
-	  infer_usage([SymMain|ExSymList], Module,real),
+		extract_symlist((multifile),MFSymList,SymTab),
+		append(ExSymList,MFSymList,TExSymList),
+		infer_usage([SymMain|TExSymList], Module,real),
 	  infer_export_fill(SymTab, SymTab, ClBT, (local)),
 	  infer_fillunused(SymTab)
 	),
