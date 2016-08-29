@@ -60,11 +60,13 @@ useinfer(Module, IsModule, ExportList) :-
 		sym_propin(global, SymMain), 
 		infer_export_fill(SymTab, SymTab, ClBT, global),
 		%% assume multifile pred would be used from another component if not here
-       		extract_symlist([docex,(multifile)], DocExSymList, SymTab),
+       		extract_symlist(docex, DocExSymList, SymTab),
 %		message(DocExSymList),
 	        (DocExSymList == [] -> 
 			true 
-		;	infer_usage([SymMain|DocExSymList], Module,pseudo),
+		 ;	extract_symlist((multifile), MultiSymList, SymTab),
+			append(MultiSymList,DocExSymList,MDocExSymList),
+			infer_usage([SymMain|MDocExSymList], Module,pseudo),
 			infer_fillunused(SymTab))
 	; IsModule = 1,
 	  ( sym_prop(im(_Mod),SymMain) -> true ; sym_propin((local),SymMain) ),
