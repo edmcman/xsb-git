@@ -38,7 +38,7 @@ const unsigned int prime_table_length = sizeof(primes)/sizeof(primes[0]);
 const double max_load_factor = 0.65;
 
 /* maintain chain of all hashtables in incr, for use when deleting all tables */
-static struct hashtable *hashtable_chain = NULL;
+struct hashtable *incr_hashtable_chain = NULL;
 
 /*****************************************************************************/
 struct hashtable *
@@ -48,7 +48,7 @@ create_hashtable1(unsigned int minsize,
 {
     struct hashtable *h;
     unsigned int pindex, size = primes[0];
-  hashtable_debug(("create_hashtable1 hashtable_chain %p\n",hashtable_chain));
+  hashtable_debug(("create_hashtable1 incr_hashtable_chain %p\n",incr_hashtable_chain));
     /* Check requested hashtable isn't too large */
     if (minsize > (1u << 30)) return NULL;
     /* Enforce size as prime */
@@ -67,10 +67,10 @@ create_hashtable1(unsigned int minsize,
     h->eqfn         = eqf;
     h->loadlimit    = (unsigned int) ceil(size * max_load_factor);
     h->prev         = NULL;
-    h->next         = hashtable_chain;
-    hashtable_chain = h;
+    h->next         = incr_hashtable_chain;
+    incr_hashtable_chain = h;
     if (h->next) (h->next)->prev = h;
-    hashtable_debug(("create_hashtable2 h %p hashtable_chain %p next %p\n",h,hashtable_chain,h->next));
+    hashtable_debug(("create_hashtable2 h %p incr_hashtable_chain %p next %p\n",h,incr_hashtable_chain,h->next));
     return h;
 }
 
@@ -268,7 +268,7 @@ hashtable1_destroy(struct hashtable *h, int free_values)
         }
     }
     hashtable_debug(("here0 prev %p\n",h->prev));
-    if (h->prev != NULL) (h->prev)->next = h->next; else hashtable_chain = h->next;
+    if (h->prev != NULL) (h->prev)->next = h->next; else incr_hashtable_chain = h->next;
     hashtable_debug(("here1 %p\n",(h->next)));
     if (h->next != NULL) (h->next)->prev = h->prev;
     hashtable_debug(("here2 %p %p\n",h->table,h->table +h->tablelength*sizeof(struct entry *)));
@@ -278,8 +278,8 @@ hashtable1_destroy(struct hashtable *h, int free_values)
 
 void
 hashtable1_destroy_all(int free_values) {
-  while (hashtable_chain != NULL) {
-    hashtable1_destroy(hashtable_chain,free_values);
+  while (incr_hashtable_chain != NULL) {
+    hashtable1_destroy(incr_hashtable_chain,free_values);
   }
 }
 

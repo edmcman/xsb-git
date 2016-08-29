@@ -149,20 +149,20 @@ typedef struct Message_Queue_Cell {
 /************************************************************************/
 struct th_context
 {
-/* System & user Flags */
+  /* System & user Flags */
 
   int _call_intercept ;
 
-/* The SLG-WAM data regions
-   ------------------------ */
+  /* The SLG-WAM data regions
+     ------------------------ */
 
   System_Stack	_pdl,           /* PDL                   */
     _glstack,	/* Global + Local Stacks */
     _tcpstack,	/* Trail + CP Stack      */
     _complstack;	/* Completion Stack  */
 
-/* Argument Registers
-   ------------------ */
+  /* Argument Registers
+     ------------------ */
   Cell _reg[MAX_REGS];
 
 
@@ -258,25 +258,25 @@ struct th_context
   int	_AnsVarCtr;
   CPtr	_ans_var_pos_reg;
 
-/* Flag used in the locking of called tries */
+  /* Flag used in the locking of called tries */
   int	trie_locked;
 
   IGRptr _IGRhead;
 
   /* Variables for subsumptive and TST tries.  */
-struct VariantContinuation *_variant_cont;
-struct tstCCPStack_t *_tstCCPStack;
-struct tstCPStack_t *_tstCPStack;
-CPtr *_trail_base;
-CPtr *_orig_trreg;
-CPtr _orig_hreg;
-CPtr _orig_hbreg;
-CPtr _orig_ebreg;
+  struct VariantContinuation *_variant_cont;
+  struct tstCCPStack_t *_tstCCPStack;
+  struct tstCPStack_t *_tstCPStack;
+  CPtr *_trail_base;
+  CPtr *_orig_trreg;
+  CPtr _orig_hreg;
+  CPtr _orig_hbreg;
+  CPtr _orig_ebreg;
 
-DynamicStack  _tstTermStack;
-DynamicStack  _tstTermStackLog;
-DynamicStack  _tstSymbolStack;
-DynamicStack  _tstTrail;
+  DynamicStack  _tstTermStack;
+  DynamicStack  _tstTermStackLog;
+  DynamicStack  _tstSymbolStack;
+  DynamicStack  _tstTrail;
 
   /* Error checking for TST unification */
   BTNptr _gAnsLeaf;
@@ -307,9 +307,9 @@ DynamicStack  _tstTrail;
   BTNptr * _trans_abol_answer_stack;
   int _trans_abol_answer_stack_size;
 
-int      _trans_abol_answer_array_top;
-BTNptr * _trans_abol_answer_array;
-int      _trans_abol_answer_array_size;
+  int      _trans_abol_answer_array_top;
+  BTNptr * _trans_abol_answer_array;
+  int      _trans_abol_answer_array_size;
 
   int _ta_done_subgoal_stack_top;
   VariantSF * _ta_done_subgoal_stack;
@@ -326,30 +326,30 @@ int      _trans_abol_answer_array_size;
   xsbHashTable _bt_storage_hash_table;
 
   /********** variables for findall buffers **********/
-findall_solution_list *_findall_solutions;  /*= NULL;*/
-findall_solution_list *_current_findall;
-int 	_nextfree ; /* nextfree index in findall array */
-CPtr 	_gl_bot, _gl_top ;
-f_tr_chunk *_cur_tr_chunk ;
-CPtr 	*_cur_tr_top ;
-CPtr 	*_cur_tr_limit ;
+  findall_solution_list *_findall_solutions;  /*= NULL;*/
+  findall_solution_list *_current_findall;
+  int 	_nextfree ; /* nextfree index in findall array */
+  CPtr 	_gl_bot, _gl_top ;
+  f_tr_chunk *_cur_tr_chunk ;
+  CPtr 	*_cur_tr_top ;
+  CPtr 	*_cur_tr_limit ;
 
-VarString **_LSBuff; /* 30 buffers for making longstring in ctop_longstring */
+  VarString **_LSBuff; /* 30 buffers for making longstring in ctop_longstring */
 
   /********** Global thread-specific charstring buffers for local use
 	      within io-builtins **********/
 
-VarString *_last_answer;  /* for c-calling-xsb interface */
-VarString *_tsgLBuff1;
-VarString *_tsgLBuff2;
-VarString *_tsgSBuff1;
-VarString *_tsgSBuff2;
-/* read_canonical stacks */
-int _opstk_size;
-int _funstk_size;
-struct funstktype *_funstk;
-struct opstktype *_opstk;
-struct vartype *_rc_vars;
+  VarString *_last_answer;  /* for c-calling-xsb interface */
+  VarString *_tsgLBuff1;
+  VarString *_tsgLBuff2;
+  VarString *_tsgSBuff1;
+  VarString *_tsgSBuff2;
+  /* read_canonical stacks */
+  int _opstk_size;
+  int _funstk_size;
+  struct funstktype *_funstk;
+  struct opstktype *_opstk;
+  struct vartype *_rc_vars;
 
   forestLogBuffer _forest_log_buffer_1;
   forestLogBuffer _forest_log_buffer_2;
@@ -360,27 +360,27 @@ struct vartype *_rc_vars;
   forest_log_buffer_struct _fl_buffer_3;
 
   /********** Global variables for tokenizing **********/
-struct xsb_token_t *_token;
-int     _lastc; // = ' ';    /* previous character */
-byte*   _strbuff; // = NULL;  /* Pointer to token buffer; Will be allocated on first call to GetToken */
-int     _strbuff_len; // = InitStrLen;  /* first allocation size, doubled on subsequent overflows */
-double  _double_v;
-Integer	_rad_int;
-int _token_too_long_warning;
+  struct xsb_token_t *_token;
+  int     _lastc; // = ' ';    /* previous character */
+  byte*   _strbuff; // = NULL;  /* Pointer to token buffer; Will be allocated on first call to GetToken */
+  int     _strbuff_len; // = InitStrLen;  /* first allocation size, doubled on subsequent overflows */
+  double  _double_v;
+  Integer	_rad_int;
+  int _token_too_long_warning;
 
-struct sort_par_spec _par_spec;		/* spec for par_sort */
+  struct sort_par_spec _par_spec;		/* spec for par_sort */
 
   /********** Global variables for assert / retract **********/
   /* used for C-level longjumps in assert */
-jmp_buf _assertcmp_env;
+  jmp_buf _assertcmp_env;
 
-ClRef _retracted_buffer[MAX_RETRACTED_CLAUSES+1];
-ClRef *_OldestCl;
-ClRef *_NewestCl;
-struct asrtBuff_t *_asrtBuff;	/* assert code buffer */
-int    _i_have_dyn_mutex;	/* This thread has dynamic mutex, for asserted code read */
-
-struct random_seeds_t *_random_seeds;	/* struct containing seeds for random num gen */
+  ClRef _retracted_buffer[MAX_RETRACTED_CLAUSES+1];
+  ClRef *_OldestCl;
+  ClRef *_NewestCl;
+  struct asrtBuff_t *_asrtBuff;	/* assert code buffer */
+  int    _i_have_dyn_mutex;	/* This thread has dynamic mutex, for asserted code read */
+  
+  struct random_seeds_t *_random_seeds;	/* struct containing seeds for random num gen */
 
   /*********** private structure managers ***********/
 
@@ -404,6 +404,12 @@ struct random_seeds_t *_random_seeds;	/* struct containing seeds for random num 
   Structure_Manager *_private_smASI;
 
   Structure_Manager *_private_smDelCF;
+
+  Structure_Manager *  _private_smCallNode;
+  Structure_Manager *  _private_smCallList;
+  Structure_Manager *  _private_smCall2List;
+  Structure_Manager *  _private_smOutEdge;
+  Structure_Manager *  _private_smKey;
 
   int    _threads_current_sm;
 
@@ -531,6 +537,8 @@ int         _unchanged_call_gl;
 int         _current_call_edge_count_gl;
 int         _current_call_node_count_gl;
 int         _total_call_node_count_gl;  
+Cell        _incr_heap_cell_array[500];
+struct hashtable * _incr_hashtable_chain;
 
 } ;
 
@@ -736,6 +744,18 @@ typedef struct th_context th_context ;
 
 #define private_smDelCF        (th -> _private_smDelCF)
 
+#define private_smCallNode     (th -> _private_smCallNode)
+#define private_smCallList     (th -> _private_smCallList)
+#define private_smCall2List    (th -> _private_smCall2List)
+#define private_smOutEdge      (th -> _private_smOutEdge)
+#define private_smKey          (th -> _private_smKey)
+
+#define smCallNode     (*private_smCallNode)
+#define smCallList     (*private_smCallList)
+#define smCall2List    (*private_smCall2List)
+#define smOutEdge      (*private_smOutEdge)
+#define smKey          (*private_smKey)
+
 #define subsumptive_smALN       (*private_smALN)
 #define subsumptive_smBTN       (*private_smTableBTN)
 #define subsumptive_smBTHT      (*private_smTableBTHT)
@@ -855,6 +875,8 @@ typedef struct th_context th_context ;
 #define current_call_node_count_gl    (th-> _current_call_node_count_gl)
 #define current_call_edge_count_gl    (th-> _current_call_edge_count_gl)
 #define total_call_node_count_gl      (th-> _total_call_node_count_gl) 
+#define incr_heap_cell_array          (th-> _incr_heap_cell_array)
+#define incr_hashtable_chain          (th-> _incr_hashtable_chain)
 
 #define CTXT			th
 #define CTXTc			th ,

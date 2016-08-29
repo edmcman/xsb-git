@@ -4741,7 +4741,7 @@ void abolish_all_tables(CTXTdeclc int action) {
   reinitialize_incremental_tries(CTXT);  
   //  changed_gl = empty_calllist();
   incr_table_update_safe_gl = TRUE;
-  lazy_affected = empty_calllist();
+  lazy_affected = empty_calllist(CTXT);
   end_table_gc_time(timer);
 }
 

@@ -44,6 +44,13 @@ extern int current_call_node_count_gl,current_call_edge_count_gl;
 extern BTNptr old_answer_table_gl;
 extern int unchanged_call_gl, total_call_node_count_gl;
 extern callnodeptr old_call_gl;
+
+extern Structure_Manager smCallNode;
+extern Structure_Manager smCallList;
+extern Structure_Manager smCall2List;
+extern Structure_Manager smOutEdge;
+extern Structure_Manager smKey;
+
 #endif
 
 extern void initoutedges(CTXTdeclc callnodeptr cn);
@@ -57,12 +64,12 @@ extern void invalidate_call(CTXTdeclc callnodeptr,xsbBool);
 //extern int return_changed_call_list(CTXTdecl);
 //extern int call_list_to_prolog(CTXTdeclc calllistptr);
 extern int return_lazy_call_list(CTXTdeclc  callnodeptr);
-extern calllistptr empty_calllist();
+extern calllistptr empty_calllist(CTXTdecl);
 extern void print_call_list(CTXTdeclc calllistptr ,char *);
 
 extern int immediate_outedges_list(CTXTdeclc callnodeptr);
 extern int immediate_inedges_list(CTXTdeclc callnodeptr call1);
-extern void add_callnode(calllistptr *,callnodeptr);
+extern void add_callnode(CTXTdeclc calllistptr *,callnodeptr);
 //extern void abolish_incr_call(CTXTdeclc callnodeptr);
 extern void free_incr_hashtables(TIFptr);
 extern int  dfs_inedges(CTXTdeclc  callnodeptr, calllistptr *, int);
@@ -76,10 +83,4 @@ extern void deleteoutedges(CTXTdeclc callnodeptr);
 extern void deleteinedges(CTXTdeclc callnodeptr);
 extern void deletecallnode(CTXTdeclc callnodeptr);
 
-extern Structure_Manager smCallNode;
-extern Structure_Manager smCallList;
-extern Structure_Manager smCall2List;
-extern Structure_Manager smOutEdge;
-extern Structure_Manager smKey;
-
-#endif
+#endif  // public call graph defs

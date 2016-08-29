@@ -267,7 +267,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
 	return rc;
       }
       else if (flag == CALL_LIST_CREATE_EVAL) {
-	lazy_affected = empty_calllist();
+	lazy_affected = empty_calllist(CTXT);
 	dfs_ret = dfs_inedges(CTXTc subg_callnode_ptr(sf),  &lazy_affected, CALL_LIST_EVAL);
 	//	fprintf(stddbg,"dfs returned %d flag = %d\n",dfs_ret,flag);
 	if (!dfs_ret ) 
@@ -276,7 +276,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
 	return rc;
       }
       else if (flag == CALL_LIST_INSPECT)  {
-	lazy_affected = empty_calllist();
+	lazy_affected = empty_calllist(CTXT);
 	dfs_ret = dfs_inedges(CTXTc subg_callnode_ptr(sf),  &lazy_affected, CALL_LIST_INSPECT);
 	//	fprintf(stddbg,"dfs returned %d flag = %d\n",dfs_ret,flag);
 	rc = return_lazy_call_list(CTXTc sf->callnode);

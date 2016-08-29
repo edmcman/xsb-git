@@ -102,11 +102,8 @@ int current_call_edge_count_gl=0;
 int total_call_node_count_gl=0;  
 // not used much -- for statistics
 
-#endif
-
-
-// This array does not need to be resized -- just needs to be > max_arity
-static Cell cell_array1[500];
+// This array does not need to be resized -- just needs to be > max_arity (TES: ... maybe ...) 
+static Cell incr_heap_cell_array[500];
 
 /* These seem to be safely within the bounds of regular (non-small) structures) */
 Structure_Manager smCallNode  =  SM_InitDecl(CALL_NODE,CALLNODE_PER_BLOCK,"CallNode");
@@ -118,6 +115,8 @@ Structure_Manager smKey	      =  SM_InitDecl(KEY,KEY_PER_BLOCK,"HashKey");
 
 /* appears to be minimal size for regular (non-small) structure */
 Structure_Manager smOutEdge   =  SM_InitDecl(OUTEDGE,OUTEDGE_PER_BLOCK,"Outedge");
+
+#endif
 
 DEFINE_HASHTABLE_INSERT(insert_some, KEY, CALL_NODE);
 DEFINE_HASHTABLE_SEARCH(search_some, KEY, callnodeptr);
@@ -480,7 +479,7 @@ void propagate_no_change(callnodeptr c){
 }
 
 /* Enter a call to calllist */
-static void inline add_callnode_sub(calllistptr *list, callnodeptr item){
+static void inline add_callnode_sub(CTXTdeclc calllistptr *list, callnodeptr item){
   calllistptr  temp;
   SM_AllocateStruct(smCallList,temp);
   temp->item=item;
@@ -490,7 +489,7 @@ static void inline add_callnode_sub(calllistptr *list, callnodeptr item){
 }
 
 /* used in addcalledge */
-static void inline addcalledge_1(calllistptr *list, outedgeptr item){
+static void inline addcalledge_1(CTXTdeclc calllistptr *list, outedgeptr item){
   calllistptr  temp;
   SM_AllocateStruct(smCallList,temp);
   temp->inedge_node=item;
@@ -516,7 +515,7 @@ void addcalledge(CTXTdeclc callnodeptr fromcn, callnodeptr tocn){
     print_outedges(fromcn);
 #endif
     
-    addcalledge_1(&(tocn->inedges),fromcn->outedges);      
+    addcalledge_1(CTXTc &(tocn->inedges),fromcn->outedges);      
     current_call_edge_count_gl++;
     fromcn->outcount++;
     
@@ -545,7 +544,7 @@ void addcalledge(CTXTdeclc callnodeptr fromcn, callnodeptr tocn){
 #define EMPTY NULL
 
 //calllistptr eneetq(){ 
-calllistptr empty_calllist(){ 
+calllistptr empty_calllist(CTXTdecl){ 
   
   calllistptr  temp;
   SM_AllocateStruct(smCallList,temp);
@@ -556,8 +555,8 @@ calllistptr empty_calllist(){
 }
 
 
-void add_callnode(calllistptr *cl,callnodeptr c){
-  add_callnode_sub(cl,c);
+void add_callnode(CTXTdeclc calllistptr *cl,callnodeptr c){
+  add_callnode_sub(CTXTc cl,c);
 }
 
 callnodeptr delete_calllist_elt(CTXTdeclc calllistptr *cl){   
@@ -889,7 +888,7 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected_ptr, in
   }
   if(IsNonNULL(call1->goal) & !ret){ /* fact check */
     //    printf(" dfs_i adding "); print_subgoal(stddbg,call1->goal);printf("\n");
-    add_callnode(lazy_affected_ptr,call1);		
+    add_callnode(CTXTc lazy_affected_ptr,call1);		
   }
   return ret;
 }
@@ -965,11 +964,11 @@ int return_lazy_call_list(CTXTdeclc  callnodeptr call1){
       new_heap_functor(sreg, psc);
       for (j = 1; j <= arity; j++) {
 	new_heap_free(sreg);
-	cell_array1[arity-j] = cell(sreg-1);
+	incr_heap_cell_array[arity-j] = cell(sreg-1);
       }
-      //      build_subgoal_args(arity,cell_array1,subgoal);		
+      //      build_subgoal_args(arity,incr_heap_incr_heap_cell_array,subgoal);		
       /* Need to do separate heapcheck above to protect regs 1-6 */
-      load_solution_trie_no_heapcheck(CTXTc arity, 0, &cell_array1[arity-1], subg_leaf_ptr(subgoal));
+      load_solution_trie_no_heapcheck(CTXTc arity, 0, &incr_heap_cell_array[arity-1], subg_leaf_ptr(subgoal));
     } else {
       follow(oldhreg++) = makestring(get_name(psc));
     }
@@ -1059,10 +1058,10 @@ int immediate_outedges_list(CTXTdeclc callnodeptr call1){
 	    new_heap_functor(sreg, psc);
 	    for (j = 1; j <= arity; j++) {
 	      new_heap_free(sreg);
-	      cell_array1[arity-j] = cell(sreg-1);
+	      incr_heap_cell_array[arity-j] = cell(sreg-1);
 	    }
-	    load_solution_trie_no_heapcheck(CTXTc arity, 0, &cell_array1[arity-1], subg_leaf_ptr(subgoal));
-	    //    build_subgoal_args(arity,cell_array1,subgoal);		
+	    load_solution_trie_no_heapcheck(CTXTc arity, 0, &incr_heap_cell_array[arity-1], subg_leaf_ptr(subgoal));
+	    //    build_subgoal_args(arity,incr_heap_cell_array,subgoal);		
 	  }else{
 	    follow(oldhreg++) = makestring(get_name(psc));
 	  }
@@ -1207,10 +1206,10 @@ int immediate_inedges_list(CTXTdeclc callnodeptr call1){
 	  new_heap_functor(sreg, psc);
 	  for (j = 1; j <= arity; j++) {
 	    new_heap_free(sreg);
-	    cell_array1[arity-j] = cell(sreg-1);
+	    incr_heap_cell_array[arity-j] = cell(sreg-1);
 	  }		
-	  load_solution_trie_no_heapcheck(CTXTc arity, 0, &cell_array1[arity-1], subg_leaf_ptr(subgoal));
-	  //	  build_subgoal_args(arity,cell_array1,subgoal);		
+	  load_solution_trie_no_heapcheck(CTXTc arity, 0, &incr_heap_cell_array[arity-1], subg_leaf_ptr(subgoal));
+	  //	  build_subgoal_args(arity,incr_heap_cell_array,subgoal);		
 	}else{
 	  follow(oldhreg++) = makestring(get_name(psc));
 	}
@@ -1259,28 +1258,27 @@ which should not be deleted.
 
 void mark_for_incr_abol(CTXTdeclc callnodeptr);
 void check_assumption_list(CTXTdecl);
-call2listptr create_cdbllist(void);
+//call2listptr create_cdbllist(CTXTdecl);
 
 /* Double Linked List functions */
+//call2listptr create_cdbllist(CTXTdecl){
+//  call2listptr l;
+//  SM_AllocateStruct(smCall2List,l);
+//  l->next=l->prev=l;
+//  l->item=NULL;
+//  return l;    
+//}
 
-call2listptr create_cdbllist(void){
-  call2listptr l;
-  SM_AllocateStruct(smCall2List,l);
-  l->next=l->prev=l;
-  l->item=NULL;
-  return l;    
-}
-
-call2listptr insert_cdbllist(call2listptr cl,callnodeptr n){
-  call2listptr l;
-  SM_AllocateStruct(smCall2List,l);
-  l->next=cl->next;
-  l->prev=cl;
-  l->item=n;    
-  cl->next=l;
-  l->next->prev=l;  
-  return l;
-}
+//acall2listptr insert_cdbllist(CTXTdeclc call2listptr cl,callnodeptr n){
+//  call2listptr l;
+//  SM_AllocateStruct(smCall2List,l);
+//  l->next=cl->next;
+//  l->prev=cl;
+//  l->item=n;    
+//  cl->next=l;
+//  l->next->prev=l;  
+//  return l;
+//}
 
 void remove_callnode_from_list(call2listptr n){
   n->next->prev=n->prev;
@@ -1510,10 +1508,10 @@ int return_scc_list(CTXTdeclc SCCNode * nodes, Integer num_nodes){
       hreg += arity + 1;
       for (j = 1; j <= arity; j++) {
 	new_heap_free(sreg);
-	cell_array1[arity-j] = cell(sreg-1);
+	incr_heap_cell_array[arity-j] = cell(sreg-1);
       }
-      load_solution_trie_no_heapcheck(CTXTc arity, 0, &cell_array1[arity-1], subg_leaf_ptr(subgoal));
-      //      build_subgoal_args(arity,cell_array1,subgoal);		
+      load_solution_trie_no_heapcheck(CTXTc arity, 0, &incr_heap_cell_array[arity-1], subg_leaf_ptr(subgoal));
+      //      build_subgoal_args(arity,incr_heap_cell_array,subgoal);		
     } else{
       follow(oldhreg++) = makestring(get_name(psc));
     }
@@ -1719,9 +1717,9 @@ int return_scc_list(CTXTdeclc SCCNode * nodes, Integer num_nodes){
 %%%      new_heap_functor(sreg, psc);
 %%%      for (j = 1; j <= arity; j++) {
 %%%	new_heap_free(sreg);
-%%%	cell_array1[arity-j] = cell(sreg-1);
+%%%	incr_heap_cell_array[arity-j] = cell(sreg-1);
 %%%      }
-%%%      build_subgoal_args(arity,cell_array1,subgoal);		
+%%%      build_subgoal_args(arity,incr_heap_cell_array,subgoal);		
 %%%    }else{
 %%%      follow(oldhreg++) = makestring(get_name(psc));
 %%%    }
@@ -1787,9 +1785,9 @@ int return_scc_list(CTXTdeclc SCCNode * nodes, Integer num_nodes){
 // 	new_heap_functor(sreg, psc);
 // 	for (j = 1; j <= arity; j++) {
 // 	  new_heap_free(sreg);
-// 	  cell_array1[arity-j] = cell(sreg-1);
+// 	  incr_heap_cell_array[arity-j] = cell(sreg-1);
 // 	}
-// 	build_subgoal_args(arity,cell_array1,subgoal);		
+// 	build_subgoal_args(arity,incr_heap_cell_array,subgoal);		
 //       }else{
 // 	follow(oldhreg++) = makestring(get_name(psc));
 //       }
@@ -1847,9 +1845,9 @@ int return_scc_list(CTXTdeclc SCCNode * nodes, Integer num_nodes){
 //      new_heap_functor(sreg, psc);
 //      for (j = 1; j <= arity; j++) {
 //	new_heap_free(sreg);
-//	cell_array1[arity-j] = cell(sreg-1);
+//	incr_heap_cell_array[arity-j] = cell(sreg-1);
 //      }
-//      build_subgoal_args(arity,cell_array1,subgoal);		
+//      build_subgoal_args(arity,incr_heap_cell_array,subgoal);		
 //    }else{
 //      follow(oldhreg++) = makestring(get_name(psc));
 //    }

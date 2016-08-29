@@ -1180,6 +1180,22 @@ void init_thread_structures(CTXTdecl)
   SM_InitDeclDyna(private_smAssertBTHT,BasicTrieHT, BTHTs_PER_BLOCK,
 		     "Basic Trie Hash Table (Asserted Private)");
 
+  private_smCallNode = (struct Structure_Manager*) mem_alloc(sizeof(struct Structure_Manager),MT_PRIVATE_SPACE);
+  SM_InitDeclDyna(private_smCallNode,CALL_NODE,CALLNODE_PER_BLOCK,"CallNode");
+
+  private_smCallList = (struct Structure_Manager*) mem_alloc(sizeof(struct Structure_Manager),MT_PRIVATE_SPACE);
+  SM_InitDeclDyna(private_smCallList,CALLLIST,CALLLIST_PER_BLOCK,"CallList");
+
+  private_smCall2List = (struct Structure_Manager*) mem_alloc(sizeof(struct Structure_Manager),MT_PRIVATE_SPACE);
+  SM_InitDeclDyna(private_smCall2List,CALL2LIST,CALL2LIST_PER_BLOCK,"Call2List");
+
+  private_smOutEdge = (struct Structure_Manager*) mem_alloc(sizeof(struct Structure_Manager),MT_PRIVATE_SPACE);
+  SM_InitDeclDyna(private_smOutEdge,OUTEDGE,OUTEDGE_PER_BLOCK,"OutEdge");
+
+  /* smKey is small -- need to to use SM_DeallocateSmallStruct */
+  private_smKey = (struct Structure_Manager*) mem_alloc(sizeof(struct Structure_Manager),MT_PRIVATE_SPACE);
+  SM_InitDeclDyna(private_smKey,KEY,KEY_PER_BLOCK,"HashKey");
+
   private_current_de_block = NULL;
   private_current_dl_block = NULL;
   private_current_pnde_block = NULL;
@@ -1217,6 +1233,8 @@ void init_thread_structures(CTXTdecl)
   callAbsStk_index = 0;
   callAbsStk_size    = 0;
 
+  incr_hashtable_chain = NULL;
+
   /***************/
 
 /* This is here just for the first thread - others initialize its xsb tid
@@ -1233,6 +1251,7 @@ void init_thread_structures(CTXTdecl)
   pthread_cond_init( &th->cond_var, NULL );
 #endif
   th->cond_var_ptr = NULL;
+
 }
 
 void cleanup_thread_structures(CTXTdecl)
