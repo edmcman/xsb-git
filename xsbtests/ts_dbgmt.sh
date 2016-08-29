@@ -11,5 +11,5 @@ XSBDIR=$1
  
  cd ../../xsbtests
  
- sh testsuite.sh -tag dbg-mt -exclude "regmatch_tests incremental_tests"  $XSBDIR
+ sh testsuite.sh -tag dbg-mt -exclude "regmatch_tests nonmt_tests"  $XSBDIR
  
