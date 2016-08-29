@@ -188,6 +188,7 @@ extern Pair insert(char *, byte, Psc, int *);
 
 DllExport extern char* call_conv string_find(const char*, int);
 
+#define insert_psc(Name,Arity,Module,Flag) insert(Name,Arity,Module,Flag) 
 /*======================================================================*/
 /*  Special instance (0-arity interface functions)			*/
 /*======================================================================*/

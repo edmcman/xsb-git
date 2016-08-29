@@ -1,5 +1,5 @@
 /* File:      psc_xsb.c
-** Author(s): Xu, Sagonas, Swift
+** Author(s): Xu, Warren, Sagonas, Swift
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -109,6 +109,8 @@ exit_string_find:
   return str0;
 }
 
+// TES: seems to be a poor name: this just finds the string if its
+// there, but wont update the string table.  Also its not thread-safe.
 char *string_find_safe(char *str) {
 
   char *ptr, *str0;
@@ -292,7 +294,7 @@ static int is_globalmod(Psc mod_psc)
  *  Returns a pointer to the PSC-PAIR structure which points to the
  *  PSC record of the desired symbol.
  */
-static Pair search(int arity, char *name, Pair *search_ptr)
+static Pair search_psc_in_module(int arity, char *name, Pair *search_ptr)
 {
     Psc psc_ptr;
     /*    Pair *init_search_ptr = search_ptr; */
@@ -313,16 +315,16 @@ Pair search_in_usermod(int arity, char *name) {
   Pair *search_ptr;
   search_ptr = (Pair *)(symbol_table.table +
 			hash(name, arity, symbol_table.size));
-  return search(arity,name,search_ptr);
+  return search_psc_in_module(arity,name,search_ptr);
 }
 
-/* === insert0: search/insert to a given chain ========================	*/
+/* === search_insert_psc_1: search/insert to a given chain ========================	*/
 
-static Pair insert0(char *name, byte arity, Pair *search_ptr, int *is_new)
+static Pair search_insert_psc_1(char *name, byte arity, Pair *search_ptr, int *is_new)
 {
     Pair pair;
     
-    pair = search(arity, name, search_ptr);
+    pair = search_psc_in_module(arity, name, search_ptr);
     if (pair==NULL) {
       *is_new = 1;
       pair = make_psc_pair(make_psc_rec(name,arity), search_ptr);
@@ -330,10 +332,10 @@ static Pair insert0(char *name, byte arity, Pair *search_ptr, int *is_new)
     else
       *is_new = 0;
     return pair;
-} /* insert0 */
+} /* search_insert_psc_1 */
 
 
-/* === insert: search/insert to a given module ========================	*/
+/* === search/insert psc to a module, or module to global chain ======================== */
 
 Pair insert(char *name, byte arity, Psc mod_psc, int *is_new)
 {
@@ -344,13 +346,13 @@ Pair insert(char *name, byte arity, Psc mod_psc, int *is_new)
     if (is_globalmod(mod_psc)) {
       search_ptr = (Pair *)(symbol_table.table +
 	           hash(name, arity, symbol_table.size));
-      temp = insert0(name, arity, search_ptr, is_new);
+      temp = search_insert_psc_1(name, arity, search_ptr, is_new);
       if (*is_new)
 	symbol_table_increment_and_check_for_overflow;
     }
     else {
       search_ptr = (Pair *)&(get_data(mod_psc));
-      temp = insert0(name, arity, search_ptr, is_new);
+      temp = search_insert_psc_1(name, arity, search_ptr, is_new);
     }
     SYS_MUTEX_UNLOCK_NOERROR( MUTEX_SYMBOL ) ;
     return temp ;
@@ -365,7 +367,7 @@ Pair insert_module(int type, char *name)
     int is_new;
 
     SYS_MUTEX_LOCK_NOERROR( MUTEX_SYMBOL ) ;
-    new_pair = insert0(name, 0, (Pair *)&flags[MOD_LIST], &is_new);
+    new_pair = search_insert_psc_1(name, 0, (Pair *)&flags[MOD_LIST], &is_new);
     if (is_new) {
 	set_type(new_pair->psc_ptr, type);
 	new_pair->psc_ptr->env = 0;
@@ -410,7 +412,7 @@ Pair link_sym(CTXTdeclc Psc psc, Psc mod_psc)
 	           hash(name, arity, symbol_table.size);
     } else
       search_ptr = (Pair *)&get_data(mod_psc);
-    if ((found_pair = search(arity, name, search_ptr))) {
+    if ((found_pair = search_psc_in_module(arity, name, search_ptr))) {
       if (pair_psc(found_pair) != psc) {
 	/*
 	 *  Invalidate the old name!! It is no longer accessible
