@@ -1,0 +1,5 @@
+verbose_handler(A,1)
+verbose_handler(A,2)
+verbose_handler(A,3)
+verbose_handler(A,3)
+verbose_handler(A,4)

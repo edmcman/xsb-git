@@ -94,7 +94,7 @@ member ()
 default_testlist="basic_tests prolog_tests retract_tests \
 	  table_tests ptq neg_tests sem_tests delay_tests \
 	  wfs_tests ai_tests attv_tests constraint_tests \
-          sub_tests io_tests regmatch_tests incremental_tests"
+          sub_tests io_tests regmatch_tests incremental_tests nonmt_tests"
 
 if test -z "$only_tests"; then
     testlist="$default_testlist $added_tests"

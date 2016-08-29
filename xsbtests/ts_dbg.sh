@@ -7,7 +7,7 @@ XSBDIR=$1
  
  rm ../config/*dbg/saved.o/*.o ; 
 # configure --enable-debug > /tmp/config ; 
- ./configure --enable-debug ; 
+# ./configure --enable-debug ; 
  ./makexsb --config-tag=dbg ;
  
  cd ../../xsbtests

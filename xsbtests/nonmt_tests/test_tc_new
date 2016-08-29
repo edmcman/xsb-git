@@ -1,0 +1,5 @@
+caught(misc_error,[th 0]  timed_call/3 not implemented for multi-threaded engine.  Please use thread signalling)
+caught(permission_error(nested_call,predicate,timed_call(loop)),( in ,timed_call/2))
+caught(permission_error(nested_call,predicate,timed_call(loop)),( in ,timed_call/2))
+caught(permission_error(nested_call,predicate,timed_call(timed_call(writeln(nested_call),[repeating(1000,writeln(nested_handler))]))),( in ,timed_call/2))
+caught_dummy(misc_error,Either maximum or repeating intervals/handlers must be specified in timed_call/2)

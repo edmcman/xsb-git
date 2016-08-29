@@ -5,12 +5,7 @@
 :- import incr_assert/1,incr_retractall/1,incr_assert_inval/1,
 	  incr_table_update/0,incr_retract_inval/1 from increval.
 
-test:- 
-	(xsb_configuration(engine_mode,'multi-threading') -> 
-	    load_dync(inc_abol_old),
-	    (incr(X),write(incr(X)),writeln('.'),fail ; true)
-	 ;  test_seq).
-
+test:- test_seq.
 %-----------
 
 :- table pt/3 as incremental.

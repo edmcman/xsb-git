@@ -1,11 +1,7 @@
 :- import incr_trans_depends/2 from increval.
 :- import numbervars/1 from num_vars.
 
-test:- 
-	(xsb_configuration(engine_mode,'multi-threading') -> 
-%	    shell('cp test_incr_depends_old test_incr_depends_new')
-	    shell('cat test_incr_depends_old')
-	  ; test_1).
+test:- test_1.
 
 test_1:- baz(_X),fail.
 test_1:- assert((fff(X):-foo(X))),
