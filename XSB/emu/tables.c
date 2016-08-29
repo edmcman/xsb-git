@@ -199,7 +199,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
  		       CallLookupResults *results) {
   TIFptr tif;
 
-#ifndef MULTI_THREAD
+  //#ifndef MULTI_THREAD
   /* for incremental evaluation begin */ 
   int call_found_flag;
   callnodeptr c;
@@ -207,7 +207,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
   ALNptr pALN;
   BTNptr leaf,Paren;  
   /* for incremental evaluation end */     
-#endif
+  //#endif
 
 #ifdef CALL_ABSTRACTION
   CallAbsStk_ResetTOS; 
@@ -222,7 +222,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
       return XSB_FAILURE;
     }
     
-#ifndef MULTI_THREAD
+    //#ifndef MULTI_THREAD
     /* incremental evaluation: checking whether falsecount is zero */
     /*
       In call check insert if a call is reinserted and was already
@@ -251,7 +251,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
 	//	 	  printf("   recomputing (rcomputable = %d) ",c->recomputable);
 	//  print_subgoal(stddbg,sf);printf("\n");
 	if (c->recomputable == COMPUTE_DEPENDENCIES_FIRST) {
-	  lazy_affected = empty_calllist();
+	  lazy_affected = empty_calllist(CTXT);
 	  if ( !dfs_inedges(CTXTc c,  &lazy_affected, CALL_LIST_EVAL) ) {
 	    CallLUR_Subsumer(*results) = CallTrieLeaf_GetSF(Paren);
 	    return XSB_SPECIAL_RETURN;
@@ -283,7 +283,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
       CallLUR_Subsumer(*results) = CallTrieLeaf_GetSF(Paren);
       CallLUR_VariantFound(*results) = call_found_flag;
       /* incremental evaluation: end */
-#endif /* not MULTI_THREAD (incremental evaluation) */
+      //#endif /* not MULTI_THREAD (incremental evaluation) */
   }
   else
     subsumptive_call_search(CTXTc call_info,results);
