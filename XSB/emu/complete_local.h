@@ -282,7 +282,7 @@ static inline CPtr ProcessL3Returns(CTXTdeclc CPtr cs_ptr) {
   while (ComplStkFrame >= openreg) {
     altsem_dbg(("in loop: ComplStkFrame %p openreg %p (",ComplStkFrame,openreg));
     compl_subg = compl_subgoal_ptr(ComplStkFrame);
-    altsem_print_subgoal(compl_subg);altsem_dbg(")\n");
+    altsem_print_subgoal(compl_subg);altsem_dbg((")\n"));
 
     if (!is_completed(compl_subg)) { /* not early completed */
       altsem_dbg(("not ec\n"));
@@ -315,8 +315,64 @@ static inline CPtr ProcessL3Returns(CTXTdeclc CPtr cs_ptr) {
   return first_sched_cons;
 }
 
-// Stub for later
+xsbBool dl_has_tagged_de(DL dl, VariantSF designated_subgoal) {
+  DE delay_elt =  dl_de_list(dl);
+  while (delay_elt) {
+    printf("de %p\n",delay_elt);
+    if (designated_subgoal == de_subgoal(delay_elt)) return TRUE;
+    delay_elt = de_next(delay_elt);
+    } /* while (delay_elt) */
+  return FALSE;
+}
+
+extern xsbBool remove_dl_from_dl_list(CTXTdeclc DL , ASI );
+
 void PerformL3Simplification(CTXTdeclc CPtr cs_ptr) {
+  CPtr ComplStkFrame = cs_ptr;
+  VariantSF compl_subg,designated_subgoal;
+  ALNptr aln;
+  BTNptr answer_leaf;
+  ASI asi_ptr;
+  Pair undefPair;				      
+  int isNew;
+  DL delay_list;
+
+  //  undefPair = insert(predicate, 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
+  undefPair = insert_psc("l3_undef", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
+  designated_subgoal  = TIF_Subgoals(get_tip(CTXTc pair_psc(undefPair)));				
+
+  altsem_dbg(("in PerformL3Simplification: ComplStkFrame %p openreg %p breg %p\n",ComplStkFrame,openreg,breg));
+  /* check from leader up to the youngest subgoal */
+  while (ComplStkFrame >= openreg) {
+    altsem_dbg(("in loop: ComplStkFrame %p openreg %p (",ComplStkFrame,openreg));
+    compl_subg = compl_subgoal_ptr(ComplStkFrame);
+    altsem_print_subgoal(compl_subg);altsem_dbg((")\n"));
+
+    if (!is_completed(compl_subg)) { /* not early completed */
+      aln = subg_ans_list_ptr(compl_subg);
+      while (aln != NULL) {
+	printf("   ALN %p\n",aln);
+	answer_leaf = ALN_Answer(aln);
+	if (is_conditional_answer(answer_leaf)) {
+	  asi_ptr = (ASI) BTN_Child(answer_leaf);
+	  delay_list = asi_dl_list(asi_ptr);
+	  while (delay_list) {
+	    if (dl_has_tagged_de(delay_list,designated_subgoal)) {
+	      printf("found designated\n");
+	      if (!remove_dl_from_dl_list(CTXTc delay_list, asi_ptr)) {
+		printf("about to handle %p\n",answer_leaf);
+		handle_unsupported_answer_subst(CTXTc answer_leaf);
+		printf("handled\n");
+	      }
+	    }
+	    delay_list = dl_next(delay_list);
+	  } /* while dl */
+	}
+	aln = ALN_Next(aln);
+      }  /* while aln */
+    }
+    ComplStkFrame = next_compl_frame(ComplStkFrame);
+  } /* while ComplStkFrame >= openreg */
 }
 
 static inline void CompleteSimplifyAndReclaim(CTXTdeclc CPtr cs_ptr)

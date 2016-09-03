@@ -5343,76 +5343,6 @@ void unfounded_component(CTXTdecl) {
   }
 }
 
-#ifdef UNDEFINED
-
-#include "system_xsb.h"
-
-xsbBool checkSupportedAnswer(BTNptr answer_leaf) {
-  int index, answer_supported, delaylist_supported;
-  DL DelayList;
-  DE DelayElement;  
-
-  if (VISITED_ANSWER(answer_leaf)) {
-    if (FALSE) /* answer_leaf is in completion stack */
-      return FALSE;
-    else return TRUE;
-  }
-  else { /* not visited */
-    MARK_VISITED_ANSWER(answer_leaf);
-    push_comp_node(answer_leaf,index);
-    DelayList = asi_dl_list(Delay(answer_leaf));
-    answer_supported = UNKNOWN;
-    while (DelayList && answer_supported != TRUE) {
-      DelayElement = dl_de_list(DelayList);
-      delaylist_supported = TRUE; /* UNKNOWN? */
-      while (DelayElement && delaylist_supported != FALSE) {
-	if (de_positive(DelayElement) /* && Is in SCC */) {
-	  if (!checkSupportedAnswer((BTNptr) de_ans_subst(DelayElement)))
-	    delaylist_supported = FALSE;
-	  DelayElement = de_next(DelayElement);
-	}
-        if (delaylist_supported == FALSE) { /* does this propagate */
-	  if (!remove_dl_from_dl_list(CTXTc DelayList, Delay(answer_leaf)))
-	    simplify_pos_unsupported(CTXTc (NODEptr) answer_leaf);
-	}
-	else answer_supported = TRUE;
-      }
-      DelayList = dl_next(DelayList);
-    }
-    if (IsValidNode(answer_leaf)) return TRUE;
-    else return FALSE;
-  }
-}
-
-
-void resetStack() {
-}
-
-// this code is obsolete (dsw 8/2/15)
-void answer_completion(CTXTdeclc CPtr cs_ptr) {
-  VariantSF compl_subg;
-  CPtr ComplStkFrame = cs_ptr; 
-  ALNptr answerPtr;
-  BTNptr answer_leaf;
-
-  printf("calling answer completion\n");
-
-  /* For each subgoal S in SCC */
-  while (ComplStkFrame >= openreg) {
-    compl_subg = compl_subgoal_ptr(ComplStkFrame);
-    answerPtr = subg_ans_list_ptr(compl_subg);
-    while (answerPtr ) {
-      answer_leaf = ALN_Answer(answerPtr);
-      checkSupportedAnswer(answer_leaf);
-      resetStack();
-      answerPtr = ALN_Next(answerPtr);
-    }
-
-    ComplStkFrame = next_compl_frame(ComplStkFrame);
-  }
-
-}
-#endif
 
 /*****************************************************************************/
 static unsigned int hashid(void *ky)
@@ -6399,3 +6329,75 @@ case CALL_SUBS_SLG_NOT: {
 *   }
 * }
 */
+
+
+#ifdef UNDEFINED
+
+//#include "system_xsb.h"
+
+//xsbBool checkSupportedAnswer(BTNptr answer_leaf) {
+//  int index, answer_supported, delaylist_supported;
+//  DL DelayList;
+//  DE DelayElement;  
+//
+//  if (VISITED_ANSWER(answer_leaf)) {
+//    if (FALSE) /* answer_leaf is in completion stack */
+//      return FALSE;
+//    else return TRUE;
+//  }
+//  else { /* not visited */
+//    MARK_VISITED_ANSWER(answer_leaf);
+//    push_comp_node(answer_leaf,index);
+//    DelayList = asi_dl_list(Delay(answer_leaf));
+//    answer_supported = UNKNOWN;
+//    while (DelayList && answer_supported != TRUE) {
+//      DelayElement = dl_de_list(DelayList);
+//      delaylist_supported = TRUE; /* UNKNOWN? */
+//      while (DelayElement && delaylist_supported != FALSE) {
+//	if (de_positive(DelayElement) /* && Is in SCC */) {
+//	  if (!checkSupportedAnswer((BTNptr) de_ans_subst(DelayElement)))
+//	    delaylist_supported = FALSE;
+//	  DelayElement = de_next(DelayElement);
+//	}
+//        if (delaylist_supported == FALSE) { /* does this propagate */
+//	  if (!remove_dl_from_dl_list(CTXTc DelayList, Delay(answer_leaf)))
+//	    simplify_pos_unsupported(CTXTc (NODEptr) answer_leaf);
+//	}
+//	else answer_supported = TRUE;
+//      }
+//      DelayList = dl_next(DelayList);
+//    }
+//    if (IsValidNode(answer_leaf)) return TRUE;
+//    else return FALSE;
+//  }
+//}
+//
+//
+//void resetStack() {
+//}
+//
+//// this code is obsolete (dsw 8/2/15)
+//void answer_completion(CTXTdeclc CPtr cs_ptr) {
+//  VariantSF compl_subg;
+//  CPtr ComplStkFrame = cs_ptr; 
+//  ALNptr answerPtr;
+//  BTNptr answer_leaf;
+//
+//  printf("calling answer completion\n");
+//
+//  /* For each subgoal S in SCC */
+//  while (ComplStkFrame >= openreg) {
+//    compl_subg = compl_subgoal_ptr(ComplStkFrame);
+//    answerPtr = subg_ans_list_ptr(compl_subg);
+//    while (answerPtr ) {
+//      answer_leaf = ALN_Answer(answerPtr);
+//      checkSupportedAnswer(answer_leaf);
+//      resetStack();
+//      answerPtr = ALN_Next(answerPtr);
+//    }
+//
+//    ComplStkFrame = next_compl_frame(ComplStkFrame);
+//  }
+//
+//}
+#endif //UNDEFINED

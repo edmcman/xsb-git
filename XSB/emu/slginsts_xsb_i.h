@@ -1351,7 +1351,7 @@ XSB_End_Instr()
 
 XSB_Start_Instr(continue_consumer,_continue_consumer) 
 {
-    altsem_dbg(">>>> continue consumer\n");
+  altsem_dbg((">>>> continue consumer\n"));
 
     CPtr conscp = breg;
     
@@ -1378,7 +1378,7 @@ XSB_Start_Instr(continue_consumer,_continue_consumer)
     //      printf("list %p ret %s\n",ALN_Answer(subg_ans_list_ptr(TIF_Subgoals(Utip))),get_ret_psc(0));
     //      delay_positively(TIF_Subgoals(Utip),ALN_Answer(subg_ans_list_ptr(TIF_Subgoals(Utip))),get_ret_psc(0));		
     lpcreg = cpreg;
-    altsem_dbg("done with continue consumer\n");
+    altsem_dbg(("done with continue consumer\n"));
 }
 XSB_End_Instr()
 
