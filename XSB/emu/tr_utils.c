@@ -3183,6 +3183,98 @@ void traverse_conditional_affects_edges(CTXTdeclc VariantSF subgoal) {
     push_ta_done_subgoal_node(CTXTc subgoal); 
 }
 
+//---------------------- 
+//TES: I need to refactor this code, so that
+// clean_up...subgoal calls clean_up...answer calls clean_up...delay_list.
+
+void clean_up_backpointers_to_failed_delay_list(CTXTdeclc DL delayList) {
+  DE current_de; PNDE current_pnde;
+
+  current_de = dl_de_list(delayList);
+  while (current_de) {
+#ifdef ABOLISH_DBG2
+    print_subgoal(stddbg,de_subgoal(current_de));printf(" | ");
+#endif
+    if (de_ans_subst(current_de)) {
+	      current_pnde = asi_pdes((ASI) Child(de_ans_subst(current_de)));
+    } else {
+      current_pnde = subg_nde_list(de_subgoal(current_de));
+    }
+    while (current_pnde && pnde_de(current_pnde) != current_de) {
+#ifdef ABOLISH_DBG2
+      printf("current pnde from %p to %p\n",current_pnde,pnde_next(current_pnde));
+#endif
+      current_pnde = pnde_next(current_pnde);
+    }
+    if (current_pnde) {
+#ifdef ABOLISH_DBG2
+      printf("removing %p (next %p) from chain`\n",current_pnde,pnde_next(current_pnde));
+#endif
+      if (de_ans_subst(current_de)) {
+	remove_pnde(asi_pdes((ASI) Child(de_ans_subst(current_de))), current_pnde,released_pndes_gl);
+      } else {
+	remove_pnde(subg_nde_list(de_subgoal(current_de)), current_pnde,released_pndes_gl);
+      }
+    } else {
+      xsb_warn(CTXTc "(*&(*& couldn't find pnde for abolished answer\n");
+    }
+#ifdef ABOLISH_DBG2
+    printf("\n");
+#endif
+    current_de = de_next(current_de);
+  }
+  delayList = dl_next(delayList);
+ }
+
+//----------------------
+void clean_up_backpointers_to_abolished_answer(CTXTdeclc BTNptr as_leaf) {
+  DL delayList;     DE current_de; PNDE current_pnde;
+
+#ifdef ABOLISH_DBG2
+    printf("checking answer in ");print_subgoal(stddbg,asi_subgoal((ASI) Child(as_leaf)));printf("\n");
+#endif
+    delayList = asi_dl_list((ASI) Child(as_leaf));
+    while (delayList) {
+      current_de = dl_de_list(delayList);
+#ifdef ABOLISH_DBG2
+      printf("  ----- new dl ");
+#endif
+      while (current_de) {
+#ifdef ABOLISH_DBG2
+	print_subgoal(stddbg,de_subgoal(current_de));printf(" | ");
+#endif
+	  if (de_ans_subst(current_de)) {
+	      current_pnde = asi_pdes((ASI) Child(de_ans_subst(current_de)));
+	  } else {
+	      current_pnde = subg_nde_list(de_subgoal(current_de));
+	  }
+	  while (current_pnde && pnde_de(current_pnde) != current_de) {
+#ifdef ABOLISH_DBG2
+	    printf("current pnde from %p to %p\n",current_pnde,pnde_next(current_pnde));
+#endif
+	    current_pnde = pnde_next(current_pnde);
+	  }
+	  if (current_pnde) {
+#ifdef ABOLISH_DBG2
+	    printf("removing %p (next %p) from chain`\n",current_pnde,pnde_next(current_pnde));
+#endif
+	    if (de_ans_subst(current_de)) {
+	      remove_pnde(asi_pdes((ASI) Child(de_ans_subst(current_de))), current_pnde,released_pndes_gl);
+	    } else {
+	      remove_pnde(subg_nde_list(de_subgoal(current_de)), current_pnde,released_pndes_gl);
+	    }
+	  } else {
+	    xsb_warn(CTXTc "(*&(*& couldn't find pnde for abolished answer\n");
+	  }
+#ifdef ABOLISH_DBG2
+	printf("\n");
+#endif
+	current_de = de_next(current_de);
+      }
+      delayList = dl_next(delayList);
+    } /* while delaylist */
+ }
+
 void clean_up_backpointers_to_abolished_subgoals(CTXTdecl) {
   BTNptr as_leaf;
   DL delayList;     DE current_de; PNDE current_pnde;

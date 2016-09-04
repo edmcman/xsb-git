@@ -758,7 +758,7 @@ void debug_call(CTXTdeclc Psc psc)
 }
 
 /*=============================================================================*/
-/*  The second section of predicates I (TLS) use when debugging with gdb.      */
+/*  The second section of predicates I (TES) use when debugging with gdb.      */
 /*  Please ensure they stay defined whenever we compile with -dbg option.      */
 /*=============================================================================*/
 
@@ -1345,7 +1345,21 @@ void print_completion_stack(CTXTdeclc FILE *fptr)
 
 /*----------------------------------------------------------------------*/
 
-void print_delay_element(CTXTdeclc FILE *fp, Cell del_elem)
+void print_delay_element_from_table(CTXTdeclc DE delay_element) {
+  printf("Delay element: subgoal ");print_subgoal(stddbg,de_subgoal(delay_element)); printf(" next: %p\n",de_next(delay_element));
+}
+
+void print_delay_list_from_table(CTXTdeclc DL delay_list) {
+  int i = 0;
+  DE delay_elt = dl_de_list(delay_list);
+  while (delay_elt) {
+    printf("   Delay element: %d subgoal ",i++);print_subgoal(stddbg,de_subgoal(delay_elt));printf(" next: %p\n",de_next(delay_elt));
+    delay_elt = de_next(delay_elt);
+  }
+}
+/*----------------------------------------------------------------------*/
+
+void print_delay_element_heap(CTXTdeclc FILE *fp, Cell del_elem)
 {
   Psc  psc = 0;
   CPtr cptr;
@@ -1385,19 +1399,17 @@ void print_delay_element(CTXTdeclc FILE *fp, Cell del_elem)
     fprintf(fp, ")");
   }
   else {
-    xsb_abort("Unknown delay list element in print_delay_element()");
+    xsb_abort("Unknown delay list element in print_delay_element_heap()");
   }
 }
 
 /* This does a more thorough job of printing out delay elements than
-   print_delay_element(), which I haven't updated */
+   print_delay_element_heap(), which I haven't updated */
 int sprint_delay_element(CTXTdeclc forestLogBuffer fl_buf, int ctr ,Cell del_elem) {
   Psc  psc = 0;
   CPtr cptr;
   Cell tmp_cell;
   //  int arity, i;  char *name;
-
-  //  print_delay_element(CTXTc stdout, del_elem);printf("\n");
 
   if ((psc = get_str_psc(del_elem)) == delay_psc) {
     cptr = (CPtr)cs_val(del_elem);
@@ -1448,7 +1460,7 @@ int sprint_delay_element(CTXTdeclc forestLogBuffer fl_buf, int ctr ,Cell del_ele
     return ctr;
   }
   else {
-    xsb_abort("Unknown delay list element in print_delay_element()");
+    xsb_abort("Unknown delay list element in sprint_delay_element_heap()");
     return 0; // quiet compiler.
   }
 }
@@ -1466,7 +1478,7 @@ void print_delay_list(CTXTdeclc FILE *fp, CPtr dlist)
       fprintf(fp, "["); cptr = dlist;
       while (islist(cptr)) {
 	cptr = clref_val(cptr);
-	print_delay_element(CTXTc fp, cell(cptr));
+	print_delay_element_heap(CTXTc fp, cell(cptr));
 	cptr = (CPtr)cell(cptr+1);
 	if (islist(cptr)) fprintf(fp, ", ");
       }
