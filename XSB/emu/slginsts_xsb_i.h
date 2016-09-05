@@ -710,7 +710,10 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
 	   * delay_positively().
 	   */
 	  if (num_heap_term_vars == 0) {
-	    fail_if_direct_recursion(producer_sf);
+	    if (flags[ALTERNATE_SEMANTICS] != NAF_L3) {
+	      // This breaks L3, which needs all delay lists to enure correctness.
+	      fail_if_direct_recursion(producer_sf);
+	    }
 	    delay_positively(producer_sf, first_answer,
 			     makestring(get_ret_string()));
 	  }
@@ -1177,7 +1180,10 @@ if (wasRederived) {
        * answer was saved as a term ret/n (in variant_answer_search()).                                                      
        */
 #ifndef IGNORE_DELAYVAR
-      fail_if_direct_recursion(producer_sf);
+      if (flags[ALTERNATE_SEMANTICS] != NAF_L3) {
+	// This breaks L3, which needs all delay lists to enure correctness.
+	fail_if_direct_recursion(producer_sf);
+      }
       if (isinteger(cell(ans_var_pos_reg))) {
         delay_positively(producer_sf, answer_leaf,
                          makestring(get_ret_string()));
