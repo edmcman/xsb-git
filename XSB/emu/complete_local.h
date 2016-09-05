@@ -317,8 +317,10 @@ static inline CPtr ProcessL3Returns(CTXTdeclc CPtr cs_ptr) {
 
 xsbBool dl_has_tagged_de(DL dl, VariantSF designated_subgoal) {
   DE delay_elt =  dl_de_list(dl);
+  //  printf("entering dl_has_tagged_de\n");print_delay_list_from_table(dl);
+
   while (delay_elt) {
-    printf("de %p\n",delay_elt);
+    //    print_delay_element_table(delay_elt);
     if (designated_subgoal == de_subgoal(delay_elt)) return TRUE;
     delay_elt = de_next(delay_elt);
     } /* while (delay_elt) */
@@ -335,7 +337,7 @@ void PerformL3Simplification(CTXTdeclc CPtr cs_ptr) {
   ASI asi_ptr;
   Pair undefPair;				      
   int isNew;
-  DL delay_list;
+  DL delay_list,tmp_dl;
 
   //  undefPair = insert(predicate, 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
   undefPair = insert_psc("l3_undef", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
@@ -349,23 +351,26 @@ void PerformL3Simplification(CTXTdeclc CPtr cs_ptr) {
     altsem_print_subgoal(compl_subg);altsem_dbg((")\n"));
 
     if (!is_completed(compl_subg)) { /* not early completed */
-      aln = subg_ans_list_ptr(compl_subg);
+      aln = ALN_Next(subg_ans_list_ptr(compl_subg));
       while (aln != NULL) {
-	printf("   ALN %p\n",aln);
+	//	printf("   ALN %p\n",aln);
 	answer_leaf = ALN_Answer(aln);
 	if (is_conditional_answer(answer_leaf)) {
 	  asi_ptr = (ASI) BTN_Child(answer_leaf);
 	  delay_list = asi_dl_list(asi_ptr);
 	  while (delay_list) {
+	    tmp_dl = dl_next(delay_list);
 	    if (dl_has_tagged_de(delay_list,designated_subgoal)) {
-	      printf("found designated\n");
+	      //	      printf("about to remove delay list\n");
+	      clean_up_backpointers_to_failed_delay_list(CTXTc delay_list);
 	      if (!remove_dl_from_dl_list(CTXTc delay_list, asi_ptr)) {
-		printf("about to handle %p\n",answer_leaf);
-		handle_unsupported_answer_subst(CTXTc answer_leaf);
-		printf("handled\n");
+		delete_branch(CTXTc answer_leaf, &subg_ans_root_ptr(compl_subg),VARIANT_EVAL_METHOD);
+		simplify_pos_unsupported(CTXTc answer_leaf);
 	      }
+	      //		printf("about to handle %p\n",answer_leaf);
+	      //		handle_unsupported_answer_subst(CTXTc answer_leaf);
 	    }
-	    delay_list = dl_next(delay_list);
+	    delay_list = tmp_dl;
 	  } /* while dl */
 	}
 	aln = ALN_Next(aln);
