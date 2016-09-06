@@ -1,12 +1,4 @@
 
-/* Only test in sequential engine */
-/*
-test:- 
-	(xsb_configuration(engine_mode,'multi-threading') -> 
-	    load_dync(test_directives_old),
-	    (prop(X,Y),write(prop(X,Y)),writeln('.'),fail ; true)
-	 ;  test_dirs).
-*/
 test:- test_dirs.
 test_dirs:- 
 	(dynamic d1/1),
@@ -28,7 +20,7 @@ test_dirs:-
 	(table t2/1 as incremental),
 	predicate_property(t2(_X),P),
 	write(prop(t2,P)),writeln('.'),fail.
-tes_dirst:- 
+test_dirs:- 
 	(table t3/1 as opaque),
 	predicate_property(t3(_X),P),
 	write(prop(t3,P)),writeln('.'),fail.

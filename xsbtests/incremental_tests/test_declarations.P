@@ -1,12 +1,5 @@
 
-/* Only test in sequential engine */
-/*
-test:- 
-	(xsb_configuration(engine_mode,'multi-threading') -> 
-	    load_dync(test_declarations_old),
-	    (prop(X,Y),write(prop(X,Y)),writeln('.'),fail ; true)
-	 ;  test_decs).
-*/
+
 test:- test_decs.
 
 :- dynamic d1/1.

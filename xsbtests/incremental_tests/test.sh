@@ -52,6 +52,10 @@ options=$2
 #------------------------------------------------- more inc tests with abolish_table_call + gc
 ../gentest.sh "$XEMU $options" inc_atc_gc_tricky "test".
 #--------------------------------------------------
+../gentest.sh "$XEMU $options" test_directives "test".
+#--------------------------------------------------
+../gentest.sh "$XEMU $options" test_declarations "test".
+#------------------------------------------------- testing executable incremental dirs.
 #../gentest.sh "$XEMU $options" test_tc "test".
 #--------------------------------------------------
 #../gentest.sh "$XEMU -l $options" test_iso_basic "test."
@@ -64,10 +68,6 @@ options=$2
 #--------------------------------------------------
 #../gentest.sh "$XEMU -l $options" test_iso_attr "test."
 #------------------------------------------------- testing executable incremental decls.
-#../gentest.sh "$XEMU $options" test_declarations "test".
-#------------------------------------------------- testing executable incremental dirs.
-#../gentest.sh "$XEMU $options" test_directives "test".
-#--------------------------------------------------
 #../gentest.sh "$XEMU -l $options" test_lazy "test."
 #-------------------------------------------------- yet more inc tests with abolish_table_call_single + gc
 #../gentest.sh "$XEMU $options" inc_atc_single_gc_deps "test".  (doesn't work yet)
