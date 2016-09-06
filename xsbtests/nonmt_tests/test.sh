@@ -19,10 +19,6 @@ options=$2
 ../gentest.sh "$XEMU -l $options" test_iso_undef "test."
 #--------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_iso_attr "test."
-#------------------------------------------------- testing executable incremental decls.
-../gentest.sh "$XEMU $options" test_declarations "test".
-#------------------------------------------------- testing executable incremental dirs.
-../gentest.sh "$XEMU $options" test_directives "test".
 #--------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_lazy "test."
 #-------------------------------------------------- yet more inc tests with abolish_table_call_single + gc
