@@ -1346,14 +1346,14 @@ void print_completion_stack(CTXTdeclc FILE *fptr)
 /*----------------------------------------------------------------------*/
 
 void print_delay_element_from_table(CTXTdeclc DE delay_element) {
-  printf("Delay element: subgoal ");print_subgoal(stddbg,de_subgoal(delay_element)); printf(" next: %p\n",de_next(delay_element));
+  printf("Delay element: subgoal ");print_subgoal(CTXTc stddbg,de_subgoal(delay_element)); printf(" next: %p\n",de_next(delay_element));
 }
 
 void print_delay_list_from_table(CTXTdeclc DL delay_list) {
   int i = 0;
   DE delay_elt = dl_de_list(delay_list);
   while (delay_elt) {
-    printf("   Delay element: %d subgoal ",i++);print_subgoal(stddbg,de_subgoal(delay_elt));printf(" next: %p\n",de_next(delay_elt));
+    printf("   Delay element: %d subgoal ",i++);print_subgoal(CTXTc stddbg,de_subgoal(delay_elt));printf(" next: %p\n",de_next(delay_elt));
     delay_elt = de_next(delay_elt);
   }
 }
