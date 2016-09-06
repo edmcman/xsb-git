@@ -235,15 +235,15 @@ TIFptr *get_tip_or_tdisp(Psc temp)
    multithreaded, it must go through the dispatch table to get the
    tip. 
 
-TLS: Added a few lines below to return NULL if the psc is non-tabled.
+TES: Added a few lines below to return NULL if the psc is non-tabled.
 Calling routines can then report the appropriate error.  */
 
 TIFptr get_tip(CTXTdeclc Psc psc) {
   TIFptr *tip = get_tip_or_tdisp(psc);
+  //  printf("get tip %s/%d tip %p\n",get_name(psc),get_arity(psc),tip);
 #ifndef MULTI_THREAD
   return tip?(*tip):NULL;
 #else
-  //  printf("get tip %s/%d tip %p\n",get_name(psc),get_arity(psc),tip);
   if (!tip) { /* get it out of dispatch table */
     CPtr temp1 = (CPtr) get_ep(psc);
     if ((get_type(psc) == T_DYNA) &&
@@ -252,13 +252,14 @@ TIFptr get_tip(CTXTdeclc Psc psc) {
       if (temp1 && ( (*(pb)temp1 == tabletrysingle) || (*(pb)temp1 == tabletrysinglenoanswers)))
 	return *(TIFptr *)(temp1+2);
       else return (TIFptr) NULL;
-    } else {
-      if (get_tabled(psc)) {
-	xsb_error("Internal Error in table dispatch\n");
-      } else { return NULL; }
-    }
+    } 
+    // TES: commented out error notification 09/16.  To make the MT engine work in
+    //the case of an executed tabling directive with no code, we need
+    //to return NULL
+    //    else { if (get_tabled(psc)) { xsb_error("Internal Error in table dispatch\n"); }
+    else { return NULL; }
   }
-  if (TIF_EvalMethod(*tip) != DISPATCH_BLOCK) return *tip;
+  if (tip && TIF_EvalMethod(*tip) != DISPATCH_BLOCK) return *tip;
   /* *tip points to 3rd word in TDispBlk, so get addr of TDispBlk */
   { struct TDispBlk_t *tdispblk = (struct TDispBlk_t *) (*tip);
     TIFptr rtip = (TIFptr)((&(tdispblk->Thread0))[xsb_thread_entry]);

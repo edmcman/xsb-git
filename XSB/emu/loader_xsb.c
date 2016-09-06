@@ -1025,6 +1025,12 @@ static void new_tdispblk(CTXTdeclc TIFptr *instr_ptr, Psc psc) {
   tdispblk->MaxThread = max_threads_glc;
   *instr_ptr = (TIFptr)tdispblk;
 
+  if (get_tabled(psc)==T_TABLED) {					
+    if ((TabledEvalMethod)pflags[TABLING_METHOD] == VARIANT_EVAL_METHOD)			
+       set_tabled(psc,T_TABLED_VAR);					
+     else set_tabled(psc,T_TABLED_SUB);				
+   }									
+
   SYS_MUTEX_UNLOCK( MUTEX_TABLE );
 
 }
@@ -1209,7 +1215,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
 #endif
 	  *instruct_tip = New_TIF(CTXTc (ptr->psc_ptr));
       }
-      //printf("table: %s/%d, psc_tabled: %x\n",get_name(ptr->psc_ptr),get_arity(ptr->psc_ptr),get_tabled(ptr->psc_ptr));
+      //      printf("table: %s/%d, psc_tabled: %x\n",get_name(ptr->psc_ptr),get_arity(ptr->psc_ptr),get_tabled(ptr->psc_ptr));
       break;
     case T_PRED:
       if (strcmp(name, "_$main")!=0) {
