@@ -56,6 +56,8 @@ options=$2
 #--------------------------------------------------
 ../gentest.sh "$XEMU $options" test_declarations "test".
 #------------------------------------------------- testing executable incremental dirs.
+../gentest.sh "$XEMU -l $options" test_table_errors "test."
+#--------------------------------------------------
 #../gentest.sh "$XEMU $options" test_tc "test".
 #--------------------------------------------------
 #../gentest.sh "$XEMU -l $options" test_iso_basic "test."
@@ -75,8 +77,6 @@ options=$2
 #../gentest.sh "$XEMU -l $options" test_introspection "test."
 #-------------------------------------------------- yet more tests of invalidation
 #../gentest.sh "$XEMU -l $options" test_invalidate "test."
-#--------------------------------------------------
-#../gentest.sh "$XEMU -l $options" test_table_errors "test."
 #--------------------------------------------------
 #../gentest.sh "$XEMU -l $options" test_goal_interrupt "test."
 #--------------------------------------------------
