@@ -111,7 +111,7 @@ hide_this_show(tcall,1).
 hide_this_hide(is_incomplete,2).
 
 trace_standard_predicate(catch,3).
-trace_this_noprint(catch,3).
+trace_this_print(catch,3).
 trace_this_noprint('$$exception_ball',2).
 
 %% On Redo, enable printing of debug prompts
