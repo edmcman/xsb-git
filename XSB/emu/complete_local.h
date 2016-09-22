@@ -328,6 +328,7 @@ xsbBool dl_has_tagged_de(DL dl, VariantSF designated_subgoal) {
 }
 
 extern xsbBool remove_dl_from_dl_list(CTXTdeclc DL , ASI );
+extern void clean_up_backpointers_to_failed_delay_list(CTXTdeclc DL delayList);
 
 void PerformL3Simplification(CTXTdeclc CPtr cs_ptr) {
   CPtr ComplStkFrame = cs_ptr;
