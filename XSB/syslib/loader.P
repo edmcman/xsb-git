@@ -369,7 +369,7 @@ load_pred1(PSC) :-
 		%% '_$cutto'(B)
 		!
 		;
-	     psc_type(PSC,NType),local_fmt_write(STDMSG, "error %s/%d,psc: %d, type: %d, modname: %S\n", arg(PSC,NType,ModName)),
+	     psc_type(PSC,NType),local_fmt_write(STDMSG, "error psc: %d, type: %d, modname: %S\n", arg(PSC,NType,ModName)),
 	     conset('_$load_pred_action',1)
 %	        handle_undefined_pred(ModName,Name,Arity)
 	    )
