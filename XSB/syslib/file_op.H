@@ -38,6 +38,10 @@
 
 :- import conpsc/2, psc_type/2, term_new/2, psc_insert/4 from machine.
 :- import instantiation_error/2 from error_handler.
+:- import dynamic_pred_has_clauses/2 from assert.
+:- import term_psc/2 from machine.
+:- import warning/1 from standard.
+
 
 :- index '_$op1'/3-3.
 
