@@ -616,7 +616,14 @@ transform_directive(table(as(Args,Options)),_ModName,_SymTab,table(as(TArgs,Opti
 	mpa_to_skel_cl(Args,TArgs).
 transform_directive(table(Args),_ModName,_SymTab,table(TArgs)) :- !,
 	mpa_to_skel_cl(Args,TArgs).
-transform_directive(index(P/A-I),_ModName,_SymTab,index(P/A-I)) :- !.  % just pass thru
+%transform_directive(index(P/A-I),_ModName,_SymTab,index(P/A-I)) :- !, % just pass thru
+transform_directive(index(P/A-I),ModName,SymTab,OutIndex) :- !,
+	(option(sysmod)
+	 ->	OutIndex = index(P/A-I) % just pass thru if sysmod!!
+				% this form cannot be used for dyn preds in sysmod!
+	 ;	OutIndex = index(OutIndexArg,I), % allow dyn preds to be indexed this way
+		transform_slash_to_skel(P/A,ModName,SymTab,OutIndexArg)
+	).
 transform_directive(index(Args),ModName,SymTab,index(TArgs)) :- !,
 	transform_slash_to_skel(Args,ModName,SymTab,TArgs).
 transform_directive(index(Spec,X),ModName,SymTab,index(Skel,X)) :- !,
