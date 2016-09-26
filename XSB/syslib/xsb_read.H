@@ -23,7 +23,7 @@
 ** 
 */
 
-
+:- export token_type/2.
 :- export file_read/2, file_read/3, vv/2.
 :- export file_read_foe/3, file_read_fapoe/3.
 :- export vv/2.  %% this is a functor symbol, not a predicate

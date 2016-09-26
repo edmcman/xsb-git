@@ -148,15 +148,30 @@ interpreter_readloop(_) :-
 	).
 
 read_in_stop(halt) :-          %% quit XSB, regardless of break level
+        call_xsb_hook(xsb_exit_hook(_),all),
+        halt.
+read_in_stop(end_of_file) :-   %% pop a break level, out if at top
+        %% if we previously pushed an input stream onto cmd_line_argument stack
+        %% then pop it back and make this stream current
+        (pop_stdin(cmd_line_argument) ->  fail
+        ; call_xsb_hook(xsb_exit_hook(_),all)
+        ).
+/*
+read_in_stop(halt) :-          %% quit XSB, regardless of break level
 	call_xsb_hook(xsb_exit_hook(_),all),
 	halt.
 read_in_stop(end_of_file) :-   %% pop a break level, out if at top
+	call_xsb_hook(xsb_exit_hook(_),all).
+*/
+:- import file_clearerr/1 from file_io.
+bp_read_in_stop(halt) :-          %% quit XSB, regardless of break level
+	call_xsb_hook(xsb_exit_hook(_),all),
+	halt.
+bp_read_in_stop(end_of_file) :-   %% pop a break level, out if at top
+        file_clearerr(STDIN),
 	%% if we previously pushed an input stream onto cmd_line_argument stack
 	%% then pop it back and make this stream current
-	(pop_stdin(cmd_line_argument) ->  fail
-	; call_xsb_hook(xsb_exit_hook(_),all)
-	).
-
+	(pop_stdin(cmd_line_argument) ; true),!.
 
 process_query(end_of_file,_) :- !, file_nl(STDFDBK), fail.
 process_query(X, Vars) :-
@@ -382,16 +397,27 @@ readl_brklp1(_) :-
 	file_write(STDFDBK, ': ?- '), file_flush(STDFDBK, _),
 	stat_flag(CURRENT_INPUT, FileIn),
 	file_read(FileIn, X, Vars),
-	(   nonvar(X), read_in_stop(X), !
+	(   nonvar(X), bp_read_in_stop(X), !
 	%% end read loop; pop a break level, out if X=halt.
 	;   process_query(X, Vars)
 	).
 
 /* === interrupt handlers ============================================== */
+:- import token_type/2 from xsb_read.
+:- import misc_error/2 from error_handler.
+/*
+'_$keyboard_int'(Call,_Code) :-
+        is_xwammode(Flag),
+        ( Flag =:= 1 -> abort ; break, call_c(Call) ).
+*/
 
 '_$keyboard_int'(Call,_Code) :- 
 	is_xwammode(Flag),
-	( Flag =:= 1 -> abort ; break, call_c(Call) ).
+	(Flag =:= 1 -> 
+	   abort
+	 ; break, 
+	   (Call = token_type(10,_) -> misc_error('_$silent_abort',0) ; call_c(Call)) ).
+
 
 :- import thread_get_signal/1 from mutex_xsb.
 :- import thread_peek_signal/1 from mutex_xsb.
