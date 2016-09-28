@@ -2689,9 +2689,13 @@ handle_timer_interrupt(MaxMemorySize,Handler) :-
 	 ;	true
 	).
 
+intersect_variables(A,B,C) :-
+	excess_vars(A,B,[],AminusB),
+	excess_vars(A,AminusB,[],C).
 
 do_all(SetGoal,DoGoal0) :-
-	term_variables(DoGoal0,Vars),
+	term_variables(DoGoal0,Vars0),
+	intersect_variables(SetGoal,Vars0,Vars),
 	findall(Vars,SetGoal,List0),
 	(DoGoal0 = if_none(DoGoal,ElseGoal)
 	 ->	(List0 == []

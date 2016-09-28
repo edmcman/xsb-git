@@ -186,7 +186,7 @@
      from xsb_writ.
 :- import xsb_thread_self/1 from thread.
 :- import (thread_shared)/1, (thread_private)/1 from consult.
-:- import findall/3, term_variables/2, sort/2 from setof.
+:- import findall/3, term_variables/2, sort/2, excess_vars/4 from setof.
 :- import (use_variant_tabling)/1, (use_subsumptive_tabling)/1 from tables.
 
 :- import (:-)/2 from usermod.
