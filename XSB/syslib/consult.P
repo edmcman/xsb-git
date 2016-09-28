@@ -420,8 +420,7 @@ add_lib_dir1(Path) :-
 	expand_filename(Path, FullPath),
 	(library_directory(FullPath)
 	 ->	true
-	 ;	standard:writeln(userout,add_library_dir(FullPath)),
-		assert(library_directory(FullPath))
+	 ;	assert(library_directory(FullPath))
 	).
 
 add_lib_dir(Root,(A,B)) :- !,
