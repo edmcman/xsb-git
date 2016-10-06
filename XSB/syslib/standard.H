@@ -44,7 +44,7 @@
 	get_date/6,
 	get_utcdate/6, get_localdate/6,
 	console_write/1, console_writeln/1,
-	error_write/1, error_writeln/1,
+   error_write/1, error_writeln/1,exec_table_option/2,
 	expand_term/2,	file_exists/1,	fail/0,	false/0,	fail_if/1,
 	fileerrors/0,	float/1,	forall/2,	functor/3,
 	gc_dynamic/1,   gc_tables/1,    gc_atoms/0,
