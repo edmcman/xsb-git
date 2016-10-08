@@ -89,7 +89,25 @@ add_incr_table(Spec,Mode) :-
 	 ; psc_set_incr(Psc,Mode)).
 
 /*----------------------------------------------------------------------*/
+:- export model_tv/2.
+:- import permission_error/4 from error_handler.
+model_tv(Goal,TV):- 
+	(Goal,fail ; true),
+ 	table_status(Goal, _PredTypeCode, _CallTypeCode, AnsSetStatusCode,_SF),
+	(AnsSetStatusCode == COMPLETED_ANSWER_SET -> 
+	    ( (\+ \+ Goal) -> 
+		variant_get_residual(Goal,Resid),
+		(Resid == [] -> TV = true ; TV = undefined)
+	     ;  TV = false)
+	 ; tv_answer_set_status_code(AnsSetStatusCode, Obj_type),
+	   permission_error(obtain_models_truth_value,Obj_type,Goal,model_tv/2) ).
+	    
+tv_answer_set_status_code(INCR_NEEDS_REEVAL,  incremental_needs_reeval).
+tv_answer_set_status_code(UNDEFINED_ANSWER_SET,  non_tabled_subgoal).
+tv_answer_set_status_code(COMPLETED_ANSWER_SET,  complete).
+tv_answer_set_status_code(INCOMPLETE_ANSWER_SET, incomplete_subgoal).
 
+    
 /*
  * To obtain info about both subsumptive and variant predicates.
  * See the file ../emu/builtin.c for a description of the valid
