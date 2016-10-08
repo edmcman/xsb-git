@@ -5152,10 +5152,10 @@ manipulation of {\tt call/[2-10]} makes it somewhat slower than {\tt
 %
 Calls {\tt Goal} just as with {\tt call/1}, and if {\tt Goal} does not
 fail, instantiates {\tt TV} with either {\tt true} or {\tt undefined},
-depending on the truth value of {\tt Goal} in the well-founded
-semantics.  {\tt Goal} need not be tabled itself.  Note that {\tt
-  Goal} might succeed with truth value {\tt undefined} before
-succeeding with truth value {\tt true}.
+depending on the truth value of {\tt Goal} {\bf {\em at the current
+    stage of the evaluation.}}  {\tt Goal} need not be tabled itself.
+Note that {\tt Goal} might succeed with truth value {\tt undefined}
+before succeeding with truth value {\tt true}.
 %, so that to avoid confusion,
 %{\tt call\_tv/2} should usually be invoked as a top-level goal.
 
@@ -5166,15 +5166,8 @@ fail; if {\tt Goal} succeeds unconditionally (is true in the
 well-founded semantics), {\tt call\_tv/2} will succeed
 unconditionally; and if {\tt Goal} succeeds conditionally (is neither
 true nor false in the well-founded semantics) {\tt call\_tv/2} will
-itself succeed conditionally.
-
-An alternative approach would be to call {\tt
-  get\_residual(Goal,DelayList)}: {\tt Goal} is true at a given state
-of an evaluation iff {\tt get\_residual(Goal,DelayList)} succeeds with
-{\tt DelayList = []}.  This appoach either fails or succeeds with
-truth value {\tt true}; however if {\tt Goal} is not completed,
-calling {\tt get\_residual(Goal,DelayList)} may lead to confusing
-results.
+itself succeed conditionally.  An alternative approach is provided by
+{\tt model\_tv/2}.
 
 {\bf Examples}
 
@@ -5203,8 +5196,56 @@ undefined   << top-level conjunctive query is undefined.
 \end{verbatim}
 \end{small}
 
-
 Error cases are the same as {\tt call/1}.
+
+\ourmoditem{model\_tv(\#Goal,?TruthValue)}{model\_tv/2}{tables}
+% 
+{\tt model\_tv(Goal,TruthValue)} succeeds only if {\tt TruthValue} is
+the truth value of {\tt Goal} in the well-founded model of the
+program.  {\tt Goal} must be tabled.  The predicate acts as follows.
+\begin{enumerate}
+\item {\tt Goal} is executed;
+\begin{enumerate}
+\item If {\tt Goal} is incomplete a permission error is thrown.
+\item Otherwise if {\tt Goal} is complete
+\begin{enumerate}
+\item If {\tt Goal} has no answers, {\tt TruthValue} is unified with
+  {\tt false}.
+\item Otherwise, {\tt model\_tv/2} backtracks through all answers for
+  {\tt Goal}, setting {\tt TruthValue} to {\tt true} or {\tt
+    undefined} as appropriate.
+\end{enumerate}
+\end{enumerate}
+\end{enumerate}
+
+{\bf Examples}
+Consider the program
+\begin{verbatim}
+:- table p/2.            :- table p/1.
+p(a,b).                  p(F):- tv_in_model(p(_),F).
+p(a,c):- undefined.
+\end{verbatim}
+The goal {\tt ?- model\_tv(p(X,Y),TV)} will succeed twice, setting
+{\tt TV} once to {\tt true} and once to {\tt undefined}.  On the other
+hand, the goal {\tt ?- model\_tv(p(c,Y),TV)} will set {\tt TV} to
+{\tt false} since the goal {\tt p(c,Y)} has no answers of any kind.
+The goal {\tt ?- model\_tv(p(Y),TV)} will throw a permission error,
+since proving the goal relies on a call to {\tt
+  model\_tv(p(Y),\_)}.  
+
+{\bf Error Cases}
+Error cases are the same as those for {\tt call/1} with the addition
+\begin{itemize}
+\item   {\tt Goal} is not tabled.
+\bi
+\item {\tt permission\_error(obtain\_models\_truth\_value,non\_tabled\_subgoal,{\tt Goal})}
+\ei
+\item
+{\tt Goal} is incomplete after being called.
+\bi
+\item {\tt permission\_error(obtain\_models\_truth\_value,incomplete\_subgoal,{\tt Goal})}
+\ei
+\ei
 
 \isoitem{once(\#X)}{once/1}
 %
