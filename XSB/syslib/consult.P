@@ -28,6 +28,7 @@
 #include "char_defs.h"
 #include "flag_defs_xsb.h"
 #include "extensions_xsb.h"
+#include "incr_xsb_defs.h"
 
 compile(Path) :- compile_opt_checked(Path, []).	% compile with no options
 
@@ -904,17 +905,35 @@ proc_directive(Cmd) :-
 	 ;	warning('Command failed.')
 	).
 
+%:- import (use_subsumptive_tabling)/1,(use_variant_tabling)/1,add_incr_table/2 from tables.
 % Table options; only some handled.  Might try to do better.
 proc_table_options((TabOpt1,TabOpt2),Pred) :- !,
 	proc_table_options(TabOpt1,Pred),
 	proc_table_options(TabOpt2,Pred).
+proc_table_options(incremental,_Pred) :- !,
+	domain_error(dynamic_table_option,incremental,(table)/1,1,
+	['must be one of ','dynamic,dyn,subsumptive,variant,nonincremental,opaque,private,shared,approximate,intern']).
+proc_table_options(Option,Pred) :- !,
+	exec_table_option(Option,Pred).
+
+/*
 proc_table_options(shared,Pred) :- !,
 	thread_shared(Pred).
 proc_table_options(private,Pred) :- !,
 	thread_private(Pred).
+proc_table_options(subsumptive,Pred) :- !,
+	use_subsumptive_tabling(Pred).
+proc_table_options(variant,Pred) :- !,
+	use_variant_tabling(Pred).
+proc_table_options(incremental,Pred) :- !,
+ 	add_incr_table(Pred,INCREMENTAL).
+proc_table_options(nonincremental,Pred) :- !,
+ 	add_incr_table(Pred,NONINCREMENTAL).
+proc_table_options(opaque,Pred) :- !,
+ 	add_incr_table(Pred,OPAQUE).
 proc_table_options(TabOpt,Pred) :- !,
 	warning(('table modifier ignored: ',TabOpt,' for ',Pred)).
-
+*/
 multifile_cvt(Ps,Skel) :-
 	mpa_to_skel(Ps,Skel0),
 	('_$multifile'(Skel0)

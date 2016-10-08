@@ -47,6 +47,7 @@
 :- import check_one_thread/3,
    domain_error/4, existence_error/4,instantiation_error/2, permission_error/4,type_error/4,
    check_nonvar/3, check_atom/3 from error_handler.
+:- import domain_error/5 from error_handler.
 :- import asserta/1, (dynamic)/1, retractall/1, assert/1, retract/1, t_assert/2
      from assert.
 :- import check_file_compiler_options/1, setoptions1/1 from auxlry.
@@ -80,6 +81,7 @@
 :- import
 	rm/1, sys_link/3, sys_filecopy/3
    from shell.
+:- import exec_table_option/2 from standard.
 :- import (multifile)/1, '_$multifile'/1 from standard.
 :- import abort/1, call/1, file_exists/1, atom/1, repeat/0,
 	  seeing/1, see/1, seen/0, call/1, goal_cut_trans/3,
