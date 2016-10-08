@@ -1,0 +1,20 @@
+:- import model_tv/2 from tables.
+:- import xsb_error_get_tag/2 from error_handler.
+:- import numbervars/1 from num_vars.
+
+:- table p/2.
+p(a,b).
+p(a,c):- undefined.
+
+nt(a,b).
+
+:- table p/1.
+p(F):- model_tv(p(_),F).
+
+test:- model_tv(p(X,Y),F),numbervars(p(X,Y)),writeln(found(p(X,Y),F)),fail.
+test:- model_tv(p(c,Y),F),numbervars(p(c,Y)),writeln(found(p(c,Y),F)),fail.
+%test:- model_tv(p(c,Y),F),writeln(found(p(c,Y),F)),fail.
+test:- catch(model_tv(nt(a,b),_),E,(xsb_error_get_tag(E,T),writeln(T))),fail.
+test:- catch(model_tv(undef(a,b),_),E,(xsb_error_get_tag(E,T),writeln(T))),fail.
+test:- catch(model_tv(p(_X),_),E,(xsb_error_get_tag(E,T),numbervars(T),writeln(T))),fail.
+test.

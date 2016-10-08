@@ -1,0 +1,6 @@
+existence_error(procedure,usermod : undef / 2)
+found(p(a,b),true)
+found(p(a,c),undefined)
+found(p(c,A),false)
+permission_error(obtain_models_truth_value,incomplete_subgoal,p(A))
+permission_error(obtain_models_truth_value,non_tabled_subgoal,nt(a,b))
