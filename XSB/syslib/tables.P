@@ -89,10 +89,33 @@ add_incr_table(Spec,Mode) :-
 	 ; psc_set_incr(Psc,Mode)).
 
 /*----------------------------------------------------------------------*/
-:- export model_tv/2.
+:- export is_tabled/1.
+is_tabled(Term):- 
+	term_psc(Term,Psc),
+	psc_tabled(Psc,T),
+	T \== 0.
+
+:- export truth_value/2.
 :- import permission_error/4 from error_handler.
-model_tv(Goal,TV):- 
+truth_value(Goal,TV):- 
+	(is_tabled(Goal) -> 
+   	   truth_value_tp(Goal,TV)
+         ; truth_value_ntp(Goal,TV) ).
+
+truth_value_tp(Goal,TV):- 	
 	(Goal,fail ; true),
+	truth_value_1(Goal,TV).
+
+truth_value_ntp(Goal,TV):- 	
+	abolish_table_subgoal(truth_value_ntp_1(_)),
+	truth_value_ntp_1(Goal),
+	truth_value_1(truth_value_ntp_1(Goal),TV).
+
+:- table truth_value_ntp_1/1.
+truth_value_ntp_1(Goal):- 
+	(Goal,fail ; true).
+
+truth_value_1(Goal,TV):- 
  	table_status(Goal, _PredTypeCode, _CallTypeCode, AnsSetStatusCode,_SF),
 	(AnsSetStatusCode == COMPLETED_ANSWER_SET -> 
 	    ( (\+ \+ Goal) -> 
@@ -101,6 +124,18 @@ model_tv(Goal,TV):-
 	     ;  TV = false)
 	 ; tv_answer_set_status_code(AnsSetStatusCode, Obj_type),
 	   permission_error(obtain_models_truth_value,Obj_type,Goal,model_tv/2) ).
+
+/*
+truth_value_2(Goal,TV):- 
+ 	table_status(Goal, _PredTypeCode, _CallTypeCode, AnsSetStatusCode,_SF),
+	(AnsSetStatusCode == COMPLETED_ANSWER_SET -> 
+	    ( (\+ \+ Goal) -> 
+		variant_get_residual(Goal,Resid),
+		(Resid == [] -> TV = true ; TV = undefined)
+	     ;  TV = false)
+	 ; tv_answer_set_status_code(AnsSetStatusCode, Obj_type),
+	   permission_error(obtain_models_truth_value,Obj_type,Goal,model_tv/2) ).
+*/
 	    
 tv_answer_set_status_code(INCR_NEEDS_REEVAL,  incremental_needs_reeval).
 tv_answer_set_status_code(UNDEFINED_ANSWER_SET,  non_tabled_subgoal).
