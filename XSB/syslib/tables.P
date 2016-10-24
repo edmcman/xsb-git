@@ -111,7 +111,7 @@ truth_value_ntp(Goal,TV):-
 	(truth_value_ntp_1(Goal),fail ; true),
 	truth_value_1(truth_value_ntp_1(Goal),TV).
 
-:- table truth_value_ntp_1/1.
+:- table truth_value_ntp_1/1 as variant, opaque.
 truth_value_ntp_1(Goal):- Goal.
 
 truth_value_1(Goal,TV):- 
