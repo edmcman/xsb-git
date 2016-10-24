@@ -13,8 +13,8 @@ p(F):- truth_value(p(_),F).
 
 test:- truth_value(p(X,Y),F),numbervars(p(X,Y)),writeln(found(p(X,Y),F)),fail.
 test:- truth_value(p(c,Y),F),numbervars(p(c,Y)),writeln(found(p(c,Y),F)),fail.
-%test:- truth_value(p(c,Y),F),writeln(found(p(c,Y),F)),fail.
-test:- catch(truth_value(nt(a,b),_),E,(xsb_error_get_tag(E,T),writeln(T))),fail.  % should be silent
+test:- truth_value(nt(a,b),F),writeln(found(nt(a,b),F)),fail.
+test:- truth_value(nt(b,a),F),writeln(found(nt(b,a),F)),fail.
 test:- catch(truth_value(undef(a,b),_),E,(xsb_error_get_tag(E,T),writeln(T))),fail.
 test:- catch(truth_value(p(_X),_),E,(xsb_error_get_tag(E,T),numbervars(T),writeln(T))),fail.
 test.

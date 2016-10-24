@@ -1,4 +1,6 @@
 existence_error(procedure,usermod : undef / 2)
+found(nt(a,b),true)
+found(nt(b,a),false)
 found(p(a,b),true)
 found(p(a,c),undefined)
 found(p(c,A),false)
