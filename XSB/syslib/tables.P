@@ -107,7 +107,7 @@ truth_value_tp(Goal,TV):-
 	truth_value_1(Goal,TV).
 
 truth_value_ntp(Goal,TV):- 	
-	abolish_table_subgoal(truth_value_ntp_1(_)),
+	abolish_table_subgoal(truth_value_ntp_1(Goal)),
 	(truth_value_ntp_1(Goal),fail ; true),
 	truth_value_1(truth_value_ntp_1(Goal),TV).
 
