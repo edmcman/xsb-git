@@ -2130,7 +2130,7 @@ finite well-founded model, it can be shown that any query to a program
 will terminate if that program uses subgoal abstraction~\cite{RigS14}.
 %
 For normal programs, the situation is not much different at a
-conceptual level.  A goal such as {\tt tnot(p(f(f(f(1))))} would
+conceptual level.  A goal such as {\tt tnot(p(f(f(f(1)))))} would
 execute as {\tt p(f(f(X)))} and then ensure that none of the answers
 to this goal have a binding for {\tt X} that allows it to unify with
 {\tt f(1)}.  Using this intuition, it can be shown that if a program
@@ -2530,3 +2530,132 @@ subsumptive &  	    dynamic &	   shared &	  incremental &         answer subsump
 \caption{Support for different tabling modes in XSB \version}
 \label{table:table}
 \end{table}
+
+\section{A Weaker Semantics for Tabling}
+%
+Recall that the well-founded semantics (WFS) is weaker than, say,
+stable model semantics.  For instance a program like
+%
+\begin{verbatim}
+p:- not q.            q:- not p.
+\end{verbatim}
+%
+has two stable models: $\{p\}$ and $\{q\}$.  On the other hand, WFS
+has a single model, where both $p$ and $q$ are undefined.  This, of
+course, is characteristic of the way WFS treats atoms whose only
+non-failed derivations are based on a ``negative loop''.
+
+However, an even weaker logic is possible where derivations based on
+positive loops are also considered undefined.  In other words the
+program
+\begin{verbatim}
+   r:- r.                r:- false.
+\end{verbatim}
+would assign the truth value {\em undefined} to $r$, although both WFS
+and stable models would assign r as {\em false}.  But why use such a
+weak logic?
+
+Consider a woman who asks her husband when he'll clean the garage, and
+the husband says:
+
+{\em I'll get around to it when I get around to it.}
+
+The wife would probably consider it ambiguous not only when her
+husband might clean the garage, but whether he would do so at all.
+The wife's reasoning (slightly simplified) could be rendered in logic
+as:
+
+\begin{verbatim}
+   clean_the_garage:- clean the garage.
+\end{verbatim}
+\noindent
+and we'd like to assign {\em undefined} or {\em unknown} to {\tt
+  clean\_the\_garage}.\footnote{Actually, many wives would
+  go ahead and assign {\em false} to this statement, but we are
+  modeling an optimistic wife.}
+
+Although this example is somewhat fanciful, it turns out that this
+interpretation accords with the results of cognitive science
+experiments about human reasoning~\cite{SteV08}, and is known in the
+logic programming community as the ``completion semantics'' (CS).  CS
+differs from WFS only in assigning the truth value {\em undefined} to
+derivations that depend on a positive loop, and that are otherwise not
+satisfiable (cf. \cite{Lloy84}).
+
+%Thus, in this
+%new semantics positive loops are treated in an analogous way to
+%negative loops.Formally, the new semantics can be expressed as a fixed
+%point logic based on Clark's completion semantics~\cite{??}, when
+%logical expressions are satisfied according to the Lukasiewicz
+%3-valued semantics for propositional programs, which is weaker than
+%some other approaches to 3-valued satisfiability, namely that of
+%Kleene (see \cite{??}).  However, this level of formality is not
+%necessary as long as one understands how positive and negative loops
+%are evaluated.  We call this semantics the {\em completion semantics
+%  (CS)}.
+
+So as useful as WFS and stable models are for programming, they don't
+reflect how human beings have been shown to reason in daily life.
+However, there is another difference between WFS and the sort of
+common-sense reasoning that humans perform.  WFS has a strong {\em
+  closed-world} assumption.  Suppose a query {\tt ?- s} were made to a
+program where {\tt s} were not defined.  WFS would assign the value
+{\em false} to {\tt s}, but this is not always what humans do: rather
+humans would treat the unknown predicate {\tt s} as in fact {\em
+  unknown} or {\em undefined}.  More generally, if (sub-)goal $G$
+refers to an undefined predcate,the {\em weak} completion semantics
+(WCS) also assigns {\em undefined} to $G$, rather than {\em false} as
+WFS does, or throwing an error (as XSB also does by default)z.
+
+%Practically speaking in XSB, as in Prolog, by default the goal $G$
+%raises an exception, so if goals like $G$ should fail, a Prolog flag
+%must be set to change the behavior.  $G$ should be undefined, a simi
+
+These features can be set globally either separately or together:
+
+\begin{itemize}
+\item Setting the ISO Prolog flag {\tt unknown} to {\tt undefined}
+  makes calls to unknown predicates return the truth value {\em
+    undefined}.  This flag can also be set to the standard ISO values,
+  {\tt fail}. {\tt warning} or {\tt error} (the last of which is the
+    default).
+\item Setting the Prolog flag {\tt alt\_semantics} to {\tt cs} causes
+  XSB to globally evaluate the completion semantics.
+\item Setting the Prolog flag {\tt alt\_semantics} to {\tt wcs} causes
+  XSB to globally evaluate the weak completion semantics, and is
+  equivalent to setting the {\tt alt\_semantics} flag to {\tt cs} and
+  the ISO flag {\tt unknown} to {\tt undefined}.
+\item Setting the Prolog flag {\tt alt\_semantics} to {\tt wfs} turns
+  causes XSB to behave in its default mode.  I.e., to globally
+  evaluate queries according to the well-founded semantics, and to
+  throw an error when encountering an unknown predicate.
+\end{itemize}
+
+\paragraph{Examples}
+
+As a simple example, consider the program:
+\begin{verbatim}
+simple_loop(X):- simple_loop(X).     simple_loop(X):- p(X).
+p(a).
+\end{verbatim}
+The query {\tt ?- simple\_loop(X)} returns two answers: {\tt X = a} as
+{\em true}, and {\tt X} unbound as {\em undefined}.
+
+For a more complex example, consider the program:
+\begin{verbatim}
+:- table m_1_1/1,m_1_2/1,m_1_3/1,m_1_4/1.
+m_1_1(X):- m_1_2(X).         m_1_1(a):- m_1_2(a).
+m_1_2(X):- m_1_3(X).         m_1_2(a):- m_1_3(a).         
+m_1_3(X):- m_1_4(X),fail.    m_1_3(a):- m_1_4(a).
+m_1_4(X):- m_1_1(X).         m_1_4(a):- m_1_1(a).
+\end{verbatim}
+%
+The derivation of the query {\tt ?- m\_1\_1(X)} creates a positive SCC
+with with numerous interrelated positive cycles, but these cycles can
+be broken down into two groups.  The first group includes a dependency
+edge from {\tt m\_1\_3(X)} to {\tt m\_1\_4(X)}, while the other set
+does not include this edge.  Due to the first clause of {\tt
+  m\_1\_3(X)}, all derivations in the first group fails, although
+derivations that do not include this edge succeed.  Thus the only
+answer to {\tt m\_1\_1(X)} has {\tt X = a} with truth value {\em
+  undefined} (and a single delay list of {\tt [m\_1\_2(a)]}.
