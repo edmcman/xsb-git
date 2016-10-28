@@ -1034,11 +1034,11 @@ xsb_flag(character_set,Mode):-
 	).
 xsb_flag(alt_semantics,Mode):- 
 	stat_flag(ALTERNATE_SEMANTICS, Flag),
-	(Flag =:= NAF_L3
-	 ->	Mode = l3
-	 ; Flag =:= WEAK_L3
-	 ->	Mode = weak_l3
-	 ; Flag =:= GFP_SEMANTICS
+	(Flag =:= NAF_CS
+	 ->	Mode = cs
+	 ; Flag =:= WEAK_CS
+	 ->	Mode = weak_cs
+	 ; Flag =:= GFP_SEMANTICS  % Not yet supported.
 	 ->	Mode = gfp
          ;      Mode = off
 	).
@@ -1289,17 +1289,17 @@ set_xsb_flag_1(max_memory_action, Action) :-!,
 	    stat_set_flag(MAX_MEMORY_ACTION, XSB_SUSPEND)
           ; domain_error([error,suspend],Action,set_prolog_flag/2,2,'max_memory_action clause') ) ).
 set_xsb_flag_1(alt_semantics,Mode):- 
-        (Mode == l3 -> 
-   	    stat_set_flag(ALTERNATE_SEMANTICS, NAF_L3) ; 
-        (Mode == weak_l3 -> 
-   	    stat_set_flag(ALTERNATE_SEMANTICS, WEAK_L3),
+        (Mode == cs -> 
+   	    stat_set_flag(ALTERNATE_SEMANTICS, NAF_CS) ; 
+        (Mode == weak_cs -> 
+   	    stat_set_flag(ALTERNATE_SEMANTICS, NAF_CS),
             set_prolog_flag(unknown,undefined) ; 
         (Mode == gfp -> 
    	    stat_set_flag(ALTERNATE_SEMANTICS, GFP_SEMANTICS) ; 
         (Mode == off -> 
    	    stat_set_flag(ALTERNATE_SEMANTICS, WFS_SEMANTICS),
             set_prolog_flag(unknown,error) ; 
-          domain_error([l3,weak_l3,gfp,off],Mode,set_prolog_flag/2,2,'alt_semantics clause') ) ) ) ).
+          domain_error([cs,weak_cs,gfp,off],Mode,set_prolog_flag/2,2,'alt_semantics clause') ) ) ) ).
 
 set_xsb_flag_1(ctrace, OnOff) :-!,
 	((OnOff == on ; OnOff == full) -> stat_set_flag(CTRACE_CALLS, 2)

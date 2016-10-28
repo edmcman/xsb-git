@@ -4,7 +4,7 @@
 % obsolescent.
 :- export brat_undefined/0.
 :- export floundered_undefined/1.
-:- export l3_undef/0.
+:- export cs_undef/0.
 :- export restraint_number_of_answers/0.
 
 :- table brat_undefined/0 as opaque.
@@ -16,8 +16,8 @@ restraint_number_of_answers :- tnot(restraint_number_of_answers).
 :- table floundered_undefined/1 as opaque.
 floundered_undefined(a) :- tnot(floundered_undefined(a)).
 
-:- table l3_undef/0 as opaque.
-l3_undef:- tnot(l3_undef).
+:- table cs_undef/0 as opaque.
+cs_undef:- tnot(cs_undef).
 
 %-------------
 % there will probably be more types of undefineds.
@@ -30,7 +30,7 @@ reinitialize_undefineds:-
 reinitialize_undefineds:- 
 	floundered_undefined(a),fail. 
 reinitialize_undefineds:- 
-	l3_undef,fail. 
+	cs_undef,fail. 
 reinitialize_undefineds.
 
 ?- reinitialize_undefineds.
