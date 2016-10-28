@@ -270,14 +270,14 @@ static inline CPtr ProcessSuspensionFrames(CTXTdeclc CPtr cc_tbreg_in,
   return cc_tbreg;
 }
 
-static inline CPtr ProcessL3Returns(CTXTdeclc CPtr cs_ptr) {
+static inline CPtr ProcessCSReturns(CTXTdeclc CPtr cs_ptr) {
   CPtr ComplStkFrame = cs_ptr;
   VariantSF compl_subg;
   int state;
   CPtr first_sched_cons, last_sched_cons, ccp;
   first_sched_cons = last_sched_cons = NULL;
 
-  altsem_dbg(("in ProcessL3Returns: ComplStkFrame %p openreg %p breg %p\n",ComplStkFrame,openreg,breg));
+  altsem_dbg(("in ProcessCSReturns: ComplStkFrame %p openreg %p breg %p\n",ComplStkFrame,openreg,breg));
   /* check from leader up to the youngest subgoal */
   while (ComplStkFrame >= openreg) {
     altsem_dbg(("in loop: ComplStkFrame %p openreg %p (",ComplStkFrame,openreg));
@@ -311,7 +311,7 @@ static inline CPtr ProcessL3Returns(CTXTdeclc CPtr cs_ptr) {
     nlcp_prevbreg(last_sched_cons) = breg ;
   } /* While tabled subgoal. */
 
-  altsem_dbg(("finished ProcessL3Returns first_sched_cons: %p\n",first_sched_cons));
+  altsem_dbg(("finished ProcessCSReturns first_sched_cons: %p\n",first_sched_cons));
   return first_sched_cons;
 }
 
@@ -330,7 +330,7 @@ xsbBool dl_has_tagged_de(DL dl, VariantSF designated_subgoal) {
 extern xsbBool remove_dl_from_dl_list(CTXTdeclc DL , ASI );
 extern void clean_up_backpointers_to_failed_delay_list(CTXTdeclc DL delayList);
 
-void PerformL3Simplification(CTXTdeclc CPtr cs_ptr) {
+void PerformCSSimplification(CTXTdeclc CPtr cs_ptr) {
   CPtr ComplStkFrame = cs_ptr;
   VariantSF compl_subg,designated_subgoal;
   ALNptr aln;
@@ -341,10 +341,10 @@ void PerformL3Simplification(CTXTdeclc CPtr cs_ptr) {
   DL delay_list,tmp_dl;
 
   //  undefPair = insert(predicate, 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
-  undefPair = insert_psc("l3_undef", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
+  undefPair = insert_psc("cs_undef", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
   designated_subgoal  = TIF_Subgoals(get_tip(CTXTc pair_psc(undefPair)));				
 
-  altsem_dbg(("in PerformL3Simplification: ComplStkFrame %p openreg %p breg %p\n",ComplStkFrame,openreg,breg));
+  altsem_dbg(("in PerformCSSimplification: ComplStkFrame %p openreg %p breg %p\n",ComplStkFrame,openreg,breg));
   /* check from leader up to the youngest subgoal */
   while (ComplStkFrame >= openreg) {
     altsem_dbg(("in loop: ComplStkFrame %p openreg %p (",ComplStkFrame,openreg));

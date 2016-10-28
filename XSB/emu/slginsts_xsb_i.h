@@ -710,8 +710,8 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
 	   * delay_positively().
 	   */
 	  if (num_heap_term_vars == 0) {
-	    if (flags[ALTERNATE_SEMANTICS] != NAF_L3) {
-	      // This breaks L3, which needs all delay lists to enure correctness.
+	    if (flags[ALTERNATE_SEMANTICS] != NAF_CS) {
+	      // This breaks CS, which needs all delay lists to enure correctness.
 	      fail_if_direct_recursion(producer_sf);
 	    }
 	    delay_positively(producer_sf, first_answer,
@@ -1180,8 +1180,8 @@ if (wasRederived) {
        * answer was saved as a term ret/n (in variant_answer_search()).                                                      
        */
 #ifndef IGNORE_DELAYVAR
-      if (flags[ALTERNATE_SEMANTICS] != NAF_L3) {
-	// This breaks L3, which needs all delay lists to enure correctness.
+      if (flags[ALTERNATE_SEMANTICS] != NAF_CS) {
+	// This breaks CS, which needs all delay lists to enure correctness.
 	fail_if_direct_recursion(producer_sf);
       }
       if (isinteger(cell(ans_var_pos_reg))) {
@@ -1377,8 +1377,8 @@ XSB_Start_Instr(continue_consumer,_continue_consumer)
     breg = nlcp_prevbreg(conscp);
     set_gfp_state(conscp);
     nlcp_pcreg(conscp) = (pb) &answer_return_inst;
-    add_positive_delay(CTXTc "l3_undef");
-    //    undefPair = insert("l3_undef", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
+    add_positive_delay(CTXTc "cs_undef");
+    //    undefPair = insert("cs_undef", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
     //    Utip = get_tip(CTXTc pair_psc(undefPair));				
     //    delay_negatively(TIF_Subgoals(Utip));				
     //      printf("list %p ret %s\n",ALN_Answer(subg_ans_list_ptr(TIF_Subgoals(Utip))),get_ret_psc(0));

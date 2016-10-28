@@ -184,9 +184,9 @@ XSB_Start_Instr(check_complete,_check_complete)
       FailIfAnswersFound((cc_tbreg == orig_breg ? 0 : cc_tbreg));
       altsem_dbg(("got through suspension frames for negation\n"));
 
-      if (flags[ALTERNATE_SEMANTICS] == NAF_L3) {
-	FailIfAnswersFound(ProcessL3Returns(CTXTc cs_ptr));
-	PerformL3Simplification(CTXTc cs_ptr);
+      if (flags[ALTERNATE_SEMANTICS] == NAF_CS) {
+	FailIfAnswersFound(ProcessCSReturns(CTXTc cs_ptr));
+	PerformCSSimplification(CTXTc cs_ptr);
       }
 
       CompleteSimplifyAndReclaim(CTXTc cs_ptr);

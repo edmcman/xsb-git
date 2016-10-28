@@ -210,5 +210,5 @@ interrupt flag
 /* for ALTERNATE_SEMANTICS */
 #define WFS_SEMANTICS        0
 #define GFP_SEMANTICS        1
-#define NAF_L3               2
-#define WEAK_L3              3
+#define NAF_CS               2
+#define WEAK_CS              3
