@@ -58,6 +58,7 @@ load_cdf_init_cdf.  % to allow altCDF to force loading of this module.
 
 :- import assert_cdf_int/1, retractall_cdf_int/1 from usermod.
 
+:- dynamic cdf_flags/2.
 :- import cdf_flags/2, user_cdf_flag/2,
      cdf_flag/1, initial_cdf_flag/2, cdf_configuration/2 from usermod.
 
@@ -71,8 +72,7 @@ load_cdf_init_cdf.  % to allow altCDF to force loading of this module.
 :- import compdlrule/3 from usermod.
 
 %%%%%%%%%%
-%:- import apply_checks/2 from cdf_checks.
-:- import apply_checks/2 from usermod.
+:- document_import apply_checks/2 from cdf_checks.
 
 %%%%%%%%%%
 :- import cdf_set_log_off/0, cdf_log/1, cdf_reset_log/0
@@ -97,7 +97,7 @@ load_cdf_init_cdf.  % to allow altCDF to force loading of this module.
 :- import xsb_configuration/2 from xsb_configuration.
 :- xsb_configuration(install_dir,InstallDir),
 	add_lib_dir(InstallDir,'packages/altCDF').
-:- ensure_loaded(cdf_checks).	% since cdf_checks is not a module, and
+%%:- ensure_loaded(cdf_checks).	% since cdf_checks is not a module, and
                 % cdf_init_cdf uses predicates defined
                 % there, it must be explicitly loaded.
 
@@ -110,7 +110,6 @@ load_cdf_init_cdf.  % to allow altCDF to force loading of this module.
 :- import parsort/4 from machine.
 
 :- import '_$index'/3 from file_op.
-%%%:- import conset/2, conget/2, coninc/1 from gensym.
 :- import member/2 from basics.
 :- import abolish_table_pred/1 from tables.
 :- import concat_atom/2 from string.

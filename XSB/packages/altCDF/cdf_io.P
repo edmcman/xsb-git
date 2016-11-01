@@ -485,6 +485,7 @@ dump_extensional_isa_component_with_backup(IDList,CDFDir,Opts) :-
 dump_extensional_isa_component(IDList,CDFDir,Opts) :-
 	abolish_table_pred(ancestor(_,_,_)),
 	abolish_table_pred(descendent(_,_,_)),
+	abolish_table_pred(target_ancestors_for(_,_,_)),
 	concat_atom([CDFDir,'/cdf_extensional.P'],CDFFile),
 	open(CDFFile,write,OStr),
 	findall(isa_ext(Sub,Sup),isa_anc_desc(IDList,Sub,Sup),Isas0),
@@ -527,15 +528,24 @@ isa_anc_desc(IDList,Sub,Sup) :-
 	 descendent(ID,Sub,Sup)
 	).
 
+:- table target_ancestors_for/3.
 target_ancestors_for(IsaList,Sub,Sup) :-
 	classes_from_isas(IsaList,IDList),
 	member(ID,IDList),
-	cdf_attr_ext_inst(AttrTerm,ID,Rid,Tid),
-	call_c(AttrTerm),
-	(ancestor(Rid,Sub,Sup)
-	 ;
-	 cids_in_partype(Cid,Tid),
-	 ancestor(Cid,Sub,Sup)   
+	(ID = cid(PType,Cmp),  % too explosive! find cheaper hack (or table)
+	 compound(PType),
+	 functor(PType,PFun,PAri),
+	 functor(OPType,PFun,PAri),
+	 cids_in_partype(Cid,cid(OPType,Cmp)),
+	 ancestor(Cid,Sub,Sup)
+	 ;	
+	 cdf_attr_ext_inst(AttrTerm,ID,Rid,Tid),
+	 call_c(AttrTerm),
+	 (ancestor(Rid,Sub,Sup)
+	  ;	 
+	  cids_in_partype(Cid,Tid),
+	  ancestor(Cid,Sub,Sup)   
+	 )
 	).
 
 :- table ancestor/3.
