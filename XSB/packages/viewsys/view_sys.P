@@ -524,7 +524,7 @@ update_views(ViewSys,ViewInstList,ProcName,NProcs) :-
 	load_viewfile_for_update(ViewSys),
 	start_available_procs(ViewSys,ViewInstList,[],ProcName,NProcs,1,userout).
 
-:- document_export start_available_procs/7.
+%%:- document_export start_available_procs/7.
 
 :- comment(
 start_available_procs(ViewSys,ViewInstList,ExecutingPids,ProcName,NProcs,Slp,OStr),
@@ -653,7 +653,7 @@ spawn_one_cmd(cmd(ShCmd,StdOut,View,Inst,Ver,Cost),OStr,pid(Pid,ShCmd,SStr,FileO
 	 ;	true
 	).
 	
-:- document_export monitor_running_procs/7.
+%%:- document_export monitor_running_procs/7.
 
 :- comment(
 monitor_running_procs(Pids,NProcs,ViewSys,VInstList,ProcName,Slp,OStr),
@@ -742,7 +742,11 @@ collect_finished_procs([PidStr|Pids],FinishedPids,UnfinishedPids) :-
 	).
 
 process_finished_pid(pid(Pid,_PCmd,SStr,FileOut,Datime,View,Inst,Ver),CurDatime,OStr) :-
-	process_control(Pid,wait(RetCode)),
+	(process_control(Pid,wait(RetCode))
+	 ->	true
+	 ;	op_fmt_write(OStr,'\nWarning: wait failed for finished process: %d\n',args(Pid)),
+		RetCode = 1
+	),
 	close(SStr),
 	datime_diff(CurDatime,Datime,Elapsed),
 	display_datime_diff(Elapsed,Time),
