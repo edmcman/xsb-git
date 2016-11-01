@@ -79,7 +79,7 @@
 	get_p_mod/3, open_or_xpp_file/2
    from parse.
 :- import
-	rm/1, sys_link/3, sys_filecopy/3
+	rm/1, sys_link/3, sys_filecopy/3, cwd/1, cd/1
    from shell.
 :- import exec_table_option/2 from standard.
 :- import (multifile)/1, '_$multifile'/1 from standard.
@@ -88,7 +88,7 @@
 	  expand_term/2, read/1, op/3, (table)/1, (index)/3, (index)/2,
 	  (=..)/2, writeln/1, write_canonical/1, tell/1,
           told/0, telling/1, functor/3, cputime/1,
-	  catch/3, throw/1
+   	  catch/3, throw/1
      from standard.
 :- import str_cat/3, str_sub/2 from string.
 :- import xsb_configuration/2 from xsb_configuration.

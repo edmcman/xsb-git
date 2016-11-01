@@ -541,13 +541,23 @@ load_object_file(FileName_O,ModPars) :-
 	code_load(FileName_O, Init, 0, ModPars), % use the C loader
 	(Init =\= 0		% load succeeded
 	 ->	(Init =\= 4 % prolog byte-code succeeded
-		 ->	ll_code_call(Init, true, 2), % call '_$main'
+		 ->	(FileName_O = [Dir,_,_]
+			 ->	local_cwd(CurDir),
+				local_cd(Dir),
+				ll_code_call(Init, true, 2), % call '_$main'
+				local_cd(CurDir)
+			 ;	ll_code_call(Init, true, 2) % call '_$main'
+			),
 			unload_seg(Init) % delete code for '_$main'
 		 ;	true	% load foreign obj code succeeded
 		)
 	).
 
-% compile the source file, and then reload the module
+local_cwd(Name) :- local_sys_syscall(SYS_cwd, Res, Name, _), Res =:= 0.
+
+local_cd(Dir) :- local_sys_syscall(SYS_chdir, Res, Dir, _), Res =:= 0.
+
+%% compile the source file, and then reload the module
 compile_and_load(FileNameList,PModName) :-
 	str_cat_list(FileNameList,FileName_P),
 	compile(FileName_P),
