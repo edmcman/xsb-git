@@ -1421,10 +1421,14 @@ DllExport void call_conv error_xsb (char *description)
 DllExport void call_conv xsb_log(char *description, ...)
 {
   va_list args;
+  char filenamestr[50];
 
   if (flags[LOG_ALL_FILES_USED]) {
     if (!logfile_opened) {
-      logfile = fopen("XSB_LOGFILE.txt","w");
+      if (flags[LOG_ALL_FILES_USED] > 1) {
+	sprintf(filenamestr,"XSB_LOGFILE_%d.txt",(int)(flags[LOG_ALL_FILES_USED]));
+	logfile = fopen(filenamestr,"w");
+      } else logfile = fopen("XSB_LOGFILE.txt","w");
       logfile_opened = 1;
     }
     va_start(args, description);
