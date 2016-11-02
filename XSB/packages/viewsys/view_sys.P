@@ -732,33 +732,32 @@ monitor_running_procs(Pids,NProcs,ViewSys,VInstList,ProcName,Slp,OStr) :-
 
 collect_finished_procs([],[],[]).
 collect_finished_procs([PidStr|Pids],FinishedPids,UnfinishedPids) :-
-	PidStr = pid(Pid,_,_,_,_,_,_,_),
+	PidStr = pid(Pid,_Pcmd,SStr,FileOut,Datime,View,Inst,Ver),
 	process_status(Pid,PStatus),
 	(PStatus \== running
-	 ->	FinishedPids = [PidStr|FinishedPids1],
+	 ->	FinishedPids = [pid(Pid,PStatus,SStr,FileOut,Datime,View,Inst,Ver)|FinishedPids1],
 		collect_finished_procs(Pids,FinishedPids1,UnfinishedPids)
 	 ;	UnfinishedPids = [PidStr|UnfinishedPids1],
 		collect_finished_procs(Pids,FinishedPids,UnfinishedPids1)
 	).
 
-process_finished_pid(pid(Pid,_PCmd,SStr,FileOut,Datime,View,Inst,Ver),CurDatime,OStr) :-
-	(process_control(Pid,wait(RetCode))
+process_finished_pid(pid(Pid,PStatus,SStr,FileOut,Datime,View,Inst,Ver),CurDatime,OStr) :-
+	(process_control(Pid,wait(_RetCode))
 	 ->	true
-	 ;	op_fmt_write(OStr,'\nWarning: wait failed for finished process: %d\n',args(Pid)),
-		RetCode = 1
+	 ;	true
 	),
 	close(SStr),
 	datime_diff(CurDatime,Datime,Elapsed),
 	display_datime_diff(Elapsed,Time),
-	(RetCode =:= 0
+	(PStatus == exited_normally
 	 ->	op_fmt_write(OStr,"\nFinished PID %d SUCCESSFUL view: %s:%s:%d Time: %s, StdOut: %s\n",
 			     args(Pid,View,Inst,Ver,Time,FileOut)),
 	 VStatus = generated
-	 ;	op_fmt_write(OStr,"\nFinished PID %d FAILED Code: %d, view: %s:%s:%d Time: %s, StdOut: %s\n",
-			     args(Pid,RetCode,View,Inst,Ver,Time,FileOut)),
+	 ;	op_fmt_write(OStr,"\nFinished PID %d FAILED Code: %s, view: %s:%s:%d Time: %s, StdOut: %s\n",
+			     args(Pid,PStatus,View,Inst,Ver,Time,FileOut)),
 	 VStatus = generation_failed
 	),
-	(RetCode =:= 0
+	(PStatus == exited_normally
 	 ->	(viewInst(View,Inst,Ver,_,_,IVers,Began)
 		 do_all
 		 retractall(viewInst(View,Inst,Ver,_,_,_,_)),
