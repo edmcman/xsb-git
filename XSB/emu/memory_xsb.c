@@ -79,7 +79,7 @@
 extern Integer next_free_code;
 extern unsigned long enc[], dec[];
 
-void inline extend_enc_dec_as_nec(void *lptr, void *hptr) {
+void extend_enc_dec_as_nec(void *lptr, void *hptr) {
     UInteger nibble;
     UInteger lnibble = (UInteger) lptr >> _SHIFT_VALUE;
     UInteger hnibble = (UInteger) hptr >> _SHIFT_VALUE;
