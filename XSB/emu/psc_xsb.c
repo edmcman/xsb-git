@@ -403,7 +403,7 @@ Pair link_sym(CTXTdeclc Psc psc, Psc mod_psc)
 {
     Pair *search_ptr, found_pair;
     char *name;
-    byte arity, global_flag, type;
+    byte arity, global_flag, umtype, mtype;
 
     SYS_MUTEX_LOCK_NOERROR( MUTEX_SYMBOL ) ;
     name = get_name(psc);
@@ -419,29 +419,41 @@ Pair link_sym(CTXTdeclc Psc psc, Psc mod_psc)
 	 *  Invalidate the old name!! It is no longer accessible
 	 *  through the global chain.
 	 */
-	type = get_type(pair_psc(found_pair));
-	if ( type != T_ORDI ) {
+	umtype = get_type(pair_psc(found_pair));
+	mtype = get_type(psc);
+	if ( umtype != T_ORDI && mtype != T_ORDI ) {
 	  char message[220], modmsg[200];
-	  if (type == T_DYNA || type == T_PRED) {
+	  if (umtype == T_DYNA || umtype == T_PRED) {
 	    Psc mod_psc;
 	    mod_psc = (Psc) get_data(pair_psc(found_pair));
 	    if (mod_psc == 0) snprintf(modmsg,200,"%s","usermod");
 	    else if (isstring(mod_psc)) snprintf(modmsg,200,"usermod from file: %s",string_val(mod_psc));
 	    else snprintf(modmsg,200,"module: %s",get_name(mod_psc));
 	    snprintf(message,220,
-		    "%s/%d (type %d) had been defined in %s",
-		     name, arity, type, 
+		    "%s/%d (umtype %d) had been defined in %s",
+		     name, arity, umtype, 
 		     modmsg);
 	  } else 
 	    snprintf(message,220,
-		    "%s/%d (type %d) had been defined in another module!",
-		    name, arity, type);
+		    "%s/%d (umtype %d) had been defined in another module!",
+		    name, arity, umtype);
 	  xsb_warn(CTXTc message);
+	} else {
+	  if (umtype != T_ORDI) {
+	    set_ep(psc,get_ep(pair_psc(found_pair)));
+	    set_type(psc,get_type(pair_psc(found_pair)));
+	    set_env(psc,get_env(pair_psc(found_pair)));
+	  } else if (mtype != T_ORDI) {
+	    set_ep(CTXTc pair_psc(found_pair),get_ep(psc));
+	    set_type(pair_psc(found_pair),get_type(psc));
+	    set_env(pair_psc(found_pair),get_env(psc));
+	  } else {
+	    set_psc_ep_to_psc(pair_psc(found_pair),psc);
+	  }
 	}
 	pair_psc(found_pair) = psc;
       }
-    }
-    else {
+    } else {
       found_pair = make_psc_pair(psc, search_ptr);
       if (global_flag)
 	symbol_table_increment_and_check_for_overflow;
