@@ -883,9 +883,8 @@ proc_directive(export(_X)) :- !,
 	warning('export directive ignored.').
 proc_directive(local(_X)) :- !,
 	warning('local directive ignored.').
-proc_directive(ImpDir) :-
-	ImpDir =.. [import,from(X,Mod)], !, % import/1 in another module??
-	standard:import(from(X, Mod)).
+proc_directive(import(from(X,Mod))) :-
+	import(from(X, Mod)).
 proc_directive(document_import(from(X, Mod))) :- !,
 	standard:import(from(X, usermod(Mod))).
 proc_directive(index(X)) :- !,
