@@ -430,12 +430,12 @@ Pair link_sym(CTXTdeclc Psc psc, Psc mod_psc)
 	    else if (isstring(mod_psc)) snprintf(modmsg,200,"usermod from file: %s",string_val(mod_psc));
 	    else snprintf(modmsg,200,"module: %s",get_name(mod_psc));
 	    snprintf(message,220,
-		    "%s/%d (umtype %d) had been defined in %s",
+		    "%s/%d (umtype %d) had been defined in %s; those clauses lost.",
 		     name, arity, umtype, 
 		     modmsg);
 	  } else 
 	    snprintf(message,220,
-		    "%s/%d (umtype %d) had been defined in another module!",
+		    "%s/%d (umtype %d) had been defined in another module. Those clauses lost!",
 		    name, arity, umtype);
 	  xsb_warn(CTXTc message);
 	} else {
