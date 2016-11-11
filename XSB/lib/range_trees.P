@@ -78,14 +78,20 @@ init_range_tree(TreeId) :-
 	assert(rt(TreeId,0,1,MinValue,MaxValue,[1])).
 
 :- comment(get_from_range_tree/5,
-"get_from_range_tree(+TreeId,+Lo,+Hi,-Key,-Val): get a range of Keys
+"get_from_range_tree(+TreeId,+Lo,+Hi,?Key,-Val): get a range of Keys
 (and their associated values) between Lo and Hi (inclusive), using the
 ordering defined by range_tree_compare/2.  TreeId is a user-provided
 tree identifier.  Key is the value of a key in the tree in the Lo-Hi
 range, and Val is its associated value.").
 
-get_from_range_tree(TreeId,Lo,Hi,Key,Val) :-
-	range_tree_compare(Lo,Hi),
+get_from_range_tree(TreeId,Lo0,Hi0,Key,Val) :-
+	range_tree_compare(Lo0,Hi0),
+	(ground(Key)
+	 ->	range_tree_compare(Lo0,Key),
+		range_tree_compare(Key,Hi0),
+		Lo = Key, Hi = Key
+	 ;	Lo = Lo0, Hi = Hi0
+	),
 	get_from_range_tree_vals(TreeId,0,Lo,Hi,Key,Vals),
 	%%writeln(userout,got_from_range_tree(Vals,Key,Lo,Hi)),
 	member(Val,Vals).
