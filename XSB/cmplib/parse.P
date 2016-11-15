@@ -741,7 +741,7 @@ parse_directive(document_import(from(P/A, _Mod)), _QrList,_SymTab,_ModName,_ModS
 	inline_predicate(P, A), !,
 %%	error((P,'/',A,' is an inline predicate, cannot be doc-imported !')).
 	warning((P,'/',A,' is an inline predicate, cannot be doc-imported, ignored !')).
-parse_directive(document_import(from(X, Mod)), _QrList,SymTab,_ModName,_ModStruct) :- !,
+/***parse_directive(document_import(from(X, Mod)), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	(var(Mod)
 	 ->	error(('Module cannot be a variable. Document_importing: ',X))
 	 ;	(Mod == usermod
@@ -750,13 +750,13 @@ parse_directive(document_import(from(X, Mod)), _QrList,SymTab,_ModName,_ModStruc
 			parse_comma_list_import(X, PMod, SymTab)
 			%%sym_insert(PMod, 0, [module], SymTab, _)
 		)
-	).
-/**parse_directive(document_import(from(X, Mod)), _QrList,SymTab,_ModName,_ModStruct) :- !,
+	).***/
+parse_directive(document_import(from(X, Mod)), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	(var(Mod)
 	 ->	error(('Module cannot be a variable. Document_importing: ',X))
 	 ;	term_to_atom(Mod,PMod,[quoted(true)]),
 		parse_comma_list(X, SymTab, [docim(PMod)], (document_import))
-	).***/
+	).
 parse_directive(ModPars,_Qr,_ST,_ModName,Module) :-
 	functor(ModPars,module_parameters,_),
 	!,
