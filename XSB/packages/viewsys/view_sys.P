@@ -46,7 +46,7 @@
 	show_failed/2,		% show_failed(VSDir,VInst)
 	reset_failed/2,		% reset_failed(VSDir,VInst)
 	expand_views/1,		% expand_views(VSDir)
-	generate_required_dirs/2,	% generate_required(Substitution,XSB_LOGFILES)
+	generate_required_dirs/2,	% generate_required_dirs(Substitution,XSB_LOGFILES)
 	copy_required_files/2.	% copy_required_files(VSDir,FromToSubs)
 
 :- export logfile_file/2, logfile_directory/2.
@@ -1845,7 +1845,7 @@ view system.
 @var{SubstList} is a list of substitutions of the form
 @tt{s(VarString,RootDir)} that are applied to @em{generalize} each
 directory name.  For example if we have a large library file
-structure, in subdirectores of @file{C:/XSBSYS/XSBLIB}, the many
+structure, in subdirectories of @file{C:/XSBSYS/XSBLIB}, the many
 loaded files (in an @file{XSB_LOGFILE}) will start with this prefix,
 for example, @file{C:/XSBSYS/XSBLIB/apps/app_1/proc_code.xwam}.  By
 using the substitution, @tt{s('$DIR$','C:/XSBCVS/XSBLIB')}, that file
@@ -1947,7 +1947,10 @@ logfile_directory(LogFiles0,Directory) :-
 	findall(Dir,
 		(member(LogFile,LogFiles),
 		 directory_codes_in(LogFile,DirCodes0),
-		 to_forward_slash_codes(DirCodes0,DirCodes),
+		 atom_codes(Dir0,DirCodes0),
+		 expand_filename(Dir0,Dir1),
+		 atom_codes(Dir1,DirCodes1),
+		 to_forward_slash_codes(DirCodes1,DirCodes),
 		 atom_codes(Dir,DirCodes) ),
 		Dirs),
 	sort(Dirs,UDirs),
@@ -1961,16 +1964,28 @@ directory_codes_in(LogFile,DirectoryCodes) :-
 file_codes_in(LogFile,FileCodes) :-
 	file_line_list_file(LogFile,CodeList),
 	append_list([CWDCodes,": ",FileCodesle],CodeList),
-	(FileCodesle = [0'.'|RelFileCodesle]
+	(FileCodesle = [0'.',0'.'|RelFileCodesle]
+	 ->	append(CWDCodes,[0'/'|FileCodesle],AbsFileCodesle)
+	 ; FileCodesle = [0'.'|RelFileCodesle]
 	 ->	append(CWDCodes,RelFileCodesle,AbsFileCodesle)
 	 ;	AbsFileCodesle = FileCodesle
 	),
-	(append(FileCodes,"\r\n",FileCodesle)
+	(append(FileCodes0,"\r\n",AbsFileCodesle)
 	 ->	true
-	 ; append(FileCodes,"\n",FileCodesle)
+	 ; append(FileCodes0,"\n",AbsFileCodesle)
 	 ->	true
-	 ;	FileCodes = FileCodesle
+	 ;	FileCodes0 = AbsFileCodesle
+	),
+	(append([Drive,0':'],Undrived,FileCodes0)
+	 ->	(Drive >= 0'a , Drive =< 0'z
+		 ->	UDrive is Drive - 32
+		 ;	UDrive = Drive
+		),
+		FileCodes = [UDrive,0':'|Undrived]
+	 ;	FileCodes = FileCodes0
 	).
+	 
+		 
 
 append_list([L],L) :- !.
 append_list([L|Ls],FL) :-
