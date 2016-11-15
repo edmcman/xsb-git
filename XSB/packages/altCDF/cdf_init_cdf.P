@@ -72,7 +72,7 @@ load_cdf_init_cdf.  % to allow altCDF to force loading of this module.
 :- import compdlrule/3 from usermod.
 
 %%%%%%%%%%
-:- document_import apply_checks/2 from cdf_checks.
+:- import apply_checks/2 from usermod(cdf_checks).
 
 %%%%%%%%%%
 :- import cdf_set_log_off/0, cdf_log/1, cdf_reset_log/0
