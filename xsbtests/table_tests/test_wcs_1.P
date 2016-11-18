@@ -2,7 +2,7 @@
 :- import numbervars/1 from num_vars.
 
 %?- start_forest_view(userout).
-:- set_prolog_flag(alt_semantics,l3).
+:- set_prolog_flag(alt_semantics,weak_cs).
 
 test:- test1,fail.
 test:- abolish_table_pred(t1/1),fail.

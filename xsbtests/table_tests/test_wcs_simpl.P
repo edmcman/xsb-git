@@ -8,7 +8,7 @@ test uncond success
 :- import variant/2 from subsumes.
 
 %?- start_forest_view(userout).
-:- set_prolog_flag(alt_semantics,l3).
+:- set_prolog_flag(alt_semantics,cs).
 
 test:- atest_cf_1,fail.
 test:- atest_cf_2,fail.
