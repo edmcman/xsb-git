@@ -732,6 +732,20 @@ void delete_variant_call(CTXTdeclc VariantSF pSF, xsbBool should_warn) {
 
 #include "tr_code_xsb_i.h"
 
+  /* traverse_variant_answer_trie() supports view consistency, where
+     the view of an answer trie AT needs to be preserved for choice
+     points that backtrack through AT.  Specifically, this function
+     traverses a segment of the choice point stack corresponding to
+     backtracking through a given answer trie, and builds a list of
+     unconsumed answers which will then be copied to the heap.
+
+     It starts with a given choice point cell, leafptr and in the
+     first traversal constructs the path from that leaf to the root of
+     the trie.  After reversing, the next step is to traverse the
+     unconsumed part of the trie to produce the answer list.
+  */
+
+
 ALNptr traverse_variant_answer_trie(CTXTdeclc VariantSF subgoal, CPtr rootptr, CPtr leafptr) {
   int node_stk_top = 0; Integer hash_offset;
   BTNptr rnod, hash_bucket;   
@@ -740,26 +754,38 @@ ALNptr traverse_variant_answer_trie(CTXTdeclc VariantSF subgoal, CPtr rootptr, C
   ALNptr lastALN = (ALNptr) NULL; ALNptr thisALN;
   BTNptr tempstk[1280]; int tempstk_top = 0;
 
-  // printf("starting leafptr to %p  %x\n",leafptr,BTN_Instr((BTNptr) *leafptr));
+  //  printf("starting leafptr to %p  %x\n",leafptr,BTN_Instr((BTNptr) *leafptr));
 
+  //  printf("-----start path traversal 1\n");
   while (leafptr != rootptr) {
-    if (BTN_Instr((BTNptr) *leafptr) == 0x7a) {
-      tempstk[tempstk_top++] = (BTNptr) string_val(cell(breg+CP_SIZE+1));
-      tempstk[tempstk_top++] = (BTNptr) int_val(cell(breg+CP_SIZE));   // Number of bucket / flag
-    }
+    printf("pushing %p instruction is %x\n",(BTNptr) leafptr,BTN_Instr((BTNptr) *leafptr)); 
+    if (BTN_Instr((BTNptr) *leafptr) == hash_handle) {
+      // If the choice point instruction is hash_handle, we're
+      //      backtracking through a hash.  In this case, the
+      //      instruction has some extra information at the end of the
+      //      choice point, specifically a pointer to the hash header
+      //      (the BTHT) and a point to the number of the bucket last
+      //      seen.  See discussion in tc_insts
+      tempstk[tempstk_top++] = (BTNptr) string_val(cell(leafptr+CP_SIZE+1));  // ptr to BTHT (arg to hash_header)
+      //      printf("   BTHT %p\n", string_val(cell(leafptr+CP_SIZE+1)));
+      tempstk[tempstk_top++] = (BTNptr) int_val(cell(leafptr+CP_SIZE)); // Nbr of bucket last seen (hash header arg) 
+    }    
     else {
       tempstk[tempstk_top++] =  *(BTNptr *)leafptr;
     }
     //    printf("   setting leafptr to %p  %x\n",cp_prevbreg(leafptr),BTN_Instr((BTNptr) *cp_prevbreg(leafptr)));
     leafptr = (CPtr)  cp_prevbreg(leafptr);
   }
+  //  printf("-----end trie traversal\n");
   if (tempstk_top >= 1280) 
       xsb_abort("Ran out of reversal stack space while logging for incremental tabling update\n");
   while(tempstk_top > 0) {
-    push_node(tempstk[--tempstk_top]);
+    push_node(tempstk[--tempstk_top]);  // tempstk -> freeing_stack, reversing
   }
+  //  printf("------ starting trie traversal 2\n");
   while (node_stk_top != 0) {
       pop_node(rnod);
+      //      printf("popped node %p\n",rnod);
       if ( IsHashHeader(rnod)) {
 	pop_node(hash_bucket);
 	hash_offset = (Integer) hash_bucket;
@@ -770,17 +796,18 @@ ALNptr traverse_variant_answer_trie(CTXTdeclc VariantSF subgoal, CPtr rootptr, C
 	if (hash_offset != NO_MORE_IN_HASH) {
 	  push_node((BTNptr) hash_offset);
 	  push_node((BTNptr) hash_hdr);
-
 	  push_node(*(BTNptr *)(hash_base + hash_offset));
 	  //	  printf("pushed %p\n",hash_base + hash_offset);
 	}
       }
       /* Non nulls from abolish-- but keeping for now */
       else { 
-	//	printf("not hash header\n");
 	if (BTN_Sibling(rnod) && IsNonNULL(BTN_Sibling(rnod)))
-	  { push_node(BTN_Sibling(rnod)); }
+	  { 
+	    //	    printf("pushing sibling %p instruction is %x\n",BTN_Sibling(rnod),BTN_Instr(BTN_Sibling(rnod)));
+		   push_node(BTN_Sibling(rnod)); }
 	if ( !IsLeafNode(rnod) && IsNonNULL(BTN_Child(rnod))) { 
+	  //	  printf("pushing sibling %p instruction is %x\n",BTN_Child(rnod),BTN_Instr(BTN_Child(rnod)));
 	  push_node(BTN_Child(rnod)) } 
 	else { /* leaf node */
 	  //	  printf("Trie traversal Leaf Node %p\n",rnod);
@@ -789,6 +816,7 @@ ALNptr traverse_variant_answer_trie(CTXTdeclc VariantSF subgoal, CPtr rootptr, C
 	}
       }
   }
+  //  printf("------ ending trie traversal 2\n");
   return lastALN;
 } 
 
