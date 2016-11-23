@@ -119,7 +119,10 @@ psc_get_intern(PSC, CODE):-
 	incr_eval_builtin(PSC_GET_INTERN, PSC, CODE).
 
 term_new_mod(Mod, Term, NewTerm) :-
-	term_to_atom(Mod,PMod,[quoted(true)]), % if atom, must handle quotes
+	(atom(Mod)
+	 ->	PMod = Mod
+	 ;	term_to_atom(Mod,PMod,[quoted(true)]) % if atom, must handle quotes
+	),
 	term_new_mod_inline(PMod, Term, NewTerm).
 term_new_mod_inline(Mod,Term,NewTerm) :- term_new_mod_inline(Mod, Term, NewTerm).
 
@@ -193,7 +196,10 @@ psc_import_as(Psc1, Psc2) :- psc_import_as(Psc1, Psc2).
 
 psc_insertmod_inline(ModName, Def, PSC) :- psc_insertmod_inline(ModName, Def, PSC).
 psc_insertmod(ModName,Def,PSC) :-
-	term_to_atom(ModName,PMod,[quoted(true)]), % if atom, must handle quotes
+	(atom(ModName)
+	 ->	PMod = ModName
+	 ;	term_to_atom(ModName,PMod,[quoted(true)]) % if atom, must handle quotes
+	),
 	psc_insertmod_inline(PMod,Def,PSC).
 
 file_gettoken(File, PrevCh, Type, Value, NextCh) :-
