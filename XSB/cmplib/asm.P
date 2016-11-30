@@ -84,11 +84,16 @@ asm_genheader0(OStr, ModName, ModPars, SymTab, IsModule) :-
 	%%standard:writeln(userout,genheader_for(ModName,ModPars)),
 	(IsModule =:= 0
 	 ->	file_put(OStr,0)
-	 ;	PModStr =.. [ModName|ModPars],
-		term_to_atom(PModStr,PModName,[quoted(true)]),
-		str_len(PModName, L),
-		file_put(OStr,L),
-		write(OStr,PModName)
+	 ;	(ModPars == []
+		 ->	str_len(ModName,L),
+			file_put(OStr,L),
+			write(OStr,ModName)
+		 ;	PModStr =.. [ModName|ModPars],
+			term_to_atom(PModStr,PModName,[quoted(true)]),
+			str_len(PModName, L),
+			file_put(OStr,L),
+			write(OStr,PModName)
+		)
 	),
 	sym_count(SymTab, Count),
 	write_int(OStr,Count),
