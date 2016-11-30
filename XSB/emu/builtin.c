@@ -1548,7 +1548,6 @@ int builtin_call(CTXTdeclc byte number)
     int new, disp;
     int import_from_usermod = FALSE;
     char *modname;
-    char usermodfile[MAXFILENAME+1];
     Psc termpsc, modpsc, newtermpsc;
     Cell arg, term = ptoc_tag(CTXTc 2);
     /* XSB_Deref(term); not nec since ptoc_tag derefs */
@@ -1558,7 +1557,7 @@ int builtin_call(CTXTdeclc byte number)
     }
     termpsc = term_psc(term);
     modname = ptoc_string(CTXTc 1);
-    if (get_usermod_filename(modname,usermodfile)) {
+    if (strncmp(modname,"usermod(",strlen("usermod(")) == 0) {
       import_from_usermod = TRUE;
       modpsc = global_mod;
     } else {
@@ -1574,8 +1573,8 @@ int builtin_call(CTXTdeclc byte number)
     if (import_from_usermod) {
       if (new) printf("ERROR: shouldn't be new\n");
       //printf("usermod predicate: %s/%d type: %x, env: %x\n",get_name(newtermpsc),get_arity(newtermpsc),get_type(newtermpsc),get_env(newtermpsc));
-      if (!(isstring(get_data(newtermpsc)) && strcmp(string_val(get_data(newtermpsc)),usermodfile) == 0)) {
-	set_data(newtermpsc, (Psc)makestring(string_find(usermodfile,1)));
+      if (!(isstring(get_data(newtermpsc)) && strcmp(string_val(get_data(newtermpsc)),modname) == 0)) {
+	set_data(newtermpsc, (Psc)makestring(string_find(modname,1)));
 	set_env(newtermpsc,T_UNLOADED);  // force reload if diff/new File
 	//printf("set env to T_UNLOADED\n");
       }
@@ -2023,12 +2022,11 @@ int builtin_call(CTXTdeclc byte number)
     int  value;
     Psc  mod_psc;
     Pair sym;
-    char mod_file[MAXFILENAME+1];
     char *mod_name = ptoc_string(CTXTc 3);
-    if (get_usermod_filename(mod_name,mod_file)) { // import from usermmod(filename)
+    if (strncmp(mod_name,"usermod(",strlen("usermod(")) == 0) {
       sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), global_mod, &value);
       init_psc_ep_info(pair_psc(sym)); // reset to reload
-      set_data(pair_psc(sym),(Psc)makestring(string_find(mod_file,1)));
+      set_data(pair_psc(sym),(Psc)makestring(string_find(mod_name,1)));
     } else {
       mod_psc = pair_psc(insert_module(0, mod_name));
       sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), mod_psc, &value);

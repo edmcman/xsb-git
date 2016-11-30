@@ -762,29 +762,6 @@ void replace_form_by_act(char *name, prolog_term modformals, prolog_term modactu
 
 /* --------------------------------------------------------------------	*/
 
-int get_usermod_filename(const char *mod_name, char *mod_file) {
-  size_t mod_name_len;
-  char *mod_file_end;
-  char *lmod_file = mod_file;
-  mod_name_len = strlen(mod_name);
-  if (mod_name_len <= 8 || strncmp("usermod(",mod_name,8) != 0) {
-    return FALSE;
-  }
-  //printf("usermod: %s\n",mod_name);
-  mod_name_len -= 9;
-  if (mod_name[8] == '\'') { // really should handle embedded doubled single quotes
-    memmove(lmod_file,mod_name+9,mod_name_len); // include final ' and paren
-    mod_file_end = lmod_file+mod_name_len;
-    lmod_file = strchr(lmod_file,'\'');
-    *(lmod_file) = '\0';
-  } else {
-    memmove(lmod_file,mod_name+8,mod_name_len);
-    lmod_file[mod_name_len] = '\0';
-  }
-  return TRUE;
-}
-
-  /*----------------------------------------------------------------------*/
 #if defined(WIN_NT) || defined(CYGWIN)
 #define file_strcmp(fn1,fn2) strcasecmp(fn1,fn2)
 #define isslash(c) ((c) == '/' || (c) == '\\')
@@ -831,7 +808,6 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
   Pair temp_pair, usermod_pair, defas_pair = NULL;
   Psc  mod;
   Integer dummy; /* used to squash warnings */
-  char usermodfile[MAXFILENAME+1];
   char modname[MAXFILENAME+1];
 
   dummy = get_obj_byte(&t_env);
@@ -856,7 +832,7 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
       dummy = get_obj_string(modname, t_modlen);
       modname[t_modlen] = '\0';
       replace_form_by_act(modname,modformals,modpars);
-      if (get_usermod_filename(modname,usermodfile)) {
+      if (strncmp(modname,"usermod(",strlen("usermod(")) == 0) {
 	import_from_usermod = TRUE;
 	mod = global_mod;
       } else {
@@ -950,9 +926,9 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
   if (import_from_usermod) {
     Psc tpsc = pair_psc(temp_pair);
     if (get_data(tpsc) != global_mod && isstring(get_data(tpsc)) &&
-	nec_different_xwam_files(string_val(get_data(tpsc)),usermodfile)) {
+	nec_different_xwam_files(string_val(get_data(tpsc)),modname)) {
       xsb_warn(CTXTc "Ignoring import of usermod:%s/%d from %s in %s; already imported from %s\n",
-	       get_name(tpsc),get_arity(tpsc),usermodfile,filename,string_val(get_data(tpsc)));
+	       get_name(tpsc),get_arity(tpsc),modname,filename,string_val(get_data(tpsc)));
     } else if (!isstring(get_data(tpsc)) && get_data(tpsc) != NULL && get_data(tpsc) != global_mod) {
       xsb_error("Importing symbol %s/%d from usermod, but was defined in module %s\n",
 		get_name(tpsc),get_arity(tpsc),get_name(get_data(tpsc)) );
@@ -1143,7 +1119,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
       replace_form_by_act(name,modformals,modpars);  // formal pars by actual pars in name to name
     } else {
       if (!isinteger(modpars) && !isstring(modpars)) {
-	xsb_error("Module %s in not parameterized, but %d actual parameters provided",
+	xsb_error("Module %s is not parameterized, but %d actual parameters provided",
 		  name,get_arity(get_str_psc(modpars)));
 		  }
       modformals = modpars;

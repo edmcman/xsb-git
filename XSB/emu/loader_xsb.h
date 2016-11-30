@@ -97,4 +97,3 @@ extern byte *loader(CTXTdeclc char *, int, prolog_term);
 extern void env_type_set(CTXTdeclc Psc, byte, byte, xsbBool);
 extern void unload_seg(pseg);
 extern unsigned int read_magic(FILE *);
-extern int get_usermod_filename(const char *mod_name, char *mod_file);
