@@ -156,7 +156,7 @@ reconsult0(Path, Options, Ensure_loaded) :-
 			 i_want_compile(SExt, Base, Obj)
  		          ->    check_one_thread_w_override,
 			        compile_f(SExt,Base,Options,_ExList,Mod,Dir),
-				load_exec(Obj, Mod), % Mod would be atomized ModTerm
+				load_exec(Obj, Mod, Dir), % Mod would be atomized ModTerm
 				(consult_file_loaded(ExpObj)
 				 ->	true
 				 ;	assert(consult_file_loaded(ExpObj))
@@ -166,12 +166,12 @@ reconsult0(Path, Options, Ensure_loaded) :-
 			                (consult_file_loaded(ExpObj)
 				         ->     true
 				         ;      /* File not loaded, ok to load w. many threads */
-					        load_exec(Obj, Mod),
+					        load_exec(Obj, Mod, Dir),
 						assert(consult_file_loaded(ExpObj)) 
 					 )
 			         ;	/* Ensure_loaded == false */
 				       check_one_thread_w_override,
-				       load_exec(Obj, Mod),
+				       load_exec(Obj, Mod, Dir),
 				       (consult_file_loaded(ExpObj)
 				        ->     true
 					;      assert(consult_file_loaded(ExpObj))
@@ -347,14 +347,14 @@ real_search_module(ModName, Dir, Base, Ext) :-
         existing_file_extension(Base, Ext).
 
 /*======================================================================*/
-/* load_exec(+File, +ModName)						*/
+/* load_exec(+File, +ModName, +Directory)				*/
 /*	Changed to use the C loader (code_load/4) that automatically	*/
 /*	imports all exported predicates of the module into the current	*/
 /*	working module when its third argument is 1.  - Kostis (4/3/93)	*/
 /* The loader returns int 4 when a foreign file has been loaded.  	*/
 /*======================================================================*/
 
-load_exec(File, ModName) :-	
+load_exec(File, ModName, Directory) :-	
 	cputime(LoadStartTime),
 	code_load(File, Init, 1, ModName),	% use the changed C loader.
 	% jf: for Windows a valid segment pointer might be negative
@@ -380,12 +380,15 @@ load_exec(File, ModName) :-
                                         % Do not check Init > 4 as valid segment pointers may be negative.
 	 ->     % push/pop_loaded_file: added by MK, 7/16/01
 		push_loaded_file(File,Rand),
+		cwd(OldCWD),	% set working directory to directory containing file being loaded. (dsw 11/30/16)
+		cd(Directory),
 	        co_code_call(Init, true, 2), % call '_$main'
+		cd(OldCWD),
 		pop_loaded_file(Rand),
 		unload_seg(Init)		% free space for '_$main'
 	 ;	true			% Foreign obj code loaded
 	).
-load_exec(_,_).
+load_exec(_,_,_).
 
 immutable(10).
 immutable(11).
@@ -396,7 +399,7 @@ co_code_call(A,B,C) :- code_call(A,B,C).
 compile_load_user(Options) :-
 	compile(user, user, XSB_SRC_EXTENSION_ATOM, Options, _), !,
 	str_cat(user,XSB_OBJ_EXTENSION_ATOM,UserObjFile),
-	load_exec(UserObjFile, user),
+	load_exec(UserObjFile, user, '.'),
 	rm(UserObjFile).
 
 /*****************************************************************

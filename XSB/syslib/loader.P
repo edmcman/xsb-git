@@ -93,12 +93,24 @@ sys_system(STAT_FILE_TIME,FileName,Time, _,_,_,_) :-
 local_append([],L,L).
 local_append([X|L1],L2,[X|L3]) :- local_append(L1,L2,L3).
 
+%% PModName is full module parameterized name as an atom.  e.g., could be
+%%  'mymod(amod,bmod)' or
+%%  'usermod(filename)' or
+%%  'usermod(load_cmd(filename,...))' or
+%%  'usermod(module:load_cmd(filename,...)'
 unstructure_modname(PModName,ModName,ModPars) :-
+	%%(atom(PModName) -> local_fmt_write(STDMSG,"unstructure string: %s\n",arg(PModName)) ; true),
 	(possibly_structured(PModName) % check so early loads dont need to load string.
 	 ->	(atom_to_term(PModName,ModTerm)
 		 ->	(ModTerm = usermod(FileName)
-			 ->	ModName = FileName,
-				ModPars = FileName
+			 ->	(compound(FileName)
+				 ->	(FileName = _:Call
+					 ->	Call =.. [_,ModName|_]
+					 ;	FileName =.. [_,ModName|_]
+					)
+				 ;	ModName = FileName
+				),
+				ModPars = error % unused
 			 ;	ModTerm =.. [ModName|StrModPars],
 				atomize_pars(StrModPars,AtomModPars),
 				ModPars =.. [ModName|AtomModPars]
@@ -112,7 +124,7 @@ unstructure_modname(PModName,ModName,ModPars) :-
 
 possibly_structured(Atom) :-
 	atom(Atom),
-	(str_match('(',Atom,forward,_,_)
+	(str_match(')',Atom,forward,_,_)
 	 ->	true
 	 ;	str_match('''',Atom,forward,_,_)
 	 ->	true
@@ -339,9 +351,6 @@ load_pred0(PSC) :-
 	stat_set_flag(HITRACE, Hitrace).  % resume hitrace status if successful
 
 load_pred1(PSC) :-
-%%	'_$savecp'(B),
-%%	psc_name(PSC, Name),
-%%	psc_arity(PSC, Arity),
 	psc_env(PSC, Env), 
 	( Env =:= T_UNLOADED
 	->  % is "imported"
@@ -350,8 +359,7 @@ load_pred1(PSC) :-
 	    psc_type(ModPSC, ModType), 
 	    (ModType =:= T_MODU
 	     ->	    (ModName == usermod, psc_data(PSC,FileName),atom(FileName)
-		     ->	    local_fmt_write(STDMSG, "loading usermod file %S\n", arg(FileName)),
-			    load(FileName)
+		     ->	    load(FileName)
 		     ;	    true
 		    )
 	     ;	    load(ModName),	% might abort here 
@@ -365,11 +373,9 @@ load_pred1(PSC) :-
 	    ),
 	    (	psc_type(PSC, NType),
 		(   NType =:= T_PRED; NType =:= T_FORN; NType =:= T_DYNA ), 
-		%% module loaded, and pred/foreign-pred is there
-		%% '_$cutto'(B)
 		!
 		;
-	     psc_type(PSC,NType),local_fmt_write(STDMSG, "error psc: %d, type: %d, modname: %S\n", arg(PSC,NType,ModName)),
+	     %%psc_type(PSC,NType),local_fmt_write(STDMSG, "error psc: %d, type: %d, modname: %S\n", arg(PSC,NType,ModName)),
 	     conset('_$load_pred_action',1)
 %	        handle_undefined_pred(ModName,Name,Arity)
 	    )
@@ -559,9 +565,12 @@ local_cd(Dir) :- local_sys_syscall(SYS_chdir, Res, Dir, _), Res =:= 0.
 
 %% compile the source file, and then reload the module
 compile_and_load(FileNameList,PModName) :-
-	str_cat_list(FileNameList,FileName_P),
-	compile(FileName_P),
-	load(PModName).
+	(atom_to_term(PModName,usermod(LoadFile)), compound(LoadFile)
+	 ->	call_c(LoadFile)
+	 ;	str_cat_list(FileNameList,FileName_P),
+		compile(FileName_P),
+		load(PModName)
+	).
 
 str_cat_list([Seg],Seg) :- !.
 str_cat_list([Seg|Segs],AllSegs) :-

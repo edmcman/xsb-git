@@ -31,7 +31,7 @@
 
 :- import assert/1 from assert.
 :- import not_exists/1 from tables.
-   :- import catch/3,throw/1,warning/1,(=..)/2 from standard.
+:- import catch/3,throw/1,warning/1,(=..)/2, compound/1, call_c/1 from standard.
 :- import default_error_handler/1,existence_error/4 from error_handler.
 %:- import conset/2 from gensym.
 :- import consult_file_loaded/1 from consult.
