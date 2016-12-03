@@ -85,14 +85,15 @@ extern "C" {
 */
 
 struct psc_rec {
-  byte env;			/* 0&0x3 - visible; 1&0x3 - local; 2&0x3 - unloaded;  */
-  				/* 0xc0, 2 bits for spy */
-				/* 0x20 - shared, 0x10 for determined; 0x8 - tabled */
-  //  byte incr;                    /* Only first 2 bits used: 1 incremental; 0 is non-incremental, 2: opaque; 4 for INTERNED */
+  byte env;			/* 0&0x3 - visible; 1&0x3 - local; 2&0x3 - unloaded; (first 2 bits)  */
+				/* 0xc for determined; 0x8/0x4 - tabled (next 2 bits) */
+                                /* 0x30/0x20 - shared, (next 2 bits)  */
+  				/* 0xc0, 2 bits for spy (final 2 bits) */
   unsigned int incremental:2;
   unsigned int intern:1;
   unsigned int immutable:1;
-  unsigned int unused:4;
+  unsigned int alt_semantics:2;
+  unsigned int unused:2;
   byte entry_type;		/* see psc_defs.h */
   byte arity; 
   char *nameptr;
@@ -151,24 +152,24 @@ typedef struct psc_pair *Pair;
 #define  get_mod_for_psc(psc)	(isstring(get_data(psc))?global_mod:get_data(psc))
 #define  get_mod_name(psc)	get_name(get_mod_for_psc(psc))
 
-#define  set_type(psc, type)	(psc)->entry_type = type
-#define  set_env(psc, envir)	(psc)->env = ((psc)->env & ~T_ENV) | envir
-#define  set_spy(psc, spy)	(psc)->env = ((psc)->env & ~T_SPY) | spy
-#define  set_shared(psc, shar)	(psc)->env = ((psc)->env & ~T_SHARED) | shar
-#define  set_tabled(psc, tab)	(psc)->env = ((psc)->env & ~T_TABLED) | tab
+#define  psc_set_type(psc, type)	(psc)->entry_type = type
+#define  psc_set_env(psc, envir)	(psc)->env = ((psc)->env & ~T_ENV) | envir
+#define  psc_set_spy(psc, spy)	(psc)->env = ((psc)->env & ~T_SPY) | spy
+#define  psc_set_shared(psc, shar)	(psc)->env = ((psc)->env & ~T_SHARED) | shar
+#define  psc_set_tabled(psc, tab)	(psc)->env = ((psc)->env & ~T_TABLED) | tab
 
-#define  set_incr(psc,val)      ((psc)->incremental = val)  /* incremental */
+#define  psc_set_incr(psc,val)      ((psc)->incremental = val)  /* incremental */
 
-#define  set_intern(psc,val)    ((psc)->intern = val) /* val 0 or T_INTERN */
-#define  set_immutable(psc,val)    ((psc)->immutable = val) 
+#define  psc_set_intern(psc,val)    ((psc)->intern = val) /* val 0 or T_INTERN */
+#define  psc_set_immutable(psc,val)    ((psc)->immutable = val) 
 
-#define  set_arity(psc, ari)	((psc)->arity = ari)
-#define  set_length(psc, len)	((psc)->length = len)
-#define  set_ep(psc, val)	do {(psc)->ep = val;     \
+#define  psc_set_arity(psc, ari)	((psc)->arity = ari)
+  //#define  psc_set_length(psc, len)	((psc)->length = len)
+#define  psc_set_ep(psc, val)	do {(psc)->ep = val;     \
     				    cell_opcode(&((psc)->load_inst)) = jump; \
 				    (psc)->this_psc = (void *)val;} while(0)
-#define  set_data(psc, val)     ((psc)->data = val)
-#define  set_name(psc, name)	((psc)->nameptr = name)
+#define  psc_set_data(psc, val)     ((psc)->data = val)
+#define  psc_set_name(psc, name)	((psc)->nameptr = name)
 
 #define set_forn(psc, val) {                   \
     cell_opcode(get_ep(psc)) = call_forn;      \

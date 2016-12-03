@@ -898,8 +898,8 @@ inline TIFptr New_TIF(CTXTdeclc Psc pPSC) {
    if (get_tabled(pPSC)==T_TABLED) {					
      TIF_EvalMethod(pTIF) = (TabledEvalMethod)pflags[TABLING_METHOD];	
      if (TIF_EvalMethod(pTIF) == VARIANT_EVAL_METHOD)			
-       set_tabled(pPSC,T_TABLED_VAR);					
-     else set_tabled(pPSC,T_TABLED_SUB);				
+       psc_set_tabled(pPSC,T_TABLED_VAR);					
+     else psc_set_tabled(pPSC,T_TABLED_SUB);				
    }									
    else if (get_tabled(pPSC)==T_TABLED_VAR) 				
       TIF_EvalMethod(pTIF) = VARIANT_EVAL_METHOD;			
@@ -911,7 +911,7 @@ inline TIFptr New_TIF(CTXTdeclc Psc pPSC) {
        xsb_warn(CTXTc "%s/%d not identified as tabled in .xwam file, Recompile (variant assumed)", \
 		get_name(pPSC),get_arity(pPSC));				
       TIF_EvalMethod(pTIF) = VARIANT_EVAL_METHOD;			
-      set_tabled(pPSC,T_TABLED_VAR);					
+      psc_set_tabled(pPSC,T_TABLED_VAR);					
    }									
    TIF_CallTrie(pTIF) = NULL;						
    TIF_Mark(pTIF) = 0;                                                  

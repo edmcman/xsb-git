@@ -128,12 +128,12 @@ char *string_find_safe(char *str) {
 
 /* === PSC and PSC-PAIR structure creation/initialization =============== */
 void init_psc_ep_info(Psc psc) {
-  set_type(psc, 0);
+  psc_set_type(psc, 0);
   psc->env = 0;
-  set_incr(psc,0);
-  set_intern(psc,0);
-  set_data(psc, 0);
-  set_ep(psc,(byte *)&(psc->load_inst));
+  psc_set_incr(psc,0);
+  psc_set_intern(psc,0);
+  psc_set_data(psc, 0);
+  psc_set_ep(psc,(byte *)&(psc->load_inst));
   cell_opcode(&(psc->load_inst)) = load_pred;
   psc->this_psc = psc;
 }
@@ -149,8 +149,8 @@ static Psc make_psc_rec(char *name, char arity) {
   //  set_spy(temp, 0);
   //  set_shared(temp, 0);
   //  set_tabled(temp, 0);
-  set_name(temp, string_find(name, 1));
-  set_arity(temp, arity);
+  psc_set_name(temp, string_find(name, 1));
+  psc_set_arity(temp, arity);
   init_psc_ep_info(temp);
   return temp;
 }
@@ -163,9 +163,9 @@ void set_psc_ep_to_psc(CTXTdeclc Psc psc_to_set, Psc target_psc) {
 	     get_ep(psc_to_set) != (byte *)&(target_psc->load_inst)) {
     xsb_warn(CTXTc "[IMPORT AS] Redefining entry to import-as predicate: %s/%d\n",
 	    get_name(psc_to_set),get_arity(psc_to_set));
-    set_ep(psc_to_set,(byte *)&(target_psc->load_inst));
+    psc_set_ep(psc_to_set,(byte *)&(target_psc->load_inst));
   } else {
-    set_ep(psc_to_set,(byte *)&(target_psc->load_inst));
+    psc_set_ep(psc_to_set,(byte *)&(target_psc->load_inst));
   }
 }
 
@@ -370,17 +370,17 @@ Pair insert_module(int type, char *name)
     SYS_MUTEX_LOCK_NOERROR( MUTEX_SYMBOL ) ;
     new_pair = search_insert_psc_1(name, 0, (Pair *)&flags[MOD_LIST], &is_new);
     if (is_new) {
-	set_type(new_pair->psc_ptr, type);
+	psc_set_type(new_pair->psc_ptr, type);
 	new_pair->psc_ptr->env = 0;
 	//	new_pair->psc_ptr->incr = 0;
-	set_incr(new_pair->psc_ptr,0);
-	set_intern(new_pair->psc_ptr,0);
-	set_data(new_pair->psc_ptr,0);
-	set_ep(new_pair->psc_ptr,0);
+	psc_set_incr(new_pair->psc_ptr,0);
+	psc_set_intern(new_pair->psc_ptr,0);
+	psc_set_data(new_pair->psc_ptr,0);
+	psc_set_ep(new_pair->psc_ptr,0);
 	new_pair->psc_ptr->this_psc = 0;
-	set_immutable(new_pair->psc_ptr,0);
+	psc_set_immutable(new_pair->psc_ptr,0);
     } else {	/* set loading bit: T_MODU - loaded; 0 - unloaded */
-      set_type(new_pair->psc_ptr, get_type(new_pair->psc_ptr) | type);
+      psc_set_type(new_pair->psc_ptr, get_type(new_pair->psc_ptr) | type);
     }
     SYS_MUTEX_UNLOCK_NOERROR( MUTEX_SYMBOL ) ;
     return new_pair;
@@ -440,13 +440,13 @@ Pair link_sym(CTXTdeclc Psc psc, Psc mod_psc)
 	  xsb_warn(CTXTc message);
 	} else {
 	  if (umtype != T_ORDI) {
-	    set_ep(psc,get_ep(pair_psc(found_pair)));
-	    set_type(psc,get_type(pair_psc(found_pair)));
-	    set_env(psc,get_env(pair_psc(found_pair)));
+	    psc_set_ep(psc,get_ep(pair_psc(found_pair)));
+	    psc_set_type(psc,get_type(pair_psc(found_pair)));
+	    psc_set_env(psc,get_env(pair_psc(found_pair)));
 	  } else if (mtype != T_ORDI) {
-	    set_ep(CTXTc pair_psc(found_pair),get_ep(psc));
-	    set_type(pair_psc(found_pair),get_type(psc));
-	    set_env(pair_psc(found_pair),get_env(psc));
+	    psc_set_ep(CTXTc pair_psc(found_pair),get_ep(psc));
+	    psc_set_type(pair_psc(found_pair),get_type(psc));
+	    psc_set_env(pair_psc(found_pair),get_env(psc));
 	  } else {
 	    set_psc_ep_to_psc(pair_psc(found_pair),psc);
 	  }
@@ -501,6 +501,6 @@ void insert_cpred(char * name,int arity,int (*pfunc)(void) ) {
 
     psc = insert(name,arity, global_mod, &dummy_flag)->psc_ptr;
     set_forn(psc,pfunc);
-    set_type(psc,T_FORN);
+    psc_set_type(psc,T_FORN);
 
 }

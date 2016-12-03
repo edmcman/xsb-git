@@ -1421,7 +1421,7 @@ int builtin_call(CTXTdeclc byte number)
   }
   case PSC_SET_TYPE: {	/* R1: +PSC; R2: +type (int): see psc_xsb.h */
     Psc psc = (Psc)ptoc_addr(1);
-    set_type(psc, (byte)ptoc_int(CTXTc 2));
+    psc_set_type(psc, (byte)ptoc_int(CTXTc 2));
     break;
   }
   case PSC_PROP: {	/* R1: +PSC; R2: -term */
@@ -1456,7 +1456,7 @@ int builtin_call(CTXTdeclc byte number)
       xsb_warn(CTXTc "[psc_set_prop/2] Cannot set property of predicate.\n");
       return FALSE;
     }
-    set_data(psc, (Psc)ptoc_int(CTXTc 2));
+    psc_set_data(psc, (Psc)ptoc_int(CTXTc 2));
     break;
   }
 
@@ -1484,14 +1484,14 @@ int builtin_call(CTXTdeclc byte number)
   case PSC_SET_EP: {	       /* R1: +PSC; R2: +int */
     Psc psc = (Psc)ptoc_addr(1);
     byte *ep = (pb)ptoc_int(CTXTc 2);
-    if (ep == (byte *)NULL) set_ep(psc,(byte *)(&(psc->load_inst)));
-    else if (ep == (byte *)4) set_ep(psc,(byte *)&fail_inst);
+    if (ep == (byte *)NULL) psc_set_ep(psc,(byte *)(&(psc->load_inst)));
+    else if (ep == (byte *)4) psc_set_ep(psc,(byte *)&fail_inst);
     break;
   }
 
   case PSC_SET_SPY: { 	       /* R1: +PSC; R2: +int */
     Psc psc = (Psc)ptoc_addr(1);
-    set_spy(psc, (byte)ptoc_int(CTXTc 2));
+    psc_set_spy(psc, (byte)ptoc_int(CTXTc 2));
     break;
   }
 
@@ -1574,13 +1574,13 @@ int builtin_call(CTXTdeclc byte number)
       if (new) printf("ERROR: shouldn't be new\n");
       //printf("usermod predicate: %s/%d type: %x, env: %x\n",get_name(newtermpsc),get_arity(newtermpsc),get_type(newtermpsc),get_env(newtermpsc));
       if (!(isstring(get_data(newtermpsc)) && strcmp(string_val(get_data(newtermpsc)),modname) == 0)) {
-	set_data(newtermpsc, (Psc)makestring(string_find(modname,1)));
-	set_env(newtermpsc,T_UNLOADED);  // force reload if diff/new File
+	psc_set_data(newtermpsc, (Psc)makestring(string_find(modname,1)));
+	psc_set_env(newtermpsc,T_UNLOADED);  // force reload if diff/new File
 	//printf("set env to T_UNLOADED\n");
       }
       //      env_type_set(CTXTc newtermpsc, T_IMPORTED, T_ORDI, (xsbBool)new);
     } else if (new) {
-      set_data(newtermpsc, modpsc);
+      psc_set_data(newtermpsc, modpsc);
       env_type_set(CTXTc newtermpsc, T_IMPORTED, T_ORDI, (xsbBool)new);
     }
     ctop_constr(CTXTc 3, (Pair)hreg);
@@ -1854,9 +1854,9 @@ int builtin_call(CTXTdeclc byte number)
       //printf("inserting %s/%d into modpsc %s\n",goalname,get_arity(psc),get_name(modpsc));
       newpsc = pair_psc(insert(goalname,(byte)(arity+k),modpsc,&new));
       if (new) {
-	set_data(newpsc, modpsc);
-	set_env(newpsc,T_UNLOADED);
-	set_type(newpsc, T_ORDI);
+	psc_set_data(newpsc, modpsc);
+	psc_set_env(newpsc,T_UNLOADED);
+	psc_set_type(newpsc, T_ORDI);
       }
       pcreg = get_ep(newpsc);
       if (asynint_val) intercept(CTXTc newpsc);
@@ -2005,7 +2005,7 @@ int builtin_call(CTXTdeclc byte number)
       psc = (Psc)flags[CURRENT_MODULE];
     sym = pair_psc(insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), psc, &value));
     if (value) {
-      set_data(sym, psc);
+      psc_set_data(sym, psc);
       env_type_set(CTXTc sym, (addr?T_IMPORTED:T_GLOBAL) , T_ORDI, (xsbBool)value);
     }
     ctop_addr(3, sym);
@@ -2026,12 +2026,12 @@ int builtin_call(CTXTdeclc byte number)
     if (strncmp(mod_name,"usermod(",strlen("usermod(")) == 0) {
       sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), global_mod, &value);
       init_psc_ep_info(pair_psc(sym)); // reset to reload
-      set_data(pair_psc(sym),(Psc)makestring(string_find(mod_name,1)));
+      psc_set_data(pair_psc(sym),(Psc)makestring(string_find(mod_name,1)));
     } else {
       mod_psc = pair_psc(insert_module(0, mod_name));
       sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), mod_psc, &value);
       if (value)       /* if predicate is new */
-	set_data(pair_psc(sym), (mod_psc));
+	psc_set_data(pair_psc(sym), (mod_psc));
       if (flags[CURRENT_MODULE]) /* in case before flags is initted */
 	link_sym(CTXTc pair_psc(sym), (Psc)flags[CURRENT_MODULE]);
       else link_sym(CTXTc pair_psc(sym), global_mod);
@@ -2335,7 +2335,7 @@ int builtin_call(CTXTdeclc byte number)
   }
   case PSC_SET_TABLED: {	/* reg 1: +PSC; reg 2: +int */
     Psc psc = (Psc)ptoc_addr(1);
-    if (ptoc_int(CTXTc 2)) set_tabled(psc,0x08);
+    if (ptoc_int(CTXTc 2)) psc_set_tabled(psc,0x08);
     else psc->env = psc->env & ~0x8; /* turn off */
     break;
   }
@@ -2898,7 +2898,7 @@ case WRITE_OUT_PROFILE:
        subgoal frame.  Let's see if it works ...    */
     /* changing to variant */
     if ((eval_meth == VARIANT_EVAL_METHOD) && (get_tabled(psc) != T_TABLED_VAR)) {
-      set_tabled(psc,T_TABLED_VAR);
+      psc_set_tabled(psc,T_TABLED_VAR);
       //      if (get_tabled(psc) == T_TABLED)
       if (get_tip(CTXTc psc)) {
 	TIF_EvalMethod(get_tip(CTXTc psc)) = VARIANT_EVAL_METHOD;
@@ -2911,7 +2911,7 @@ case WRITE_OUT_PROFILE:
       if (get_incr(psc))
 	xsb_abort("cannot change %s/%n to use call subsumption as it is tabled incremental\n",
 		  get_name(psc),get_arity(psc));
-      set_tabled(psc,T_TABLED_SUB);
+      psc_set_tabled(psc,T_TABLED_SUB);
       /* T_TABLED if the predicate is known to be tabled, but no specific eval method */
       if (get_tip(CTXTc psc)) {
 	TIF_EvalMethod(get_tip(CTXTc psc)) = SUBSUMPTIVE_EVAL_METHOD;

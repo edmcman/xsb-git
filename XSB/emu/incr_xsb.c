@@ -160,13 +160,13 @@ xsbBool incr_eval_builtin(CTXTdecl)
     int ibits = (int)ptoc_int(CTXTc 3);
     if (ibits < 4) {
       if (!(get_tabled(psc) == T_TABLED_SUB && ptoc_int(CTXTc 3) == INCREMENTAL)) {
-	set_incr(psc,(int)ptoc_int(CTXTc 3));
+	psc_set_incr(psc,(int)ptoc_int(CTXTc 3));
 	//      printf("%s/%d:%u incr set to %d\n",get_name(psc),get_arity(psc),psc,ptoc_int(3));
       } else {
 	xsb_abort("Cannot incrementally maintain a subsumptive table (%s/%d)",get_name(psc),get_arity(psc));
       }
     } else {
-      set_intern(psc,ibits);
+      psc_set_intern(psc,ibits);
     }
       break;
   }
@@ -183,7 +183,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
 
   case PSC_SET_INTERN: {
     Psc psc = (Psc)ptoc_addr(2);   
-    set_intern(psc,(int)ptoc_int(CTXTc 3));
+    psc_set_intern(psc,(int)ptoc_int(CTXTc 3));
     break;    
   }
 

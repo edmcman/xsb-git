@@ -625,8 +625,8 @@ void env_type_set(CTXTdeclc Psc psc, byte t_env, byte t_type, xsbBool is_new) {
 int env; byte type;
 
   if (is_new) {
-    set_env(psc, env_check[T_NEW][t_env]);
-    set_type(psc, t_type);
+    psc_set_env(psc, env_check[T_NEW][t_env]);
+    psc_set_type(psc, t_type);
   } else {
     env = env_check[get_env(psc)][t_env];
     if (env < 0) {
@@ -641,7 +641,7 @@ int env; byte type;
 	  /* by another module that imported (mistakenly) this symbol.  */
 	  xsb_warn(CTXTc "Environment conflict in the use of %s/%d !", 
 		    get_name(psc), get_arity(psc));
-	  set_env(psc, T_LOCAL);	
+	  psc_set_env(psc, T_LOCAL);	
 	}
 	else {/* We are trying to load a module
 		that imports sth not exported. */
@@ -656,14 +656,14 @@ int env; byte type;
 	}
       }
     }
-    else set_env(psc, env);
+    else psc_set_env(psc, env);
     type = get_type(psc);
     if (t_type && type && t_type != type) {
       if (t_type==T_UDEF && (type==T_PRED || type==T_DYNA || type==T_FORN)) ;
-      else if (t_type==T_FORN && type==T_UDEF) set_type(psc, T_FORN);
+      else if (t_type==T_FORN && type==T_UDEF) psc_set_type(psc, T_FORN);
       else xsb_error("incompatible types in the use of %s/%d (%x with %x)",
 		     get_name(psc), get_arity(psc), type, t_type);
-    } else set_type(psc, type | t_type);  
+    } else psc_set_type(psc, type | t_type);  
   }
 }
 
@@ -847,9 +847,9 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
 	defasname[t_defaslen] = '\0';
 	defas_pair = insert(defasname, t_arity, mod, &def_is_new);
 	if (def_is_new) {
-	  set_data(defas_pair->psc_ptr, mod);
-	  set_env(defas_pair->psc_ptr, T_UNLOADED);
-	  set_type(defas_pair->psc_ptr, T_ORDI);
+	  psc_set_data(defas_pair->psc_ptr, mod);
+	  psc_set_env(defas_pair->psc_ptr, T_UNLOADED);
+	  psc_set_type(defas_pair->psc_ptr, T_ORDI);
 	}
 	mod = cur_mod;  /* mod of this symbol is cur_mod */
       }
@@ -870,7 +870,7 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
 	(get_type(temp_pair->psc_ptr) == T_ORDI &&
 	 (t_type == T_DYNA || t_type == T_PRED || t_type == T_UDEF) &&
 	 get_data(temp_pair->psc_ptr) == NULL)) {
-      set_data(temp_pair->psc_ptr, mod);
+      psc_set_data(temp_pair->psc_ptr, mod);
     }
     env_type_set(CTXTc temp_pair->psc_ptr, (byte)(t_env&(T_ENV|T_GLOBAL)), t_type, (xsbBool)is_new);
 
@@ -881,7 +881,7 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
       else {   /* 1 (for emacs scoping) */
 	if (flags[PRIVSHAR_DEFAULT] == DEFAULT_PRIVATE) {
 	  if (t_env&T_SHARED_DET) 
-	    set_shared(temp_pair->psc_ptr, (t_env&T_SHARED));
+	    psc_set_shared(temp_pair->psc_ptr, (t_env&T_SHARED));
 	}
 	else { /* 2 (for emacs scoping) */
 	  /* Default shared: if the compiled code has a thead_xxx
@@ -892,25 +892,25 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
 	     the || get_shared were not part of the condition above --
 	     so perhaps this code should be refactored. */
 	  if (t_env&T_SHARED_DET) {
-	    set_shared(temp_pair->psc_ptr, (t_env&(T_SHARED|T_SHARED_DET)));
+	    psc_set_shared(temp_pair->psc_ptr, (t_env&(T_SHARED|T_SHARED_DET)));
 	  }
 	  else if (!(((temp_pair->psc_ptr)->env)&T_SHARED_DET)) {
-	    set_shared(temp_pair->psc_ptr, (T_SHARED));
+	    psc_set_shared(temp_pair->psc_ptr, (T_SHARED));
 	  }
 	}
       } 
     } /* is_new || !get_shared(temp_pair->psc_ptr) */
 
     if (t_env&T_TABLED_SUB_LOADFILE) 
-      set_tabled(temp_pair->psc_ptr,((t_env&T_TABLED_VAR) | T_TABLED_SUB));
+      psc_set_tabled(temp_pair->psc_ptr,((t_env&T_TABLED_VAR) | T_TABLED_SUB));
     else if (is_new || t_defined)
-      set_tabled(temp_pair->psc_ptr,(t_env&T_TABLED_VAR));
+      psc_set_tabled(temp_pair->psc_ptr,(t_env&T_TABLED_VAR));
     //    printf("sym loaded: %s/%d, tabled=%x, t_env=%x, t_type=%x, t_defined=%x\n",get_name(temp_pair->psc_ptr),get_arity(temp_pair->psc_ptr),get_tabled(temp_pair->psc_ptr),t_env,t_type,t_defined);
     /* dsw added following, maybe wrongly */
     if (exp && (t_env&0x7) == T_EXPORTED) {
       /* xsb_dbgmsg(("exporting: %s from: %s",name,cur_mod->nameptr)); */
       if (is_new) 
-	set_data(temp_pair->psc_ptr, mod);
+	psc_set_data(temp_pair->psc_ptr, mod);
       if ((usermod_pair = search_in_usermod(get_arity(temp_pair->psc_ptr),get_name(temp_pair->psc_ptr)))) {
 	/* if existing usermod rec without ep, set its ep to that of new one */
 	if (get_ep(usermod_pair->psc_ptr) == (byte *)&((usermod_pair->psc_ptr)->load_inst)) {
@@ -934,10 +934,10 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
 		get_name(tpsc),get_arity(tpsc),get_name(get_data(tpsc)) );
     } else {
       //    set_data(tpsc, (struct psc_rec *)makestring(string_find(usermodfile,1)));
-      set_data(tpsc, (struct psc_rec *)makestring(string_find(modname,1)));
-      set_env(tpsc,T_UNLOADED);
+      psc_set_data(tpsc, (struct psc_rec *)makestring(string_find(modname,1)));
+      psc_set_env(tpsc,T_UNLOADED);
       if (get_type(tpsc) == 0)
-	set_type(tpsc,T_UDEF);
+	psc_set_type(tpsc,T_UDEF);
     }
   }
 
@@ -1128,14 +1128,14 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
     if (immutable) {
       if (get_ep(ptr->psc_ptr) == 0) {
 	if (pflags[VERBOSENESS_LEVEL]) { printf("Immutable: first load of module: %s\n",name);}
-	set_immutable(ptr->psc_ptr,1);
+	psc_set_immutable(ptr->psc_ptr,1);
       } else { 
 	if (pflags[VERBOSENESS_LEVEL]) { printf("Immutable: re-load of module prohibited: %s\n",name);}
 	return(NULL); 
       }
     }
     cur_mod = ptr->psc_ptr;
-    set_ep(ptr->psc_ptr,(byte *)makestring(filename)); // psc->filename for module.
+    psc_set_ep(ptr->psc_ptr,(byte *)makestring(filename)); // psc->filename for module.
   }
   get_obj_word_bb(&psc_count);
   if (!load_syms(CTXTc fd, filename, (int)psc_count, 0, cur_mod, exp, modformals, modpars ))
@@ -1173,14 +1173,14 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
     case T_ORDI:
     case T_UDEF:
       if (strcmp(name, "_$main")!=0) {
-	set_type(ptr->psc_ptr, T_PRED);
-	set_ep(ptr->psc_ptr, (pb)seg_first_inst);
+	psc_set_type(ptr->psc_ptr, T_PRED);
+	psc_set_ep(ptr->psc_ptr, (pb)seg_first_inst);
 	if (xsb_profiling_enabled) {
 	  add_prog_seg(ptr->psc_ptr, (pb)seg_first_inst, /*text_bytes*/ seg_size(seg_first_inst)-SIZE_SEG_HDR);
 	}
       }
       if (get_data(ptr->psc_ptr) == global_mod || isstring(get_data(ptr->psc_ptr))) {
-	set_data(ptr->psc_ptr,(struct psc_rec *)makestring(filename)); // filename already interned
+	psc_set_data(ptr->psc_ptr,(struct psc_rec *)makestring(filename)); // filename already interned
       }
       instruct_tip = get_tip_or_tdisp(ptr->psc_ptr);
       if (instruct_tip != NULL) {
@@ -1210,10 +1210,10 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
 	  xsb_warn(CTXTc "Redefining: %s/%d from file %s; Previously defined from file %s",
 		   get_name(ptr->psc_ptr),get_arity(ptr->psc_ptr),
 		   filename, string_val(get_data(ptr->psc_ptr)));
-	  set_data(ptr->psc_ptr,(struct psc_rec *)makestring(filename)); // already intern
+	  psc_set_data(ptr->psc_ptr,(struct psc_rec *)makestring(filename)); // already intern
 	}
 	unload_seg((pseg)get_ep(ptr->psc_ptr));
-	set_ep(ptr->psc_ptr, (pb)seg_first_inst);
+	psc_set_ep(ptr->psc_ptr, (pb)seg_first_inst);
 	if (xsb_profiling_enabled) {
 	  add_prog_seg(ptr->psc_ptr, (pb)seg_first_inst, /*text_bytes*/ seg_size(seg_first_inst)-SIZE_SEG_HDR);
 	}
@@ -1229,7 +1229,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
       }
       /* set data to point to module's psc, if not */
       if (!isstring(get_data(ptr->psc_ptr))) {
-	set_data(ptr->psc_ptr, cur_mod);
+	psc_set_data(ptr->psc_ptr, cur_mod);
       }
       break;
     case T_DYNA: {
@@ -1288,7 +1288,7 @@ static byte *loader_foreign(CTXTdeclc char *filename, FILE *fd, int exp,int immu
   if (immutable) {
     if (get_immutable(ptr->psc_ptr) == 0) {
       if (pflags[VERBOSENESS_LEVEL]) {printf("DEBUG Immutable: Immutable foreign file: first load\n");}
-      set_immutable(ptr->psc_ptr,1);
+      psc_set_immutable(ptr->psc_ptr,1);
     } else { 
       if (pflags[VERBOSENESS_LEVEL]) {printf("DeBUG Immutable foreign file: re-load prohibited\n");}
       return(NULL);

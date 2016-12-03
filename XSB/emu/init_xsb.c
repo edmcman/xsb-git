@@ -1523,9 +1523,9 @@ Psc make_code_psc_rec(CTXTdeclc char *name, int arity, Psc mod_psc) {
   Psc new_psc;
   temp = (Pair)insert(name, (byte) arity, mod_psc, &new);
   new_psc = pair_psc(temp);
-  set_data(new_psc, mod_psc);
-  set_env(new_psc, T_UNLOADED);
-  set_type(new_psc, T_ORDI);
+  psc_set_data(new_psc, mod_psc);
+  psc_set_env(new_psc, T_UNLOADED);
+  psc_set_type(new_psc, T_ORDI);
   if (mod_psc != global_mod) link_sym(CTXTc new_psc, global_mod); /* Add to global module as well */
   return new_psc;
 }
@@ -1580,7 +1580,7 @@ void init_symbols(CTXTdecl)
   /* insert mod name global */
   /*tp = insert_module(T_MODU, "global");	/ loaded */
   tp = insert_module(T_MODU, "usermod");	/* loaded */
-  set_data(pair_psc(tp), (Psc)USERMOD_PSC);	/* initialize global mod PSC */
+  psc_set_data(pair_psc(tp), (Psc)USERMOD_PSC);	/* initialize global mod PSC */
   global_mod = pair_psc(tp);
 
   /* insert "."/2 into global list */
@@ -1620,7 +1620,7 @@ void init_symbols(CTXTdecl)
   ccall_mod_psc = pair_psc(insert_module(0,"ccallxsb"));
   c_callloop_psc = pair_psc(insert("c_callloop_query_loop",1,ccall_mod_psc,&new));
   if (new) {
-    set_data(c_callloop_psc,ccall_mod_psc);
+    psc_set_data(c_callloop_psc,ccall_mod_psc);
     env_type_set(CTXTc c_callloop_psc, T_IMPORTED, T_ORDI, (xsbBool)new);
     link_sym(CTXTc c_callloop_psc, global_mod);
   }
