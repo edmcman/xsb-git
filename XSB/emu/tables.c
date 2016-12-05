@@ -241,7 +241,6 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
       old_answer_table_gl=NULL;
       
       sf=CallTrieLeaf_GetSF(Paren);
-      subg_ans_ctr(sf) = 0;  // Reset answer counter for incremental recomputation
       c=sf->callnode;
 
       /* TLS: if falsecount == 0 && call_found_flag, we know that call
@@ -258,6 +257,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
 	  } /* otherwise if dfs_inedges, treat as falsecount = 0, use completed table */
 	}
 	else {    /* COMPUTE_DIRECTLY */
+          subg_ans_ctr(sf) = 0;  // Reset answer counter for incremental recomputation
 	  old_call_gl=c;      
 	  call_found_flag=0;  /* treat as a new call */
 	  if ( has_answers(sf) ) {
