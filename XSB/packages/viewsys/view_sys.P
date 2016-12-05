@@ -49,7 +49,7 @@
 	generate_required_dirs/2,	% generate_required_dirs(Substitution,XSB_LOGFILES)
 	copy_required_files/2.	% copy_required_files(VSDir,FromToSubs)
 
-:- export logfile_file/2, logfile_directory/2.
+%%:- export logfile_file/2, logfile_directory/2.
 
 :- import create_lockfile/1, rm/1, sys_mkdir/2, process_control/2, process_status/2 from shell.
 :- import concat_atom/2, concat_atom/3 from string.
@@ -81,9 +81,11 @@ A view system workflow (@bf{ViewSys} for short) describes the names of
 the views, their input views, the command to be run to generate a view
 from its inputs, etc.  A particular @bf{instance} of a ViewSys is
 determined by the specific external data sources associated with the
-base views of the ViewSys.  It is useful to give names to such an
-instance, usually indicating the external source of the base data
-sources.  Many view systems will have only one instance.
+base views of the ViewSys.  This is to support the situation in which
+the same workflow needs to be applied to different sets of base views.
+It is useful to give names to such instances, usually indicating the
+external source of the base data sources.  Many view systems will have
+only one instance.
 
 Another useful component of a view system is what is called a
 consistency view.  The purpose of a consistency view is to check to
@@ -127,11 +129,12 @@ pattern variable $INSTANCE$ which will be replaced by the instance
 name to obtain the filename (or directory name) of an instance of this
 view.  A file template may also contain user-defined pattern variables
 of the form '$USERVARNAME$' where USERVARNAME is any upper-case letter
-sequence.  User-defined pattern variable values are defined in facts
-of the form viewsys_uservar('$USERVARNAME$',VarValueString).  When
-instantiated by an instance name and user-variable values, this will
-be the filename that contains the view contents, or a directory name
-that contains the files containing the view contents.
+sequence (except those reserved for viewsys system variables.)
+User-defined pattern variable values are defined in facts of the form
+viewsys_uservar('$USERVARNAME$',VarValueString).  When instantiated by
+an instance name and user-variable values, this will be the filename
+that contains the view contents, or a directory name that contains the
+files containing the view contents.
 
 @item @var{StdoutFileTemplate} is the file name template for where to
 put the standard output (stdout and stderr) of the execution of the
@@ -177,24 +180,31 @@ processing.
 
 @item @var{ShCmd} is the shell command to execute to generate the view
 instance from its input view instances. (Ignored for base views.)  The
-shell command can be in one of three forms: 1) a string containing
-metavariables of the form $INP1$, $INP2$, ..., and $OUT$, which will
-be replaced by the filenames of the input view instance
-files/directories and the output view instance file/directory,
-respectively; or 2) a string containing the metavariables $INPUTFILES$
-and $OUTPUTFILE$, which will be replaces with the sequence of input
+shell command can be in one of two forms:
+
+@begin{enumerate}
+
+@item a string containing metavariables of the form $INP1$, $INP2$,
+..., and $OUT$, which will be replaced by the filenames of the input
+view instance files/directories and the output view instance
+file/directory, respectively; or
+
+@item a string containing the metavariables $INPUTFILES$ and
+$OUTPUTFILE$, which will be replaces with the sequence of input
 filenames and the output filename, respectively, where each filename
 is enclosed in double-quotes.  This is often appropreate for shell
 commands.  If the shell string doesn't contain any of the
 metavariables, then it is treated as if it were: '<ShCmd> $INPUTFILES$
 $OUTPUTFILE$'.
 
+@end{enumerate}
+
 @end{itemize}
 
 User-defined syntactic variables can be used in filename templates and
 in shell command templates to make it easier to define filenames and
 commands.  The predicate @pred{viewsys_uservar/2} is used to define
-user variables, and facts for this predicate should be places in the
+user variables, and facts for this predicate should be placed in the
 @file{viewsys_view_info.P} file.  For example, assume the user adds
 the following facts to that file:
 
@@ -204,13 +214,13 @@ viewsys_uservar('$SCRIPT_LIB$','c:/userfiles/project1/scripts').
 @end{verbatim}
 
 With these declarations in a @file{viewsys_view_info.P} file, a file
-templiate string could be of the form '$DATA_DIR$/data_file_13', which
+template string could be of the form '$DATA_DIR$/data_file_13', which
 after replacement of the syntactic variable by its value would refer
 to the file named 'C:/userfiles/project1/data/data_file_13'.  A shell
 command string could be 'sh $SCRIPT_LIB$/script_cc.sh', which after
-replacements would casue the command 'sh
+replacements would cause the command 'sh
 c:/userfiles/project1/scripts/script_cc.sh' to be run.  User variables
-are normally defind at the beginning of the view file and can be used
+are normally defined at the beginning of the view file and can be used
 to allow locations to be easily changed.  The value of a user variable
 may contain another user variable, but, of course, cycles are not
 permitted.
@@ -268,7 +278,7 @@ where:
 @item @var{Status} is the status of this view instance
 @tt{not_generated}, @tt{being_generated(ProcName)}, @tt{generated},
 @tt{generation_failed}. (For base view instances this is always
-generated.)
+@tt{generated}.)
 
 @item @var{Date} is the date-time the view instance was generated.
 (Better? the filetime of the base view last used to regenerate view
@@ -276,7 +286,7 @@ instances. Not used for non-base views.)
 
 @item @var{Began} is the date-time at which the generation of this
 view began.  (This is the same as Date above for base view instances.)
-It is used to estimate how long it will take to generated this view
+It is used to estimate how long it will take to generate this view
 output given its inputs.
 
 @end{itemize}
@@ -322,9 +332,9 @@ directory to hold the viewsys information.  She creates a file
 @pred{view/7}, and @pred{consView/6} facts that describe the desired
 view system.  Then the user consults the viewsys.P package, and runs
 @pred{check_viewsys/1} to report any obvious inconsistencies in the
-viewsys specification in @file{viewsys_view_info.P}.  After the check
-passes, if any views have the @tt{split(N)} option, the user should
-copy the @file{viewsys_view_info.P} file to a file named
+view system specified in the file @file{viewsys_view_info.P}.  After
+the check passes, if any views have the @tt{split(N)} option, the user
+should copy the @file{viewsys_view_info.P} file to a file named
 @file{viewsys_orig_view_info.P} and then run @pred{expand_views/1} to
 generate the appropriate file @file{viewsys_view_info.P} to contain
 the views necessary to split, execute and combine the results.  This
@@ -335,17 +345,18 @@ to regenerate the @file{viewsys_view_info.P} file.)  The user will
 then run @pred{generate_view_instance/2} to generate an instance (or
 instances) of the view system into the file
 @file{viewsys_instance_info.P}.  After that the user will run
-@pred{update_views/4} to generate all the view contents.  Then the
-user checks the generated logging to determine if there were any
-errors.  If so, the user corrects the programs (the viewsys
-specification, whatever), executes @pred{reset_failed/2} and reruns
-@pred{update_views/4}.  The user can also use @pred{viewsys_status/1}
-to determine what the state of the view system is, and to determine
-what needs to be fixed and what needs to be rerun.  If the execution
-of @pred{update_views/4} is aborted or somehow does not complete, the
-user can run @pred{reset_unfinished/2} to reset the views that were in
-process, so that a subsequent @pred{update_views/4} will try to
-recompute those unfinished computations.
+@pred{update_views/4} to run the workflow to generate all the view
+contents.  Then the user checks the generated logging to determine if
+there were any errors.  If so, the user corrects the programs (the
+viewsys specification, whatever), executes @pred{reset_failed/2} and
+reruns @pred{update_views/4}.  The user can also use
+@pred{viewsys_status/1} to determine what the state of the view system
+is, and to determine what needs to be fixed and what needs to be
+rerun.  If the execution of @pred{update_views/4} is aborted or
+somehow does not complete, the user can run @pred{reset_unfinished/2}
+to reset the views that were in process, so that a subsequent
+@pred{update_views/4} will try to recompute those unfinished
+computations.
 
 @section{Ideas for Possible Future Extensions}
 	   
@@ -395,6 +406,8 @@ generate_new_instance(ViewSys,VInstList0,NewUpd) :-
 	local_datime(Datime),
 	(do_all
 	 member(VInst,VInstList),
+	 retractall(viewInst(_,VInst,_,_,_)),
+	 retractall(consViewInst(_,VInst,_,_,_)),
 	 generate_all_vinsts(VInst,NewUpd,Datime)
 	),
 	save_viewfile(ViewSys).
@@ -700,7 +713,7 @@ collect_finished_procs([PidStr|Pids],FinishedPids,UnfinishedPids) :-
 		collect_finished_procs(Pids,FinishedPids,UnfinishedPids1)
 	).
 
-process_finished_pid(pid(Pid,PStatus,SStr,FileOut,Datime,View,File,Inst),CurDatime,OStr) :-
+process_finished_pid(pid(Pid,PStatus,SStr,FileOut,Datime,View,_File,Inst),CurDatime,OStr) :-
 	(process_control(Pid,wait(_RetCode))
 	 ->	true		% windows: finish process
 	 ;	true		% linux: already gone
@@ -924,7 +937,7 @@ a_consistency_instance_ungenerated(View,Inst) :-
 	VStatus \== generated.
 
 :- comment(invalidate_all_instances(ViewSys),
-"@pred{invalidate_all_instances(+ViewSys)} invalidate all views, so a
+"@pred{invalidate_all_instances(+ViewSys)} invalidates all views, so a
 subsequent invocation of @pred{update_views/4} would recompute them
 all."  ).
 
