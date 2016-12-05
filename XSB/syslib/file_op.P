@@ -267,7 +267,6 @@ assert_trie_index(Pcall) :-
 	retract_index(Pcall),
 	assert('_$trie_asserted1'(Pcall)).
 
-:- import system_retractall/1 from assert.
 retract_trie_index(Pcall) :-
 	system_retractall('_$trie_asserted1'(Pcall)).
 

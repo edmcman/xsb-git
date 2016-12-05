@@ -394,11 +394,16 @@ wcs_undefined(Term):- not_exists(wcs_undefined(Term)).
 handle_undefined_pred(PSC,Term) :-
         psc_name(PSC,Name),psc_arity(PSC,Arity),
 	psc_env(PSC, Env), 
-	( Env =:= T_UNLOADED
-	->  % is "imported"
-	    psc_mod(PSC, ModPSC),
-	    psc_name(ModPSC, ModName)
-	  ; ModName = usermod ),
+	(Env =:= T_UNLOADED
+	 ->	% is "imported"
+		psc_mod(PSC, ModPSC),
+		psc_name(ModPSC, ModName)
+	 ;	psc_data(PSC,ModPscOrFile),
+		(ModPscOrFile =:= 0
+		 ->	ModName = usermod
+		 ;	psc_name(ModPscOrFile,ModName)
+		)
+	),
 	current_prolog_flag(unknown,Action),
 	(Action == fail 
 	 ->	fail
@@ -544,13 +549,23 @@ load_object_file(FileName_O) :-
 
 % actually load the byte-code file
 load_object_file(FileName_O,ModPars) :-
+	%local_fmt_write(STDMSG, "Loading: %S\n", arg(FileName_O)),
 	code_load(FileName_O, Init, 0, ModPars), % use the C loader
 	(Init =\= 0		% load succeeded
 	 ->	(Init =\= 4 % prolog byte-code succeeded
 		 ->	(FileName_O = [Dir,_,_]
 			 ->	local_cwd(CurDir),
 				local_cd(Dir),
-				ll_code_call(Init, true, 2), % call '_$main'
+				%local_fmt_write(STDMSG, "calling main for: %S\n", arg(FileName_O)),
+				(system_mod(FileName_O) % cant use catch during system startup
+				 ->	ll_code_call(Init, true, 2) % '_$main'
+				 ;	catch(
+					      ll_code_call(Init, true, 2), % '_$main'
+					      Ball,
+					      local_cd_throw(CurDir,Ball)
+					     )
+				),
+				%local_fmt_write(STDMSG, "returned from main for: %S\n", arg(FileName_O)),
 				local_cd(CurDir)
 			 ;	ll_code_call(Init, true, 2) % call '_$main'
 			),
@@ -562,6 +577,12 @@ load_object_file(FileName_O,ModPars) :-
 local_cwd(Name) :- local_sys_syscall(SYS_cwd, Res, Name, _), Res =:= 0.
 
 local_cd(Dir) :- local_sys_syscall(SYS_chdir, Res, Dir, _), Res =:= 0.
+
+local_cd_throw(Dir,Ball) :-
+	local_fmt_write(STDMSG, "Caught: %s, %S\n", arg(Dir,Ball)),
+	local_cd(Dir),
+	throw(Ball).
+
 
 %% compile the source file, and then reload the module
 compile_and_load(FileNameList,PModName) :-

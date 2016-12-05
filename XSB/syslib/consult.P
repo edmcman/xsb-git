@@ -382,13 +382,21 @@ load_exec(File, ModName, Directory) :-
 		push_loaded_file(File,Rand),
 		cwd(OldCWD),	% set working directory to directory containing file being loaded. (dsw 11/30/16)
 		cd(Directory),
-	        co_code_call(Init, true, 2), % call '_$main'
+		catch(
+		      co_code_call(Init, true, 2), % call '_$main'
+		      Ball,
+		      cd_throw(OldCWD,Ball)
+		     ),
 		cd(OldCWD),
 		pop_loaded_file(Rand),
 		unload_seg(Init)		% free space for '_$main'
 	 ;	true			% Foreign obj code loaded
 	).
 load_exec(_,_,_).
+
+cd_throw(Dir,Ball) :-
+	cd(Dir),
+	throw(Ball).
 
 immutable(10).
 immutable(11).
@@ -745,7 +753,7 @@ execute_accumulated_commands(Dir) :-
 	cwd(OldDir),
 	cd(Dir),
 	(load_dyn_cmds(Cmd),
-	 (call(Cmd)
+	 (catch(Cmd,Ball,cd_throw(OldDir,Ball))
 	  ->	 fail
 	  ;	 warning('Command failed.'),
 		 fail
