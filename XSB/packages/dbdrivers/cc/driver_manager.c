@@ -131,10 +131,11 @@ DllExport int call_conv openConnection(void)
 
   CHandles[numCHandles++] = cHandle;
   if ((val = connectDriver(cHandle)) != SUCCESS) {
-    if (getDriverFunction(cHandle->driver, ERROR_MESG) != NULL)
+    if (getDriverFunction(cHandle->driver, ERROR_MESG) != NULL) {
       errorMesgDriver = getDriverFunction(cHandle->driver, ERROR_MESG)->errorMesgDriver;
-    else
+    } else {
       return FALSE;
+    }
 
     errorMesg = errorMesgDriver();
     errorNumber = "XSB_DBI_000";
