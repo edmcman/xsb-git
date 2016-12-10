@@ -79,7 +79,13 @@ retract_table(Spec) :-
 	mpa_to_skel(Spec,Call),
 	term_psc(Call,Psc),
 	psc_set_tabled(Psc,0).  %% set it as non-tabled
-	
+
+/* The following predicates are only called from table/1, 
+   and consistency has already been checked, so it is safe to 	
+   assume that we can just set the bits without further checking. 
+*/
+
+%:- import console_writeln/1 from standard.
 /* Mode can be INCREMENTAL, NONINCREMENTAL, or OPAQUE */
 add_incr_table(Spec,Mode) :-
 	mpa_to_skel(Spec,Call),
@@ -88,6 +94,17 @@ add_incr_table(Spec,Mode) :-
 	   permission_error(add_incremental_tabling,predicate_with_tables,Spec,(table)/1) 
 	 ; psc_set_incr(Psc,Mode)).
 
+add_alt_semantics(Spec,Mode) :-
+	mpa_to_skel(Spec,Call),
+	term_psc(Call,Psc),	
+	(predicate_has_tables(Psc) ->
+	   permission_error(add_alt_semantics,predicate_with_tables,Spec,(table)/1) 
+	 ; alt_semantics(Mode,C_Mode),
+	   psc_set_alt_semantics(Psc,C_Mode)).
+
+alt_semantics(weak_cs,WEAK_CS):- !.
+alt_semantics(wfs_semantics,WFS_SEMANTICS).
+
 /*----------------------------------------------------------------------*/
 :- export is_tabled/1.
 is_tabled(Term):- 
@@ -95,8 +112,6 @@ is_tabled(Term):-
 	psc_tabled(Psc,T),
 	T \== 0.
 
-:- export truth_value/2.
-:- import permission_error/4 from error_handler.
 truth_value(Goal,TV):- 
 	(is_tabled(Goal) -> 
    	   truth_value_tp(Goal,TV)
@@ -387,7 +402,7 @@ tunnumcall(GGoal) :-
 	call(VGoal).
 
 % we've got true and fail -- why not this?
-:- table undefined/0.
+:- table undefined() as opaque.
 undefined:- tnot(undefined).
 
 /*----------------------------------------------------------------------*/
