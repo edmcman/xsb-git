@@ -81,7 +81,6 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
    (use_variant_tabling)/1,
    variant_get_residual/2.
 :- export not_exists(Goal).
-:- export floundered_undefined/0.
 :- export answer_completion/2.
 :- export dump_table_counts/0, table_counts/5.
 :- export print_sdg_info/0,print_sdg_info_modes/0, print_sdg_info_functor/0, print_sdg_info/1, 
