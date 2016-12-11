@@ -90,6 +90,9 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 :- export get_residual_sccs/3.
 :- export get_residual_sccs/5.
 
+:- export add_alt_semantics/2.
+:- export truth_value/2.
+
 % Obsolete
 :- export    abolish_table_call/1,       abolish_table_call/2.
 
@@ -146,7 +149,7 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 
 :- import abolish_table_info/0, delete_attributes/1, 
    ground_and_acyclic/1,
-   psc_set_incr/2, psc_set_tabled/2, psc_tabled/2, psc_type/2,
+   psc_set_incr/2, psc_set_tabled/2, psc_tabled/2, psc_type/2,psc_set_alt_semantics/2,
    table_inspection_function/5, table_inspection_function/7,table_inspection_function/8,table_inspection_function/9,
    term_psc/2, term_new/2, stat_flag/2
    from machine.
