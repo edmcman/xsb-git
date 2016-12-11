@@ -33,6 +33,9 @@
 :- export
     float_op/10,
     float_op/5,
+   psc_immutable/2,
+   psc_get_alt_semantics/2,
+   psc_set_alt_semantics/2,
 	psc_name/2, 
 	psc_arity/2, 
 	psc_type/2, 
