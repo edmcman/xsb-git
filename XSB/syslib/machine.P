@@ -1,5 +1,5 @@
 /* File:      machine.P
-** Author(s): Jiyang Xu, Kostis Sagonas, Terrance Swift, David S. Warren,
+** Author(s): Jiyang Xu, Kostis Sagonas, Theresa Swift, David S. Warren,
 **    	      Ernie Johnson 
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
@@ -70,10 +70,8 @@ psc_set_ep(PSC, Term) :- psc_set_ep(PSC, Term).
 psc_data(PSC, Data) :- psc_data(PSC, Data).
 psc_init_info(_PSC) :- '_$builtin'(PSC_INIT_INFO).
 
-:- export psc_immutable/2.
 psc_immutable(Psc,Immutable):- 
 	table_inspection_function(PSC_IMMUTABLE,Psc,Immutable,_Three,_Four).
-
 
 psc_set_shared(PSC, Bool) :-
 	psc_get_env(PSC, Det, T_SHARED_DET),
@@ -108,15 +106,18 @@ psc_get_set_env_byte(_PSC, _And, _Or, _Res) :- '_$builtin'(PSC_GET_SET_ENV_BYTE)
 
 psc_set_incr(PSC, CODE):-
 	incr_eval_builtin(PSC_SET_INCR, PSC, CODE).
-
 psc_get_incr(PSC, CODE):-
 	incr_eval_builtin(PSC_GET_INCR, PSC, CODE).
 
 psc_set_intern(PSC, CODE):-
 	incr_eval_builtin(PSC_SET_INTERN, PSC, CODE).
-
 psc_get_intern(PSC, CODE):-
 	incr_eval_builtin(PSC_GET_INTERN, PSC, CODE).
+
+psc_set_alt_semantics(PSC, CODE):-
+	incr_eval_builtin(PSC_SET_ALT_SEMANTICS, PSC, CODE).
+psc_get_alt_semantics(PSC, CODE):-
+	incr_eval_builtin(PSC_GET_ALT_SEMANTICS, PSC, CODE).
 
 term_new_mod(Mod, Term, NewTerm) :-
 	(atom(Mod)
