@@ -766,7 +766,7 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
   cp_top1 = breg ;				 
   cp_bot1 = (CPtr)(tcpstack.high) - CP_SIZE;
   if (xwammode && hreg < hfreg) {
-    printf("uh-oh! hreg was less than hfreg in in find the visitors\n");
+    xsb_warn("find_the_visitors: hreg was less than hfreg at start of function.  Trouble may arise.\n");
     hreg = hfreg;
   }
   while ( cp_top1 < cp_bot1 ) {
@@ -781,12 +781,14 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
       if (IsInAnswerTrie(trieNode)) {
 	//	printf("in answer trie\n");
 	if (subgoal == get_subgoal_frame_for_answer_trie_cp(CTXTc trieNode,cp_top1))  {
-	  //	  	  printf("found top of run %p ",cp_top1);
-	  //	  	  print_subgoal(CTXTc stdout, subgoal); printf("\n");
-	  cp_root = cp_top1; 
-	  #ifdef INCR_DEBUG1
+#ifdef INCR_DEBUG1
+	  printf("found top of run %p ",cp_top1);
+	  print_subgoal(CTXTc stdout, subgoal); printf("\n");
+#endif
+	   cp_root = cp_top1; 
+#ifdef INCR_DEBUG1
 	  cp_first = cp_top1;
-	  #endif
+#endif
 	  while (*cp_pcreg(cp_root) != trie_fail) {
 	  #ifdef INCR_DEBUG1
 	    cp_first = cp_root;
@@ -794,7 +796,7 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
 	    cp_root = cp_prevbreg(cp_root);
 	    if (*cp_pcreg(cp_root) != trie_fail && 
 		subgoal != get_subgoal_frame_for_answer_trie_cp(CTXTc TrieNodeFromCP(cp_root),cp_top1))
-	      printf(" couldn't find incr trie root -- whoa, whu? (%p\n",cp_root);
+	      xsb_warn(CTXTc "find_the_visitors: couldn't find incr trie root -- trouble may arise (%p)\n",cp_root);
 	  }
 	  ALNlist = traverse_variant_answer_trie(subgoal, cp_root,cp_top1);
 	  ans_subst_num = (int)int_val(cell(cp_root + CP_SIZE + 1)) ;  // account for sf ptr of trie root cp
@@ -827,8 +829,13 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
     }
     cp_top1 = cp_prevtop(cp_top1);
   }
-  if (xwammode) hfreg = hreg;
-  //  printf("constructed listhead hreg %x hfreg %x\n",hreg,hfreg);
+  //  printf("abt to construct listhead hreg %x hfreg %x\n",hreg,hfreg);
+
+  /* TES 12/2016.  Took out the following line, which on retrospect
+     doesn't seem correct.  In fact it fixes a core-dump, which may
+     have aided my retrospection, so I want to make note of it. */
+
+  //  if (xwammode) hfreg = hreg;
   subg_visitors(subgoal) = 0;
   //  instr_flag = 1;  printf("setting instr_flag\n");  hreg_pos = hreg;
 }
