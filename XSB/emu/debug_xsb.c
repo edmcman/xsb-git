@@ -63,6 +63,56 @@
 void print_subgoal(CTXTdeclc FILE *, VariantSF);
 #define virtual_buffer (fl_buf->fl_buffer)
 
+/* @@
+STACKS
+print_completion_stack()
+
+print_deltf_chain()
+print_delcf_chain()
+
+print_registers()
+print_callRegs()
+
+SUBGOALS
+Print a subgoal starting from...
+
+A subgoal frame
+void print_subgoal(CTXTdeclc FILE *fp, VariantSF subg)
+
+a callnode_leaf: 
+void print_subgoal_callnode_leaf(CTXTdeclc FILE *fp, callnodeptr cn)
+
+ANSWERS: 
+
+printAnswerList()
+
+printTriePath()
+
+Print an answer starting from its template.
+void sprint_answer_template(CTXTdeclc forestLogBuffer fl_buf, CPtr pAnsTmplt, int template_size,long depth) 
+
+Delay_lists
+
+... in the heap
+print_delay_list(CTXTc stddbg, dlist);
+
+print_delay_element()
+
+Works for answers, maybe subgoials
+void print_pdes(PNDE firstPNDE) 
+
+TRIES
+print_trie_atom
+
+INCREMENTAL
+print_call_stack()
+
+print_inedges
+
+print_outedges
+*/
+
+
 /*=============================================================================*/
 /*  The first section of predicates are used for tracing as well as by XSB     */
 /*  developers during debugging.  They should always be defined		       */
@@ -2653,7 +2703,7 @@ static void debug_interact(CTXTdecl)
     skip_to_nl();
     sym = insert_module(0, mod);
     sym = insert(name, num, sym->psc_ptr, &num);
-    set_spy(sym->psc_ptr, 0x80);
+    psc_set_spy(sym->psc_ptr, 0x80);
     goto again;
   case 'B':
     scanf("%d", &num);
@@ -2791,7 +2841,7 @@ static void debug_interact(CTXTdecl)
     skip_to_nl();
     sym = insert_module(0, mod);
     sym = insert(name, num, sym->psc_ptr, &num);
-    set_spy(sym->psc_ptr, 0x00);
+    psc_set_spy(sym->psc_ptr, 0x00);
     goto again;
   case 'v':
     scanf("%d", &num);

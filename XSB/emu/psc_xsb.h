@@ -159,8 +159,11 @@ typedef struct psc_pair *Pair;
 #define  psc_set_tabled(psc, tab)	(psc)->env = ((psc)->env & ~T_TABLED) | tab
 
 #define  psc_set_incr(psc,val)      ((psc)->incremental = val)  /* incremental */
-
 #define  psc_set_intern(psc,val)    ((psc)->intern = val) /* val 0 or T_INTERN */
+
+#define  psc_set_alt_semantics(psc,val)    ((psc)->alt_semantics = val) 
+#define  psc_get_alt_semantics(psc)    ((psc)->alt_semantics)
+
 #define  psc_set_immutable(psc,val)    ((psc)->immutable = val) 
 
 #define  psc_set_arity(psc, ari)	((psc)->arity = ari)

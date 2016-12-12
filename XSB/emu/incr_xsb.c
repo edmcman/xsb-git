@@ -195,6 +195,18 @@ xsbBool incr_eval_builtin(CTXTdecl)
     break;
   }
 
+  case PSC_SET_ALT_SEMANTICS: {
+    Psc psc = (Psc)ptoc_addr(2);   
+    psc_set_alt_semantics(psc,(int)ptoc_int(CTXTc 3));
+    break;    
+  }
+
+  case PSC_GET_ALT_SEMANTICS: {
+    Psc psc = (Psc)ptoc_addr(2);   
+    ctop_int(CTXTc 3,psc_get_alt_semantics(psc));
+    break;
+  }
+
   case IMMED_DEPENDS_LIST: {
     VariantSF sf;
 
