@@ -1,5 +1,5 @@
 /* File:      loader_xsb.c
-** Author(s): David S. Warren, Jiyang Xu, Terrance Swift, Kostis Sagonas
+** Author(s): David S. Warren, Jiyang Xu, Teri Swift, Kostis Sagonas
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
 ** Copyright (C) The Research Foundation of SUNY, 1986, 1993-1998
@@ -1003,8 +1003,8 @@ static void new_tdispblk(CTXTdeclc TIFptr *instr_ptr, Psc psc) {
 
   if (get_tabled(psc)==T_TABLED) {					
     if ((TabledEvalMethod)pflags[TABLING_METHOD] == VARIANT_EVAL_METHOD)			
-       set_tabled(psc,T_TABLED_VAR);					
-     else set_tabled(psc,T_TABLED_SUB);				
+       psc_set_tabled( psc,T_TABLED_VAR);					
+     else psc_set_tabled(psc,T_TABLED_SUB);				
    }									
 
   SYS_MUTEX_UNLOCK( MUTEX_TABLE );

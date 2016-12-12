@@ -766,7 +766,7 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
   cp_top1 = breg ;				 
   cp_bot1 = (CPtr)(tcpstack.high) - CP_SIZE;
   if (xwammode && hreg < hfreg) {
-    xsb_warn("find_the_visitors: hreg was less than hfreg at start of function.  Trouble may arise.\n");
+    xsb_warn(CTXTc "find_the_visitors: hreg was less than hfreg at start of function.  Trouble may arise.\n");
     hreg = hfreg;
   }
   while ( cp_top1 < cp_bot1 ) {

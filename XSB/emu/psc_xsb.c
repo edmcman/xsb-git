@@ -444,11 +444,11 @@ Pair link_sym(CTXTdeclc Psc psc, Psc mod_psc)
 	    psc_set_type(psc,get_type(pair_psc(found_pair)));
 	    psc_set_env(psc,get_env(pair_psc(found_pair)));
 	  } else if (mtype != T_ORDI) {
-	    psc_set_ep(CTXTc pair_psc(found_pair),get_ep(psc));
+	    psc_set_ep(pair_psc(found_pair),get_ep(psc));
 	    psc_set_type(pair_psc(found_pair),get_type(psc));
 	    psc_set_env(pair_psc(found_pair),get_env(psc));
 	  } else {
-	    set_psc_ep_to_psc(pair_psc(found_pair),psc);
+	    set_psc_ep_to_psc(CTXTc pair_psc(found_pair),psc);
 	  }
 	}
 	pair_psc(found_pair) = psc;

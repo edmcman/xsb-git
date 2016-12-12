@@ -607,7 +607,7 @@ XSB_Start_Instr(trie_retry_fail,_trie_retry_fail)
 XSB_End_Instr()
 
 /*----------------------------------------------------------------------*/
-/* The following code, that handles hashing in coded tries, has been	*/
+/* The following code, which handles hashing in coded tries, has been	*/
 /* modified for garbage collection.  Choice points for hashes in tries,	*/
 /* besides the usual trie argument registers (see file tr_code.h), also	*/
 /* contain 3 fields with certain information about the hash bucket.	*/
@@ -615,7 +615,7 @@ XSB_End_Instr()
 /* now encoded as such.  The second field contains a malloc-ed address	*/
 /* which is encoded as a STRING (that's how addresses are encoded in	*/
 /* XSB -- see file cell_xsb.h) to prevent garbage collection from       */
-/* treating it as a reference either to a WAM stack or to a CHAT area.	*/
+/* treating it as a reference either to a WAM stack.	                */
 /*----------------------------------------------------------------------*/
 
 /* Structure of the CPF created by hash_opcode:

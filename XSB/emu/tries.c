@@ -554,7 +554,7 @@ void hashify_children(CTXTdeclc BTNptr parent, int trieType) {
 
   ht = New_BTHT(CTXTc smBTHT, trieType);
   children = BTN_Child(parent);
-  BTN_SetHashHdr(parent,ht);
+  BTN_SetHashHdr(parent,ht);        // child is now ht
   tablebase = BTHT_BucketArray(ht);
   hashseed = BTHT_GetHashSeed(ht);
   for (btn = children;  IsNonNULL(btn);  btn = children) {
