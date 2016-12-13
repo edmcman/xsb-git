@@ -1180,20 +1180,28 @@ table_1(Pred):-
 table_index(PredSpecs,IndexSpec) :-
 	comma_member(PSpec,PredSpecs),
 	functor(PSpec,Pred,Arity),
+	retractall(table_index_predicates(PSpec,_)),
 	collect_orders_from_indexes(IndexSpec,Arity,_,IndexOrds),
+	upto_n(1,Arity,StdOrd),
+	IndexOrds \== [StdOrd],
 	module_of_term(PSpec,Module),
 	member(IndexOrd,IndexOrds),
 	concat_atom([Pred,'$'],PredD),
 	concat_atom([PredD|IndexOrd],'_',NPredName),
 	functor(NTermU,NPredName,Arity),
 	term_new_mod(Module,NTermU,NTerm),
-	(table_index_predicates(PSpec,NTerm)
-	 ->	true
-	 ;	assert(table_index_predicates(PSpec,NTerm))
-	),
+	assert(table_index_predicates(PSpec,NTerm)),
 	fail.
 table_index(_PredSpecs,_IndexSpec).
 		       
+upto_n(I,K,List) :-
+	(I =< K
+	 ->	List = [I|List1],
+		I1 is I+1,
+		upto_n(I1,K,List1)
+	 ;	List = []
+	).
+
 abolish_table_index_pred(PredSpec) :-
 	mpa_to_skel(PredSpec,RPredSpec),
 	table_index_predicates(RPredSpec,TPredSpec),

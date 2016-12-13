@@ -480,9 +480,9 @@ load(PModName) :-
 
 	%% following is like a once, with an else clause (if-then-else in a conditional of an if-then-else)
 	(search_file(ModName, [FileName_O,FileName_P,FileName_PL,FileName_PROLOG,FileName_H,FileName_C,
-			       FileName_CPP],
+			       FileName_CPP,FileName],
 		     [XSB_OBJ_EXTENSION_ATOM,XSB_SRC_EXTENSION_ATOM,'.pl','.prolog',XSB_HDR_EXTENSION_ATOM,'.c',
-		      '.cpp']),
+		      '.cpp','']),
 	 (local_file_exists(FileName_O)
 	  ->	(system_mod(FileName_O)	% DONT CHECK TIME but load byte-code regardless if in XSB system 
 		 ->	load_object_file(FileName_O,ModPars) % (allows self recompile, could just exempt cmplib and syslib)
@@ -499,6 +499,8 @@ load(PModName) :-
 	  ->	 compile_and_load(FileName_C,PModName)
 	  ; local_file_exists(FileName_CPP)
 	  ->	 compile_and_load(FileName_CPP,PModName)
+	  ; local_file_exists(FileName)
+	  ->	 compile_and_load(FileName,PModName)
 	 )
 	 ->	true
 	 ;	tilde_expand_filename(ModName,ExpandedModName), % file not found

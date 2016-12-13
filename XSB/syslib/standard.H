@@ -55,7 +55,6 @@
 	(hilog)/1,	hilog_arg/3,	hilog_functor/3,
 	(index)/3,	(index)/2,      (table)/1,
 	(use_incremental_tabling)/1,    (use_incremental_dynamic)/1, 
-   use_incremental_dynamic_internal/1,
 	(use_opaque_tabling)/1, /* incremental */
 	integer/1,	is/2,		is_attv/1,	is_list/1,
 	is_most_general_term/1,		is_number_atom/1,
@@ -72,7 +71,6 @@
 	see/1,		seeing/1,	seen/0,
 	set_input/1,    set_output/1,  
    demand_once/1, check_table_options/3,
-	set_tmp_file/3,
 	skip/1,		statistics/1,	statistics/0,	structure/1,
 	tab/1,		tell/1,		telling/1,	time/1,	told/0,true/0,
 	ttywrite/1,	ttywritenl/1,   ttywrite/2,	ttywritenl/2, 
@@ -89,7 +87,6 @@
 :- export handle_interrupts/1.
 %:- export timed_call/3.
 %:- export timed_call/4.
-:- export get_timed_call_index/1.
 :- export timer_interrupt_trap/2.
 :- export timed_call/2,timed_call_modify/1.
 :- export current_timed_call/2.

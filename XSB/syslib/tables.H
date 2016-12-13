@@ -61,7 +61,7 @@
    log_forest/1, log_forest/2,
    morph_dep_graph/3,
    print_incomplete_tables/0,print_incomplete_tables/1,
-print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks/0, 
+   /*print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks/0, */
            retract_table/1,          /* abolish/1 */
    sdg_scc_info/2, 
    sk_not/1,
@@ -96,10 +96,10 @@ print_ls/0, print_tr/0, print_heap/2, print_cp/1, print_regs/0,	print_all_stacks
 :- export    abolish_table_call/1,       abolish_table_call/2.
 
 /****** Experimental ********/
-:- export find_components/1,
-	find_forward_dependencies/1,
+/*:- export find_components/1,
+	%%find_forward_dependencies/1,
 	%%%find_backward_dependencies/1,
-	find_answers/1.
+	find_answers/1.*/
 :- export early_complete_on_nth/2.
 :- export early_complete_on_delta/4.
 :- export get_scc_dumpfile/1.
