@@ -698,12 +698,12 @@ parse_directive(module(ModIn,X,_Dialect), _QrList,SymTab,ModName,_ModStruct) :- 
 	parse_directive(module(ModIn,X), _QrList,SymTab,ModName,_ModStruct).
 parse_directive(module(ModIn,X), _QrList,SymTab,ModName,_ModStruct) :- !, 	
 	(functor(ModName,ModIn,_) -> 
-	    parse_list(X, SymTab, [ex], (export))
+	    parse_list(X, SymTab, [ex,pred], (export))
 	  ; misc_error(('Declared module name (',ModIn,') must be the same as file base (',ModName,').')) ).
 parse_directive(export(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
-	parse_comma_list(X, SymTab, [ex], (export)).
+	parse_comma_list(X, SymTab, [ex,pred], (export)).
 parse_directive(document_export(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
-	parse_comma_list(X, SymTab, [docex], (document_export)).
+	parse_comma_list(X, SymTab, [docex,pred], (document_export)).
 parse_directive(import(from(X, Mod)), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	(var(Mod)
 	 ->	error(('Module cannot be a variable. Importing: ',X))

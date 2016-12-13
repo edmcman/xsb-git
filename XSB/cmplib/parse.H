@@ -41,10 +41,7 @@
 	xpp_options/1,
 	gpp_options/1,
 	enqueue_preprocessor/1,
-	dequeue_preprocessor/1,
-	'_$multifile'/1, '_$multifile1'/1,
-	'_$multifile2'/3, '_$apply_arity'/1,
-	'_$multifile_retract'/3.
+	dequeue_preprocessor/2.
 :- export parsing_file_name/1.
 
 :- import

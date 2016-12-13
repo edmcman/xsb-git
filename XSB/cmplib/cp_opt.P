@@ -586,11 +586,21 @@ subsumption_modes_trans_pred(Sym,Pscs,Oth,Modes,[pred(Sym1,Pscs,Oth)|NewClList],
 	transform_pred(Pred,Pred1),
 	build_subs_abs_clause_body(Modes,Pred,Pred1,PArgs,Body),
 	PredCall =.. [Pred|PArgs],
-	%standard:writeln(userout,abs_rule(PredCall,Body)),
+	%%print_rule(abs_rule,PredCall,Body),
 	parse_preddef_closed(PredCall,Body,NewClList,SymTab),
 	NewTerm =.. [Pred1|PArgs],
 	parse_preddef_closed(NewTerm,true,[pred(Sym1,_,_)],SymTab), % add to symtab
 	ensure_imported(table_error/1,error_handler,SymTab).
+
+/*print_rule(Label,Head,Body) :-
+	num_vars:numbervars(p(Head,Body)),
+	standard:write(userout,Label),
+	standard:writeln(userout,':'),
+	standard:writeq(userout,Head),standard:writeln(userout,' :-'),
+	standard:write(userout,'  '),standard:writeq(userout,Body),
+	standard:writeln(userout,'.'),
+	fail.
+print_rule(_Label,_Head,_Body).*/
 
 %% Modes must be open tailed...
 build_subs_abs_clause_body(Modes,Pred,Pred1,PArgs,Body) :-
@@ -632,26 +642,34 @@ build_plus_orig_minus_equates([-|Mode],[Var|PArgs],[NV|VListMNew],[Var=NV|Equate
 
 /* generate code for multiple subsumptive tables in different argument
    orders for arbitrary indexing. */
-table_index_trans_pred(Sym,Pscs,Oth,Indexes,[pred(Sym1,Pscs,Oth)|NewClList],SymTab) :-
+table_index_trans_pred(Sym,Pscs,Oth,Indexes,ClList,SymTab) :-
 	sym_name(Sym,Pred,Arity),
-	concat_atom([Pred,'$_base'],BasePredName),
 	collect_orders_from_indexes(Indexes,Arity,OrdSets,IndexOrds),
 	collect_inds_and_perms(OrdSets,IndexOrds,IndPerms0),
 	parsort(IndPerms0,[asc(2)],0,IndPerms),
 	findall(IndPosn,all_indexes(OrdSets,IndPosn),IndPosns0),
 	sort(IndPosns0,IndPosns), 
-	upto_n(1,Arity,StdOrd),  % 1..Arity
-	generate_index_selection_rule(IndPerms,IndPosns,Pred,Arity,StdOrd,(SelHead:-SelBody)),
-	%%standard:writeq(userout,selrule(SelHead,SelBody)),standard:writeln(userout,'.'),
-	parse_preddef_closed(SelHead,SelBody,NewClList,SymTab),
-	tail_var(NewClList,NewClList1),
-
 	findall(IndPosn,in_all_indexes(OrdSets,IndPosn),InAllInds), % posns not to abstract...
-	IndexOrds = [FirstIndOrd|_],
-	functor(BaseHead,BasePredName,Arity),
-	parse_preddef_closed(BaseHead,true,[pred(Sym1,_,_)],SymTab), % add to symtab
-	generate_all_index_rules(IndexOrds,FirstIndOrd,InAllInds,Pred,BasePredName,StdOrd,SymTab,NewClList1),
-	ensure_imported(table_error/1,error_handler,SymTab).
+	upto_n(1,Arity,StdOrd),  % 1..Arity
+	(IndexOrds == [StdOrd]
+	 ->	build_mode(StdOrd,InAllInds,Mode),
+		subsumption_modes_trans_pred(Sym,Pscs,Oth,[Mode|_],ClList,SymTab)
+	 ;	ClList = [pred(Sym1,Pscs,Oth)|NewClList],
+		generate_index_selection_rule(IndPerms,IndPosns,Pred,Arity,StdOrd,(SelHead:-SelBody)),
+		%%print_rule(sel_rule,SelHead,SelBody),
+		parse_preddef_closed(SelHead,SelBody,NewClList,SymTab),
+		tail_var(NewClList,NewClList1),
+		
+		IndexOrds = [FirstIndOrd|_],
+		concat_atom([Pred,'$_base'],BasePredName),
+		functor(BaseHead,BasePredName,Arity),
+		parse_preddef_closed(BaseHead,true,[pred(Sym1,_,_)],SymTab), % add to symtab
+		generate_all_index_rules(IndexOrds,FirstIndOrd,InAllInds,Pred,BasePredName,StdOrd,SymTab,NewClList1),
+		ensure_imported(table_error/1,error_handler,SymTab),
+		ensure_imported(pred_table_pred/2,tables,SymTab),
+		ensure_imported(assert/1,assert,SymTab),
+		ensure_imported(retractall/1,assert,SymTab)
+	).
 
 collect_orders_from_indexes(Indexes,Arity,OrdSets,IndexOrds) :-
 	find_orders(Indexes,OrdSets),
@@ -717,6 +735,7 @@ generate_all_index_rules([IndexOrder|IndexOrds],FirstIndOrd,InAllInds,Pred,BaseP
 	 ;	concat_atom([PredD|FirstIndOrd],'_',FirstPredName),
 		BodyGoal =.. [FirstPredName|BodyVars]
 	),
+	%%standard:writeq(userout,index_rule(Head,BodyGoal)),standard:writeln(userout,'.'),
 	parse_preddef_closed(Head,BodyGoal,[pred(Sym,Pscs,Oth)],SymTab), % just update symtab
 	build_mode(IndexOrder,InAllInds,Mode),
 	subsumption_modes_trans_pred(Sym,Pscs,Oth,[Mode|_],ClList,SymTab),
@@ -757,10 +776,11 @@ collect_arg_pos([set(_,_,List)|Sets],PList,ArgPoses0,ArgPoses) :-
 	append(ArgPoses0,NewArgPoses,ArgPoses1),
 	collect_arg_pos(Sets,List,ArgPoses1,ArgPoses).
 
-%% find_orders(+Indexes,-OrdSets) takes a list of indexes and
-%% returns a list of lists, one for each required argument order.
-%% Such a list is a list of terms set(Len,OrdArgPosList), where Len is
-%% the length of OrdArgPosList, OrdArgPosList is a list of indexed
+%% find_orders(+Indexes,-OrdSets) takes a list of indexes and returns
+%% a list of lists, one for each required argument order.  Such a list
+%% is a list of terms set(Len,I,OrdArgPosList), where Len is the
+%% length of OrdArgPosList, I is the position of this index in the
+%% sequence of indexes, and OrdArgPosList is a list of indexed
 %% argument positions, and each OrdArgPosList in such a list is a
 %% (proper) subset of the following one.
 find_orders(Indexes,OrdSets) :-
@@ -873,10 +893,9 @@ in_all_indexes([OrdSet|OrdSets],Ind) :-
 	in_all_indexes(OrdSets,Ind).
 
 in_all_ordSet([],_).
-in_all_ordSet([set(_,Inds)|OrdSets],Ind) :-
+in_all_ordSet([set(_,_,Inds)|OrdSets],Ind) :-
 	member(Ind,Inds),
 	in_all_ordSet(OrdSets,Ind).
-
 
 parse_preddef_closed(Head,Body,PredList,SymTab) :-
 	functor(Head, Pred, Arity),

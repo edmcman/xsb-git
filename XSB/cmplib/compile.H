@@ -26,7 +26,7 @@
 
 
 :- export compile/4, compile/5, mc/2, abort_if_syntax_errors/1. 
-:- export current_compiled_module/1, check_compiler_options/1.
+:- export current_compiled_module/1.
 :- export file_names/11.
 
 :- import spec/2 from spec.

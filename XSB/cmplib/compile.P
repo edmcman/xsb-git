@@ -58,7 +58,7 @@ handle_compile_error(Basename,IStr,OStr):-
 	sys_unlink(OFile,_), 
 	see(IStr),tell(OStr).
 
-:- import console_writeln/1 from standard.
+%%:- import console_writeln/1 from standard.
 compile_internal(Modname, Basename, Extension,Options, ExportList) :-
 	file_names(Basename, Extension,PFile, HFile, OFile, AFile, DFile,
 		   SpecFile, TIFile, TableFile, _OptFile),
