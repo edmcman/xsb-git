@@ -501,7 +501,8 @@ load(PModName) :-
 	  ->	 compile_and_load(FileName_CPP,PModName)
 	 )
 	 ->	true
-	 ; (search_file(ModName, [FileName], ['']),
+	 ; (PModName = usermod(_),
+	    search_file(ModName, [FileName], ['']),
 	    local_file_exists(FileName))
 	 ->	compile_and_load(FileName,PModName)
 	 ;	tilde_expand_filename(ModName,ExpandedModName), % file not found
