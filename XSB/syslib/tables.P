@@ -697,6 +697,7 @@ abolish_all_tables :-
 	   reinitialize_undefineds.
 
 :- import table_index_predicates/2 from standard.
+% TES: predicate does not seem to work if abolish_table_pred_bi is not last (?) 
 abolish_table_pred(Spec,Options) :-
 	check_nonvar(Spec,abolish_table_pred/2,1),
 	(Spec = M:Goal -> 
@@ -708,9 +709,9 @@ abolish_table_pred(Spec,Options) :-
 	 ->	table_index_predicates(Term,TTerm)
 	 ;	TTerm = Term
 	),		
-	abolish_table_pred_bi(TTerm,ActionType),
-	fail.
-abolish_table_pred(_Spec,_Options).
+	abolish_table_pred_bi(TTerm,ActionType).
+%	fail.
+%abolish_table_pred(_Spec,_Options).
 
 abolish_table_pred(Spec) :- abolish_table_pred(Spec,[]).
 
@@ -764,7 +765,7 @@ check_abolish_options_list([Option|_Rest],ActionType,Pred):- !,
 check_abolish_options_list(Culprit,_ActionType,Pred):- 
 	type_error(list,Culprit,Pred,2).
 
-/* TLS: Action on call subsumption is to delete producer for consumer
+/* TES: Action on call subsumption is to delete producer for consumer
    calls. get_calls/3 automatically finds all producers, so there is
    no action we need to take for consumer calls.
 
@@ -1722,7 +1723,7 @@ scc_depends_1([Scc1|R],Scc2,In,Out,Sign):-
 scc_depends_2(SCC1,SCC2,depends(Comp1,Comp2)):-
 	member(ret(Comp1,AnsPtr),SCC1),
 %	writeln(ret(Comp1,AnsPtr)),
-	AnsPtr \== 0,  % TLS: fix
+	AnsPtr \== 0,  % TES: fix
 	table_inspection_function(IMMED_ANS_DEPENDS_PTRLIST, AnsPtr, PtrList,_,_),
 	member(ret(AnsPtr1,_),PtrList),
 	member(ret(Comp2,AnsPtr1),SCC2).
@@ -1730,7 +1731,7 @@ scc_depends_2(SCC1,SCC2,depends(Comp1,Comp2)):-
 scc_self_depends(SCC,Comp,neg):- 
 	member(ret(Comp,AnsPtr),SCC),
 %	writeln(ret(Comp,AnsPtr)),
-	AnsPtr \== 0,  % TLS: fix
+	AnsPtr \== 0,  % TES: fix
 	table_inspection_function(IMMED_ANS_DEPENDS_PTRLIST, AnsPtr, PtrList,_,_),
 	member(ret(AnsPtr1,IS_SUBGOAL_FRAME),PtrList),
 	member(ret(_Comp,AnsPtr1),SCC),
