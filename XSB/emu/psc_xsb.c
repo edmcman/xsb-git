@@ -472,6 +472,7 @@ Psc get_ret_psc(int n)
   Pair temp;
   int new_indicator;
 
+  if (n > MAX_ARITY) xsb_abort("Trying to get a ret_psc with too large an arity; too many variables");
   if (!ret_psc[n]) {
     temp = (Pair) insert("ret", (byte) n, global_mod, &new_indicator);
     ret_psc[n] = pair_psc(temp);

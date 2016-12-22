@@ -1198,19 +1198,19 @@ if (wasRederived) {
     }
     else {
       if (template_size == 0 || subg_is_ec_scheduled(producer_sf) ) {
-        /*                                                                                                                     
-         *  The table is for a ground call which we just proved true.                                                           
-         *  (We entered an ESCAPE Node, above, to note this fact in the                                                         
-         *  table.)  As we only need to do this once, we perform "early                                                         
-         *  completion" by ignoring the other clauses of the predicate                                                          
-         *  and setting the failure continuation (next_clause) field of                                                         
-         *  the CPF to a check_complete instr.                                                                               
-         *                                                                                                                      
+        /*
+         *  The table is for a ground call which we just proved true.
+         *  (We entered an ESCAPE Node, above, to note this fact in the
+         *  table.)  As we only need to do this once, we perform "early
+         *  completion" by ignoring the other clauses of the predicate
+         *  and setting the failure continuation (next_clause) field of
+         *  the CPF to a check_complete instr.
+         *
          */
-        /*                                                                                                                      
-                printf("performing early completion for: (%d)",subg_is_complete(producer_sf));                                 
-                print_subgoal(CTXTc stddbg, producer_sf);                                                                      
-                printf("(breg: %x pcpf %x\n",breg,producer_cpf);alt_print_cp(CTXTc"ec");                                      
+        /*
+                printf("performing early completion for: (%d)",subg_is_complete(producer_sf));
+                print_subgoal(CTXTc stddbg, producer_sf);
+                printf("(breg: %x pcpf %x\n",breg,producer_cpf);alt_print_cp(CTXTc"ec");
 	*/
 	perform_early_completion(CTXTc producer_sf, producer_cpf);
 #if defined(LOCAL_EVAL)
