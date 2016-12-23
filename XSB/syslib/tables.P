@@ -705,13 +705,17 @@ abolish_table_pred(Spec,Options) :-
 	    term_new_mod(M,TermIn,Term)
 	  ; (Spec = F/A -> functor(Term,F,A) ; Term = Spec)),
 	check_abolish_options_list(Options,ActionType,abolish_table_pred/2),
-	(table_index_predicates(Term,_)
-	 ->	table_index_predicates(Term,TTerm)
-	 ;	TTerm = Term
-	),		
-	abolish_table_pred_bi(TTerm,ActionType).
-%	fail.
-%abolish_table_pred(_Spec,_Options).
+	(\+table_index_predicates(Term,_)
+	 ->	abolish_table_pred_bi(Term,ActionType)
+	 ;	findall(TTerm,table_index_predicates(Term,TTerm),TTerms),
+		%% no failure-driven loop; breaks cascaded abolishes.
+		abolish_table_pred_bi_all(TTerms,ActionType)
+	).
+
+abolish_table_pred_bi_all([],_ActionType).
+abolish_table_pred_bi_all([Term|Terms],ActionType) :-
+	abolish_table_pred_bi(Term,ActionType),
+	abolish_table_pred_bi_all(Terms,ActionType).
 
 abolish_table_pred(Spec) :- abolish_table_pred(Spec,[]).
 
@@ -2197,7 +2201,7 @@ table_counts(Module,Pred,Arity,CallCnt,AnsCnt) :-
 	).
 
 
-end_of_file.
+%end_of_file.
 
 :- export explain_u_val/4.
 :- import brat_undefined/0 from xsbbrat.
@@ -2236,6 +2240,8 @@ find_forward_dependencies(Call):-
 
 find_answers(Pred):- 
 	table_inspection_function(FIND_ANSWERS,Pred,_,_,_).
+
+end_of_file.
 
 print_ls :- table_inspection_function(PRINT_LS,_,_,_,_).
 print_tr :- table_inspection_function(PRINT_TR,_,_,_,_).
