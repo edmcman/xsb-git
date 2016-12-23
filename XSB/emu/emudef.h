@@ -100,6 +100,7 @@ Pair list_pscPair;
 
 Psc list_psc, comma_psc, true_psc, if_psc, colon_psc, caret_psc, ccall_mod_psc, c_callloop_psc, dollar_var_psc;
 Psc tnot_psc, delay_psc, cond_psc, cut_psc, load_undef_psc, setof_psc, bagof_psc;
+Psc forall2_psc, forall3_psc, forall4_psc;
 Psc box_psc, visited_psc, answer_completion_psc;
 /*
  * Ret PSC's are used to store substitution factors for subgoal calls

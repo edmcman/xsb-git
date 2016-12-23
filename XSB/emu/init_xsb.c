@@ -1613,6 +1613,10 @@ void init_symbols(CTXTdecl)
   caret_psc = make_code_psc_rec(CTXTc "^", 2, setofmod_psc);
   setof_psc = make_code_psc_rec(CTXTc "setof", 3, setofmod_psc);
   bagof_psc = make_code_psc_rec(CTXTc "bagof", 3, setofmod_psc);
+  forall2_psc = make_code_psc_rec(CTXTc "forall", 2, setofmod_psc);
+  forall3_psc = make_code_psc_rec(CTXTc "forall", 3, setofmod_psc);
+  forall4_psc = make_code_psc_rec(CTXTc "forall", 4, setofmod_psc);
+
   cut_psc = make_code_psc_rec(CTXTc "!", 0, standard_psc);
   cond_psc = make_code_psc_rec(CTXTc "->", 2, standard_psc);
   dollar_var_psc = make_code_psc_rec(CTXTc "$VAR", 1, global_mod);

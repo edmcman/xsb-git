@@ -998,7 +998,7 @@ CPtr excess_vars(CTXTdeclc Cell term, CPtr varlist, int ifExist,
     psc = get_str_psc(term);
     arity = (int) get_arity(psc);
     if (arity == 0) return varlist;
-    if (psc == caret_psc && ifExist) {
+    if (ifExist && (psc == caret_psc || psc == forall2_psc)) {
       CPtr *save_templ_base;
       save_templ_base = templ_trail->ltrail_top;
       make_ground(get_str_arg(term,1), templ_trail);
@@ -1006,7 +1006,7 @@ CPtr excess_vars(CTXTdeclc Cell term, CPtr varlist, int ifExist,
       undo_ltrail_bindings(templ_trail,save_templ_base);
       return varlist;
     }
-    if (ifExist && (psc == setof_psc || psc == bagof_psc)) {
+    if (ifExist && (psc == setof_psc || psc == bagof_psc || psc == forall3_psc)) {
       CPtr *save_templ_base;
       save_templ_base = templ_trail->ltrail_top;
       make_ground(get_str_arg(term,1), templ_trail);
@@ -1015,10 +1015,20 @@ CPtr excess_vars(CTXTdeclc Cell term, CPtr varlist, int ifExist,
       undo_ltrail_bindings(templ_trail,save_templ_base);
       return varlist;
     }
-      for (i = 1; i < arity; i++) {
-	varlist = excess_vars(CTXTc get_str_arg(term,i), varlist, ifExist, templ_trail, var_trail);
-      }
-      term = get_str_arg(term,arity);
+    if (ifExist && (psc == forall4_psc)) {
+      CPtr *save_templ_base;
+      save_templ_base = templ_trail->ltrail_top;
+      make_ground(get_str_arg(term,1), templ_trail);
+      make_ground(get_str_arg(term,3), templ_trail);
+      varlist = excess_vars(CTXTc get_str_arg(term,2),varlist,ifExist,templ_trail,var_trail);
+      varlist = excess_vars(CTXTc get_str_arg(term,4),varlist,ifExist,templ_trail,var_trail);
+      undo_ltrail_bindings(templ_trail,save_templ_base);
+      return varlist;
+    }
+    for (i = 1; i < arity; i++) {
+      varlist = excess_vars(CTXTc get_str_arg(term,i), varlist, ifExist, templ_trail, var_trail);
+    }
+    term = get_str_arg(term,arity);
   }
     goto begin_excess_vars;
   case XSB_LIST:
