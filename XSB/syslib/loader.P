@@ -87,11 +87,14 @@ local_newerthan(File1,File2) :-
 	sys_system(STAT_FILE_TIME,File2,Time2,_,_,_,_),
 	Time1 @>= Time2.
 
-sys_system(STAT_FILE_TIME,FileName,Time, _,_,_,_) :-
-	sys_system(STAT_FILE_TIME,FileName,Time, _,_,_,_).
+sys_system(Code,Arg1,Arg2, _,_,_,_) :-
+	sys_system(Code,Arg1,Arg2, _,_,_,_).
 
 local_append([],L,L).
 local_append([X|L1],L2,[X|L3]) :- local_append(L1,L2,L3).
+
+local_member(X,[X|_]).
+local_member(X,[_|L]) :- local_member(X,L).
 
 %% PModName is full module parameterized name as an atom.  e.g., could be
 %%  'mymod(amod,bmod)' or
@@ -478,71 +481,38 @@ load(PModName) :-
 	),
 	unstructure_modname(PModName,ModName,ModPars),
 
-	%% following is like a once, with an else clause (if-then-else in a conditional of an if-then-else)
-	(search_file(ModName, [FileName_O,FileName_P,FileName_PL,FileName_PROLOG,FileName_H,FileName_C,
-			       FileName_CPP],
-		     [XSB_OBJ_EXTENSION_ATOM,XSB_SRC_EXTENSION_ATOM,'.pl','.prolog',XSB_HDR_EXTENSION_ATOM,'.c',
+	(search_file(ModName, [FileName_O,FileName_H|SourceFileNames],
+		     [XSB_OBJ_EXTENSION_ATOM,XSB_HDR_EXTENSION_ATOM,XSB_SRC_EXTENSION_ATOM,'.pl','.prolog','.c',
 		      '.cpp']),
-	 (local_file_exists(FileName_O)
-	  ->	(system_mod(FileName_O)	% DONT CHECK TIME but load byte-code regardless if in XSB system 
-		 ->	load_object_file(FileName_O,ModPars) % (allows self recompile, could just exempt cmplib and syslib)
-		 ;	check_times_and_load(FileName_O,FileName_P,FileName_PL,FileName_PROLOG,FileName_H,FileName_C,FileName_CPP,PModName,ModPars)
-		)
+	 (local_file_exists(FileName_O),
+	  %% byte-code file exists
+	  (system_mod(FileName_O)	% Always load byte-code file from system
+	   ->	  load_object_file(FileName_O,ModPars) % (allows self recompile, could just exempt cmplib and syslib)
+	   ;	  check_times_and_load(FileName_O,FileName_H,SourceFileNames,PModName,ModPars)
+	  )
+	  ;
 	  %% no byte-code file, compile sourcefile
-	  ; local_file_exists(FileName_P)
-	  ->	 compile_and_load(FileName_P,PModName)
-	  ; local_file_exists(FileName_PL)
-	  ->	 compile_and_load(FileName_PL,PModName)
-	  ; local_file_exists(FileName_PROLOG)
-	  ->	compile_and_load(FileName_PROLOG,PModName)
-	  ; local_file_exists(FileName_C)
-	  ->	 compile_and_load(FileName_C,PModName)
-	  ; local_file_exists(FileName_CPP)
-	  ->	 compile_and_load(FileName_CPP,PModName)
+	  local_member(FileName_X,SourceFileNames),
+	  local_file_exists(FileName_X),
+	  compile_and_load(FileName_X,PModName)
 	 )
 	 ->	true
 	 ; (PModName = usermod(_),
 	    search_file(ModName, [FileName], ['']),
-	    local_file_exists(FileName))
+	    local_is_directory(FileName)
+	   )
 	 ->	compile_and_load(FileName,PModName)
 	 ;	tilde_expand_filename(ModName,ExpandedModName), % file not found
 		existence_error(module,ExpandedModName,load,1)
 	).
 
-check_times_and_load(FileName_O,FileName_P,FileName_PL,FileName_PROLOG,FileName_H,FileName_C,FileName_CPP,PModName,ModPars) :-
-	(local_file_exists(FileName_P)
-	 ->	(local_newerthan(FileName_P,FileName_O) % check if source is newer
-		 ->	compile_and_load(FileName_P,PModName)
-		 ; (local_file_exists(FileName_H),local_newerthan(FileName_H,FileName_O))
-		 ->	compile_and_load(FileName_P,PModName)
-		 ;	load_object_file(FileName_O,ModPars) % load byte-code, it's newest
-		)
-	 ; local_file_exists(FileName_PL)
-	 ->	(local_newerthan(FileName_PL,FileName_O) % check if source is newer
-		 ->	compile_and_load(FileName_PL,PModName)
-		 ; (local_file_exists(FileName_H),local_newerthan(FileName_H,FileName_O))
-		 ->	compile_and_load(FileName_P,PModName)
-		 ;	load_object_file(FileName_O,ModPars) % load byte-code, it's newest
-		)
-	 ; local_file_exists(FileName_PROLOG)
-	 ->	(local_newerthan(FileName_PROLOG,FileName_O) % check if source is newer
-		 ->	compile_and_load(FileName_PROLOG,PModName)
-		 ; (local_file_exists(FileName_H),local_newerthan(FileName_H,FileName_O))
-		 ->	compile_and_load(FileName_PROLOG,PModName)
-		 ;	load_object_file(FileName_O,ModPars) % load byte-code, it's newest
-		)
-	 ; local_file_exists(FileName_C)
-	 ->	(local_newerthan(FileName_C,FileName_O) % check if source is newer
-		 ->	compile_and_load(FileName_C,PModName)
-		 ; (local_file_exists(FileName_H),local_newerthan(FileName_H,FileName_O))
-		 ->	compile_and_load(FileName_C,PModName)
-		 ;	load_object_file(FileName_O,ModPars) % load byte-code, it's newest
-		)
-	 ; local_file_exists(FileName_CPP)
-	 ->	(local_newerthan(FileName_CPP,FileName_O) % check if source is newer
-		 ->	compile_and_load(FileName_CPP,PModName)
-		 ; (local_file_exists(FileName_H),local_newerthan(FileName_H,FileName_O))
-		 ->	compile_and_load(FileName_CPP,PModName)
+check_times_and_load(FileName_O,FileName_H,SourceFileNames,PModName,ModPars) :-
+	(local_member(FileName_X,SourceFileNames),
+	 local_file_exists(FileName_X)
+	 ->	(local_newerthan(FileName_X,FileName_O) % check if source is newer
+		 ->	compile_and_load(FileName_X,PModName)
+		 ;	(local_file_exists(FileName_H),local_newerthan(FileName_H,FileName_O))
+		 ->	compile_and_load(FileName_X,PModName)
 		 ;	load_object_file(FileName_O,ModPars) % load byte-code, it's newest
 		)
 	 ;	load_object_file(FileName_O,ModPars) % load byte-code, no source-file
@@ -587,6 +557,7 @@ local_cd_throw(Dir,Ball) :-
 	local_cd(Dir),
 	throw(Ball).
 
+local_is_directory(File) :- sys_system(IS_DIRECTORY, File,_,_,_,_,_).
 
 %% compile the source file, and then reload the module
 compile_and_load(FileNameList,PModName) :-
