@@ -600,7 +600,7 @@ subsumption_modes_trans_pred(Sym,Pscs,Oth,Modes,[pred(Sym1,Pscs,Oth)|NewClList],
 	standard:write(userout,'  '),standard:writeq(userout,Body),
 	standard:writeln(userout,'.'),
 	fail.
-print_rule(_Label,_Head,_Body).*/
+print_rule(_Label,_Head,_Body). **/
 
 %% Modes must be open tailed...
 build_subs_abs_clause_body(Modes,Pred,Pred1,PArgs,Body) :-
@@ -649,11 +649,13 @@ table_index_trans_pred(Sym,Pscs,Oth,Indexes,ClList,SymTab) :-
 	parsort(IndPerms0,[asc(2)],0,IndPerms),
 	findall(IndPosn,all_indexes(OrdSets,IndPosn),IndPosns0),
 	sort(IndPosns0,IndPosns), 
-	findall(IndPosn,in_all_indexes(OrdSets,IndPosn),InAllInds), % posns not to abstract...
 	upto_n(1,Arity,StdOrd),  % 1..Arity
 	(IndexOrds == [StdOrd]
-	 ->	build_mode(StdOrd,InAllInds,Mode),
-		subsumption_modes_trans_pred(Sym,Pscs,Oth,[Mode|_],ClList,SymTab)
+	 ->	OrdSets = [OrdSet],
+		standard:writeln(userout,stdordset=OrdSet),
+		build_modes(OrdSet,StdOrd,ModeList),
+		standard:writeln(userout,mde=ModeList),
+		subsumption_modes_trans_pred(Sym,Pscs,Oth,ModeList,ClList,SymTab)
 	 ;	ClList = [pred(Sym1,Pscs,Oth)|NewClList],
 		generate_index_selection_rule(IndPerms,IndPosns,Pred,Arity,StdOrd,(SelHead:-SelBody)),
 		%%print_rule(sel_rule,SelHead,SelBody),
@@ -664,7 +666,7 @@ table_index_trans_pred(Sym,Pscs,Oth,Indexes,ClList,SymTab) :-
 		concat_atom([Pred,'$_base'],BasePredName),
 		functor(BaseHead,BasePredName,Arity),
 		parse_preddef_closed(BaseHead,true,[pred(Sym1,_,_)],SymTab), % add to symtab
-		generate_all_index_rules(IndexOrds,FirstIndOrd,InAllInds,Pred,BasePredName,StdOrd,SymTab,NewClList1),
+		generate_all_index_rules(IndexOrds,FirstIndOrd,OrdSets,Pred,BasePredName,StdOrd,SymTab,NewClList1),
 		ensure_imported(table_error/1,error_handler,SymTab),
 		ensure_imported(pred_table_pred/2,tables,SymTab),
 		ensure_imported(assert/1,assert,SymTab),
@@ -724,8 +726,8 @@ gen_pred_call(Pred,HeadOrd,BodyOrd,HeadVars,Call) :-
 	concat_atom([PredD|BodyOrd],'_',CallPred),
 	Call =.. [CallPred|CallArgs].
 
-generate_all_index_rules([],_FirstIndOrd,_InAllInds,_Pred,_BasePredName,_StdOrd,_SymTab,_ClList).
-generate_all_index_rules([IndexOrder|IndexOrds],FirstIndOrd,InAllInds,Pred,BasePredName,StdOrd,SymTab,ClList) :-
+generate_all_index_rules([],_FirstIndOrd,_OrdSets,_Pred,_BasePredName,_StdOrd,_SymTab,_ClList).
+generate_all_index_rules([IndexOrder|IndexOrds],FirstIndOrd,[OrdSet|OrdSets],Pred,BasePredName,StdOrd,SymTab,ClList) :-
 	concat_atom([Pred,'$'],PredD),
 	concat_atom([PredD|IndexOrder],'_',PredName),
 	corresponding_vars(IndexOrder,StdOrd,HeadVars,BodyVars),
@@ -735,12 +737,22 @@ generate_all_index_rules([IndexOrder|IndexOrds],FirstIndOrd,InAllInds,Pred,BaseP
 	 ;	concat_atom([PredD|FirstIndOrd],'_',FirstPredName),
 		BodyGoal =.. [FirstPredName|BodyVars]
 	),
-	%%standard:writeq(userout,index_rule(Head,BodyGoal)),standard:writeln(userout,'.'),
 	parse_preddef_closed(Head,BodyGoal,[pred(Sym,Pscs,Oth)],SymTab), % just update symtab
-	build_mode(IndexOrder,InAllInds,Mode),
-	subsumption_modes_trans_pred(Sym,Pscs,Oth,[Mode|_],ClList,SymTab),
+	build_modes(OrdSet,IndexOrder,ModeList),
+	subsumption_modes_trans_pred(Sym,Pscs,Oth,ModeList,ClList,SymTab),
 	tail_var(ClList,ClList1),
-	generate_all_index_rules(IndexOrds,FirstIndOrd,InAllInds,Pred,BasePredName,StdOrd,SymTab,ClList1).
+	generate_all_index_rules(IndexOrds,FirstIndOrd,OrdSets,Pred,BasePredName,StdOrd,SymTab,ClList1).
+
+:- import parsort/4 from machine.
+build_modes(OrdSets,IndexOrder,ModeList) :-
+	parsort(OrdSets,[asc(2)],0,OrdOrdSets),
+	build_modes_1(OrdOrdSets,IndexOrder,ModeList).
+
+%%build_modes(OrdSets,IndexOrder,ModeList)
+build_modes_1([],_IndexOrder,_ModeList). % modelist must be open tailed
+build_modes_1([set(_,_,IndexArgs)|OrdSets],IndexOrder,[Mode|ModeList]) :-
+	build_mode(IndexOrder,IndexArgs,Mode),
+	build_modes_1(OrdSets,IndexOrder,ModeList).
 
 build_mode([],_All,[]).
 build_mode([I|Is],All,[M|Ms]) :-
@@ -886,16 +898,6 @@ equate_corresponding_vars([I|Is],K,Js,IVarList,JVarList) :-
 	ith(J,JVarList,Var),
 	K1 is K+1,
 	equate_corresponding_vars(Is,K1,Js,IVarList,JVarList).
-
-in_all_indexes([],_).
-in_all_indexes([OrdSet|OrdSets],Ind) :-
-	in_all_ordSet(OrdSet,Ind),
-	in_all_indexes(OrdSets,Ind).
-
-in_all_ordSet([],_).
-in_all_ordSet([set(_,_,Inds)|OrdSets],Ind) :-
-	member(Ind,Inds),
-	in_all_ordSet(OrdSets,Ind).
 
 parse_preddef_closed(Head,Body,PredList,SymTab) :-
 	functor(Head, Pred, Arity),
