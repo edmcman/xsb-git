@@ -45,8 +45,8 @@ and might look like the following:
              library_directory('~my_friend/').
              library_directory('/usr/lib/sbprolog/').
 \end{verbatim}
-Note that all directories specified in predicate {\tt library\_directory/1}
-must end with a {\tt '/'}.  After loading the module of the above 
+(The precise form of the directory names is operating system dependent.)
+After loading the module of the above 
 example, the current working directory is searched first (as opposed to the
 default action of searching it last).  Also, \ourprolog's system
 library directories ({\tt lib, syslib}, and {\tt cmplib}), will now
