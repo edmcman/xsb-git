@@ -1853,7 +1853,7 @@ exponential time to fail, since it will construct all the
 exponentially many partial parse trees for the initial $k$ {\tt a}'s.
 We would like the parser in this case to fail in polynomial time.  We
 can do this by representing the parse trees as a term-set during the
-recognition the string.  Then after the string is recognized, we
+recognition of the string.  Then after the string is recognized, we
 extensionalize the set-term that represents the parse trees.  In this
 way we can get the behavior we want.  The set-term that represents the
 parse trees for any grammar will be constructed in polynomial time;
@@ -1868,8 +1868,8 @@ the grammar by adding to the above program the declaration:
 which tells XSB to use the term-set representation of the first
 argument of nonterminal {\tt a/3}.
 
-With this declaration, XSB transforms the above program into the
-following:
+With this declaration, the XSB compiler transforms the above program
+into the following:
 \begin{verbatim}
 :- table a/3.
 
