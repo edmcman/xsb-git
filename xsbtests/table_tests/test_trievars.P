@@ -1,3 +1,4 @@
+
 :- import new_trie/1, trie_intern/2,trie_interned/2 from intern.
 :- import trie_intern/4 from intern.
 :- import numbervars/1 from num_vars.
@@ -6,8 +7,8 @@
 test:- test_intern,test_assert,test_table.
 
 test_intern:- 
-       test_intern_1(800),
-       catch(test_intern_2(1000),error(A,context(_B,_C)),writeln(A)).
+       catch(test_intern_1(800),error(A,context(_B,_C)),writeln(A)),
+       catch(test_intern_2(1000),error(A,context(_B,_C)),writeln((test_intern_2(A)))).
 
 test_intern_1(N):- 
        new_trie(Trie),
@@ -55,7 +56,7 @@ test_assert_1(_N).
 p_table(_).
 
 test_table:- 
-       test_table_1(800).
+       catch(test_table_1(800),error(A,context(_B,_C)),writeln(test_table(A,_B))).
 
 test_table_1(N):- 
        makevarlist(N,L),

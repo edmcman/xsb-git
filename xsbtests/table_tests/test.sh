@@ -120,7 +120,7 @@ rm test_ec.xwam
 #--------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_table_dump "test."
 #--------------------------------------------------
-../gentest.sh "$XEMU -l $options" test_ec "test."
+#../gentest.sh "$XEMU -l $options" test_ec "test."
 #--------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_cyclic_tabling "test."
 #--------------------------------------------------

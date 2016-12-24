@@ -1,4 +1,4 @@
 assert_length(800)
 intern_length(800)
-representation_error(less than MAX_ARITY)
-table_length(800)
+test_intern_2(representation_error(less than MAX_ARITY))
+test_table(misc_error, Trying to get a ret_psc with too large an arity; too many variables)
