@@ -116,7 +116,7 @@ EOF
 #--------------------------------------------------
 ../agentest.sh "$XEMU -l $options" test_table_dump "test."
 #--------------------------------------------------
-../agentest.sh "$XEMU -l $options" test_ec "test."
+#../agentest.sh "$XEMU -l $options" test_ec "test."
 #--------------------------------------------------
 ../agentest.sh "$XEMU -l $options" test_cyclic_tabling "test."
 #--------------------------------------------------
