@@ -1,4 +1,4 @@
-/* File:      call_graph_xsb.c
+/* File: call_graph_xsb.c
 ** Author(s): Diptikalyan Saha, C. R. Ramakrishnan, Swift
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
@@ -71,6 +71,9 @@
 
 extern int prolog_call0(CTXTdeclc Cell);
 extern int prolog_code_call(CTXTdeclc Cell, int);
+extern BTNptr TrieNodeFromCP(CPtr);
+extern ALNptr traverse_variant_answer_trie( VariantSF, CPtr, CPtr) ;
+extern Cell list_of_answers_from_answer_list(VariantSF,int,int,ALNptr);
 
 /* 
 Terminology: outedge -- pointer to calls that depend on call
@@ -125,6 +128,32 @@ DEFINE_HASHTABLE_ITERATOR_SEARCH(search_itr_some, KEY);
 
 /*****************************************************************************/
 /* Debugging */
+
+void print_trieinsts_in_cpstack() {
+  CPtr cp_outer_iter,bottom_of_cpstack;
+  byte cp_inst;  BTNptr trieNode;
+  VariantSF subgoal;                                                                                                  
+                                                                                                                      
+  cp_outer_iter = breg ;                                                                                              
+  bottom_of_cpstack = (CPtr)(tcpstack.high) - CP_SIZE;                                                                
+                                                                                                                      
+  printf("-------- CPstack top\n");                                                                                   
+  while ( cp_outer_iter < bottom_of_cpstack ) {                                                                       
+    cp_inst = *(byte *)*cp_outer_iter;                                                                                
+    if ( is_trie_instruction(cp_inst) ) {
+      trieNode = TrieNodeFromCP(cp_outer_iter);
+      if (IsInAnswerTrie(trieNode)) {
+        subgoal = get_subgoal_frame_for_answer_trie_cp(CTXTc trieNode,cp_outer_iter);
+        printf("AnsTrie: breg %p node %p instr %x subgoal %p\n",cp_outer_iter,trieNode,cp_inst,subgoal);
+      }
+      else printf("Trie: breg %p node %p instr %x\n",cp_outer_iter,trieNode,cp_inst);
+    }
+    else printf("NonTrie: breg %p \n",cp_outer_iter);
+    cp_outer_iter = cp_prevtop(cp_outer_iter);
+  }
+  printf("-------- CPstack bottom\n");
+}
+
 
 void print_call_list(CTXTdeclc calllistptr affected_ptr,char * string) {
 
@@ -426,7 +455,7 @@ void initoutedges(CTXTdeclc callnodeptr cn){
   outedgeptr out;
 
 #ifdef INCR_DEBUG
-  printf("Initoutedges for ");  print_callnode(CTXTc stddbg, cn);  printf(" (id %d) \n",cn->id);
+  printf("Initaffectsedges for ");  print_callnode(CTXTc stddbg, cn);  printf(" (id %d) \n",cn->id);
 #endif
 
   SM_AllocateStruct(smOutEdge,out);
@@ -565,7 +594,7 @@ callnodeptr delete_calllist_elt(CTXTdeclc calllistptr *cl){
   callnodeptr c;
 
   #ifdef INCR_DEBUG1
-    printf(" in deallocate call list elt %p *%p\n",cl,*cl);
+    printf(" in delete_calllist_elt %p *%p\n",cl,*cl);
   #endif
   c = (*cl)->item;
   tmp = *cl;
@@ -733,7 +762,7 @@ static void dfs_outedges(CTXTdeclc callnodeptr call1,xsbBool inval_context){
  *  add_callnode(&affected_gl,call1);		
  * }
  * */
-// TLS: factored out this warning because dfs_inedges is recursive and
+// TES: factored out this warning because dfs_inedges is recursive and
 // this makes the stack frames too big. 
 void dfs_inedges_warning(CTXTdeclc callnodeptr call1,calllistptr *lazy_affected_ptr) {
   deallocate_call_list(CTXTc *lazy_affected_ptr);
@@ -742,15 +771,16 @@ void dfs_inedges_warning(CTXTdeclc callnodeptr call1,calllistptr *lazy_affected_
 	     subg_visitors(call1->goal),forest_log_buffer_1->fl_buffer);
   }
 
-extern BTNptr TrieNodeFromCP(CPtr);
-extern ALNptr traverse_variant_answer_trie( VariantSF, CPtr, CPtr) ;
-extern Cell list_of_answers_from_answer_list(VariantSF,int,int,ALNptr);
 
-//extern int instr_flag;
-extern CPtr hreg_pos;
+/*
+   (1) the inner iteration checks for a trie_fail instruction, as this                                  
+   instruction is setup for incremental tries in order to decrement                                     
+   its visitors field when backtracking from the last answer in the                                     
+   trie.                                                                                                
+*/
 
 void find_the_visitors(CTXTdeclc VariantSF subgoal) {
-  CPtr cp_top1,cp_bot1 ; CPtr cp_root; 
+  CPtr cp_outer_iter,bottom_of_cpstack ; CPtr cp_root; 
   #ifdef INCR_DEBUG1
   CPtr cp_first;
   #endif
@@ -763,71 +793,80 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
   printf("find the visitors: subg %p trie root %p\n",subgoal,subg_ans_root_ptr(subgoal));
 #endif
 
-  cp_top1 = breg ;				 
-  cp_bot1 = (CPtr)(tcpstack.high) - CP_SIZE;
+  cp_outer_iter = breg ;				 
+  bottom_of_cpstack = (CPtr)(tcpstack.high) - CP_SIZE;
   if (xwammode && hreg < hfreg) {
     xsb_warn(CTXTc "find_the_visitors: hreg was less than hfreg at start of function.  Trouble may arise.\n");
     hreg = hfreg;
   }
-  while ( cp_top1 < cp_bot1 ) {
-    //    printf("1 cp_top1 %p cp_bot1 %p prev %p\n",cp_top1,cp_bot1,cp_prevtop(cp_top1));
-    cp_inst = *(byte *)*cp_top1;
-    // Want trie insts, but need to distinguish from asserted and interned tries
+  if (xwammode && breg > bfreg) {
+    xsb_warn(CTXTc "find_the_visitors: breg was less than bfreg at start of function.  Trouble may arise.\n");
+  }
+  while ( cp_outer_iter < bottom_of_cpstack ) { 
+    //    printf("1 cp_outer_iter %p bottom_of_cpstack %p prev %p\n",cp_outer_iter,bottom_of_cpstack,cp_prevtop(cp_outer_iter));
+    cp_inst = *(byte *)*cp_outer_iter;
+    // Want trie insts, but need to distinguish between asserted and interned tries
     //    printf("cp_inst %x\n",cp_inst);
     if ( is_trie_instruction(cp_inst) ) {
       //      printf("found trie instr\n");
       // Below we want basic_answer_trie_tt, ts_answer_trie_tt
-      trieNode = TrieNodeFromCP(cp_top1);
+      trieNode = TrieNodeFromCP(cp_outer_iter);
       if (IsInAnswerTrie(trieNode)) {
 	//	printf("in answer trie\n");
-	if (subgoal == get_subgoal_frame_for_answer_trie_cp(CTXTc trieNode,cp_top1))  {
+	if (subgoal == get_subgoal_frame_for_answer_trie_cp(CTXTc trieNode,cp_outer_iter))  {
 #ifdef INCR_DEBUG1
-	  printf("found top of run %p ",cp_top1);
+	  printf("found top of run %p ",cp_outer_iter);
 	  print_subgoal(CTXTc stdout, subgoal); printf("\n");
 #endif
-	   cp_root = cp_top1; 
+	   cp_root = cp_outer_iter; 
 #ifdef INCR_DEBUG1
-	  cp_first = cp_top1;
+	  cp_first = cp_outer_iter;
 #endif
-	  while (*cp_pcreg(cp_root) != trie_fail) {
+	  while (*cp_pcreg(cp_root) != trie_fail) { /* see (1) above */
 	  #ifdef INCR_DEBUG1
 	    cp_first = cp_root;
 	  #endif
 	    cp_root = cp_prevbreg(cp_root);
-	    if (*cp_pcreg(cp_root) != trie_fail && 
-		subgoal != get_subgoal_frame_for_answer_trie_cp(CTXTc TrieNodeFromCP(cp_root),cp_top1))
-	      xsb_warn(CTXTc "find_the_visitors: couldn't find incr trie root -- trouble may arise (%p)\n",cp_root);
-	  }
-	  ALNlist = traverse_variant_answer_trie(subgoal, cp_root,cp_top1);
+   	  }
+	  //	    if (*cp_pcreg(cp_root) != trie_fail && 
+	  //		subgoal != get_subgoal_frame_for_answer_trie_cp(CTXTc TrieNodeFromCP(cp_root),cp_root))
+	  //	      xsb_warn(CTXTc "find_the_visitors: couldn't find incr trie root -- trouble may arise (%p)\n",cp_root);
+	  if (subgoal != get_subgoal_frame_for_answer_trie_cp(CTXTc TrieNodeFromCP(cp_root),cp_root))
+	    xsb_warn(CTXTc "find_the_visitors 3: different subgoal %p %p\n",
+		     cp_root,get_subgoal_frame_for_answer_trie_cp(CTXTc TrieNodeFromCP(cp_root),cp_root));
+	  ALNlist = traverse_variant_answer_trie(subgoal, cp_root,cp_outer_iter);
 	  ans_subst_num = (int)int_val(cell(cp_root + CP_SIZE + 1)) ;  // account for sf ptr of trie root cp
-	  attv_num = (int)int_val(cell(breg+CP_SIZE+1+ans_subst_num)) + 1;;
+	  //	  attv_num = (int)int_val(cell(breg+CP_SIZE+1+ans_subst_num)) + 1;;
+	  attv_num = 0;   // TES: FIX!
 	  #ifdef INCR_DEBUG1
-	  printf("found root %p first %p top %p ans_subst_num %d & %p attv_num %d\n",cp_root,cp_first,cp_top1,ans_subst_num,breg+CP_SIZE, attv_num); 
+	  printf("found root %p first %p top %p ans_subst_num %d & %p attv_num %d\n",cp_root,cp_first,cp_outer_iter,ans_subst_num,breg+CP_SIZE, attv_num); 
 	  #endif
 	  listHead = list_of_answers_from_answer_list(subgoal,ans_subst_num,attv_num,ALNlist);
 	  // Free ALNlist;
-	  cp_pcreg(cp_top1) = (byte *) &completed_trie_member_inst;
-       	  cp_ebreg(cp_top1) = cp_ebreg(cp_root);
-	  cp_hreg(cp_top1) = hreg;	  
-	  cp_ereg(cp_top1) = cp_ereg(cp_root);
-	  cp_trreg(cp_top1) = cp_trreg(cp_root);
-	  cp_prevbreg(cp_top1) = cp_prevbreg(cp_root);	  cp_prevtop(cp_top1) = cp_prevtop(cp_root);
+	  cp_pcreg(cp_outer_iter) = (byte *) &completed_trie_member_inst;
+       	  cp_ebreg(cp_outer_iter) = cp_ebreg(cp_root);
+	  cp_hreg(cp_outer_iter) = hreg;	  
+	  cp_ereg(cp_outer_iter) = cp_ereg(cp_root);
+	  cp_trreg(cp_outer_iter) = cp_trreg(cp_root);
+	  cp_prevbreg(cp_outer_iter) = cp_prevbreg(cp_root);	  cp_prevtop(cp_outer_iter) = cp_prevtop(cp_root);
 	  // cpreg, ereg, pdreg, ptcpreg should not need to be reset (prob not ebreg?)
 	  //	  printf("sf %p\n",* (cp_root + CP_SIZE + 2));
-	  * (cp_top1 + CP_SIZE) = makeint(ans_subst_num);
+          if (cp_prevbreg(cp_root) < (cp_outer_iter + 2 + CP_SIZE + ans_subst_num)) // TES fix!!     
+            printf("not enough room for coalesced choice point\n");
+ 	  * (cp_outer_iter + CP_SIZE) = makeint(ans_subst_num);
 	  for (i = 0;i < ans_subst_num ;i++) {                              // Use registers for root of trie, not leaf (top)
-	    * (cp_top1 + CP_SIZE + 1 + i) =  * (cp_root + CP_SIZE + 2 +i);  // account for sf ptr or root
+	    * (cp_outer_iter + CP_SIZE + 1 + i) =  * (cp_root + CP_SIZE + 2 +i);  // account for sf ptr or root
 	  }
-	  * (cp_top1 + CP_SIZE + 1+ ans_subst_num) = listHead;
-	  * (cp_top1 + CP_SIZE + 2+ ans_subst_num) = (Cell)hfreg;
+	  * (cp_outer_iter + CP_SIZE + 1+ ans_subst_num) = listHead;
+	  * (cp_outer_iter + CP_SIZE + 2+ ans_subst_num) = (Cell)hfreg;
 	  //	  printf("4 cp_root %p prev %p\n",cp_root,cp_prevtop(cp_root));
 	  //	  printf("constructed listhead hreg %x\n",hreg);
-	  //	  cp_top1 = cp_root;  // next iteration
-	  //	  printf("7 cp_top1 %p cp_bot1 %p prev %p\n",cp_top1,cp_bot1,cp_prevtop(cp_top1));
+	  //	  cp_outer_iter = cp_root;  // next iteration
+	  //	  printf("7 cp_outer_iter %p bottom_of_cpstack %p prev %p\n",cp_outer_iter,bottom_of_cpstack,cp_prevtop(cp_outer_iter));
 	}
       }
     }
-    cp_top1 = cp_prevtop(cp_top1);
+    cp_outer_iter = cp_prevtop(cp_outer_iter);
   }
   //  printf("abt to construct listhead hreg %x hfreg %x\n",hreg,hfreg);
 
@@ -872,7 +911,7 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected_ptr, in
       #endif
     }
   }
-  // TLS: handles dags&cycles -- no need to traverse more than once.
+  // TES: handles dags&cycles -- no need to traverse more than once.
   if (call1 -> recomputable == COMPUTE_DEPENDENCIES_FIRST)
     call1 -> recomputable = COMPUTE_DIRECTLY;
   else {     //    printf("found directly computable call \n");

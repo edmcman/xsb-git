@@ -367,6 +367,9 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
       producer_sf->callnode->outcount=old_call_gl->outcount;
       producer_sf->callnode->outedges->callnode=producer_sf->callnode;
       producer_sf->ans_root_ptr=old_answer_table_gl;
+      if (IsNonNULL(old_answer_table_gl)) { 
+	BTN_Parent(old_answer_table_gl) = (BTNptr) producer_sf;
+      }
       old_call_gl->falsecount=0; /* this will stop propagation of unmarking */
       old_call_gl->deleted=1; 
       old_call_gl=NULL;

@@ -198,7 +198,7 @@ XSB_End_Instr()
 XSB_Start_Instr(trie_retry_numcon_succ,_trie_retry_numcon_succ) 
 	CPtr tbreg;
 	TRIE_R_LOCK();
-	trie_instr_print(( "trie_retry_numcon_succ"));
+	trie_instr_print(( "trie_retry_numcon_succ\n"));
 	NodePtr = (BTNptr) lpcreg;
 	tbreg = breg;
 	restore_regs_and_vars(tbreg, CP_SIZE);
@@ -980,7 +980,10 @@ XSB_End_Instr()
 XSB_Start_Instr(completed_trie_member,_completed_trie_member) 
   Cell listHead, unconditional_flag; int i, ans_sf_length; CPtr this_ret; CPtr ans_sf; CPtr xtemp1;
 
-// printf("\nin completed_trie_member hreg %p hfreg %p\n",hreg,hfreg);  //print_n_registers(stddbg, 6 , 8);printf("\n");
+#ifdef NON_OPT_COMPILE
+  printf("\nin completed_trie_member hreg %p hfreg %p\n",hreg,hfreg);  
+  //print_n_registers(stddbg, 6 , 8);printf("\n");
+#endif
   ans_sf_length = (int)int_val(cell(breg + CP_SIZE));
   //  printf("ans_sf_length %d\n",ans_sf_length);
   listHead = * (breg + CP_SIZE + ans_sf_length+1);
