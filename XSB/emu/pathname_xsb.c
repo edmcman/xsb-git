@@ -680,6 +680,7 @@ char *file_readlink(char *filename)
   memset(buf, 0, MAXPATHLEN);
 #ifdef WIN_NT
   strncpy(buf,filename,MAXPATHLEN);
+  return buf;
 #else
   ssize_t retcode = readlink(filename,buf,MAXPATHLEN);
   if (retcode >= 0)
