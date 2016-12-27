@@ -71,6 +71,7 @@
 
 extern void get_statistics(CTXTdecl);
 extern size_t getMemorySize();
+extern char *file_readlink(char *filename);
 
 static int xsb_spawn (CTXTdeclc char *prog, char *arg[], int callno,
 		      int pipe1[], int pipe2[], int pipe3[],
@@ -201,6 +202,18 @@ int sys_syscall(CTXTdeclc int callno)
   case SYS_create: {
     result = open(ptoc_longstring(CTXTc 3),O_CREAT|O_EXCL,S_IREAD|S_IWRITE);
     if (result >= 0) close(result);
+    break;
+  }
+  case SYS_readlink: {
+    char *inpath = ptoc_longstring(CTXTc 3);
+    char *outpath = file_readlink(CTXTc inpath);
+    if (outpath == NULL) {
+      result = -1;
+    } else {
+      ctop_string(CTXTc 4,outpath);
+      result = 0;
+    }
+    mem_dealloc(outpath,MAXPATHLEN,OTHER_SPACE);
     break;
   }
 

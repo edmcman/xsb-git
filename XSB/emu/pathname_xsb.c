@@ -666,4 +666,28 @@ xsbBool almost_search_module(CTXTdeclc char *filename)
   return TRUE;
 }
 
+
+/*
+  Used to standardize path names by converting symbolic links
+  into non-symlink path names.
+  On Windows -- for now -- just copies to output 
+  If a file is not a symlink, returns NULL, but in file_io.P we then
+  make it into identity for non-symlink.
+*/
+char *file_readlink(char *filename)
+{
+  char *buf =  mem_alloc(MAXPATHLEN,OTHER_SPACE);
+  memset(buf, 0, MAXPATHLEN);
+#ifdef WIN_NT
+  strncpy(buf,filename);
+#else
+  ssize_t retcode = readlink(filename,buf,MAXPATHLEN);
+  if (retcode >= 0)
+    return buf;
+  else
+    return NULL;
+#endif
+}
+
+
 /*=========================================================================*/

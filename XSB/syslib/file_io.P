@@ -340,6 +340,11 @@ path_sysop(isabsolute,Filename) :- !,
 	is_absolute_filename(Filename).
 path_sysop(expand,Filename,ExpandedName) :- !,
 	expand_filename(Filename,ExpandedName).
+path_sysop(standardize,Filename,CanonicalFileName) :- !,
+        sys_file_readlink(Filename,CanonicalFileName,Res),
+        (Res =:= 0 -> true
+        ; CanonicalFileName = Filename
+        ).
 path_sysop(cwd_ancestordir,BaseName,ExpandedName) :- !,
 	cwd(CurrDir0),		% cwd returns name without trailing slash
 	slash(Slash),
