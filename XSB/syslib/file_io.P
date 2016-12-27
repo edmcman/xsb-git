@@ -340,10 +340,16 @@ path_sysop(isabsolute,Filename) :- !,
 	is_absolute_filename(Filename).
 path_sysop(expand,Filename,ExpandedName) :- !,
 	expand_filename(Filename,ExpandedName).
+/*
+   Expands file name then replaces symlinks with the real file names.
+   If not a symlink then just expands.
+   On windows does nothing (only expands) - for now.
+*/
 path_sysop(standardize,Filename,CanonicalFileName) :- !,
-        sys_file_readlink(Filename,CanonicalFileName,Res),
+        expand_filename(Filename,FullFilename),
+        sys_file_readlink(FullFilename,CanonicalFileName,Res),
         (Res =:= 0 -> true
-        ; CanonicalFileName = Filename
+        ; CanonicalFileName = FullFilename
         ).
 path_sysop(cwd_ancestordir,BaseName,ExpandedName) :- !,
 	cwd(CurrDir0),		% cwd returns name without trailing slash
