@@ -205,15 +205,15 @@ fi
 
 
 if test -f "$RES_FILE"; then
-  echo "There was an old $RES_FILE"
-  echo "removing..."
+  echo "There was an old $RES_FILE:"
+  echo "   removing..."
   rm -f $RES_FILE
 fi
 
 
 if test -f "$LOG_FILE"; then
-  echo "There was an old $LOG_FILE"
-  echo "removing..."
+  echo "There was an old $LOG_FILE:"
+  echo "    removing..."
   rm -f $LOG_FILE
 fi
 
@@ -222,6 +222,10 @@ fi
 # should parameterize: create a script that given an input file
 # greps for errors and prints the results to an output file
 # and then this script can also be used in buildtest
+
+# remove xwams so the test will be clean
+echo "Removing the old .xwams"
+make clean  2>&1 1> /dev/null
 
 echo "Testing $XEMU"
 echo "The log will be left in  $LOG_FILE"
