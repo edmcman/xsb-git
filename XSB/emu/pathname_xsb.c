@@ -685,8 +685,10 @@ char *file_readlink(char *filename)
   ssize_t retcode = readlink(filename,buf,MAXPATHLEN);
   if (retcode >= 0)
     return buf;
-  else
+  else {
+    mem_dealloc(buf,MAXPATHLEN,OTHER_SPACE); // to avoid memory leak
     return NULL;
+  }
 #endif
 }
 

@@ -208,12 +208,13 @@ int sys_syscall(CTXTdeclc int callno)
     char *inpath = ptoc_longstring(CTXTc 3);
     char *outpath = file_readlink(CTXTc inpath);
     if (outpath == NULL) {
+      // memory for this case is dealocated in file_readlink in pathname_xsb.c
       result = -1;
     } else {
       ctop_string(CTXTc 4,outpath);
+      mem_dealloc(outpath,MAXPATHLEN,OTHER_SPACE);
       result = 0;
     }
-    mem_dealloc(outpath,MAXPATHLEN,OTHER_SPACE);
     break;
   }
 
