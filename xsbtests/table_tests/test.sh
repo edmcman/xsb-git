@@ -27,7 +27,7 @@ EOF
 #========================================================================
 
 rm aggregs_test_2.xwam
-rm test_ec.xwam
+#rm test_ec.xwam
 
 #--------------------------------------------------
 # Tests get_calls and get_returns and tries as code
