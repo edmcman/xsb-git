@@ -98,7 +98,7 @@
 /****** Experimental ********/
 :- export find_components/1,
 	find_forward_dependencies/1,
-	find_backward_dependencies/1,
+	%%find_backward_dependencies/1,
 	find_answers/1.
 :- export early_complete_on_nth/2.
 :- export early_complete_on_delta/4.

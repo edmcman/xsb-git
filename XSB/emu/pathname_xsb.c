@@ -668,11 +668,10 @@ xsbBool almost_search_module(CTXTdeclc char *filename)
 
 
 /*
-  Used to standardize path names by converting symbolic links
-  into non-symlink path names.
-  On Windows -- for now -- just copies to output 
-  If a file is not a symlink, returns NULL, but in file_io.P we then
-  make it into identity for non-symlink.
+  Reads a symbolic link and returns the real path.
+  Identiity on windows.
+  Probably not very useful - see file_realpath() below, which does proper
+  conversion of all symbolic parts of any file that contains symlinks inside.
 */
 char *file_readlink(char *filename)
 {
@@ -684,6 +683,31 @@ char *file_readlink(char *filename)
 #else
   ssize_t retcode = readlink(filename,buf,MAXPATHLEN);
   if (retcode >= 0)
+    return buf;
+  else {
+    mem_dealloc(buf,MAXPATHLEN,OTHER_SPACE); // to avoid memory leak
+    return NULL;
+  }
+#endif
+}
+
+
+/*
+  Used to standardize path names by converting symbolic links
+  into non-symlink path names.
+  On Windows -- for now -- just copies to output 
+  If a file is not a symlink, returns NULL, but in file_io.P we then
+  make it into identity for non-symlink.
+*/
+char *file_realpath(char *filename)
+{
+  char *buf =  mem_alloc(MAXPATHLEN,OTHER_SPACE);
+#ifdef WIN_NT
+  strncpy(buf,filename,MAXPATHLEN);
+  return buf;
+#else
+  char *result = realpath(filename,buf);
+  if (result != NULL)
     return buf;
   else {
     mem_dealloc(buf,MAXPATHLEN,OTHER_SPACE); // to avoid memory leak

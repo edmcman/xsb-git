@@ -37,6 +37,7 @@
 	sys_mkdir/2, sys_rmdir/2,
 	sys_unlink/2, sys_exit/1, sys_rename/3,
         sys_filecopy/3, sys_fileappend/3,
+        sys_file_realpath/3,
         sys_file_readlink/3,
         sys_main_memory/1.
 :- export platform/1.
@@ -46,7 +47,9 @@
 :- import findall/3 from setof.
 :- import path_sysop/2 from file_io.
 :- import check_nonvar/3 from error_handler.
-:- import sys_system/7, expand_filename/2, sys_syscall/4,
+:- import
+        sys_system/7, expand_filename/2,
+        sys_syscall/4,
         tilde_expand_filename/2, slash/1
    from machine.
 :- import atom/1, abort/1, is_list/1 from standard.

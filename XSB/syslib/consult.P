@@ -123,7 +123,6 @@ consult(Path, Options) :- \+ (\+ (reconsult(Path, Options))).
 
 :- thread_shared consult_file_loaded(_).
 :- dynamic consult_file_loaded(_).
-:- export consult_file_loaded/1.
 
 reconsult(Path) :- reconsult(Path, []).
 
@@ -146,40 +145,36 @@ check_one_thread_w_override:-
 	 ; check_one_thread(load,file,reconsult/3) ).
 
 reconsult0(Path, Options, Ensure_loaded) :-
-	(Path == user
-	 ->	
-	        (check_one_thread_w_override,
-	         compile_load_user(Options))
-	 ;	(search_module(Path, Dir, Mod, SExt, Base, Obj)
-		 ->	expand_filename(Obj,ExpObj),
-			(SExt \== XSB_OBJ_EXTENSION_ATOM_SANS_DOT,
-			 i_want_compile(SExt, Base, Obj)
- 		          ->    check_one_thread_w_override,
-			        compile_f(SExt,Base,Options,_ExList,Mod,Dir),
-				load_exec(Obj, Mod, Dir), % Mod would be atomized ModTerm
-				(consult_file_loaded(ExpObj)
-				 ->	true
-				 ;	assert(consult_file_loaded(ExpObj))
-				)
-			 ;     /* Compilation not required */
-  			       (Ensure_loaded==true ->  
-			                (consult_file_loaded(ExpObj)
-				         ->     true
-				         ;      /* File not loaded, ok to load w. many threads */
-					        load_exec(Obj, Mod, Dir),
-						assert(consult_file_loaded(ExpObj)) 
-					 )
-			         ;	/* Ensure_loaded == false */
-				       check_one_thread_w_override,
-				       load_exec(Obj, Mod, Dir),
-				       (consult_file_loaded(ExpObj)
-				        ->     true
-					;      assert(consult_file_loaded(ExpObj))
-				       )
-				)
-			)
-		)
-         ;	existence_error('file/module',Path,consult/1,1)
+	(Path == user ->	
+            (check_one_thread_w_override,
+                compile_load_user(Options))
+        ;  (search_module(Path, Dir, Mod, SExt, Base, Obj)
+           ->	expand_filename(Obj,ExpObj),
+               (SExt \== XSB_OBJ_EXTENSION_ATOM_SANS_DOT,
+                   i_want_compile(SExt, Base, Obj)
+               ->    check_one_thread_w_override,
+                   compile_f(SExt,Base,Options,_ExList,Mod,Dir),
+                   load_exec(Obj, Mod, Dir), % Mod would be atomized ModTerm
+                   (file_is_consultloaded(ExpObj) ->	true
+                   ; record_file_consultloaded(ExpObj)
+                   )
+               ;   %%  Compilation not required
+                   (Ensure_loaded==true ->  
+                       (file_is_consultloaded(ExpObj) ->     true
+                       ;  %% File not loaded, ok to load w. many threads
+                           load_exec(Obj, Mod, Dir),
+                           record_file_consultloaded(ExpObj) 
+                       )
+                   ;	%% Ensure_loaded == false 
+                       check_one_thread_w_override,
+                       load_exec(Obj, Mod, Dir),
+                       (file_is_consultloaded(ExpObj) -> true
+                       ; record_file_consultloaded(ExpObj)
+                       )
+                   )
+               )
+           )
+        ;   existence_error('file/module',Path,consult/1,1)
 	).
 
 i_want_compile(SExt, Base, Obj) :-
@@ -355,12 +350,13 @@ real_search_module(ModName, Dir, Base, Ext) :-
 /*======================================================================*/
 
 load_exec(File, ModName, Directory) :-	
+        standardize_pathname(File,FullFile),
 	cputime(LoadStartTime),
-	code_load(File, Init, 1, ModName),	% use the changed C loader.
+	code_load(FullFile, Init, 1, ModName),	% use the changed C loader.
 	% jf: for Windows a valid segment pointer might be negative
 	( Init =\= 0			% load succeeded
 	; Init =:= 0,
-	  get_magic_num(File,[_One,_Two,_Three,Four]),\+ immutable(Four),
+	  get_magic_num(FullFile,[_One,_Two,_Three,Four]),\+ immutable(Four),
           abort(['Error in loading file ',File])
 	),
 	!,
@@ -379,7 +375,7 @@ load_exec(File, ModName, Directory) :-
 	(Init =\= 4			% Prolog byte code loaded
                                         % Do not check Init > 4 as valid segment pointers may be negative.
 	 ->     % push/pop_loaded_file: added by MK, 7/16/01
-		push_loaded_file(File,Rand),
+		push_loaded_file(FullFile,Rand),
 		cwd(OldCWD),	% set working directory to directory containing file being loaded. (dsw 11/30/16)
 		cd(Directory),
 		catch(
@@ -425,14 +421,13 @@ add_lib_dir(Path) :-
 	add_lib_dir1(Path).
 
 add_lib_dir1(a(Path)) :- !,
-	expand_filename(Path, FullPath),
-	retractall(library_directory(FullPath)), % remove from where it is, if anywhere
+	standardize_pathname(Path, FullPath),
+	retractall(library_directory(FullPath)), % remove if it was there
 	asserta(library_directory(FullPath)).	 % put at front.
 add_lib_dir1(Path) :-
-	expand_filename(Path, FullPath),
-	(library_directory(FullPath)
-	 ->	true
-	 ;	assert(library_directory(FullPath))
+	standardize_pathname(Path, FullPath),
+	(library_directory(FullPath) ->	true
+        ;  assert(library_directory(FullPath))
 	).
 
 add_lib_dir(Root,(A,B)) :- !,
@@ -441,13 +436,13 @@ add_lib_dir(Root,(A,B)) :- !,
 add_lib_dir(ancestordir(AncName),Path0) :- !,
 	path_sysop(cwd_ancestordir,AncName,Root),
 	(Path0 = a(Path)
-	 ->	add_lib_dir1(a([Root,'/',Path]))
-	 ;	add_lib_dir1([Root,'/',Path0])
+        ->	add_lib_dir1(a([Root,'/',Path]))
+        ;	add_lib_dir1([Root,'/',Path0])
 	).
 add_lib_dir(Root,Path0) :-
 	(Path0 = a(Path)
-	 ->	add_lib_dir1(a([Root,'/',Path]))
-	 ;	add_lib_dir1([Root,'/',Path0])
+        ->	add_lib_dir1(a([Root,'/',Path]))
+        ;	add_lib_dir1([Root,'/',Path0])
 	).
 
 /*-------------define load_dyn for reading in dynamic predicates -----*/
@@ -608,8 +603,8 @@ close_and_throw(XPP_process,XPPport,Ball) :-
 init_for_load(Filename,Mod) :-
 	conset(needs_restart, 0), conset(xpp_on, 0), % Cleanup before XPP
 	file_time(Filename,Time),
-	retractall(load_dyn_file_loaded(Filename,_)),
-	assert(load_dyn_file_loaded(Filename,time(Time))),
+        remove_file_dynloaded(Filename),
+        record_file_dynloaded(Filename,Time),
 	retractall(load_dyn_trie_retracted(_)),
 	retractall(load_dyn_retracted(_,_,_,_,_)),
 	assert(load_dyn_file(Filename)),
@@ -638,10 +633,12 @@ read_and_assert(_) :- conget(needs_restart,1), !.
 read_and_assert(Dir) :- read_and_assert(Dir).
 
 load_dync(File) :-
-	load_dync(File,1,usermod).	% assertz in usermod
+        standardize_pathname(File,FullFile),
+	load_dync(FullFile,1,usermod).	% assertz in usermod
 
 load_dync(File,DirIn) :-
-	load_dync(File,DirIn,usermod).
+        standardize_pathname(File,FullFile),
+	load_dync(FullFile,DirIn,usermod).
 
 load_dync(File,Dirin,Module) :-
 	check_one_thread(load,file,load_dync/[1,2,3]),
@@ -873,17 +870,15 @@ multifile_cvt_head(Head,MHead) :-
 */
 
 set_retracted(Head,Arity,OPsc,Psc,Prref,Index,Hashsize) :-
-	('_$index'(Head,Index,Hashsize)
-	 ->	true
-	 ; Arity =:= 0
-	 ->	Index = 0,default_assert_size(Hashsize)
-	 ;	Index = 1,default_assert_size(Hashsize)
+	('_$index'(Head,Index,Hashsize) -> true
+        ; Arity =:= 0
+        ->  Index = 0,default_assert_size(Hashsize)
+        ;   Index = 1,default_assert_size(Hashsize)
 	),
-	NArity is Arity+1,		% to hold the cut addr
+	NArity is Arity+1,      % to hold the cut addr
 	psc_type(Psc, SYMTYPE),
-	(SYMTYPE =\= 1
-	 ->	dynamic(Head)
-	 ;	true
+	(SYMTYPE =\= 1 ->  dynamic(Head)
+        ;  true
 	),
 	db_get_prref(Psc,Prref),
 	asserta(load_dyn_retracted(OPsc,Prref,NArity,Index,Hashsize)),
@@ -1089,7 +1084,7 @@ if_should_not_reload(File) :-
 	get_HRname(SExt,Base,_Hfname,Filename),
 	expand_filename(Filename,AFilename),
 	file_time(AFilename,Ctime),
-	load_dyn_file_loaded(AFilename,time(Ltime)),
+        file_is_dynloaded(AFilename,Ltime),
 	Ltime >= Ctime,
 	\+ need_more_index(AFilename).
 
@@ -1120,8 +1115,8 @@ indexes_subsumed(Ispec,OIndex) :-
 %% entries from the stack
 push_loaded_file(File,Rand) :-
 	gensym('loadfile',Rand),
-	expand_filename(File,ExpandedFile),
-	asserta(loading_stack(Rand,ExpandedFile)).
+	standardize_pathname(File,StandardizedFile),
+	asserta(loading_stack(Rand,StandardizedFile)).
 
 
 pop_loaded_file(Rand) :-
@@ -1132,20 +1127,54 @@ current_loaded_file(File) :- loading_stack(_,File), !.
 
 if_file_loaded(FileName) :-
 	(atom(FileName)
-	 ->	search_module(FileName,_Dir,_Mod,_SExt,_Base,Obj),
-		expand_filename(Obj,ExpObj),
-		(consult_file_loaded(ExpObj)
-		 ->	true
-		 ;	get_fname(FileName,_Dirctry,SExtd,Based,_Modd),
-			get_HRname(SExtd,Based,_Hfname,Rfname),
-			expand_filename(Rfname,ARfname),
-			load_dyn_file_loaded(ARfname,_)
-		)
-	 ;      instantiation_error(if_file_loaded/1,1)
+        ->  search_module(FileName,_Dir,_Mod,_SExt,_Base,Obj),
+            expand_filename(Obj,ExpObj),
+            (file_is_consultloaded(ExpObj) -> true
+            ; get_fname(FileName,_Dirctry,SExtd,Based,_Modd),
+                get_HRname(SExtd,Based,_Hfname,Rfname),
+                expand_filename(Rfname,ARfname),
+                file_is_dynloaded(ARfname,_)
+            )
+        ;  instantiation_error(if_file_loaded/1,1)
 	).
 
-is_loaded(FilePath) :- consult_file_loaded(FilePath); load_dyn_file_loaded(FilePath,_).
+is_loaded(FilePath) :-
+        file_is_consultloaded(FilePath)
+        ; file_is_dynloaded(FilePath,_).
 
 % Add currently loading file's directory to library_directory
 % Useful to pull related files in a location independent manner
-add_this_lib_dir :- current_loaded_file(F), parse_filename(F,D,_,_), add_lib_dir(D).
+add_this_lib_dir :-
+        current_loaded_file(F),
+        parse_filename(F,D,_,_),
+        add_lib_dir(D).
+
+record_file_consultloaded(F) :-
+        atom(F),
+        standardize_pathname(F,StandardF),
+        assert(consult_file_loaded(StandardF)).
+remove_file_consultloaded(F) :-
+        atom(F),
+        standardize_pathname(F,StandardF),
+        retractall(consult_file_loaded(StandardF)).
+file_is_consultloaded(F) :-
+        atom(F),
+        standardize_pathname(F,StandardF),
+        consult_file_loaded(StandardF).
+
+record_file_dynloaded(F,Time) :-
+        atom(F),
+        standardize_pathname(F,StandardF),
+        assert(load_dyn_file_loaded(StandardF,time(Time))).
+remove_file_dynloaded(F) :-
+        atom(F),
+        standardize_pathname(F,StandardF),
+        retractall(load_dyn_file_loaded(StandardF,_)).
+file_is_dynloaded(F,Time) :-
+        atom(F),
+        standardize_pathname(F,StandardF),
+        load_dyn_file_loaded(StandardF,time(Time)).
+
+standardize_pathname(F,StandardF) :-
+        %%expand_filename(F,StandardF).
+        path_sysop(standardize,F,StandardF).

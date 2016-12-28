@@ -40,9 +40,17 @@
           (thread_shared)/1,
           (thread_private)/1,
 	  cvt_canonical/2.
+:- export
+        record_file_consultloaded/1,
+        remove_file_consultloaded/1,
+        file_is_consultloaded/1,
+        consult_file_loaded/1.
 
-:- local load_dyn_retracted/5, load_dyn_trie_retracted/1,
-	 load_dyn_file_loaded/2, load_dyn_pred_loaded/4, load_dyn_file/1.
+:- local load_dyn_retracted/5,
+         load_dyn_trie_retracted/1,
+	 load_dyn_file_loaded/2,
+         load_dyn_pred_loaded/4,
+         load_dyn_file/1.
 
 :- import check_one_thread/3,
    domain_error/4, existence_error/4,instantiation_error/2, permission_error/4,type_error/4,

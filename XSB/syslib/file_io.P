@@ -347,6 +347,16 @@ path_sysop(expand,Filename,ExpandedName) :- !,
 */
 path_sysop(standardize,Filename,CanonicalFileName) :- !,
         expand_filename(Filename,FullFilename),
+        sys_file_realpath(FullFilename,CanonicalFileName,Res),
+        (Res =:= 0 -> true
+        ; CanonicalFileName = FullFilename
+        ).
+/*
+  This one just reads symlinks. If a file contains a symlink inside then
+  it won't do anythink useful. See standardize above for the real thing.
+*/
+path_sysop(readlink,Filename,CanonicalFileName) :- !,
+        expand_filename(Filename,FullFilename),
         sys_file_readlink(FullFilename,CanonicalFileName,Res),
         (Res =:= 0 -> true
         ; CanonicalFileName = FullFilename

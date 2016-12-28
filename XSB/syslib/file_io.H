@@ -40,11 +40,16 @@
 
 %%%:- import gensym/2 from gensym.
 
-:- import is_plain_file/1, is_directory/1, rename/2, rm/1, rmdir_rec/1, cwd/1,
+:- import
+        is_plain_file/1, is_directory/1,
+        rename/2, rm/1, rmdir_rec/1, cwd/1,
 	sys_filecopy/3, sys_fileappend/3,
         sys_file_readlink/3,
-	cd/1, sys_link/3, sys_mkdir/2, sys_rmdir/2, sys_access/3
-      from shell.
+        sys_file_realpath/3,
+	cd/1, sys_link/3,
+        sys_mkdir/2, sys_rmdir/2,
+        sys_access/3
+   from shell.
 
 :- import file_write/2 from xsb_writ.
 
