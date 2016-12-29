@@ -205,15 +205,13 @@ fi
 
 
 if test -f "$RES_FILE"; then
-  echo "There was an old $RES_FILE:"
-  echo "   removing..."
+  echo "There was an old $RES_FILE: removing..."
   rm -f $RES_FILE
 fi
 
 
 if test -f "$LOG_FILE"; then
-  echo "There was an old $LOG_FILE:"
-  echo "    removing..."
+  echo "There was an old $LOG_FILE: removing..."
   rm -f $LOG_FILE
 fi
 
@@ -224,7 +222,7 @@ fi
 # and then this script can also be used in buildtest
 
 # remove xwams so the test will be clean
-echo "Removing the old .xwams"
+echo "Removing the old .xwams ..."
 make clean  2>&1 1> /dev/null
 
 echo "Testing $XEMU"

@@ -23,23 +23,25 @@
 ** 
 */
 
-:- export 	  add_lib_dir/1, add_lib_dir/2,
-	  compile/1, compile/2, search_module/6,
-          consult/1, consult/2, '.'/2, reconsult/1, reconsult/2,
-	  current_loaded_file/1, is_loaded/1, add_this_lib_dir/0,
-          engine_mode_magic_num/3,
-	  ensure_dyn_loaded/1, ensure_dync_loaded/1,
-	  ensure_dyn_loaded/3, ensure_dync_loaded/3,
-	  ensure_loaded/1, ensure_loaded/2, ensure_loaded/3,
-          get_magic_num/2,
-	  load_dyn/1, load_dyn/2, load_dyn/3,
-	  load_dyn_module/1,
-	  load_dync/1, load_dync/2, load_dync/3,
-          read_canonical/1,read_canonical/2,
-          if_file_loaded/1,
-          (thread_shared)/1,
-          (thread_private)/1,
-	  cvt_canonical/2.
+:- export 
+        add_lib_dir/1, add_lib_dir/2,
+        remove_lib_dir/1,
+        compile/1, compile/2, search_module/6,
+        consult/1, consult/2, '.'/2, reconsult/1, reconsult/2,
+        current_loaded_file/1, is_loaded/1, add_this_lib_dir/0,
+        engine_mode_magic_num/3,
+        ensure_dyn_loaded/1, ensure_dync_loaded/1,
+        ensure_dyn_loaded/3, ensure_dync_loaded/3,
+        ensure_loaded/1, ensure_loaded/2, ensure_loaded/3,
+        get_magic_num/2,
+        load_dyn/1, load_dyn/2, load_dyn/3,
+        load_dyn_module/1,
+        load_dync/1, load_dync/2, load_dync/3,
+        read_canonical/1,read_canonical/2,
+        if_file_loaded/1,
+        (thread_shared)/1,
+        (thread_private)/1,
+        cvt_canonical/2.
 :- export
         record_file_consultloaded/1,
         remove_file_consultloaded/1,
