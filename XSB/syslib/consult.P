@@ -633,12 +633,10 @@ read_and_assert(_) :- conget(needs_restart,1), !.
 read_and_assert(Dir) :- read_and_assert(Dir).
 
 load_dync(File) :-
-        standardize_pathname(File,FullFile),
-	load_dync(FullFile,1,usermod).	% assertz in usermod
+	load_dync(File,1,usermod).	% assertz in usermod
 
 load_dync(File,DirIn) :-
-        standardize_pathname(File,FullFile),
-	load_dync(FullFile,DirIn,usermod).
+	load_dync(File,DirIn,usermod).
 
 load_dync(File,Dirin,Module) :-
 	check_one_thread(load,file,load_dync/[1,2,3]),
