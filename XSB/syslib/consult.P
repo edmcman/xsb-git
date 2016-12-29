@@ -424,6 +424,10 @@ add_lib_dir1(a(Path)) :- !,
 	standardize_pathname(Path, FullPath),
 	retractall(library_directory(FullPath)), % remove if it was there
 	asserta(library_directory(FullPath)).	 % put at front.
+%% push onto the top of the stack - don't remove anything
+add_lib_dir1(push(Path)) :- !,
+	standardize_pathname(Path, FullPath),
+	asserta(library_directory(FullPath)).	 % put at front.
 add_lib_dir1(Path) :-
 	standardize_pathname(Path, FullPath),
 	(library_directory(FullPath) ->	true
@@ -448,7 +452,16 @@ add_lib_dir(Root,Path0) :-
 %% extend to multiple dirs, if needed
 remove_lib_dir(Dir) :-
         standardize_pathname(Dir,StandardDir),
+        retract(library_directory(StandardDir)).
+removeall_lib_dir(Dir) :-
+        standardize_pathname(Dir,StandardDir),
         retractall(library_directory(StandardDir)).
+
+has_lib_dir(D) :-
+        (var(D) -> library_directory(D)
+        ; standardize_pathname(D,StandardD),
+            library_directory(StandardD)
+        ).
 
 /*-------------define load_dyn for reading in dynamic predicates -----*/
 

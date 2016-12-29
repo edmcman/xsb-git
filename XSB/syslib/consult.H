@@ -25,7 +25,7 @@
 
 :- export 
         add_lib_dir/1, add_lib_dir/2,
-        remove_lib_dir/1,
+        remove_lib_dir/1, removeall_lib_dir/1, has_lib_dir/1,
         compile/1, compile/2, search_module/6,
         consult/1, consult/2, '.'/2, reconsult/1, reconsult/2,
         current_loaded_file/1, is_loaded/1, add_this_lib_dir/0,

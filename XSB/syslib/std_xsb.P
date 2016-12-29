@@ -175,6 +175,9 @@ standard_symbol(consult, 1, consult).
 standard_symbol(consult, 2, consult).
 standard_symbol(add_lib_dir, 1, consult).
 standard_symbol(add_lib_dir, 2, consult).
+standard_symbol(has_lib_dir, 1, consult).
+standard_symbol(remove_lib_dir, 1, consult).
+standard_symbol(removeall_lib_dir, 1, consult).
 standard_symbol(copy_term, 2, basics).                       % ISO
 standard_symbol(ground, 1, basics).                          % ISO
 standard_symbol(ground_or_cyclic, 1, machine).               % checks cycles
