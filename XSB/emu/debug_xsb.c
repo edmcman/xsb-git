@@ -357,6 +357,9 @@ CTptr_2 cycle_trail_2;
 void mark_cyclic(CTXTdeclc Cell Term) {
   Cell preTerm, visited_string;
 
+  // Need to do this because string gc sometimes reclaims this interned string.
+  cyclic_string = (char *) string_find("<cyclic>",1);
+
   cycle_trail_top = -1;
 
   XSB_Deref(Term);
@@ -503,6 +506,7 @@ static int sprint_term(forestLogBuffer fl_buf, int insize, Cell term, byte car, 
     sprintf(virtual_buffer+size, ")");size++;
     return size;
   case XSB_STRING:
+    //    printf("svt %s\n",string_val(term));
     return sprint_quotedname(virtual_buffer, size, string_val(term));
   case XSB_INT: {
     //    int width = get_int_print_width((Integer)int_val(term));
