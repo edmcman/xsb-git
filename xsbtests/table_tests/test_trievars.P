@@ -56,7 +56,7 @@ test_assert_1(_N).
 p_table(_).
 
 test_table:- 
-       catch(test_table_1(800),error(A,context(_B,_C)),writeln(test_table(A,_B))).
+       catch(test_table_1(800),error(A,context(_B,_C)),writeln(test_table(A,'trying to get a ret_psc with too large an arity'))).
 
 test_table_1(N):- 
        makevarlist(N,L),
