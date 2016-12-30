@@ -1079,7 +1079,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
   Pair ptr;
   TIFptr *instruct_tip;
   Integer dummy; /* used to squash warnings */
-  prolog_term modformals;
+  prolog_term modformals = (prolog_term) NULL;
  
   seg_count = 0; first_inst = 0;
   dummy = get_obj_byte(&name_len);
@@ -1101,7 +1101,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
     // parse and build formal par list
       STRFILE strfile;
       strfile.strcnt = strlen((char *)name);
-      strfile.strptr = strfile.strbase = name;
+      strfile.strptr = strfile.strbase = (byte *)name;
       iostrs[0] = &strfile;
       bld_ref(reg+5,hreg);  // where read returns answer with code=3
       new_heap_free(hreg);
