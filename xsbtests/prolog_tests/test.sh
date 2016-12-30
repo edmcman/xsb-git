@@ -201,7 +201,7 @@ else
 fi
 
 #------------------------------------------------------------------------
-rm test_cond_comp.xwam
+rm -f test_cond_comp.xwam
 	../gentest.sh "$XEMU $options" test_cond_comp "test."
 
 
