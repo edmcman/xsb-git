@@ -129,17 +129,14 @@ DEFINE_HASHTABLE_ITERATOR_SEARCH(search_itr_some, KEY);
 /*****************************************************************************/
 /* Debugging */
 
-void print_trieinsts_in_cpstack() {
+void print_trieinsts_in_cpstack(CTXTdecl) {
   CPtr cp_outer_iter,bottom_of_cpstack;
   byte cp_inst;  BTNptr trieNode;
   VariantSF subgoal;                                                                                                  
-                                                                                                                      
-  cp_outer_iter = breg ;                                                                                              
+  cp_outer_iter = breg ;                                                                                             
   bottom_of_cpstack = (CPtr)(tcpstack.high) - CP_SIZE;                                                                
-                                                                                                                      
-  printf("-------- CPstack top\n");                                                                                   
-  while ( cp_outer_iter < bottom_of_cpstack ) {                                                                       
-    cp_inst = *(byte *)*cp_outer_iter;                                                                                
+  printf("-------- CPstack top\n");                                                                                    while ( cp_outer_iter < bottom_of_cpstack ) {                                                                      
+    cp_inst = *(byte *)*cp_outer_iter;                                                                               
     if ( is_trie_instruction(cp_inst) ) {
       trieNode = TrieNodeFromCP(cp_outer_iter);
       if (IsInAnswerTrie(trieNode)) {

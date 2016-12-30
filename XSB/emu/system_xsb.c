@@ -207,7 +207,8 @@ int sys_syscall(CTXTdeclc int callno)
   }
   case SYS_readlink: {
     char *inpath = ptoc_longstring(CTXTc 3);
-    char *outpath = file_readlink(CTXTc inpath);
+    //    char *outpath = file_readlink(CTXTc inpath);
+    char *outpath = file_readlink(inpath);
     if (outpath == NULL) {
       // memory for this case is dealocated in file_readlink in pathname_xsb.c
       result = -1;
@@ -220,7 +221,7 @@ int sys_syscall(CTXTdeclc int callno)
   }
   case SYS_realpath: {
     char *inpath = ptoc_longstring(CTXTc 3);
-    char *outpath = file_realpath(CTXTc inpath);
+    char *outpath = file_realpath(inpath);
     if (outpath == NULL) {
       // memory for this case is dealocated in file_readlink in pathname_xsb.c
       result = -1;
