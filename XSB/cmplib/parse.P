@@ -1366,9 +1366,44 @@ trans_goals('\+'(A), not(Goal1), SymTab, VidIn, VidOut) :- !,
 trans_goals(fail_if(A), not(Goal1), SymTab, VidIn, VidOut) :- !, 
 	trans_goals(A, Goal1, SymTab, VidIn, VidOut).
 trans_goals(once(A), Goal1, SymTab, VidIn, VidOut) :- !,
-	trans_goals((A->true;fail), Goal1, SymTab, VidIn, VidOut). % optimize once(A) to A->true;fail
+	trans_goals((A->true;fail), Goal1, SymTab, VidIn, VidOut).
 trans_goals(forall(A,B), Goal1, SymTab, VidIn, VidOut) :- !,
-	trans_goals((\+((A,\+B))), Goal1, SymTab, VidIn, VidOut). % translate forall(A,B) to \+((A,\+B))
+	trans_goals((\+((A,\+B))), Goal1, SymTab, VidIn, VidOut).
+trans_goals(do_all(Gen,if_none(Do,Else)),Goal1,SymTab,VidIn,VidOut) :-
+	!,
+	intersect_both_vars(Gen,Do,Vars),
+	trans_goals((findall(Vars,Gen,Vals),
+		     (Vals == []
+		      ->     call(Else),fail
+		      ;	     sort(Vals,SVals),
+			     basics:member(Vars,SVals),call(Do),fail
+		     )
+		     ;
+		     true
+		    ),
+		    Goal1,SymTab,VidIn,VidOut).
+trans_goals(do_all(Gen,Do),Goal1,SymTab,VidIn,VidOut) :-
+	!,
+	intersect_both_vars(Gen,Do,Vars),
+	trans_goals((findall(Vars,Gen,Vals),sort(Vals,SVals),
+		     basics:member(Vars,SVals),call(Do),
+		     fail
+		     ;
+		     true
+		    ), Goal1,SymTab,VidIn,VidOut).
+trans_goals(do_all(Do), Goal1, SymTab, VidIn, VidOut) :- !, % optimize do_all 
+	trans_goals((call(Do),fail ; true), Goal1, SymTab, VidIn, VidOut).
+trans_goals(call(Goal), Goal1, SymTab, VidIn, VidOut) :-
+	callable(Goal),
+	\+ (Goal = '$$var'(X),integer(X)),
+	\+ (Goal = ('$$var'(X):_), integer(X)),
+	\+ (Goal = (_:'$$var'(X)), integer(X)),
+	!,
+	(requires_cut_transforming(Goal)
+	 ->	goal_cut_trans(Goal,TransGoal,C),
+		trans_goals(('_$savecp'(C), TransGoal), Goal1, SymTab, VidIn, VidOut)
+	 ;	trans_goals(Goal,Goal1,SymTab,VidIn,VidOut)
+	).
 trans_goals(T, Goal, SymTab, VidIn, VidOut) :-
 	trans_goal(T, Goal, SymTab, VidIn, VidOut).
 
@@ -1394,6 +1429,46 @@ trans_goal(Term, Goal, SymTab, VidIn, VidOut) :-
 trans_head(Term, goal(_Sym, ArgList), SymTab, VidIn, VidOut) :-
 	Term =.. [_|RawArgs],
         trans_args(RawArgs, ArgList, SymTab, VidIn, VidOut).
+
+intersect_both_vars(Term1,Term2,Vars) :-
+	collect_both_vars(Term1,[],Term1Vars),
+	collect_both_vars(Term2,[],Term2Vars),
+	intersect_both_varlists(Term1Vars,Term2Vars,[],Vars).
+
+collect_both_vars(X,VIn,VOut) :-
+	var(X), !,
+	(memberee(X,VIn)
+	 ->	VOut = VIn
+	 ;	VOut = [X|VIn]
+	).
+collect_both_vars(X,VIn,VOut) :-
+	X = '$$var'(V), integer(V), !,
+	(memberee(X,VIn)
+	 ->	VOut = VIn
+	 ;	VOut = [X|VIn]
+	).
+collect_both_vars(X,VIn,VIn) :-
+	atomic(X), !.
+collect_both_vars(X,VIn,VOut) :-
+	X =.. [_|Args],
+	collect_both_vars_list(Args,VIn,VOut).
+
+collect_both_vars_list([],VIn,VIn).
+collect_both_vars_list([Arg|Args],VIn,VOut) :-
+	collect_both_vars(Arg,VIn,VMid),
+	collect_both_vars_list(Args,VMid,VOut).
+
+intersect_both_varlists([],_Vars2,IVars,IVars).
+intersect_both_varlists([Var|Vars1],Vars2,IVars0,IVars) :-
+	(memberee(Var,IVars0)
+	 ->	intersect_both_varlists(Vars1,Vars2,IVars0,IVars)
+	 ; memberee(Var,Vars2)
+	 ->	intersect_both_varlists(Vars1,Vars2,[Var|IVars0],IVars)
+	 ;	intersect_both_varlists(Vars1,Vars2,IVars0,IVars)
+	).
+
+memberee(X,[Y|_]) :- X == Y, !.
+memberee(X,[_|L]) :- memberee(X,L).
 
 % fix for 0-ary preds.
 fix_for_0_ary_preds(Pred,Arity,Args,FixedArgs) :-
