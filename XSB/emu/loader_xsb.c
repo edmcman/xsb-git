@@ -784,7 +784,7 @@ int nec_different_xwam_files(char *datafilename, char *currfilename) {
   if (file_strcmp(datafilename,currfilename) == 0) return FALSE;
   dlen = strlen(datafilename);
   slen = strlen(currfilename);
-  if (dlen == 0) printf("datafile len=0, addr=%p\n",datafilename);
+  if (dlen == 0) printf("ERROR in checking module/file names: datafile len=0, addr=%p\n",datafilename);
   if (dlen < slen+5) return TRUE;
   if (file_strcmp(datafilename+dlen-5,".xwam") == 0 &&
       file_strncmp(datafilename+dlen-5-slen,currfilename,slen) == 0)
@@ -792,7 +792,12 @@ int nec_different_xwam_files(char *datafilename, char *currfilename) {
   if (file_strncmp(datafilename+8,currfilename,slen) == 0) // skip "usermod("
     return FALSE;
   if (file_strcmp(datafilename+dlen-5,".xwam") == 0 &&
-      file_strncmp(datafilename+dlen-5-(slen-9),currfilename+8,slen-9) == 0)
+      (file_strncmp(datafilename+dlen-5-(slen-9),currfilename+8,slen-9) == 0
+       ||
+       (currfilename[8] == '\'' && // for quoted module name
+	file_strncmp(datafilename+dlen-5-(slen-11),currfilename+9,slen-11) == 0
+	))
+      )
     return FALSE;
   return TRUE;
 }
@@ -926,7 +931,7 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
   if (import_from_usermod) {
     Psc tpsc = pair_psc(temp_pair);
     if (get_data(tpsc) != global_mod && isstring(get_data(tpsc)) &&
-	nec_different_xwam_files(string_val(get_data(tpsc)),modname)) {
+	nec_different_xwam_files(string_val(get_data(tpsc)),modname)) { // dsw diff order?
       xsb_warn(CTXTc "Ignoring import of usermod:%s/%d from %s in %s; already imported from %s\n",
 	       get_name(tpsc),get_arity(tpsc),modname,filename,string_val(get_data(tpsc)));
     } else if (!isstring(get_data(tpsc)) && get_data(tpsc) != NULL && get_data(tpsc) != global_mod) {
