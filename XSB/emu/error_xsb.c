@@ -25,6 +25,9 @@
 #include "xsb_config.h"
 #include "xsb_debug.h"
 
+#ifdef WIN_NT
+#include <io.h>
+#endif
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -1628,6 +1631,34 @@ inline void  CHECK_TRIE_ROOT(CTXTdeclc CPtr CurBreg) {
 // TLS: global to handle memory errors w.o. worrying abt stack space.
 char abort_file_gl[2*MAXPATHLEN];
 
+// New version.
+// old version - below. Uses tempname (unsafe) and annoyingly pollutes the
+// XSB/etc directory.
+void print_incomplete_tables_on_abort(CTXTdecl) {
+  FILE * abort_stream;
+  char * template = "scc_dump_XXXXXX";
+  char tempname[30];  // 30 > size of the above template
+
+  strcpy(tempname,template);  // because mktemp requires non-constant string
+
+  if (openreg < COMPLSTACKBOTTOM && flags[EXCEPTION_PRE_ACTION]  ) {
+#ifdef WIN_NT
+    errno_t result = _mktemp_s(tempname,sizeof(tempname));
+    // should really check if result == 0
+    // and of course that abort_stream != NULL, but the original didn't check
+    // that either.
+    abort_stream = fopen(tempname,"w");
+#else
+    // in unix, this creates a temp file name and then opens it
+    abort_stream = fdopen(mkstemp(tempname),"w");
+#endif
+    print_completion_stack(CTXTc abort_stream);
+    fflush(abort_stream);
+    fclose(abort_stream);
+  }
+}
+
+/*
 void print_incomplete_tables_on_abort(CTXTdecl) {
   FILE * abort_stream;
   char etcdir[MAXPATHLEN];
@@ -1645,6 +1676,7 @@ void print_incomplete_tables_on_abort(CTXTdecl) {
     fclose(abort_stream);
   }
 }
+*/
 
 int unwind_stack(CTXTdecl)
 {
