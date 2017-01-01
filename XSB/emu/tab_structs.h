@@ -1199,17 +1199,19 @@ void tstCreateTSIs(struct th_context *,TSTNptr);
 /*----------------------------------------------------------------------*/
 
 #define pdlpush(cell)	*(pdlreg) = cell;				\
-                        if (pdlreg-- < (CPtr)pdl.low)	       		\
-			  xsb_abort("PANIC: pdl overflow; large or cyclic structure?")
+	if (--pdlreg == (CPtr)pdl.low) {				\
+	  xsb_abort("PANIC: pdl overflow; large or cyclic structure?");	\
+	};
 
 #define pdlpop		*(++pdlreg)
 
 #define pdlempty	(pdlreg == (CPtr)(pdl.high) - 1)
 
-#define resetpdl \
-   if (pdlreg < (CPtr) pdl.low) \
-     xsb_exit("pdlreg grew too much"); \
-   else (pdlreg = (CPtr)(pdl.high) - 1)
+#define resetpdl {		  \
+   if (pdlreg < (CPtr) pdl.low) {					\
+     xsb_exit("pdlreg grew too much");					\
+   }									\
+   else (pdlreg = (CPtr)(pdl.high) - 1); }
 
 #define pdlprint  {				\
     CPtr temp_pdlreg = pdlreg;				\
