@@ -26,6 +26,7 @@
 #include "xsb_debug.h"
 
 #ifdef WIN_NT
+#include <windows.h>
 #include <io.h>
 #endif
 #include <stdio.h>
@@ -1644,17 +1645,25 @@ void print_incomplete_tables_on_abort(CTXTdecl) {
   if (openreg < COMPLSTACKBOTTOM && flags[EXCEPTION_PRE_ACTION]  ) {
 #ifdef WIN_NT
     errno_t result = _mktemp_s(tempname,sizeof(tempname));
-    // should really check if result == 0
-    // and of course that abort_stream != NULL, but the original didn't check
-    // that either.
-    abort_stream = fopen(tempname,"w");
+    if (result == 0) {
+      GetTempPath(2*MAXPATHLEN,abort_file_gl);
+      strcat(abort_file_gl,tempname);
+      abort_stream = fopen(abort_file_gl,"w");
+    } else
+      abort_stream = NULL;
 #else
+    //strcpy(abort_file_gl,"");
+    strcpy(abort_file_gl,"/tmp/");
+    strcat(abort_file_gl,tempname);
     // in unix, this creates a temp file name and then opens it
-    abort_stream = fdopen(mkstemp(tempname),"w");
+    abort_stream = fdopen(mkstemp(abort_file_gl),"w");
 #endif
-    print_completion_stack(CTXTc abort_stream);
-    fflush(abort_stream);
-    fclose(abort_stream);
+    if (abort_stream != NULL) {
+      print_completion_stack(CTXTc abort_stream);
+      fflush(abort_stream);
+      fclose(abort_stream);
+    } else 
+      xsb_warn(CTXTc "[table dump]: cannot create the dump file, %s", abort_file_gl);
   }
 }
 
