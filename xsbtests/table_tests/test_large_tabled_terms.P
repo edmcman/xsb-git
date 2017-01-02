@@ -6,7 +6,7 @@ test:- test_large_ground_answer,writeln(test_large_ground_answer),fail.
 test:- test_subgoal_abstraction(50000,_L),writeln(test_subgoal_abstraction),fail.
 test:- test_answer_abstraction(50000,_L),writeln(test_answer_abstraction),fail.
 test:- test_subgoal_answer_abstraction(50000,_L,_M),writeln(test_subgoal_answer_abstraction),fail.
-test:- catch(test_var_limit(1900,_L2),_E,writeln(subgoal_var_limit_one_tested)),fail. %new
+test:- catch(test_var_limit(1900,_L2),_E,writeln(subgoal_var_limit_one_caught)),fail. %new
 test:- catch(test_var_limit(50000,_L2),_E,writeln(subgoal_var_limit_two_tested)),fail.
 test:- catch(a_var(50000,_L2),_E,writeln(answer_var_limit_tested)),fail.
 test.
@@ -65,7 +65,8 @@ test_var_limit(N,L2):-
    s(L1),
    makevarlist(N,L2),
    s(L2),
-   L1 = L2.
+   L1 = L2,
+   writeln(test_var_limit_1_succeeded).
 
 %---------
 

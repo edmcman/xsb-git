@@ -26,10 +26,15 @@ test_intern_1(_N).
 test_intern_2(N):- 
        new_trie(Trie),
        makevarlist(N,L),
-       trie_intern(L,Trie,Leaf,Skel),
+       trie_intern(L,Trie,_Leaf,Skel),
+%       functor(Skel,_T,Arity),
+%       writeln(arity(Arity)),
        numbervars(Skel),
-       writeln(leaf(Leaf)),
-       writeln(skel(Skel)),
+%       writeln(skel(Skel)),
+       arg(500,Skel,Arg),
+       writeln(test_intern_2_arg500(Arg)),
+%       arg(Skel,750,Arg1),
+%       writeln(test_intern_21(Arg1)),
        fail.
 test_intern_2(_N).
 
