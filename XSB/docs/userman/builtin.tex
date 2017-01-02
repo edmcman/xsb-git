@@ -2178,9 +2178,9 @@ error and end of file.  You can determine if either of these
 conditions has happened by verifying that $\tt BytesRead <
 BytesRequested$.
 
-Note: because XSB does not have an atom table garbage collector yet,
-this predicate should not be used to read large files.  Use {\tt
-read\_getbuf\_list} or another predicate in this case.
+Note: although XSB has an atom table garbage collector, this predicate
+is inefficent to read large files.  It is usually best to use {\tt
+  read\_getbuf\_list} or another predicate in such a  case.
 
 {\bf Error Cases} 
 \bi
@@ -3760,7 +3760,7 @@ a  or a list whose head is a variable
 
 %in the following line I used a very ``dirty'' LaTeX hack! -- Kostis.
 
-\standarditem{?Term \^{ }=.. [?F |?ArgList]}{\^{ }=../2}{HiLog}
+\ourstandarditem{?Term \^{ }=.. [?F |?ArgList]}{\^{ }=../2}{HiLog}
     When {\tt Term} is a Prolog term, this predicate behaves exactly like
     the Prolog {\tt =../2}. However when {\tt Term} is a proper HiLog term, 
     {\tt \verb|^|=../2} 
@@ -3828,13 +3828,13 @@ a  or a list whose head is a variable
                    X = _598948
                    Y = _598904
 
-rr                   | ?- copy_term(f(a,X), Y).
+                   | ?- copy_term(f(a,X), Y).
 
                    X = _598892
                    Y = f(a,_599112)
      \end{verbatim}}
 
-\ourmoditem{copy\_term\_nat(+Term, -Copy)}{copy\_term\_nat/2}{machine}
+\ourmoditem{copy\_term\_nat(+Term, -Copy)}{copy\_term\_nat/2}{basics}
 %
 Behaves as {\tt copy\_term/2}, however it replaces attributed
 variables with non-attributed variables in the copy.\footnote{The name
