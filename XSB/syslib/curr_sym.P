@@ -37,6 +37,7 @@
 #include "cinterf_defs.h"
 #include "incr_xsb_defs.h"
 #include "token_defs_xsb.h"
+#include "basicdefs.h"
 
 /* ===== current_atom/1 ====================================== */
 
@@ -750,7 +751,8 @@ iso_flag(max_integer,Maxint):-
 %'
 %%iso_flag(min_integer,Minint) :- iso_flag(max_integer,Maxint), Minint is -Maxint - 1.
 iso_flag(min_integer,Minint) :- iso_flag(max_integer,Maxint), Minint is -Maxint.
-iso_flag(max_arity,255).
+%iso_flag(max_arity,255).
+iso_flag(max_arity,MAX_ARITY).
 iso_flag(integer_rounding_function,toward_zero).
 iso_flag(debug, Debug) :- xsb_flag(debugging, Debug).
 iso_flag(unknown, State) :- settable_prolog_flag(unknown, State).
