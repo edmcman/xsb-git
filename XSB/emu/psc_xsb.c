@@ -141,7 +141,8 @@ void init_psc_ep_info(Psc psc) {
 /*
  *  Create a PSC record and initialize its fields.
  */
-static Psc make_psc_rec(char *name, char arity) {
+//static Psc make_psc_rec(char *name, char arity) {
+static Psc make_psc_rec(char *name, int arity) {
   Psc temp;
   
   temp = (Psc)mem_alloc(sizeof(struct psc_rec),ATOM_SPACE);
@@ -321,7 +322,8 @@ Pair search_in_usermod(int arity, char *name) {
 
 /* === search_insert_psc_1: search/insert to a given chain ========================	*/
 
-static Pair search_insert_psc_1(char *name, byte arity, Pair *search_ptr, int *is_new)
+//static Pair search_insert_psc_1(char *name, byte arity, Pair *search_ptr, int *is_new)
+static Pair search_insert_psc_1(char *name, int arity, Pair *search_ptr, int *is_new)
 {
     Pair pair;
     
@@ -338,8 +340,7 @@ static Pair search_insert_psc_1(char *name, byte arity, Pair *search_ptr, int *i
 
 /* === search/insert psc to a module, or module to global chain ======================== */
 
-Pair insert(char *name, byte arity, Psc mod_psc, int *is_new)
-{
+Pair insert_psc(char *name, int arity, Psc mod_psc, int *is_new) {
     Pair *search_ptr, temp;
 
     SYS_MUTEX_LOCK_NOERROR( MUTEX_SYMBOL ) ;
@@ -359,6 +360,25 @@ Pair insert(char *name, byte arity, Psc mod_psc, int *is_new)
     return temp ;
 } /* insert */
 
+Pair insert(char *name, int arity, Psc mod_psc, int *is_new) {
+    Pair *search_ptr, temp;
+
+    SYS_MUTEX_LOCK_NOERROR( MUTEX_SYMBOL ) ;
+
+    if (is_globalmod(mod_psc)) {
+      search_ptr = (Pair *)(symbol_table.table +
+	           hash(name, arity, symbol_table.size));
+      temp = search_insert_psc_1(name, arity, search_ptr, is_new);
+      if (*is_new)
+	symbol_table_increment_and_check_for_overflow;
+    }
+    else {
+      search_ptr = (Pair *)&(get_data(mod_psc));
+      temp = search_insert_psc_1(name, arity, search_ptr, is_new);
+    }
+    SYS_MUTEX_UNLOCK_NOERROR( MUTEX_SYMBOL ) ;
+    return temp ;
+} /* insert */
 
 /* === insert_module: search for/insert a given module ================	*/
 
@@ -472,13 +492,23 @@ Psc get_ret_psc(int n)
   Pair temp;
   int new_indicator;
 
-  if (n > MAX_ARITY) xsb_abort("Trying to get a ret_psc with too large an arity; too many variables");
-  if (!ret_psc[n]) {
-    temp = (Pair) insert("ret", (byte) n, global_mod, &new_indicator);
-    ret_psc[n] = pair_psc(temp);
+  if (n > MAX_ARITY) {
+    xsb_abort("Trying to get a ret_psc with too large an arity; too many variables");
+    return NULL;
   }
-  return ret_psc[n];
+  else if (ret_psc[n]) {
+    return ret_psc[n];
+  } else {
+    //    temp = (Pair) insert("ret", (byte) n, global_mod, &new_indicator);
+    temp = (Pair) insert("ret", n, global_mod, &new_indicator);
+    return pair_psc(temp);
+  }
 }
+  //  if (!ret_psc[n]) {
+  //    temp = (Pair) insert("ret", (byte) n, global_mod, &new_indicator);
+  //    ret_psc[n] = pair_psc(temp);
+  //  }
+  //  return ret_psc[n];
 
 
 /*

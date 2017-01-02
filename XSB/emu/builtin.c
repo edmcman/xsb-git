@@ -832,7 +832,7 @@ int is_proper_list(Cell term)	/* for standard preds */
 
 /* --------------------------------------------------------------------	*/
 //  Need to expand this.
-#define MAX_LOCAL_TRAIL_SIZE 32*K
+#define MAX_LOCAL_TRAIL_SIZE MAX_ARITY
 
 struct ltrail {
   CPtr *ltrail_top;
@@ -1525,7 +1525,7 @@ int builtin_call(CTXTdeclc byte number)
     {int new;
       Cell term = ptoc_tag(CTXTc 1);
       if (isstring(term)) {
-	ctop_addr(2, pair_psc(insert(string_val(term), 0, (Psc)flags[CURRENT_MODULE], &new)));
+	ctop_addr(2, pair_psc(insert_psc(string_val(term), 0, (Psc)flags[CURRENT_MODULE], &new)));
       }
       else if (isconstr(term))
 	ctop_addr(2, term_psc(term));
@@ -1579,7 +1579,7 @@ int builtin_call(CTXTdeclc byte number)
       XSB_Deref(term);
       termpsc = term_psc(term);
     }
-    newtermpsc = pair_psc(insert(get_name(termpsc),get_arity(termpsc),modpsc,&new));
+    newtermpsc = pair_psc(insert_psc(get_name(termpsc),get_arity(termpsc),modpsc,&new));
     if (import_from_usermod) {
       if (new) printf("ERROR: shouldn't be new\n");
       //printf("usermod predicate: %s/%d type: %x, env: %x\n",get_name(newtermpsc),get_arity(newtermpsc),get_type(newtermpsc),get_env(newtermpsc));
@@ -1795,13 +1795,17 @@ int builtin_call(CTXTdeclc byte number)
     Psc newpsc;
     int k = (int)ptoc_int(CTXTc 1);
     Cell goal = ptoc_tag(CTXTc (k+2));
+    if (k > 253) {  // TES: subtracting 2 -- this might not be right.
+      xsb_abort("Calling calln with too many arguments\n");
+    }
     if (k == 0) {
       return prolog_call0(CTXTc goal);
     } else if (isstring(goal)) {
       for (i = 1; i <= k; i++) {
 	bld_copy(reg+i,cell(reg+i+1));
       }
-      newpsc = pair_psc(insert(string_val(goal),(byte)k,(Psc)flags[CURRENT_MODULE],&new));
+      //      newpsc = pair_psc(insert(string_val(goal),(byte)k,(Psc)flags[CURRENT_MODULE],&new));
+      newpsc = pair_psc(insert_psc(string_val(goal),k,(Psc)flags[CURRENT_MODULE],&new));
       pcreg = get_ep(newpsc);
       if (asynint_val) intercept(CTXTc newpsc);
       return TRUE;
@@ -1827,7 +1831,8 @@ int builtin_call(CTXTdeclc byte number)
 	  //printf("here00 %s/%d\n",get_name(psc),get_arity(psc));
 	} else {
 	  //printf("isstring\n");
-	  psc = pair_psc(insert(string_val(goal),(byte)k,modpsc,&new));
+	  //	  psc = pair_psc(insert(string_val(goal),(byte)k,modpsc,&new));
+	  psc = pair_psc(insert_psc(string_val(goal),k,modpsc,&new));
 	}
       } else {
 	//printf("string\n");
@@ -1839,7 +1844,7 @@ int builtin_call(CTXTdeclc byte number)
 	  bld_copy(reg+i,cell(reg+i+1));
 	}
 	//printf("inserting\n");  
-	newpsc = pair_psc(insert(string_val(goal),(byte)k,modpsc,&new));
+	newpsc = pair_psc(insert_psc(string_val(goal),k,modpsc,&new));
 	pcreg = get_ep(newpsc);
 	if (asynint_val) intercept(CTXTc newpsc);
 	return TRUE;
@@ -1862,7 +1867,7 @@ int builtin_call(CTXTdeclc byte number)
       if (!modpsc) modpsc = (Psc)flags[CURRENT_MODULE];
       if (!modpsc) modpsc = global_mod;
       //printf("inserting %s/%d into modpsc %s\n",goalname,get_arity(psc),get_name(modpsc));
-      newpsc = pair_psc(insert(goalname,(byte)(arity+k),modpsc,&new));
+      newpsc = pair_psc(insert_psc(goalname,(arity+k),modpsc,&new));
       if (new) {
 	psc_set_data(newpsc, modpsc);
 	psc_set_env(newpsc,T_UNLOADED);
@@ -2013,7 +2018,8 @@ int builtin_call(CTXTdeclc byte number)
       psc = pair_psc(insert_module(0, addr));
     else
       psc = (Psc)flags[CURRENT_MODULE];
-    sym = pair_psc(insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), psc, &value));
+    //    sym = pair_psc(insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), psc, &value));
+    sym = pair_psc(insert_psc(ptoc_string(CTXTc 1), ptoc_int(CTXTc 2), psc, &value));
     if (value) {
       psc_set_data(sym, psc);
       env_type_set(CTXTc sym, (addr?T_IMPORTED:T_GLOBAL) , T_ORDI, (xsbBool)value);
@@ -2034,12 +2040,12 @@ int builtin_call(CTXTdeclc byte number)
     Pair sym;
     char *mod_name = ptoc_string(CTXTc 3);
     if (strncmp(mod_name,"usermod(",strlen("usermod(")) == 0) {
-      sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), global_mod, &value);
+      sym = insert_psc(ptoc_string(CTXTc 1),ptoc_int(CTXTc 2), global_mod, &value);
       init_psc_ep_info(pair_psc(sym)); // reset to reload
       psc_set_data(pair_psc(sym),(Psc)makestring(string_find(mod_name,1)));
     } else {
       mod_psc = pair_psc(insert_module(0, mod_name));
-      sym = insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), mod_psc, &value);
+      sym = insert_psc(ptoc_string(CTXTc 1), ptoc_int(CTXTc 2), mod_psc, &value);
       if (value)       /* if predicate is new */
 	psc_set_data(pair_psc(sym), (mod_psc));
       if (flags[CURRENT_MODULE]) /* in case before flags is initted */
@@ -3529,7 +3535,7 @@ void retrieve_prof_table(CTXTdecl) { /* r2: +NodePtr, r3: -p(PSC,ModPSC,Cnt), r4
     }
   }
 
-  if (p3psc == NULL) p3psc = insert("p",3,(Psc)flags[CURRENT_MODULE],&tmp)->psc_ptr;
+  if (p3psc == NULL) p3psc = insert_psc("p",3,(Psc)flags[CURRENT_MODULE],&tmp)->psc_ptr;
   arg3 = ptoc_tag(CTXTc 3);
   bind_cs((CPtr)arg3,hreg);
   new_heap_functor(hreg,p3psc);

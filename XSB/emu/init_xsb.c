@@ -279,7 +279,7 @@ static void init_flags(CTXTdecl)
   flags[MAX_QUEUE_TERMS] = DEFAULT_MQ_SIZE; 
   flags[HEAP_GC_MARGIN] = 8192 * ZOOM_FACTOR;
 #else
-  flags[HEAP_GC_MARGIN] = 32*K * ZOOM_FACTOR;
+  flags[HEAP_GC_MARGIN] = 64*K * ZOOM_FACTOR;
 #endif
   flags[WRITE_DEPTH] = 64;
   //  flags[UNIFY_WITH_OCCURS_CHECK_FLAG] = 0;
@@ -1521,7 +1521,7 @@ Psc make_code_psc_rec(CTXTdeclc char *name, int arity, Psc mod_psc) {
   Pair temp;
   int new;
   Psc new_psc;
-  temp = (Pair)insert(name, (byte) arity, mod_psc, &new);
+  temp = (Pair)insert_psc(name, arity, mod_psc, &new);
   new_psc = pair_psc(temp);
   psc_set_data(new_psc, mod_psc);
   psc_set_env(new_psc, T_UNLOADED);
@@ -1622,7 +1622,7 @@ void init_symbols(CTXTdecl)
   dollar_var_psc = make_code_psc_rec(CTXTc "$VAR", 1, global_mod);
 
   ccall_mod_psc = pair_psc(insert_module(0,"ccallxsb"));
-  c_callloop_psc = pair_psc(insert("c_callloop_query_loop",1,ccall_mod_psc,&new));
+  c_callloop_psc = pair_psc(insert_psc("c_callloop_query_loop",1,ccall_mod_psc,&new));
   if (new) {
     psc_set_data(c_callloop_psc,ccall_mod_psc);
     env_type_set(CTXTc c_callloop_psc, T_IMPORTED, T_ORDI, (xsbBool)new);
@@ -1649,7 +1649,7 @@ void init_symbols(CTXTdecl)
   /* Finally, eagerly insert pscs used for resource errors.  This way,
      we don't have to worry abt the symbol table growing when we're
      thowing a memory error. */
-  temp = (Pair)insert("$$exception_ball", (byte)2, 
+  temp = (Pair)insert_psc("$$exception_ball", 2, 
 					pair_psc(insert_module(0,"standard")), 
 		      &new_indicator);
   temp = (Pair) insert("error",3,global_mod,&new_indicator);

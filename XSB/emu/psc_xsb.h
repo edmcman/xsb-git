@@ -95,7 +95,8 @@ struct psc_rec {
   unsigned int alt_semantics:2;
   unsigned int unused:2;
   byte entry_type;		/* see psc_defs.h */
-  byte arity; 
+  //  byte arity; 
+  unsigned int arity:16; 
   char *nameptr;
   struct psc_rec *data;      /* psc of module, if pred in non-usermod module, otw filename pred loaded from */
   byte *ep;                     /* entry point (initted to next word) if pred; filename of pred loaded from if module */
@@ -188,11 +189,12 @@ typedef struct psc_pair *Pair;
 
 extern Pair search_in_usermod(int, char *);
 extern Pair insert_module(int, char *);
-extern Pair insert(char *, byte, Psc, int *);
+  //extern Pair insert(char *, byte, Psc, int *);
+extern Pair insert(char *, int, Psc, int *);
+extern Pair insert_psc(char *, int, Psc, int *);
 
 DllExport extern char* call_conv string_find(const char*, int);
 
-#define insert_psc(Name,Arity,Module,Flag) insert(Name,Arity,Module,Flag) 
 /*======================================================================*/
 /*  Special instance (0-arity interface functions)			*/
 /*======================================================================*/

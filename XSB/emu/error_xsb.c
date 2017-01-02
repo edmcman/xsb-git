@@ -203,7 +203,7 @@ DllExport void call_conv xsb_throw_internal(CTXTdeclc prolog_term Ball, size_t B
   }
   */
 
-  exceptballpsc = pair_psc((Pair)insert("$$exception_ball", (byte)2, 
+  exceptballpsc = pair_psc((Pair)insert("$$exception_ball", 2, 
 					pair_psc(insert_module(0,"standard")), 
 					&isnew));
   hreg_start = hreg;
@@ -303,7 +303,7 @@ DllExport void call_conv xsb_throw(CTXTdeclc prolog_term Ball)
 	    ctrace_ctr++);
   }
 
-  exceptballpsc = pair_psc((Pair)insert("$$exception_ball", (byte)2, 
+  exceptballpsc = pair_psc((Pair)insert("$$exception_ball", 2, 
 					pair_psc(insert_module(0,"standard")), 
 					&isnew));
   hreg_start = hreg;

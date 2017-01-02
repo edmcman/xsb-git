@@ -307,7 +307,8 @@ Cell build_ret_term(CTXTdeclc int arity, Cell termVector[]) {
     return makestring(get_ret_string());  /* return as a term */
   else {
     ret_term = hreg;  /* pointer to where ret(..) will be built */
-    sym_psc = get_ret_psc((byte)arity);
+    //    sym_psc = get_ret_psc((byte)arity);
+    sym_psc = get_ret_psc(arity);
     new_heap_functor(hreg, sym_psc);
     for ( i = 0; i < arity; i++ )
       nbldval_safe(termVector[i]);
@@ -325,7 +326,8 @@ Cell build_ret_term_reverse(CTXTdeclc int arity, Cell termVector[]) {
     return makestring(get_ret_string());  /* return as a term */
   else {
     ret_term = hreg;  /* pointer to where ret(..) will be built */
-    sym_psc = get_ret_psc((byte)arity);
+    //    sym_psc = get_ret_psc((byte)arity);
+    sym_psc = get_ret_psc(arity);
     new_heap_functor(hreg, sym_psc);
     for ( i = arity-1; i >= 0; i-- )
       nbldval_safe(termVector[i]);
@@ -1535,7 +1537,7 @@ void breg_retskel(CTXTdecl)
       ctop_string(CTXTc 3, get_ret_string());
     } else {
       bind_cs((CPtr)ptoc_tag(CTXTc 3), hreg);
-      psc = get_ret_psc((byte)template_size);
+      psc = get_ret_psc(template_size);
       new_heap_functor(hreg, psc);
       for (i = template_size; i > 0; i--) {
 	term = (Cell)(*(CPtr)(cptr+i));
