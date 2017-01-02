@@ -270,7 +270,8 @@ DllExport xsbBool call_conv c2p_functor(CTXTdeclc char *functor, int arity,
     int i;
     if (is_var(v)) {
       XSB_Deref(v);
-      sym = (Pair)insert(functor, (byte)arity, (Psc)flags[CURRENT_MODULE], &i);
+      //      sym = (Pair)insert(functor, (byte)arity, (Psc)flags[CURRENT_MODULE], &i);
+      sym = (Pair)insert_psc(functor, arity, (Psc)flags[CURRENT_MODULE], &i);
 	sreg = hreg;
 	hreg += arity + 1;
 	bind_cs(vptr(v), sreg);
