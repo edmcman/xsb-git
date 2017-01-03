@@ -969,8 +969,8 @@ Integer read_canonical_term(CTXTdeclc int stream, int return_location_code)
 		      size += 2;
 		    } else {
 		      size += arity+1;
-		      sym = (Pair)insert(funstk[funtop].fun,(char)arity,
-					 (Psc)flags[CURRENT_MODULE],&i);
+		      sym = (Pair)insert_psc(funstk[funtop].fun,arity,
+					     (Psc)flags[CURRENT_MODULE],&i);
 		      new_heap_functor(h, sym->psc_ptr);
 		      for (j=op1; j<optop; h++,j++) {
 			if (opstk[j].typ == TK_VAR) { setvar(h,j) }
@@ -1921,7 +1921,7 @@ int call_conv write_canonical_term_rec(CTXTdeclc Cell prologterm, int letter_fla
 	  XSB_StrAppend(wcan_string,wcan_buff->string);
 	}
       } else { /* regular ole structured term */
-	int i; 
+	unsigned int i; 
 	char *fnname = get_name(get_str_psc(prologterm));
 	if (quotes_are_needed(fnname)) {
 	  size_t len_needed = 2*strlen(fnname)+1;

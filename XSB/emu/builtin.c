@@ -924,7 +924,9 @@ int count_variable_occurrences(Cell term) {
   case XSB_STRUCT: {
     int i, arity;
     arity = (int) get_arity(get_str_psc(term));
-    if (arity == 0) return count;
+    if (arity == 0) {
+      return count;
+    }
     for (i = 1; i < arity; i++) {
       count += count_variable_occurrences(get_str_arg(term,i));
     }
@@ -997,7 +999,9 @@ CPtr excess_vars(CTXTdeclc Cell term, CPtr varlist, int ifExist,
     Psc psc;
     psc = get_str_psc(term);
     arity = (int) get_arity(psc);
-    if (arity == 0) return varlist;
+    if (arity == 0) {
+      return varlist;
+    }
     if (ifExist && (psc == caret_psc || psc == forall2_psc)) {
       CPtr *save_templ_base;
       save_templ_base = templ_trail->ltrail_top;
@@ -1555,7 +1559,8 @@ int builtin_call(CTXTdeclc byte number)
     ctop_int(CTXTc 3, compare(CTXTc (void *)ptoc_tag(CTXTc 1), (void *)ptoc_tag(CTXTc 2)));
     break;
   case TERM_NEW_MOD: {  /* R1: +ModName, R2: +Term, R3: -NewTerm */
-    int new, disp;
+    int new;
+    unsigned int disp;
     int import_from_usermod = FALSE;
     char *modname;
     Psc termpsc, modpsc, newtermpsc;
@@ -2019,7 +2024,7 @@ int builtin_call(CTXTdeclc byte number)
     else
       psc = (Psc)flags[CURRENT_MODULE];
     //    sym = pair_psc(insert(ptoc_string(CTXTc 1), (char)ptoc_int(CTXTc 2), psc, &value));
-    sym = pair_psc(insert_psc(ptoc_string(CTXTc 1), ptoc_int(CTXTc 2), psc, &value));
+    sym = pair_psc(insert_psc(ptoc_string(CTXTc 1), (int)ptoc_int(CTXTc 2), psc, &value));
     if (value) {
       psc_set_data(sym, psc);
       env_type_set(CTXTc sym, (addr?T_IMPORTED:T_GLOBAL) , T_ORDI, (xsbBool)value);
@@ -2040,12 +2045,12 @@ int builtin_call(CTXTdeclc byte number)
     Pair sym;
     char *mod_name = ptoc_string(CTXTc 3);
     if (strncmp(mod_name,"usermod(",strlen("usermod(")) == 0) {
-      sym = insert_psc(ptoc_string(CTXTc 1),ptoc_int(CTXTc 2), global_mod, &value);
+      sym = insert_psc(ptoc_string(CTXTc 1),(int)ptoc_int(CTXTc 2), global_mod, &value);
       init_psc_ep_info(pair_psc(sym)); // reset to reload
       psc_set_data(pair_psc(sym),(Psc)makestring(string_find(mod_name,1)));
     } else {
       mod_psc = pair_psc(insert_module(0, mod_name));
-      sym = insert_psc(ptoc_string(CTXTc 1), ptoc_int(CTXTc 2), mod_psc, &value);
+      sym = insert_psc(ptoc_string(CTXTc 1), (int)ptoc_int(CTXTc 2), mod_psc, &value);
       if (value)       /* if predicate is new */
 	psc_set_data(pair_psc(sym), (mod_psc));
       if (flags[CURRENT_MODULE]) /* in case before flags is initted */

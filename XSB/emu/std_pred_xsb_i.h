@@ -76,7 +76,7 @@ inline static xsbBool functor_builtin(CTXTdecl)
 	    new_heap_free(hreg);
 	  } else { 
 	    /* functor always creates a psc in the current module */
-	    sym = (Pair)insert_psc(string_val(functor), value, 
+	    sym = (Pair)insert_psc(string_val(functor), (int)value, 
 			       (Psc)flags[CURRENT_MODULE],
 			       &new_indicator);
 	    sreg = hreg;
@@ -839,8 +839,9 @@ inline static xsbBool parsort(CTXTdecl)
   /* r2: +list of sort indicators: asc(I) or desc(I)	*/
   /* r3: 1 if eliminate dupls, 0 if not			*/
   /* r4: ?sorted list of terms				*/
-  int i, len;
-  int max_ind = 0, elim_dupls;
+  unsigned int i, len;
+  unsigned int max_ind = 0;
+  int elim_dupls;
   Cell heap_addr, term, term2, tmp_ind;
   Cell list, new_list;
   Cell *cell_tbl;

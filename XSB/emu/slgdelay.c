@@ -976,7 +976,7 @@ void *simpl_variant_trie_lookup(CTXTdeclc void *trieRoot, int nTerms, CPtr termV
 /* assume term copied is not a var */
 void answerStack_copyTerm(CTXTdecl) {
   Cell symbol = (Cell) NULL;
-  int i;
+  unsigned int i;
 
   SimplStack_Pop(simplAnsStack,symbol);
   //  printf("working on AS: ");printTrieSymbol(stddbg, symbol);fprintf(stddbg,"\n");
@@ -996,7 +996,7 @@ void answerStack_copyTerm(CTXTdecl) {
 /* For aliased variables; assume term copied is not a var */
 void answerStack_copyTermPtr(CTXTdeclc CPtr symbolPtr) {
   Cell symbol;
-  int i;
+  unsigned int i;
 
   //  printf("answerStack_copyTermPtr: %p ",symbolPtr);
   symbol = *symbolPtr;

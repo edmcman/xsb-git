@@ -2980,7 +2980,7 @@ argument positions.
       chainlen = length_dyntry_chain(*(((byte **)(lpcreg))+1));
       if (chainlen > 20) {  /* only if chain is > 20 long */
 	if (xsb_profiling_enabled) {
-	  int i;
+	  unsigned int i;
 	  Psc psc = psc_from_code_addr(lpcreg);
 	  fprintf(stdout,"%s/%d searched %"Intfmt" unindexed clauses\n",get_name(psc),get_arity(psc),chainlen);
 	  fprintf(stdout,"  %s(",get_name(psc));
