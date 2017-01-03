@@ -779,28 +779,77 @@ int file_strncmp(char *fn1, char *fn2, size_t len) {
 #define file_strncmp(fn1,fn2,len) strncmp(fn1,fn2,len)
 #endif
 
+/* compare forms: either may be full_path.xwam or usermod(modname) or modname.
+   If first is full modname, then the second must also be.
+   If both full then if different ret true else ret false.
+   Otherwise, find both base locations, and compare */
+
 int nec_different_xwam_files(char *datafilename, char *currfilename) {
-  size_t dlen, slen;
+  size_t dlen, clen, dlen_wo_ext, clen_wo_ext;
+  size_t ddisp, cdisp;
+  size_t dmlen = 0, cmlen = 0;
+  //  printf("nec_diff: %s, %s\n",datafilename, currfilename);
   if (file_strcmp(datafilename,currfilename) == 0) return FALSE;
   dlen = strlen(datafilename);
-  slen = strlen(currfilename);
-  if (dlen == 0) printf("ERROR in checking module/file names: datafile len=0, addr=%p\n",datafilename);
-  if (dlen < slen+5) return TRUE;
-  if (file_strcmp(datafilename+dlen-5,".xwam") == 0 &&
-      file_strncmp(datafilename+dlen-5-slen,currfilename,slen) == 0)
+  dlen_wo_ext = dlen - XSB_OBJ_EXTENSION_LENGTH;
+  clen = strlen(currfilename);
+  clen_wo_ext = clen - XSB_OBJ_EXTENSION_LENGTH;
+  if (file_strcmp(datafilename+dlen_wo_ext,XSB_OBJ_EXTENSION_STRING) == 0 &&
+      file_strcmp(currfilename+clen_wo_ext,XSB_OBJ_EXTENSION_STRING) == 0)
+    // both full names and different
+    return TRUE;
+  // at least one is a module or usermod().
+  if (file_strcmp(datafilename+dlen_wo_ext,XSB_OBJ_EXTENSION_STRING) != 0) {
+    if (file_strncmp(datafilename,"usermod(",sizeof("usermod(")-1) == 0) {
+      if (datafilename[sizeof("usermof(")-1] == '\'') {
+	ddisp = sizeof("usermod('")-1;  //9
+	dmlen = dlen - (sizeof("usermod('')")-1);  //11;
+      } else {
+	ddisp = sizeof("usermod(")-1; //8;
+	dmlen = dlen - (sizeof("usermod()")-1);  //9;
+      }
+    } else {
+      ddisp = 0;
+      dmlen = dlen;
+    }
+  } else {
+    ddisp = -1;
+    dmlen = 0;
+  }
+  
+  if (file_strcmp(currfilename+clen_wo_ext,XSB_OBJ_EXTENSION_STRING) != 0) {
+    if (file_strncmp(currfilename,"usermod(",8) == 0) {
+      if (currfilename[8] == '\'') {
+	cdisp = sizeof("usermod('")-1; //9;
+	cmlen = clen - (sizeof("usermod('')")-1); //11;
+      } else {
+	cdisp = sizeof("usermod(")-1; //8;
+	cmlen = clen - (sizeof("usermod()")-1);  //9;
+      }
+    } else {
+      cdisp = 0;
+      cmlen = clen;
+    }
+  } else {
+    cdisp = -1;
+    cmlen = 0;
+  }
+  
+  if (dmlen == 0) dmlen = cmlen; // one or other must be nonzero
+  if (dmlen != cmlen) return TRUE;
+  if ((ddisp == -1) &&
+      strncmp(datafilename+dlen-dmlen-XSB_OBJ_EXTENSION_LENGTH,
+		   currfilename+cdisp,dmlen) == 0)
     return FALSE;
-  if (file_strncmp(datafilename+8,currfilename,slen) == 0) // skip "usermod("
+  if ((cdisp == -1) &&
+      file_strncmp(datafilename+ddisp,
+		   currfilename+clen-cmlen-XSB_OBJ_EXTENSION_LENGTH,dmlen) == 0)
     return FALSE;
-  if (file_strcmp(datafilename+dlen-5,".xwam") == 0 &&
-      (file_strncmp(datafilename+dlen-5-(slen-9),currfilename+8,slen-9) == 0
-       ||
-       (currfilename[8] == '\'' && // for quoted module name
-	file_strncmp(datafilename+dlen-5-(slen-11),currfilename+9,slen-11) == 0
-	))
-      )
+  if (file_strncmp(datafilename+ddisp,currfilename+cdisp,dmlen) == 0)
     return FALSE;
   return TRUE;
 }
+
   /*----------------------------------------------------------------------*/
 
 static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int count, int exp,
