@@ -922,8 +922,8 @@ int count_variable_occurrences(Cell term) {
   case XSB_ATTV:
     return count + 1;
   case XSB_STRUCT: {
-    int i, arity;
-    arity = (int) get_arity(get_str_psc(term));
+    unsigned int i, arity;
+    arity = get_arity(get_str_psc(term));
     if (arity == 0) {
       return count;
     }
