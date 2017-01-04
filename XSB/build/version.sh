@@ -16,7 +16,7 @@ xsb_patch_date=`echo Build date: $xsb_build_date`
 
 xsb_major_version=3
 xsb_minor_version=7
-#xsb_patch_version=1
+xsb_patch_version=0         # must be present; otherwise, an ugly "." at the end
 #xsb_beta_version=pre"
 #xsb_codename="Skol"        # for Version 2.1
 #xsb_codename="Tsingtao"    # for Version 2.2
