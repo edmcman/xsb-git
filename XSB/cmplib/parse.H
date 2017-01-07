@@ -56,7 +56,7 @@
    from auxlry.
 
 :- import append/3, memberchk/2, log_ith/3, member/2, copy_term/2 from basics.
-:- import ith/3 from basics.
+:- import ith/3, ground/1 from basics.
 
 :- import inline_predicate/2 from builtin.
 
@@ -99,7 +99,7 @@
 
 :- import functor/3, seen/0, file_exists/1, '=..'/2, atom/1, integer/1,
           op/3, (index)/3, (index)/2, real/1, see/1, expand_term/2, (=..)/2,
-	  '\='/2, check_table_options/3,
+	  check_table_options/3,
 	  callable/1, goal_cut_trans/3, requires_cut_transforming/1,
 	  arg/3,
 	  open/3,

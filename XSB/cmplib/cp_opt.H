@@ -42,7 +42,6 @@
 :- import concat_atom/2 from string.
 :- import trans_head/5, trans_goals/5 from parse.
 :- import memberchk/2 from basics.
-:- import '\='/2 from standard.
 :- import xwam_state/2 from machine.
 :- import parsort/4 from machine.
 :- import findall/3, sort/2 from setof.

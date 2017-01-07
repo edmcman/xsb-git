@@ -1408,12 +1408,17 @@ trans_goals(T, Goal, SymTab, VidIn, VidOut) :-
 	trans_goal(T, Goal, SymTab, VidIn, VidOut).
 
 trans_goal(Term, Goal, SymTab, VidIn, VidOut) :-
-	(Term = Mod:Term1, atom(Mod), Term1 \= '$$var'(_)
+	(Term = Mod:Term1,
+	 \+ (Mod = '$$var'(Id), integer(Id)),
+	 ground(Mod),
+	 \+ (Term1 = '$$var'(Id), integer(Id))
 	 ->	functor(Term1, P, A),
 		Goal = goal(Sym, ArgList),
-		(sym_insert(P,A,[],SymTab,Sym),sym_prop(im(Mod),Sym)
+		term_to_atom(Mod,PMod,[quoted(true)]),
+		(sym_insert(P,A,[],SymTab,Sym),sym_prop(im(PMod),Sym)
 		 ->	true
-		 ;	sym_insert(Mod:P, A, [im(Mod)], SymTab, Sym)
+		 ;	% PMod:P since unqualified P/N could be in diff mod
+		 	sym_insert(PMod:P, A, [im(PMod)], SymTab, Sym) 
 		),
 		Term1 =.. [P|RawArgs]
 	 ;	functor(Term, P, A),

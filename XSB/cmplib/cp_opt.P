@@ -563,7 +563,9 @@ get_aggr_spec0(ArgNo,Spec,Arity,ExistArgList,OpArgNo,OpSpec) :-
 		)
 	).
 
-non_cpopt_var(Term):- nonvar(Term),Term \= '$$var'(_).
+non_cpopt_var(Term):-
+	nonvar(Term),
+	\+ (Term = '$$var'(Id), integer(Id)).
 
 ensure_imported(Pred/Arity,Mod,SymTab) :-
 	sym_insert(Mod,0,[module],SymTab,_),
