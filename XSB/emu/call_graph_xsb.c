@@ -64,6 +64,7 @@
 #include "tries.h"
 //#include "tr_utils.h"
 #include "debug_xsb.h"
+#include "tr_code_xsb_i.h"
 
 //#define INCR_DEBUG
 //#define INCR_DEBUG1
@@ -812,8 +813,9 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
 	//	printf("in answer trie\n");
 	if (subgoal == get_subgoal_frame_for_answer_trie_cp(CTXTc trieNode,cp_outer_iter))  {
 #ifdef INCR_DEBUG1
-	  printf("found top of run %p ",cp_outer_iter);
+	  printf("found top of run %p %x ",cp_outer_iter,cp_inst);
 	  print_subgoal(CTXTc stdout, subgoal); printf("\n");
+	  if (cp_inst == hash_handle) print_hash_handle(cp_outer_iter);
 #endif
 	   cp_root = cp_outer_iter; 
 #ifdef INCR_DEBUG1
@@ -835,31 +837,36 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
 	  ans_subst_num = (int)int_val(cell(cp_root + CP_SIZE + 1)) ;  // account for sf ptr of trie root cp
 	  //	  attv_num = (int)int_val(cell(breg+CP_SIZE+1+ans_subst_num)) + 1;;
 	  attv_num = 0;   // TES: FIX!
-	  #ifdef INCR_DEBUG1
-	  printf("found root %p first %p top %p ans_subst_num %d & %p attv_num %d\n",cp_root,cp_first,cp_outer_iter,ans_subst_num,breg+CP_SIZE, attv_num); 
-	  #endif
+#ifdef INCR_DEBUG1
+	  printf("found root %p first %p top %p ans_subst_num %d & %p attv_num %d\n",
+		 cp_root,cp_first,cp_outer_iter,ans_subst_num,breg+CP_SIZE, attv_num); 
+#endif
 	  listHead = list_of_answers_from_answer_list(subgoal,ans_subst_num,attv_num,ALNlist);
-	  // Free ALNlist;
-	  cp_pcreg(cp_outer_iter) = (byte *) &completed_trie_member_inst;
-       	  cp_ebreg(cp_outer_iter) = cp_ebreg(cp_root);
-	  cp_hreg(cp_outer_iter) = hreg;	  
-	  cp_ereg(cp_outer_iter) = cp_ereg(cp_root);
-	  cp_trreg(cp_outer_iter) = cp_trreg(cp_root);
-	  cp_prevbreg(cp_outer_iter) = cp_prevbreg(cp_root);	  cp_prevtop(cp_outer_iter) = cp_prevtop(cp_root);
-	  // cpreg, ereg, pdreg, ptcpreg should not need to be reset (prob not ebreg?)
-	  //	  printf("sf %p\n",* (cp_root + CP_SIZE + 2));
-          if (cp_prevbreg(cp_root) < (cp_outer_iter + 2 + CP_SIZE + ans_subst_num)) // TES fix!!     
-            printf("not enough room for coalesced choice point\n");
- 	  * (cp_outer_iter + CP_SIZE) = makeint(ans_subst_num);
-	  for (i = 0;i < ans_subst_num ;i++) {                              // Use registers for root of trie, not leaf (top)
-	    * (cp_outer_iter + CP_SIZE + 1 + i) =  * (cp_root + CP_SIZE + 2 +i);  // account for sf ptr or root
+	  if (listHead) { 
+	    // Free ALNlist;
+	    cp_pcreg(cp_outer_iter) = (byte *) &completed_trie_member_inst;
+	    cp_ebreg(cp_outer_iter) = cp_ebreg(cp_root);
+	    cp_hreg(cp_outer_iter) = hreg;	  
+	    cp_ereg(cp_outer_iter) = cp_ereg(cp_root);
+	    cp_trreg(cp_outer_iter) = cp_trreg(cp_root);
+	    cp_prevbreg(cp_outer_iter) = cp_prevbreg(cp_root);	  cp_prevtop(cp_outer_iter) = cp_prevtop(cp_root);
+	    // cpreg, ereg, pdreg, ptcpreg should not need to be reset (prob not ebreg?)
+	    //	  printf("sf %p\n",* (cp_root + CP_SIZE + 2));
+	    if (cp_prevbreg(cp_root) < (cp_outer_iter + 2 + CP_SIZE + ans_subst_num)) // TES fix!!     
+	      printf("not enough room for coalesced choice point\n");
+	    * (cp_outer_iter + CP_SIZE) = makeint(ans_subst_num);
+	    for (i = 0;i < ans_subst_num ;i++) {   
+	      // Use registers for root of trie, not leaf (top)
+	      * (cp_outer_iter + CP_SIZE + 1 + i) =  * (cp_root + CP_SIZE + 2 +i);  // account for sf ptr or root
+	    }
+	    * (cp_outer_iter + CP_SIZE + 1+ ans_subst_num) = listHead;
+	    * (cp_outer_iter + CP_SIZE + 2+ ans_subst_num) = (Cell)hfreg;
+	    //	  printf("4 cp_root %p prev %p\n",cp_root,cp_prevtop(cp_root));
+	    //	  printf("constructed listhead hreg %x\n",hreg);
+	    //	  cp_outer_iter = cp_root;  // next iteration
+	    //	  printf("7 cp_outer_iter %p bottom_of_cpstack %p prev %p\n",
+	    //           cp_outer_iter,bottom_of_cpstack,cp_prevtop(cp_outer_iter));
 	  }
-	  * (cp_outer_iter + CP_SIZE + 1+ ans_subst_num) = listHead;
-	  * (cp_outer_iter + CP_SIZE + 2+ ans_subst_num) = (Cell)hfreg;
-	  //	  printf("4 cp_root %p prev %p\n",cp_root,cp_prevtop(cp_root));
-	  //	  printf("constructed listhead hreg %x\n",hreg);
-	  //	  cp_outer_iter = cp_root;  // next iteration
-	  //	  printf("7 cp_outer_iter %p bottom_of_cpstack %p prev %p\n",cp_outer_iter,bottom_of_cpstack,cp_prevtop(cp_outer_iter));
 	}
       }
     }
@@ -874,6 +881,7 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
   //  if (xwammode) hfreg = hreg;
   subg_visitors(subgoal) = 0;
   //  instr_flag = 1;  printf("setting instr_flag\n");  hreg_pos = hreg;
+  //  printf("done with ftv\n");
 }
 
 void throw_dfs_inedges_error(CTXTdeclc callnodeptr call1) {

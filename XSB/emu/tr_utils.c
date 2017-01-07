@@ -760,7 +760,7 @@ ALNptr traverse_variant_answer_trie(CTXTdeclc VariantSF subgoal, CPtr rootptr, C
 
   //  printf("-----start path traversal 1\n");
   while (leafptr != rootptr) {
-    printf("pushing %p instruction is %x\n",(BTNptr) leafptr,BTN_Instr((BTNptr) *leafptr)); 
+    //    printf("pushing %p instruction is %x\n",(BTNptr) leafptr,BTN_Instr((BTNptr) *leafptr)); 
     if (BTN_Instr((BTNptr) *leafptr) == hash_handle) {
       // If the choice point instruction is hash_handle, we're
       //      backtracking through a hash.  In this case, the
@@ -5689,15 +5689,15 @@ forestLogBuffer forest_log_buffer_3;
 
 Cell list_of_answers_from_answer_list(CTXTdeclc VariantSF sf,int as_length,int attv_length,ALNptr ALNlist) {
   //  BTNptr leaf;
-  Cell listHead;   CPtr argvec1,oldhreg=NULL;
+  Cell listHead = 0;   CPtr argvec1,oldhreg=NULL;
   int i, isNew;   Psc ans_desig;
   ALNptr ansPtr;
   VariantSF undef_sf;
-    Pair undefPair;				      
+  Pair undefPair;				      
+  int j = 0;
 
-  //  print_subgoal(stdout, sf); printf("\n"); 
-
-    //  leaf = subg_leaf_ptr(sf);
+  //  printf("loafal "); print_subgoal(stdout, sf); printf("\n"); 
+  //  leaf = subg_leaf_ptr(sf);
   ans_desig = get_ret_psc(2);
   ansPtr = ALNlist;
   undefPair = insert("brat_undefined", 0, pair_psc(insert_module(0,"xsbbrat")), &isNew); 
@@ -5731,11 +5731,14 @@ Cell list_of_answers_from_answer_list(CTXTdeclc VariantSF sf,int as_length,int a
     follow((oldhreg+1)) = makelist(hreg);
 
     ansPtr = ALN_Next(ansPtr);
+    j++;
   }
-
-  follow(oldhreg+1) = makenil;
-  //  printf("---listhead--- ");  printterm(stddbg,listHead,80);printf("\n");
-  return listHead;
+  //  printf("copied %d answers\n",j);
+  if (j) {
+    follow(oldhreg+1) = makenil;
+    //  printf("---listhead--- ");  printterm(stddbg,listHead,80);printf("\n");
+    return listHead;
+  } else return 0;
 }
 
 int hello_world(void) {
