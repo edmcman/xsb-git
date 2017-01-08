@@ -10,20 +10,19 @@ process, separate from other components of an application, and
 communicating through sockets, a database, or some other mechanism.
 However it is often useful for XSB to reside in the same process as
 other components.  To do this, one wants to be able to {\em call}\ XSB
-from the host language, providing queries for XSB to evaluate, and
-retrieving back the answers.  An interface for calling XSB from C is
-provided for this purpose and is described in this chapter.  Based on
-this C interface, XSB can also be called from Java either through a
-JNI or a socket-based interface, as described in the
-documentation for InterProlog, available through {\tt
+from the host language, providing queries for XSB to evaluate.  An
+interface for calling XSB from C is provided for this purpose and is
+described in this chapter.  Based on this C interface, XSB can also be
+called from Java either through a JNI or a socket-based interface, as
+described in the documentation for InterProlog, available through {\tt
   xsb.sourceforge.net}.  To call XSB from Visual Basic, a DLL is
 created as described in this chapter, and additional declarations must
 be made in visual basic as described in the web page ``How to use XSB
 DLL from Visual Basic'' \url{http://xsb.sourceforge.net/vbdll.html}.
 In addition, the interface described in this chapter has also been
 extended to allow XSB to be called from Delphi and Ruby.  However,
-since all of these interfaces -- Java, Ruby, Delphi and Visual Basic --
-depend on XSB's C API, we refer in this chapter to C programs or
+since all of these interfaces -- Java, Ruby, Delphi and Visual Basic
+-- depend on XSB's C API, we refer in this chapter to C programs or
 threads calling XSB, although each of the examples suitably modified
 can be extended to other calling languages.
 

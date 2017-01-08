@@ -612,4 +612,8 @@ We end our discussion about operators by mentioning that prefix
 operators of type {\tt hx} and {\tt hy} are {\em proper HiLog
   operators}.  The discussion of proper HiLog operators and their
 properties is deferred for the manual of a future version.
+\footnote{As a known bug, XSB's reader cannot properly read an
+  operator defined as both a prefix and an infix operator.  For
+  instance the declaration of both {\tt :- op(1200,xf,'$<=$').} and 
+{\tt :- op(1200,xfx,'$<=$').} will lead to a syntax error.}
 
