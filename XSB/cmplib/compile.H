@@ -31,7 +31,8 @@
 
 :- import spec/2 from spec.
 :- import cp_opt/2, perform_tabling_transforms/2 from cp_opt.
-:- import str_cat/3, stat_flag/2, stat_set_flag/2 from machine.
+:- import str_cat/3, stat_flag/2, stat_set_flag/2, machine_file_exists/1 from machine.
+:- import concat_atom/2 from string.
 :- import useinfer/3 from useinfer.
 %%:- import db_optimize/4 from db_opt.
 %%:- import build_graph/1 from cutcheck.
@@ -65,10 +66,10 @@
 :- import throw/1, cputime/1, open/3, close/1 from standard.
 :- import tell/1 from standard.
 :- import force_peephole_loaded/0, compile_peephole_opt/2 from peephole.
-   :- import message/1, warning/1, time_message/2, setoptions/1, option/1
+:- import message/1, warning/1, time_message/2, setoptions/1, option/1
      from auxlry.
 :- import gennum/1, conget/2, conset/2 from gensym.
-:- import sys_unlink/2 from shell.
+:- import sys_unlink/2, create_lockfile/1, sleep/1 from shell.
 :- import member/2 from basics.
 %%:- import force_ti_mod_loaded/0, ti_pred_block/3 from ti_mod.
 
@@ -76,6 +77,7 @@
 :- import assert/1, retractall/1, (dynamic)/1  from assert.
 :- import '_$hilog_symbol'/1 from hilogsym.
 :- import catch/3,throw/1 from standard.
+:- import console_writeln/1 from standard.
 :- import syntax_error/1, permission_error/4, permission_warning/5  from error_handler.
 :- import see/1 from standard.
 

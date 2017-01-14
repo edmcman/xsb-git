@@ -71,7 +71,7 @@
 
 :- import
 	preprocessing_error/1,
-	existence_error/4, misc_error/1, syntax_error/1, check_ground/3
+	existence_error/4, syntax_error/1, check_ground/3
    from error_handler.
 
 :- import
@@ -107,8 +107,6 @@
 	  call/1, compound/1,
 	  is_most_general_term/1, number/1, atom_codes/2
      from standard.
-
-:- import throw/1 from standard.
 
 :- import file_read/3 from xsb_read.
 

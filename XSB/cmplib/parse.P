@@ -393,7 +393,7 @@ make_gpp_options(' -P -m -nostdinc -curdirinclast ').
 %% Arg 2 is the output shell command made by Pred/2.
 register_xsb_preprocessor(Name,_) :-
 	var(Name),
-	error('When registering a preprocessor, the name should be an atom'),
+	error(('When registering a preprocessor, the name should be an atom, not ',Name)),
 	!.
 register_xsb_preprocessor(Name,CallTemplate) :-
 	(var(CallTemplate)
@@ -699,7 +699,7 @@ parse_directive(module(ModIn,X,_Dialect), _QrList,SymTab,ModName,_ModStruct) :- 
 parse_directive(module(ModIn,X), _QrList,SymTab,ModName,_ModStruct) :- !, 	
 	(functor(ModName,ModIn,_) -> 
 	    parse_list(X, SymTab, [ex,pred], (export))
-	  ; misc_error(('Declared module name (',ModIn,') must be the same as file base (',ModName,').')) ).
+	  ; error(('Declared module name (',ModIn,') must be the same as file base (',ModName,').')) ).
 parse_directive(export(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
 	parse_comma_list(X, SymTab, [ex,pred], (export)).
 parse_directive(document_export(X), _QrList,SymTab,_ModName,_ModStruct) :- !,
@@ -943,7 +943,7 @@ skip_over_condition(N,Cl_fin):-
 	;	Cl = (':-'(elif(Condition))), cond_call(Condition) ->
 		Cl = Cl_fin
 	;	Cl = (':-'(if(_Call))) -> 
-		misc_error('XSB does not support nested conditional compilation.')
+		error('XSB does not support nested conditional compilation.')
 	;	skip_over_condition(N,Cl_fin)
 	).
 
@@ -1486,7 +1486,7 @@ fix_for_0_ary_preds(Pred,Arity,Args,FixedArgs) :-
 	replace_ith(Args,ArgNo,PString,FixedArgs).
 fix_for_0_ary_preds(_,_,Args,Args).
 
-replace_ith([],_,_,[]) :- !, throw(error(parser,'Bad Metapredicate')).
+replace_ith([],_,_,[]) :- !, error(('Bad Metapredicate Declaration: meta-argument out of range.')).
 replace_ith([_|Args],1,Repl,[Repl|Args]) :- !.
 replace_ith([A|Args],N,Repl,[A|RArgs]) :-
 	N1 is N-1,

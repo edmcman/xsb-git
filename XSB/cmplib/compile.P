@@ -55,7 +55,9 @@ handle_compile_error(Basename,IStr,OStr):-
 	stat_flag(CURRENT_INPUT, CurStr),
 	(IStr \== CurStr -> close(CurStr) ; true),
 	str_cat(Basename,XSB_OBJ_EXTENSION_ATOM,OFile),
-	sys_unlink(OFile,_), 
+	sys_unlink(OFile,_Ret0), 
+	str_cat(Basename,XSB_LCK_EXTENSION_ATOM,LFile),
+	sys_unlink(LFile,_Ret1), 
 	see(IStr),tell(OStr).
 
 %%:- import console_writeln/1 from standard.
@@ -73,7 +75,6 @@ compile_internal(Modname, Basename, Extension,Options, ExportList) :-
 	cputime(TimeStart),
 	retractall(current_compiled_module(_)),
 	assert(current_compiled_module(Basename)),
-%	db_preprocess(PFile, HFile, OptFile, SourceFile),
 	parse(Modname, PFile, HFile, Module_0),
 	( option(profile) -> 
 	    time_message(TimeStart, 'Parse finita'), cputime(TimeParse)
@@ -219,15 +220,37 @@ compile1(Modname, Module, ModPars, SymTab, AFile, OFile, TIFile, IsModule) :-
 	  compile0(Module, 1, AStr, OStr, TIFile, IsModule),
 	  close(AStr),
 	  close(OStr)
-      ; stat_flag(101,OldCS), % old charset
-	stat_set_flag(101,2), % set utf-8
-        open(OFile,write,OStr),
-	stat_set_flag(101,OldCS), % reset old charset
+       ; lockfile_name(OFile,LFile),
+	      (create_lockfile(LFile)
+	       ->     stat_flag(101,OldCS), % old charset
+		      stat_set_flag(101,2), % set utf-8
+		      open(OFile,write,OStr),
+		      stat_set_flag(101,OldCS), % reset old charset
 %	  console_writeln(asm_genheader(Modname,ModPars,IsModule,SymTab)),
-	asm_genheader(OStr, Modname, ModPars, SymTab, IsModule), % generate OBJ header
-	compile0(Module, 0, dummy, OStr, TIFile, IsModule),
-	close(OStr)
+		      asm_genheader(OStr, Modname, ModPars, SymTab, IsModule), % generate OBJ header
+		      compile0(Module, 0, dummy, OStr, TIFile, IsModule),
+		      close(OStr),
+		      sys_unlink(LFile,_)
+	       ;      wait_on_lockfile(LFile,0)
+	      )
       ).
+
+wait_on_lockfile(LFile,Cnt) :-
+	(Cnt mod 10 =:= 0
+	 ->	console_writeln('Waiting for compilation of file '(LFile))
+	 ;	true
+	),
+	sleep(1),
+	(machine_file_exists(LFile)
+	 ->	Cnt1 is Cnt+1,
+		wait_on_lockfile(LFile,Cnt1)
+	 ;	true
+	).
+
+lockfile_name(OFile,LFile) :-
+	concat_atom([BaseFile,XSB_OBJ_EXTENSION_ATOM],OFile),
+	concat_atom([BaseFile,XSB_LCK_EXTENSION_ATOM],LFile).
+
 
 /*======================================================================*/
 /* compile0(+Module, +GenAsm, +AStr, +OStr, +IsModule)		*/
@@ -236,7 +259,10 @@ compile1(Modname, Module, ModPars, SymTab, AFile, OFile, TIFile, IsModule) :-
 
 compile0(module(SymTab,_,ClList,[MainPred],_Par),GenAsm,AStr,OStr,TIFile,M) :-
 	member(PredBlk, [MainPred|ClList]),
-	compile_predicate(PredBlk, GenAsm, AStr, OStr, TIFile, M, SymTab),
+	catch(compile_predicate(PredBlk, GenAsm, AStr, OStr, TIFile, M, SymTab),
+	      Error,
+	      (close(OStr),throw(Error))
+	     ),
 	fail.	/* just reclaim space */
 compile0(_, _, _, _, _, _).
 
@@ -273,7 +299,7 @@ compile_check_ok(Sym) :-
 	 ;	(standard_symbol(P, N, _)
 		 ->	(option(allow_redefinition)
 			 ->	permission_warning(redefine,'standard predicate',P/N,'',compile/1)
-		         ;      permission_error(redefine,'standard predicate',P/N,compile/1)
+		         ;	permission_error(redefine,'standard predicate',P/N,compile/1)
 			)
 		 ;	true
 		)

@@ -48,21 +48,6 @@ warning(Message) :-
 error(Message) :- 
 	misc_error(Message).
 
-/*
-TLS No need for this any more -- lets use XSBs error mechanism
-
-error(Message) :- 
-	( conget('error occurred', 1)
-	->  true
-	;   conset('error occurred', 1)
-	),
-	ttywritenl(('++Error[XSB]: [Compiler] ', Message), STDERR),
-	(conget(quit_on_error,1)
-	->  sys_exit(1)
-	;   true
-	).
-*/
-
 :- dynamic('_$global_compiler_options'(_)).
 
 set_global_compiler_options(Options) :-
