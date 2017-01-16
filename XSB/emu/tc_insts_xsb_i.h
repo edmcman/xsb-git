@@ -722,6 +722,7 @@ XSB_Start_Instr(hash_opcode,_hash_opcode)
 	} 
 XSB_End_Instr()
 
+
 /*
  *  Since this instruction is called immediately after 'hash_opcode' and
  *  is also backtracked to while exploring a bucket chain, a mechanism is
@@ -734,7 +735,7 @@ XSB_Start_Instr(hash_handle,_hash_handle)
     Integer     hash_offset, hashed_hash_offset;
 
     trie_instr_print(("hash_handle\n"));
-    hash_offset = int_val(cell(breg+CP_SIZE));   // This may be number of bucket. */
+    hash_offset = int_val(cell(breg+CP_SIZE));   // number of bucket
     hash_hdr = (BTHTptr) string_val(cell(breg+CP_SIZE+1));
     hash_base = (BTHTptr *) BTHT_BucketArray(hash_hdr);
 if ( int_val(cell(breg + CP_SIZE + 2)) == HASH_IS_NOT_FREE ) {
@@ -768,7 +769,7 @@ if ( int_val(cell(breg + CP_SIZE + 2)) == HASH_IS_NOT_FREE ) {
 	    cell(breg + CP_SIZE) = makeint(hashed_hash_offset);  /* Thus backtrack into matching con/sym after backtracking thru vars */
 	  lpcreg = (byte *) *hash_base;
 	}
-      }
+      }  /* end of case FIRST_HASH_NODE */
       else if (hash_offset == hashed_hash_offset) {   /* TLS: probably could opt this "if" away */
 	/* explore hashed-to bucket */
 	lpcreg = (byte *)*(hash_base + hash_offset);
@@ -779,7 +780,7 @@ if ( int_val(cell(breg + CP_SIZE + 2)) == HASH_IS_NOT_FREE ) {
 		  hash_offset, hashed_hash_offset);
 	xsb_exit( "error_condition in hash_handle\n");
       }
- }
+ } /* end of case HASH_IS_NOT_FREE */
  else {  /* unification of trie with variable term */
    find_next_nonempty_bucket(hash_hdr,hash_base,hash_offset);
    if (hash_offset == NO_MORE_IN_HASH) {
