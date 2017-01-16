@@ -4966,6 +4966,7 @@ void remove_incomplete_tries(CTXTdeclc CPtr bottom_parameter)
   VariantSF CallStrPtr;
   TIFptr tif;
   while (openreg < bottom_parameter) {
+
     CallStrPtr = (VariantSF)compl_subgoal_ptr(openreg);
     if (!is_completed(CallStrPtr)) {
       if (warned == FALSE) {
@@ -4991,7 +4992,9 @@ void remove_incomplete_tries(CTXTdeclc CPtr bottom_parameter)
     openreg += COMPLFRAMESIZE;
   }
   //  printf("new complstacksize %d\n",COMPLSTACKSIZE);
-  level_num = compl_level(openreg);
+  if (openreg < COMPLSTACKBOTTOM) 
+      level_num = compl_level(openreg);
+  else level_num = 0;
 }
 
 
