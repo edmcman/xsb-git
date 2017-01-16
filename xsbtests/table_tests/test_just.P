@@ -2,7 +2,7 @@
 :- [justify].
 :- [actions].
 
-test:- shell('rm ./actions_jxm.*'),fail.
+test:- shell('rm -f ./actions_jxm.*'),fail.
 test:- jxm(actions),fail.
 test:- [actions_jxm],fail.
 %
