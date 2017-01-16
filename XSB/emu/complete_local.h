@@ -330,6 +330,9 @@ xsbBool dl_has_tagged_de(DL dl, VariantSF designated_subgoal) {
 extern xsbBool remove_dl_from_dl_list(CTXTdeclc DL , ASI );
 extern void clean_up_backpointers_to_failed_delay_list(CTXTdeclc DL delayList);
 
+/* Performs a second-stage simplification needed by completion
+   semantics (instead of  answer simplification) */
+
 void PerformCSSimplification(CTXTdeclc CPtr cs_ptr) {
   CPtr ComplStkFrame = cs_ptr;
   VariantSF compl_subg,designated_subgoal;
@@ -345,7 +348,7 @@ void PerformCSSimplification(CTXTdeclc CPtr cs_ptr) {
   designated_subgoal  = TIF_Subgoals(get_tip(CTXTc pair_psc(undefPair)));				
 
   altsem_dbg(("in PerformCSSimplification: ComplStkFrame %p openreg %p breg %p\n",ComplStkFrame,openreg,breg));
-  /* check from leader up to the youngest subgoal */
+  /* check SCC from leader up to the youngest subgoal */
   while (ComplStkFrame >= openreg) {
     altsem_dbg(("in loop: ComplStkFrame %p openreg %p (",ComplStkFrame,openreg));
     compl_subg = compl_subgoal_ptr(ComplStkFrame);
