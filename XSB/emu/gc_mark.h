@@ -788,10 +788,15 @@ static int mark_hreg_from_choicepoints(CTXTdecl)
   UNUSED(bprev);
 
   m = 0;
-    while(1)
-     {
+  // T
+  while(1)
+    { // TES: leaving some scaffolding commented, as an overflow of heap_marks could happen again
+      //       if (cp_pcreg(b) ==  (byte *) &completed_trie_member_inst) 
+      //	 printf("completed trie member found in cp traversal %p offset %u\n",b,(CPtr)(tcpstack.high) - b);
       h = cp_hreg(b) ;
       i = h - heap_bot ;
+      //       if ( i > heap_marks_size || i < 0) printf("heap_marks_size %u i %u breg %p instr %x\n",
+      //					 heap_marks_size,i,b,*(byte *) cp_pcreg(b));
       if (! h_marked(i)) /* h from choicepoint should point to something that
 			    is marked; if not, mark it now and set it
 			    to something reasonable - int(666) is ok

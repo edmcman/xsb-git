@@ -788,7 +788,8 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
   ALNptr ALNlist;
 
 #ifdef NON_OPT_COMPILE
-  printf("find the visitors: subg %p trie root %p\n",subgoal,subg_ans_root_ptr(subgoal));
+  printf("find the visitors: subg %p trie root %p breg %p prevp %p\n",
+	 subgoal,subg_ans_root_ptr(subgoal),breg,cp_prevbreg(breg));
 #endif
 
   cp_outer_iter = breg ;				 
@@ -813,7 +814,8 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
 	//	printf("in answer trie\n");
 	if (subgoal == get_subgoal_frame_for_answer_trie_cp(CTXTc trieNode,cp_outer_iter))  {
 #ifdef INCR_DEBUG1
-	  printf("found top of run %p %x ",cp_outer_iter,cp_inst);
+	  printf("   found top of run %p b-offset %u %x \n",
+		 cp_outer_iter, (CPtr)(tcpstack.high) - cp_outer_iter,cp_inst);
 	  print_subgoal(CTXTc stdout, subgoal); printf("\n");
 	  if (cp_inst == hash_handle) print_hash_handle(cp_outer_iter);
 #endif
@@ -838,8 +840,9 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
 	  //	  attv_num = (int)int_val(cell(breg+CP_SIZE+1+ans_subst_num)) + 1;;
 	  attv_num = 0;   // TES: FIX!
 #ifdef INCR_DEBUG1
-	  printf("found root %p first %p top %p ans_subst_num %d & %p attv_num %d\n",
-		 cp_root,cp_first,cp_outer_iter,ans_subst_num,breg+CP_SIZE, attv_num); 
+	  printf("   found root %p first %p top %p ans_subst_num %d & %p attv_num %d cp_hreg offset %u\n",
+		 cp_root,cp_first,cp_outer_iter,ans_subst_num,breg+CP_SIZE, 
+		 attv_num,cp_hreg(cp_root) - (CPtr)(glstack.low)); 
 #endif
 	  listHead = list_of_answers_from_answer_list(subgoal,ans_subst_num,attv_num,ALNlist);
 	  if (listHead) { 
@@ -861,11 +864,23 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
 	    }
 	    * (cp_outer_iter + CP_SIZE + 1+ ans_subst_num) = listHead;
 	    * (cp_outer_iter + CP_SIZE + 2+ ans_subst_num) = (Cell)hfreg;
-	    //	  printf("4 cp_root %p prev %p\n",cp_root,cp_prevtop(cp_root));
 	    //	  printf("constructed listhead hreg %x\n",hreg);
 	    //	  cp_outer_iter = cp_root;  // next iteration
-	    //	  printf("7 cp_outer_iter %p bottom_of_cpstack %p prev %p\n",
+	    //	  printf("cp_outer_iter %p bottom_of_cpstack %p prev %p\n",
 	    //           cp_outer_iter,bottom_of_cpstack,cp_prevtop(cp_outer_iter));
+	    // printf("  done with coalescing cp_hreg-offset %ld\n",
+	    //	   cp_hreg(cp_outer_iter) - (CPtr)(glstack.low));
+	    { 
+	      CPtr breg_for_run = breg;
+	      //	      printf("  cp_outer_iter %p breg %p prev-b %p\n",cp_outer_iter,breg,cp_prevbreg(breg));
+	      while (breg_for_run != cp_outer_iter && breg_for_run != bottom_of_cpstack) {
+	        if (cp_hreg(breg_for_run) < hreg) {
+		  cp_hreg(breg_for_run) = hreg;
+		  //		  printf("setting hreg for cp %p\n",breg_for_run);
+		}
+		breg_for_run = cp_prevbreg(breg_for_run);
+	      }
+	    }
 	  }
 	}
       }
