@@ -747,6 +747,11 @@ void delete_variant_call(CTXTdeclc VariantSF pSF, xsbBool should_warn) {
      unconsumed part of the trie to produce the answer list.
   */
 
+#ifdef TVAT_DEBUG
+#define tvat_print(X) printf X
+#else
+#define tvat_print(X)
+#endif
 
 ALNptr traverse_variant_answer_trie(CTXTdeclc VariantSF subgoal, CPtr rootptr, CPtr leafptr) {
   int node_stk_top = 0; Integer hash_offset;
@@ -756,11 +761,11 @@ ALNptr traverse_variant_answer_trie(CTXTdeclc VariantSF subgoal, CPtr rootptr, C
   ALNptr lastALN = (ALNptr) NULL; ALNptr thisALN;
   BTNptr tempstk[1280]; int tempstk_top = 0;
 
-  //  printf("starting leafptr to %p  %x\n",leafptr,BTN_Instr((BTNptr) *leafptr));
-
-  //  printf("-----start path traversal 1\n");
+  tvat_print(("starting tvat leafptr to %p inst %x root rootptr %p inst %x\n",
+	      leafptr,BTN_Instr((BTNptr) *leafptr),rootptr,BTN_Instr((BTNptr) *leafptr)));
+  tvat_print((("-----start path traversal (via ptrs from choice points)\n")));
   while (leafptr != rootptr) {
-    //    printf("pushing %p instruction is %x\n",(BTNptr) leafptr,BTN_Instr((BTNptr) *leafptr)); 
+    tvat_print(("examining %p instruction is %x\n",(BTNptr) leafptr,BTN_Instr((BTNptr) *leafptr)));
     if (BTN_Instr((BTNptr) *leafptr) == hash_handle) {
       // If the choice point instruction is hash_handle, we're
       //      backtracking through a hash.  In this case, the
@@ -768,55 +773,67 @@ ALNptr traverse_variant_answer_trie(CTXTdeclc VariantSF subgoal, CPtr rootptr, C
       //      choice point, specifically a pointer to the hash header
       //      (the BTHT) and a point to the number of the bucket last
       //      seen.  See discussion in tc_insts
+      // TES: we know that for veriant answers HASH_IS_FREE will always be true, so we dont have to worry
+      // However, things might be different for call subsumption (?)
       tempstk[tempstk_top++] = (BTNptr) string_val(cell(leafptr+CP_SIZE+1));  // ptr to BTHT (arg to hash_header)
-      //      printf("   BTHT %p\n", string_val(cell(leafptr+CP_SIZE+1)));
-      tempstk[tempstk_top++] = (BTNptr) int_val(cell(leafptr+CP_SIZE)); // Nbr of bucket last seen (hash header arg) 
+      tvat_print(("pushing BTHT %p\n", string_val(cell(leafptr+CP_SIZE+1))));
+      tempstk[tempstk_top++] = (BTNptr) int_val(cell(leafptr+CP_SIZE)); // Nbr of bucket last seen (hash header arg)
     }    
     else {
       tempstk[tempstk_top++] =  *(BTNptr *)leafptr;
+      tvat_print(("pushing regular %p\n",   *(BTNptr *)leafptr));
     }
-    //    printf("   setting leafptr to %p  %x\n",cp_prevbreg(leafptr),BTN_Instr((BTNptr) *cp_prevbreg(leafptr)));
+    tvat_print(("   setting leafptr to %p  %x\n",cp_prevbreg(leafptr),BTN_Instr((BTNptr) *cp_prevbreg(leafptr))));
     leafptr = (CPtr)  cp_prevbreg(leafptr);
   }
-  //  printf("-----end trie traversal\n");
-  if (tempstk_top >= 1280) 
-      xsb_abort("Ran out of reversal stack space while logging for incremental tabling update\n");
+	     tvat_print(("-----end path traversal\n"));
+  if (tempstk_top >= 1280)
+    xsb_abort("Ran out of reversal stack space while logging for incremental tabling update\n");
   while(tempstk_top > 0) {
     push_node(tempstk[--tempstk_top]);  // tempstk -> freeing_stack, reversing
+    tvat_print(("reversal_pushed %p ns_top %d\n",tempstk[tempstk_top],node_stk_top));
   }
-  //  printf("------ starting trie traversal 2\n");
+  //  tvat_print(("------ starting trie traversal 2\n");
   while (node_stk_top != 0) {
-      pop_node(rnod);
-      //      printf("popped node %p\n",rnod);
-      if ( IsHashHeader(rnod)) {
-	pop_node(hash_bucket);
-	hash_offset = (Integer) hash_bucket;
-	//	printf("hash header %p offset %p\n",rnod,hash_bucket);
-	hash_hdr = (BTHTptr) rnod;
-	hash_base = (BTHTptr *) BTHT_BucketArray(hash_hdr);
-	find_next_nonempty_bucket(hash_hdr,hash_base,hash_offset);
-	if (hash_offset != NO_MORE_IN_HASH) {
-	  push_node((BTNptr) hash_offset);
-	  push_node((BTNptr) hash_hdr);
-	  push_node(*(BTNptr *)(hash_base + hash_offset));
-	  //	  printf("pushed %p\n",hash_base + hash_offset);
-	}
+    pop_node(rnod);
+    tvat_print(("popped node %p top %d\n",rnod,node_stk_top));
+    if ( IsHashHeader(rnod)) {
+      pop_node(hash_bucket);
+      hash_offset = (Integer) hash_bucket;
+      tvat_print(("hash header %p offset %p\n",rnod,hash_bucket));
+      hash_hdr = (BTHTptr) rnod;
+      hash_base = (BTHTptr *) BTHT_BucketArray(hash_hdr);
+      find_next_nonempty_bucket(hash_hdr,hash_base,hash_offset);
+      if (hash_offset != NO_MORE_IN_HASH) {
+        push_node((BTNptr) hash_offset);
+        push_node((BTNptr) hash_hdr);
+        push_node(*(BTNptr *)(hash_base + hash_offset));
+        tvat_print(("pushed 3 %p top now %d\n",hash_base + hash_offset,node_stk_top));
       }
-      /* Non nulls from abolish-- but keeping for now */
-      else { 
-	if (BTN_Sibling(rnod) && IsNonNULL(BTN_Sibling(rnod)))
-	  { 
-	    //	    printf("pushing sibling %p instruction is %x\n",BTN_Sibling(rnod),BTN_Instr(BTN_Sibling(rnod)));
-		   push_node(BTN_Sibling(rnod)); }
-	if ( !IsLeafNode(rnod) && IsNonNULL(BTN_Child(rnod))) { 
-	  //	  printf("pushing sibling %p instruction is %x\n",BTN_Child(rnod),BTN_Instr(BTN_Child(rnod)));
-	  push_node(BTN_Child(rnod)) } 
-	else { /* leaf node */
-	  //	  printf("Trie traversal Leaf Node %p\n",rnod);
-	  New_ALN(subgoal,thisALN, rnod, lastALN);
-	  lastALN = thisALN;
-	}
+    }  
+    else {      /* Non nulls from abolish-- but keeping for now */
+      if (BTN_Sibling(rnod) && IsNonNULL(BTN_Sibling(rnod))) {
+        push_node(BTN_Sibling(rnod));
+        tvat_print(("pushed sibling %p instr %x top %d\n",
+		    BTN_Sibling(rnod),BTN_Instr(BTN_Sibling(rnod)),node_stk_top));
       }
+      if ( !IsLeafNode(rnod) && IsNonNULL(BTN_Child(rnod))) {
+        if ( IsHashHeader(BTN_Child(rnod))) {
+	  push_node((BTNptr) int_val(FIRST_HASH_NODE)); // Nbr of bucket last seen (hash header arg)
+          // push_node((BTNptr) int_val(0)); // Nbr of bucket last seen (hash header arg)
+          tvat_print(("pushed hash_header child %p instr is %x\n",BTN_Child(rnod),BTN_Instr(BTN_Child(rnod))));
+          push_node((BTN_Child(rnod)));  // ptr to BTHT (hash_header arg)
+        } else {
+          tvat_print(("pushing reg child %p instr is %x\n",BTN_Child(rnod),BTN_Instr(BTN_Child(rnod))));
+          push_node(BTN_Child(rnod));
+        }
+      }
+      else { /* leaf node */
+	tvat_print(("Trie traversal Leaf Node %p\n",rnod));
+	New_ALN(subgoal,thisALN, rnod, lastALN);
+	lastALN = thisALN;
+      }     
+    }
   }
   //  printf("------ ending trie traversal 2\n");
   return lastALN;
