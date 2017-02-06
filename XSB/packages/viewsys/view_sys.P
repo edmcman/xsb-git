@@ -46,18 +46,22 @@
 	show_failed/2,		% show_failed(VSDir,VInst)
 	reset_failed/2,		% reset_failed(VSDir,VInst)
 	expand_views/1,		% expand_views(VSDir)
-	generate_required_dirs/2,	% generate_required_dirs(Substitution,XSB_LOGFILES)
+	set_viewsys_uservar/2,	% set_viewsys_uservar('$varname$','varvalue')
+	generate_required_dirs/2, % generate_required_dirs(Substitution,XSB_LOGFILES)
 	copy_required_files/2.	% copy_required_files(VSDir,FromToSubs)
 
-%%:- export logfile_file/2, logfile_directory/2.
+:- export logfile_file/2, logfile_directory/2.
+
+:- dynamic global_viewsys_uservar/2.  % for external user to set.
 
 :- import create_lockfile/1, rm/1, sys_mkdir/2, process_control/2, process_status/2 from shell.
 :- import concat_atom/2, concat_atom/3 from string.
-:- import member/2, select/3, length/2, append/3 from basics.
+:- import member/2, select/3, length/2, append/3, for/3 from basics.
 :- import fmt_write/3, file_time/2 from file_io.
 :- import local_datime/1, call_c/1, file_exists/1 from standard.
 :- import parsort/4 from machine.
 :- import xsb_configuration/2 from xsb_configuration.
+:- import predicate_defined/1 from assert.
 
 :- comment(summary, "The ViewSys package supports workflows that can
 be structured as a DAG of view definitions.  ViewSys allows a user to
@@ -758,13 +762,26 @@ op_fmt_write(OStr,FmtString,Args) :-
 	 ;	fmt_write(OStr,FmtString,Args)
 	).
 
+ensure_viewout_directories_exist(File,ViewType,OStr) :-
+	ensure_directories_exist(File,OStr),
+	(functor(ViewType,dir,_)
+	 ->	(file_exists(File)
+		 ->	true
+		 ;	mkdir(File),
+			fmt_write(OStr,'Created Directory: %s\n',args(File))
+		)
+	 ;	true
+	).
+
 ensure_directories_exist(File,OStr) :-
-	split_dir_path(File,Dir),
-	(file_exists(Dir)
-	 ->	true
-	 ;	ensure_directories_exist(Dir,OStr),
-		mkdir(Dir),
-		fmt_write(OStr,'Created Directory: %s\n',args(Dir))
+	(split_dir_path(File,Dir)
+	 ->	(file_exists(Dir)
+		 ->	true
+		 ;	ensure_directories_exist(Dir,OStr),
+			mkdir(Dir),
+			fmt_write(OStr,'Created Directory: %s\n',args(Dir))
+		)
+	 ;	true
 	).
 
 mkdir(Dir) :-
@@ -780,7 +797,7 @@ split_dir_path(Name,Dir) :-
 	 ->	true
 	 ; lappend(DirC,[0'\\|FileC],NameC),FileC \== []
 	 ->	true
-	 ;	throw(error('trying to create directory',Name))
+	 ;	fail
 	),
 	atom_codes(Dir,DirC).
 
@@ -790,11 +807,12 @@ lappend([],L,L).
 %% find views that are ready to be updated
 view_to_update(View,Inst,Command) :-
 	viewInst(View,Inst,not_generated,Datime,Began),
-	view(View,_Type,LocTempl,Stdout,ViewsDep,_Opts,ShellCmd),
+	view(View,Type,LocTempl,Stdout,ViewsDep,_Opts,ShellCmd),
 	ViewsDep \== [],
 	(all_view_instances_generated(ViewsDep,Inst,InputFiles)
 	 ->	generate_file_from_template(LocTempl,Inst,File),
-		generate_shell_command(ShellCmd,InputFiles,File,ShCommand),
+		ensure_viewout_directories_exist(File,Type,userout),
+		generate_shell_command(ShellCmd,Inst,InputFiles,File,ShCommand),
 		compute_cost(View,Inst,Datime,Began,Cost),
 		Command = cmd(ShCommand,Stdout,View,Inst,File,Cost)
 	 ;	member(DepViewTerm,ViewsDep),
@@ -810,7 +828,7 @@ view_to_update(View,Inst,Command) :-
 	 ->	generate_file_from_template(CVTempl,Inst,File),
 		view(View,_Type,VLocTempl,_,_,_,_),
 		generate_file_from_template(VLocTempl,Inst,ViewFile),
-		generate_shell_command(ShellCmd,[ViewFile|InputFiles0],File,ShCommand),
+		generate_shell_command(ShellCmd,Inst,[ViewFile|InputFiles0],File,ShCommand),
 		datime_diff(Datime,Began,Cost),
 		Command = cmd(ShCommand,Stdout,ConsView,Inst,File,Cost)
 	 ;	fail
@@ -847,14 +865,14 @@ compute_post_cost(View,Inst,Cost) :-
 max(X,Y,Z) :- (X @>= Y -> Z = X ; Z = Y).
 
 %% first check for individual $INP1$...$INPN$ and $OUT$, and replace them if so.
-generate_shell_command(ShellCmd,InputFiles,OutFile,ShCommand) :-
+generate_shell_command(ShellCmd,Inst,InputFiles,OutFile,ShCommand) :-
 	str_match('$OUT$',ShellCmd,forward,_,_), % explicit indiv file vars
 	!,
 	build_substitution_list(InputFiles,1,OutFile,SubList),
-	add_user_substitutions(SubList,AllSubs),
+	add_user_substitutions([s(Inst,'$INSTANCE$')|SubList],AllSubs),
 	substitute_strings(AllSubs,ShellCmd,ShCommand).
 %% use "sh script" forms, including double-quote delimiters
-generate_shell_command(ShellCmd,InputFiles,OutFile,ShCommand) :-
+generate_shell_command(ShellCmd,Inst,InputFiles,OutFile,ShCommand) :-
 	concat_atom(InputFiles,'" "',InputFileStr0),
 	concat_atom(['"',InputFileStr0,'"'],InputFileStr),
 	concat_atom(['"',OutFile,'"'],OutFileStr),
@@ -862,7 +880,7 @@ generate_shell_command(ShellCmd,InputFiles,OutFile,ShCommand) :-
 	 ->	ShellCmd1 = ShellCmd
 	 ;	concat_atom([ShellCmd,' ','$INPUTFILES$',' ','$OUTPUTFILE$'],ShellCmd1)
 	),
-	add_user_substitutions([s(InputFileStr,'$INPUTFILES$'),s(OutFileStr,'$OUTPUTFILE$')],AllSubs),
+	add_user_substitutions([s(Inst,'$INSTANCE$'),s(InputFileStr,'$INPUTFILES$'),s(OutFileStr,'$OUTPUTFILE$')],AllSubs),
 	substitute_strings(AllSubs,ShellCmd1,ShCommand).
 
 %% build list of substitution pairs for input files, and output file
@@ -886,30 +904,26 @@ add_user_substitutions(SubList,AllSubList) :-
 	append(SubList,UserSubList,AllSubList).
 
 :- table user_substitutions/1.
-user_substitutions(UserSubList) :-
-	findall(s(Val,Var),get_viewsys_uservar(Var,Val),UserSubList0),
+user_substitutions([s(XSBHome,'$XSB_HOME$')|UserSubList0]) :-
 	xsb_configuration(install_dir,XSBHome),
-	UserSubList1 = [s(XSBHome,'$XSB_HOME$')|UserSubList0],
-	rec_apply_user_substitutions(UserSubList1,UserSubList1,10,UserSubList).
+	findall(s(Val,Var),get_viewsys_uservar(Var,Val),UserSubList0).
 
 get_viewsys_uservar(Var,Val) :-
-	viewsys_uservar(Var,Val0),
+	all_viewsys_uservar(Var,Val0),
 	(Val0 = lambda(Val,Goal)
 	 ->	call_c(Goal)
 	 ;	Val = Val0
 	).
 
-%% allow variable values to contain other variables.
-rec_apply_user_substitutions([],_,_,[]).
-rec_apply_user_substitutions([s(Val,Var)|RestSubs],UserSubList0,N,UserSubList) :-
-	(N =< 0 -> throw(error('Loop in viewsys_uservar definitions.',_)) ; true),
-	substitute_strings(UserSubList0,Val,Val1),
-	(Val \== Val1
-	 ->	N1 is N-1,
-		rec_apply_user_substitutions([s(Val1,Var)|RestSubs],UserSubList0,N1,UserSubList)
-	 ;	UserSubList = [s(Val,Var)|RestSubList],
-		rec_apply_user_substitutions(RestSubs,UserSubList0,10,RestSubList)
-	).
+all_viewsys_uservar(Var,Val) :-
+	viewsys_uservar(Var,Val),
+	\+ global_viewsys_uservar(Var,_). % global overrides
+all_viewsys_uservar(Var,Val) :- global_viewsys_uservar(Var,Val).
+
+set_viewsys_uservar(Var,Val) :-
+	retractall(global_viewsys_uservar(Var,_)),
+	assert(global_viewsys_uservar(Var,Val)).
+
 
 all_view_instances_generated([],_,[]).
 all_view_instances_generated([ViewTerm|Views],Inst,[InpFile|InpFiles]) :-
@@ -1252,6 +1266,14 @@ check_viewsys(ViewDir) :-
 	 fmt_write(userout,'***ERROR: View %s uses directory subfile %s from view %s that is not defined in that view.\n',
 		   args(View,SFile,SView))
 	),
+	(do_all
+	 for(I,5,9),
+	 I =\= 7,
+	 functor(ViewTerm,view,I),
+	 predicate_defined(ViewTerm),
+	 fmt_write(userout,'***WARNING: view/%d is defined; should only be view/7\n',args(I))
+	),
+
 	fmt_write(userout,'View system: "%s" has been checked for consistency.',
 		  args(ViewDir)).
 	
@@ -1551,6 +1573,7 @@ load_viewfile(ViewDir) :-
 load_viewfile_for_update(ViewDir) :-
 	abolish_table_pred(transitively_depends_on(_,_)),
 	abolish_table_pred(rtransitively_supports(_,_)),
+	abolish_table_pred(user_substitutions(_)),
 	(view_info_pred(Goal)
 	 do_all
 	 retractall(Goal)
@@ -1583,6 +1606,7 @@ readin_viewfile(ViewFile) :-
 load_viewfile_view_orig_for_update(ViewDir) :-
 	abolish_table_pred(transitively_depends_on(_,_)),
 	abolish_table_pred(rtransitively_supports(_,_)),
+	abolish_table_pred(user_substitutions(_)),
 	(view_info_pred(Goal)
 	 do_all
 	 retractall(Goal)
@@ -1768,19 +1792,20 @@ modays(10,31).
 modays(11,30).
 modays(12,31).
 
-substitute_strings(Subs,StringIn,String) :-
-	substitute_strings(Subs,20,StringIn,String).
+substitute_strings(Subs,String0,String) :-
+	substitute_strings(Subs,100,String0,String).
 
-substitute_strings(_,0,StringIn,StringIn) :- !,
-	throw(error('ERROR: loop in substitute_strings/3',[])).
-substitute_strings([],_,StringIn,StringIn) :- !.
-substitute_strings(Subs,N,StringIn,String) :-
-	N1 is N-1,
-	Subs = [s(Sub,Repl)|Subs1],
-	(str_match(Repl,StringIn,forward,Beg,End)
-	 ->	string_substitute(StringIn,[s(Beg,End)],[Sub],StringIn1),
-		substitute_strings(Subs,N1,StringIn1,String)
-	 ;	substitute_strings(Subs1,N1,StringIn,String)
+substitute_strings(Subs,N,String0,String) :-
+	(N =< 0
+	 ->	throw(error('ERROR: loop in substitutions in substitute_strings/2?',[]))
+	 ; ASub = s(Sub,Repl),
+	   append(Pre,[ASub|Post],Subs),
+	   str_match(Repl,String0,forward,Beg,End)
+	 ->	string_substitute(String0,[s(Beg,End)],[Sub],String1),
+		append(Post,[ASub|Pre],ReSubs),
+		N1 is N-1,
+		substitute_strings(ReSubs,N1,String1,String)
+	 ;	String = String0
 	).
 
 :- comment(generate_required_dirs/2, " This predicate can be used to
