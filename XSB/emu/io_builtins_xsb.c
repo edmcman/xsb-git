@@ -1631,7 +1631,8 @@ int xsb_intern_file(CTXTdeclc char *context,char *addr, int *ioport,char *strmod
     return 0;
   } 
   else { /* try to intern new file */
-    struct stat stat_buff;
+    struct stat_buff_type stat_buff;
+    int retcode;
     fptr = fopen(addr, strmode);
     //    fprintf(logfile,"opening: %s (%s)\n",addr,strmode);
     if (!fptr) {*ioport = 0; return -1;}
@@ -1642,7 +1643,7 @@ int xsb_intern_file(CTXTdeclc char *context,char *addr, int *ioport,char *strmod
       SQUASH_LINUX_COMPILER_WARN(dummy) ; 
       xsb_log("%s: %s\n",current_dir,addr);
     }
-    if (!stat(addr, &stat_buff) && !S_ISDIR(stat_buff.st_mode)) {
+    if (!(retcode= stat_function(addr, &stat_buff)) && !S_ISDIR(stat_buff.st_mode)) {
 	/* file exists and isn't a dir */
       open_files[first_null].file_ptr = fptr;
       open_files[first_null].file_name = string_find(addr,1);
@@ -1651,9 +1652,12 @@ int xsb_intern_file(CTXTdeclc char *context,char *addr, int *ioport,char *strmod
       *ioport = first_null;
       return 0;
     }  else {
-	xsb_warn(CTXTc "FILE_OPEN: File %s is a directory, cannot open!", addr);
-	fclose(fptr);
-	return -1;
+      if (retcode) {
+	xsb_warn(CTXTc "FILE_OPEN: stat() for file %s failed with error: %s!",
+		 addr,strerror(errno));
+      } else xsb_warn(CTXTc "FILE_OPEN: File %s is a directory, cannot open!", addr);
+      fclose(fptr);
+      return -1;
     }
   }
 }

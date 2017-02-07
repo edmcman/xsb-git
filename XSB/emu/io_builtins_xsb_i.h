@@ -567,8 +567,8 @@ inline static xsbBool file_function(CTXTdecl)
     XSB_STREAM_UNLOCK(io_port);
 
     if (fptr) {
-      struct stat stat_buff;
-      if (!stat(addr, &stat_buff) && !S_ISDIR(stat_buff.st_mode))
+      struct stat_buff_type stat_buff; // dsw: optional stat64 on 64bit windows (see auxlry.h)
+      if (!stat_function(addr, &stat_buff) && !S_ISDIR(stat_buff.st_mode))
 	/* file exists and isn't a dir */
 	ctop_int(CTXTc 5, 0);
       else {
@@ -1055,6 +1055,12 @@ inline static xsbBool file_function(CTXTdecl)
     } else {
       xsb_type_error(CTXTc "atom",term,"atom_length/2",1);
     }
+    break;
+  }
+
+  case FILE_SET_CHARACTER_SET: {
+    io_port = (int)ptoc_int(CTXTc 2);
+    open_files[io_port].charset = (int)ptoc_int(CTXTc 3);
     break;
   }
 
