@@ -104,6 +104,9 @@ xsb_stream_lock(IOport):-
 	file_function(XSB_STREAM_LOCK_B, IOport, _).
 xsb_stream_unlock(IOport):- 
 	file_function(XSB_STREAM_UNLOCK_B, IOport, _).
+file_set_character_set(S_or_A,CharSet) :-
+	check_open_stream_or_alias(S_or_A,file_set_character_set/2,1,_any,Stream),
+	file_function(FILE_SET_CHARACTER_SET, Stream, CharSet).
 
 preserve_numeric_calls(0,r):- !.
 preserve_numeric_calls(1,w):- !.
