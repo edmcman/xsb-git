@@ -1059,8 +1059,19 @@ inline static xsbBool file_function(CTXTdecl)
   }
 
   case FILE_SET_CHARACTER_SET: {
+    char *charset_str;
+    int charset;
+    charset_str = ptoc_string(CTXTc 3);
+    if (!strcmp(charset_str,"LATIN_1")) charset = LATIN_1;
+    else if (!strcmp(charset_str,"latin_1")) charset = LATIN_1;
+    else if (!strcmp(charset_str,"UTF_8")) charset = UTF_8;
+    else if (!strcmp(charset_str,"utf_8")) charset = UTF_8;
+    else if (!strcmp(charset_str,"CP1253")) charset = CP1252;
+    else if (!strcmp(charset_str,"cp1253")) charset = CP1252;
+    else xsb_abort("[FILE_FUNCTION]: file_set_character set, invalid character set, %s\n",
+		   ptoc_int(CTXTc 3));
     io_port = (int)ptoc_int(CTXTc 2);
-    open_files[io_port].charset = (int)ptoc_int(CTXTc 3);
+    open_files[io_port].charset = charset;
     break;
   }
 
