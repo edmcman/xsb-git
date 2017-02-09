@@ -1066,11 +1066,12 @@ inline static xsbBool file_function(CTXTdecl)
     else if (!strcmp(charset_str,"latin_1")) charset = LATIN_1;
     else if (!strcmp(charset_str,"UTF_8")) charset = UTF_8;
     else if (!strcmp(charset_str,"utf_8")) charset = UTF_8;
-    else if (!strcmp(charset_str,"CP1253")) charset = CP1252;
-    else if (!strcmp(charset_str,"cp1253")) charset = CP1252;
+    else if (!strcmp(charset_str,"CP1252")) charset = CP1252;
+    else if (!strcmp(charset_str,"cp1252")) charset = CP1252;
     else xsb_abort("[FILE_FUNCTION]: file_set_character set, invalid character set, %s\n",
 		   ptoc_int(CTXTc 3));
     io_port = (int)ptoc_int(CTXTc 2);
+    //printf("Setting port %d to charset %d\n",io_port,charset);
     open_files[io_port].charset = charset;
     break;
   }
