@@ -397,19 +397,43 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 		breg_retskel(Breg,Arity,Skel,Cs),
 		(nonvar(Var) -> instantiation_error(Pred/Arity,Arity,var) ; true),
 		excess_vars(Skel,[Var|ExistVarList],[],Vars),
-		copy_term(t(Vars,Skel,Var),t(Vars,OSkel,OVar)),
-		DefTerm = ifUndef(XX), % if seen undefined
-		XX = 0,
+		copy_term(t(Vars,Skel,Var),t(Vars1,OSkel,OVar)),
+		DefTerm = ifUndef(XX,YY), % if seen undefined
+		XX = 0,			  % undef seen?
+		YY = 0,			  % varibles seen in groupby values?
 		Pred1Term,
 		xwam_state(2,DelayReg),
-		(DelayReg =:= 0, XX =:= 0 % opt for all defined
-		 ->	('_$$get_returns'(Cs,OSkel,Leaf)
-			 ->	OpSpec1,
-				Var \== OVar,
-				Actions
-			 ;	Init
+		(XX =:= 0, DelayReg =:= 0 % opt for all defined
+		 ->	(YY =:= 0, ground(Vars) % opt for all groupby vals ground
+			 ->	(Vars = Vars1,
+				 '_$$get_returns'(Cs,OSkel,Leaf)
+				 ->	OpSpec1,
+					Var \== OVar,
+					Actions
+				 ;	Init
+				)
+			 ;	(YY =:= 0 -> term_set_arg(DefTerm,2,1,1) ; true),
+				findall(t(OVar,Var,Leaf1,Sub,RSub),
+					('_$$get_returns'(Cs,OSkel,Leaf1),
+					 OpSpec1,
+					 (subsumes_chk(Vars1,Vars) -> Sub=1 ; Sub=0),
+					 (subsumes_chk(Vars,Vars1) -> RSub=1 ; RSub=0)
+					),
+					AllRets),
+				('_$member'(t(OVar,Var,Leaf,1,_),AllRets),
+				 Var == OVar
+				 ->	fail % a subsuming answer as good or better
+				 ;	('_$member'(t(OVar,Var,Leaf,_,1),AllRets),
+					 Var \== OVar,
+					 Actions, % delete answer this one is better than
+					 fail
+					 ;
+					 Init % add this answer
+					)
+				)
 			)
 		 ;	term_set_arg(DefTerm,1,1,1), % undef, must handle from now on
+			Vars = Vars1,
 			findall(t(OSkel,Leaf1,TV1,Var),
 				('_$$get_returns_and_tvs'(Cs,OSkel,Leaf1,TV1),
 				 OpSpec1),
@@ -448,6 +472,9 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	ensure_imported(undefined/0,tables,SymTab),
 	ensure_imported(xwam_state/2,machine,SymTab),
 	ensure_imported('_$member'/2,basics,SymTab),
+	ensure_imported(variant/2,subsumes,SymTab),
+	ensure_imported(subsumes_chk/2,subsumes,SymTab),
+	%%ensure_imported(is_most_general_term/1,standard,SymTab),
 	% TLS: for approximations (whether or not used)
 	ensure_imported(early_complete_on_nth/2,tables,SymTab),
 	ensure_imported(term_set_arg/4,machine,SymTab),
@@ -594,7 +621,7 @@ subsumption_modes_trans_pred(Sym,Pscs,Oth,Modes,[pred(Sym1,Pscs,Oth)|NewClList],
 	parse_preddef_closed(NewTerm,true,[pred(Sym1,_,_)],SymTab), % add to symtab
 	ensure_imported(table_error/1,error_handler,SymTab).
 
-/*print_rule(Label,Head,Body) :-
+/**print_rule(Label,Head,Body) :-
 	num_vars:numbervars(p(Head,Body)),
 	standard:write(userout,Label),
 	standard:writeln(userout,':'),
@@ -602,7 +629,7 @@ subsumption_modes_trans_pred(Sym,Pscs,Oth,Modes,[pred(Sym1,Pscs,Oth)|NewClList],
 	standard:write(userout,'  '),standard:writeq(userout,Body),
 	standard:writeln(userout,'.'),
 	fail.
-print_rule(_Label,_Head,_Body). **/
+print_rule(_Label,_Head,_Body).**/
 
 %% Modes must be open tailed...
 build_subs_abs_clause_body(Modes,Pred,Pred1,PArgs,Body) :-
@@ -654,9 +681,9 @@ table_index_trans_pred(Sym,Pscs,Oth,Indexes,ClList,SymTab) :-
 	upto_n(1,Arity,StdOrd),  % 1..Arity
 	(IndexOrds == [StdOrd]
 	 ->	OrdSets = [OrdSet],
-		standard:writeln(userout,stdordset=OrdSet),
+		%%standard:writeln(userout,stdordset=OrdSet),
 		build_modes(OrdSet,StdOrd,ModeList),
-		standard:writeln(userout,mde=ModeList),
+		%%standard:writeln(userout,mde=ModeList),
 		subsumption_modes_trans_pred(Sym,Pscs,Oth,ModeList,ClList,SymTab)
 	 ;	ClList = [pred(Sym1,Pscs,Oth)|NewClList],
 		generate_index_selection_rule(IndPerms,IndPosns,Pred,Arity,StdOrd,(SelHead:-SelBody)),
