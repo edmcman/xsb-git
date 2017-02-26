@@ -142,11 +142,14 @@ VariantSF NewProducerSF(CTXTdeclc BTNptr Leaf,TIFptr TableInfo,unsigned int is_n
    subg_tif_ptr(pNewSF) = TableInfo;					    
    subg_dll_add_sf(pNewSF,TIF_Subgoals(TableInfo),TIF_Subgoals(TableInfo)); 
    subg_leaf_ptr(pNewSF) = Leaf;					    
-   CallTrieLeaf_SetSF(Leaf,pNewSF);					    
+   CallTrieLeaf_SetSF(Leaf,pNewSF);
+   
    subg_ans_list_ptr(pNewSF) = empty_return_handle(pNewSF);		     
    subg_compl_stack_ptr(pNewSF) = openreg - COMPLFRAMESIZE;		    
    INIT_SUBGOAL_CALLSTO_NUMBER(pNewSF);
-   ((VariantSF) pNewSF)->visited = 0;
+//   ((VariantSF) pNewSF)->visited = 0;
+//   ((VariantSF) pNewSF)->is_reclaimed = 0;
+//   subg_tag(pNewSF) = 0;
    subg_negative_initial_call(pNewSF) = (unsigned int) is_negative_call;
 /* incremental evaluation start */
 if((get_incr(TIF_PSC(TableInfo))) &&(IsVariantPredicate(TableInfo))){
@@ -242,17 +245,20 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
       
       sf=CallTrieLeaf_GetSF(Paren);
       c=sf->callnode;
-
+      //      if (IsNonNULL(c))  {
+      //	printf("        checking the incremental goal flscnt %d ",c->falsecount);print_subgoal(stddbg,sf);printf("\n");
+      //      }
       /* TLS: if falsecount == 0 && call_found_flag, we know that call
          is complete.  Otherwise, dfs_outedges would have aborted */
 
       if(IsNonNULL(c) && (c->falsecount!=0)){
-	//	 	  printf("   recomputing (rcomputable = %d) ",c->recomputable);
-	//  print_subgoal(stddbg,sf);printf("\n");
+	//	printf("           recomputing (rcomputable = %d) ",c->recomputable);
+	//	print_subgoal(stddbg,sf);printf(" (sf %p)\n",sf);
 	if (c->recomputable == COMPUTE_DEPENDENCIES_FIRST) {
 	  lazy_affected = empty_calllist(CTXT);
 	  if ( !dfs_inedges(CTXTc c,  &lazy_affected, CALL_LIST_EVAL) ) {
 	    CallLUR_Subsumer(*results) = CallTrieLeaf_GetSF(Paren);
+	    //	    printf("        using recompleted table\n");
 	    return XSB_SPECIAL_RETURN;
 	  } /* otherwise if dfs_inedges, treat as falsecount = 0, use completed table */
 	}
@@ -261,7 +267,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
 	  old_call_gl=c;      
 	  call_found_flag=0;  /* treat as a new call */
 	  if ( has_answers(sf) ) {
-	    pALN = subg_answers(sf);
+	    pALN = subg_answers(sf); 
 	    do {
 	      leaf=ALN_Answer(pALN);
 
@@ -714,8 +720,8 @@ void table_complete_entry(CTXTdeclc VariantSF producerSF) {
      If a new call is complete we should compare whether its answer
      set is equal to the previous answer set. If no_of_answer is > 0
      we know that not all answers are rederived so the extension has
-     changed.  However, if a new answer was added the callnodepointer
-     is already marked as changed (see tries.c:
+     changed.  However, if a new answer was added the previous 
+     callnodepointer is already marked as changed (see tries.c:
      variant_answer_search). Otherwise, the call is unchanged i.e it
      produced the same set of answers. This information has to be
      propagated to the calls dependent on this call whose falsecount
@@ -724,6 +730,7 @@ void table_complete_entry(CTXTdeclc VariantSF producerSF) {
      call.
   */
   if(IsIncrSF(producerSF)){
+    //    printf("        incr compl  ");print_subgoal(stddbg,producerSF);printf("\n");
     callnodeptr pc;  int fewer_true_answers = FALSE;
     producerSF->callnode->recomputable = COMPUTE_DEPENDENCIES_FIRST;
     pc = producerSF->callnode->prev_call;
@@ -732,30 +739,36 @@ void table_complete_entry(CTXTdeclc VariantSF producerSF) {
       //      printf("has prev call ");print_subgoal(stddbg,producerSF);
       //      printf(" visitors %ld / %p",producerSF->visitors,producerSF);printf("\n");
       
+      //      printf("          incr compl has prev call ");print_subgoal(stddbg,producerSF);printf("\n");
       if ( has_answers(producerSF) ) {
+	//	printf("          ");print_subgoal(stddbg,producerSF);printf("   has answers at incr compl\n");
 	pALN = pc->aln;
 	while(IsNonNULL(pALN)) {
 	  if (is_conditional_answer(ALN_Answer(pALN)) 
 	      && BTN_IncrMarking(ALN_Answer(pALN)) == PREVIOUSLY_UNCONDITIONAL)
 	    fewer_true_answers = TRUE;
 	  BTN_IncrMarking(ALN_Answer(pALN)) = 0;
-	  if (IsDeletedNode(ALN_Answer(pALN)))
+	  if (IsDeletedNode(ALN_Answer(pALN))) {
 	    delete_branch(CTXTc ALN_Answer(pALN),&subg_ans_root_ptr(producerSF),VARIANT_EVAL_METHOD);
+	    //	    printf("        deleting incremental_branch\n");
+	  }
 	  pALN = ALN_Next(pALN);
 	}
       } else {
 	/* There is a memory leak here: I have to delete the answer
 	   table here: iterating delete_branch thru the answer trie
 	   gives error while deleting the last branch */
-	
+	//	printf("          incr compl: removing answer root  ");print_subgoal(stddbg,producerSF);printf("\n");
 	producerSF->ans_root_ptr=NULL; 
       }
 
-      /* old calls */
+      /* Check previous callnodepointer: changed was set to 1 if a new answer was rederived.*/
       if (pc->no_of_answers>0 || fewer_true_answers)    // if some previous answers have not been rederived
 	pc->changed=1;
       if (pc->changed==0){
 	unchanged_call_gl++;
+	//	printf("         propagating no change   nbransr %d fewer_true %d  ",pc->no_of_answers,fewer_true_answers);
+	//	print_subgoal(stddbg,producerSF);printf("\n");
 	propagate_no_change(pc); /* defined in call_graph_xsb.c */
       } //else
 	//add_callnode(&changed_gl,producerSF->callnode);

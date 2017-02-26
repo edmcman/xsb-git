@@ -692,12 +692,15 @@ typedef struct subgoal_frame {
   union{
     CPtr compl_stack_ptr;	  /* Pointer to subgoal's completion stack frame (pre-compl) */
     long visitors;};
-  CPtr compl_suspens_ptr; /* SLGWAM: CP stack ptr (pre-compl)  */
 #ifdef MULTI_THREAD
   Thread_T tid;	  /* Thread id of the generator thread for this sg */
 #endif
 #ifdef CONC_COMPL
+  CPtr compl_suspens_ptr; /* SLGWAM: CP stack ptr (pre-compl)  */
   ALNptr tag;		  /* Tag can't be stored in answer list in conc compl */
+#else
+  union{  CPtr compl_suspens_ptr; /* SLGWAM: CP stack ptr (pre-compl)  */
+    ALNptr tag;};		  /* Tag can't be stored in answer list in conc compl */
 #endif
 #ifdef SHARED_COMPL_TABLES
   byte grabbed; 	  /* Subgoal is marked to be computed for leader in

@@ -1144,8 +1144,10 @@ XSB_Start_Instr(new_answer_dealloc,_new_answer_dealloc)
 //printf("completion status %d isnew %d wasRederived %d\n",subg_is_complete(producer_sf),isNewAnswer,wasRederived);
 
 if (wasRederived) {
+  //  printf("           was rederived answer ");print_subgoal(stddbg,producer_sf);printf("\n");
   LOG_NEW_ANSWER(producer_sf,answer_template,template_size);
   SUBG_INCREMENT_ANSWER_CTR(producer_sf,template_size);
+  subg_callnode_ptr(producer_sf)->no_of_answers++;
   if (subg_is_ec_scheduled(producer_sf) ) {  // See comment below
     perform_early_completion(CTXTc producer_sf, producer_cpf);
   }
