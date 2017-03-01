@@ -27,11 +27,9 @@
 :- comment(author,"David S. Warren").
 :- comment(copyright,"Copyright 2016 David S. Warren, XSB, Inc.").
 %%:- comment(version(0*1+1,2016/06/14,16:51*00+'EST'),"Initial system; David S. Warren").
-/**:- op(1150,xfy,(do_all)).
-:- op(1150,fx,(do_all)).
-:- op(1150,xfy,(if_none)).***/
 
 :- export
+	viewsys_view_status/3,	 % viewsys_view_status(VSDir,View:VInst,-Status)
 	viewsys_status/1,	 % viewsys_status(VSDir)
 	viewsys_status/2,	 % viewsys_status(VSDir,Option)
 	print_viewsys/1,	 % print_viewsys(VSDir)
@@ -40,6 +38,7 @@
 	update_instance/2,	 % update_instance(VSDir,VInst)
 	delete_instance/2,	 % delete_instance(VSDir,VInst)
 	update_views/4,		 % update_views(VSDir,ViewInstList,ProcName,NProcs)
+	update_views/5,		 % update_views(VSDir,ViewInstList,ProcName,NProcs,OutStream)
 	invalidate_all_instances/1, % invalidate_all_instances(VSDir)
 	invalidate_view_instances/2, % invalidate_view_instances(VSDir,[View:VInst])
 	reset_unfinished/2,	% reset_unfinished(VSDir,ProcName)
@@ -55,7 +54,7 @@
 :- dynamic global_viewsys_uservar/2.  % for external user to set.
 
 :- import create_lockfile/1, rm/1, sys_mkdir/2, process_control/2, process_status/2 from shell.
-:- import concat_atom/2, concat_atom/3 from string.
+:- import concat_atom/2, concat_atom/3, term_to_atom/3 from string.
 :- import member/2, select/3, length/2, append/3, for/3 from basics.
 :- import fmt_write/3, file_time/2 from file_io.
 :- import local_datime/1, call_c/1, file_exists/1 from standard.
@@ -418,11 +417,11 @@ generate_new_instance(ViewSys,VInstList0,NewUpd) :-
 
 generate_all_vinsts(VInst,NewUpd,Datime) :-
 	(do_all
-	 view(View,_Type,FileTemplate,_StdoutFileTemplate,_ViewInputList,_Opts,_Cmd),
+	 view(View,_Type0,FileTemplate,_StdoutFileTemplate0,_ViewInputList0,_Opts,_Cmd0),
 	 generate_vinst(VInst,Datime,View,FileTemplate,NewUpd)
 	),
 	(do_all
-	 consView(View,_Type,FileTemplate,_StdoutFileTemplate,_ViewInputList,_Cmd),
+	 consView(View,_Type1,FileTemplate,_StdoutFileTemplate1,_ViewInputList1,_Cmd1),
 	 generate_const_vinst(VInst,Datime,View,NewUpd)
 	).
 
@@ -431,7 +430,7 @@ generate_vinst(VInst,Datime,View,FileTemplate,NewUpd) :-
 	(base_view(View)
 	 ->	(str_match('$INSTANCE$',FileTemplate,forward,_,_)
 		 ->	GVInst = VInst
-		 ;	\+ viewInst(View,all,_Stat,_Dt,_Beg),
+		 ;	\+ viewInst(View,all,_Stat0,_Dt,_Beg),
 			GVInst = all
 		),
 		Status = generated
@@ -490,14 +489,17 @@ view instances that a particular invocation of this process is
 responsible for.  ").
 
 update_views(ViewSys,all,ProcName,NProcs) :-
+	update_views(ViewSys,all,ProcName,NProcs,userout).
+
+update_views(ViewSys,all,ProcName,NProcs,OutStream) :-
 	!,
 	load_viewfile_for_update(ViewSys),
 	findall(View:Inst,root_view_instance(View,Inst),VIs0),
 	sort(VIs0,ViewInstList),
-	start_available_procs(ViewSys,ViewInstList,[],ProcName,NProcs,1,userout).
-update_views(ViewSys,ViewInstList,ProcName,NProcs) :-
+	start_available_procs(ViewSys,ViewInstList,[],ProcName,NProcs,1,OutStream).
+update_views(ViewSys,ViewInstList,ProcName,NProcs,OutStream) :-
 	load_viewfile_for_update(ViewSys),
-	start_available_procs(ViewSys,ViewInstList,[],ProcName,NProcs,1,userout).
+	start_available_procs(ViewSys,ViewInstList,[],ProcName,NProcs,1,OutStream).
 
 %%:- document_export start_available_procs/7.
 
@@ -625,7 +627,8 @@ spawn_one_cmd(cmd(ShCmd,StdOut,View,Inst,File,Cost),OStr,
 	(OStr \== none
 	 ->	fmt_write(OStr,"\nSpawned Command: PID %d: view: %s:%s at %S, est %S\n",
 			  args(Pid,View,Inst,Datime,Cost)),
-	 	fmt_write(OStr,"  %s\n",args(ShCmd))
+		fmt_write(OStr,"  %s\n",args(ShCmd)),
+		file_flush(OStr,_)
 	 ;	true
 	).
 	
@@ -728,11 +731,12 @@ process_finished_pid(pid(Pid,PStatus,SStr,FileOut,Datime,View,_File,Inst),CurDat
 	(PStatus == exited_normally
 	 ->	op_fmt_write(OStr,"\nFinished PID %d SUCCESSFUL view: %s:%s Time: %s, StdOut: %s\n",
 			     args(Pid,View,Inst,Time,FileOut)),
-	 VStatus = generated
+		VStatus = generated
 	 ;	op_fmt_write(OStr,"\nFinished PID %d FAILED Code: %s, view: %s:%s Time: %s, StdOut: %s\n",
 			     args(Pid,PStatus,View,Inst,Time,FileOut)),
-	 VStatus = generation_failed
+		VStatus = generation_failed
 	),
+	file_flush(OStr,_),
 	(PStatus == exited_normally
 	 ->	(viewInst(View,Inst,_,_,Began)
 		 do_all
@@ -744,7 +748,7 @@ process_finished_pid(pid(Pid,PStatus,SStr,FileOut,Datime,View,_File,Inst),CurDat
 		 retractall(consViewInst(View,Inst,_,_,_)),
 		 assert(consViewInst(View,Inst,VStatus,CurDatime,Began))
 		)
-	 ;	(viewInst(View,Inst,_Stat,_Dt,Began)
+	 ;	(viewInst(View,Inst,_Stat1,_Dt,Began)
 		 do_all
 		 retractall(viewInst(View,Inst,_,_,_)),
 		 assert(viewInst(View,Inst,generation_failed,CurDatime,Began))
@@ -865,12 +869,24 @@ compute_post_cost(View,Inst,Cost) :-
 max(X,Y,Z) :- (X @>= Y -> Z = X ; Z = Y).
 
 %% first check for individual $INP1$...$INPN$ and $OUT$, and replace them if so.
+generate_shell_command(xsb(Goal),Inst,InputFiles,OutFile,ShCommand) :-
+	!,			% xsb command with call-term
+	build_substitution_list(InputFiles,1,OutFile,SubList),
+	add_user_substitutions([s(Inst,'$INSTANCE$')|SubList],AllSubs),
+	substitute_terms(AllSubs,Goal,ShGoal),
+	term_to_atom(ShGoal,ShGoalStr,[quoted(true)]),
+	(member(s('$XSB$',XSB),AllSubs)
+	 ->	true
+	 ;	XSB = xsb
+	),
+	double_single_quotes(ShGoalStr,ShGoalStrQ),
+	concat_atom([XSB,' -e "',ShGoalStrQ,'."'],ShCommand).
 generate_shell_command(ShellCmd,Inst,InputFiles,OutFile,ShCommand) :-
 	str_match('$OUT$',ShellCmd,forward,_,_), % explicit indiv file vars
 	!,
 	build_substitution_list(InputFiles,1,OutFile,SubList),
 	add_user_substitutions([s(Inst,'$INSTANCE$')|SubList],AllSubs),
-	substitute_strings(AllSubs,ShellCmd,ShCommand).
+	substitute_terms(AllSubs,ShellCmd,ShCommand).
 %% use "sh script" forms, including double-quote delimiters
 generate_shell_command(ShellCmd,Inst,InputFiles,OutFile,ShCommand) :-
 	concat_atom(InputFiles,'" "',InputFileStr0),
@@ -881,7 +897,18 @@ generate_shell_command(ShellCmd,Inst,InputFiles,OutFile,ShCommand) :-
 	 ;	concat_atom([ShellCmd,' ','$INPUTFILES$',' ','$OUTPUTFILE$'],ShellCmd1)
 	),
 	add_user_substitutions([s(Inst,'$INSTANCE$'),s(InputFileStr,'$INPUTFILES$'),s(OutFileStr,'$OUTPUTFILE$')],AllSubs),
-	substitute_strings(AllSubs,ShellCmd1,ShCommand).
+	substitute_terms(AllSubs,ShellCmd1,ShCommand).
+
+double_single_quotes(Atom0,Atom) :-
+	atom_codes(Atom0,AtomC0),
+	dsq(AtomC0,AtomC),
+	atom_codes(Atom,AtomC).
+	
+dsq([],[]).
+dsq([0'\''|Ss],[0'\'',0'\''|Rs]) :- !,
+	dsq(Ss,Rs).
+dsq([C|Ss],[C|Rs]) :-
+	dsq(Ss,Rs).
 
 %% build list of substitution pairs for input files, and output file
 build_substitution_list([],_,OutFile,[s(OutFile,'$OUT$')]).
@@ -897,7 +924,7 @@ instance name, @var{Inst}, and replaces
 the variable names with their values, returnning @var{FileName}.  ").
 generate_file_from_template(FileTempl,Inst,File) :-
 	add_user_substitutions([s(Inst,'$INSTANCE$')],SubList),
-	substitute_strings(SubList,FileTempl,File).
+	substitute_terms(SubList,FileTempl,File).
 
 add_user_substitutions(SubList,AllSubList) :-
 	user_substitutions(UserSubList),
@@ -933,9 +960,9 @@ all_view_instances_generated([ViewTerm|Views],Inst,[InpFile|InpFiles]) :-
 	generate_file_from_template(LocTempl,Inst,InpFile0),
 	(viewInst(View,Inst,generated,_,_)
 	 ->	add_inpfile_if_nec(InpFile0,ViewTerm,InpFile)
-	 ; base_view(View),viewInst(View,Inst,_Stat,_Dt,_)
+	 ; base_view(View),viewInst(View,Inst,_Stat0,_Dt,_)
 	 ->	InpFile = InpFile0
-	 ;	base_view(View),viewInst(View,all,_Stat,_,_)
+	 ;	base_view(View),viewInst(View,all,_Stat1,_,_)
 	),
 	all_view_instances_generated(Views,Inst,InpFiles).
 
@@ -957,13 +984,13 @@ all."  ).
 
 invalidate_all_instances(ViewSys) :-
 	load_viewfile_for_update(ViewSys),
-	(viewInst(View,VInst,_State,Datime,Began),
+	(viewInst(View,VInst,_State0,Datime,Began),
 	 \+ base_view(View)
 	 do_all
 	 retractall(viewInst(View,VInst,_,_,_)),
 	 assert(viewInst(View,VInst,not_generated,Datime,Began))
 	),
-	(consViewInst(CView,View,_State,Datime,Began)
+	(consViewInst(CView,View,_State1,Datime,Began)
 	 do_all
 	 retractall(consViewInst(CView,View,_,_,_)),
 	 assert(consViewInst(CView,View,not_generated,Datime,Began))
@@ -1026,11 +1053,11 @@ invalidate_each(InvalVIs) :-
 	  \+ base_view(View)	%base views always generated
 	  ->	 retractall(consViewInst(View,VInst,_,_,_)),
 		 assert(consViewInst(View,VInst,not_generated,Datime,Began)),
-		 fmt_write(userout,'Invalidated consistency view %s:%s\n',args(View,VInst))
+		 fmt_write('Invalidated consistency view %s:%s\n',args(View,VInst))
 	  ; (viewInst(View,VInst,generated,Datime,Began), \+ base_view(View))
 	  ->	 retractall(viewInst(View,VInst,_,_,_)),
 		 assert(viewInst(View,VInst,not_generated,Datime,Began)),
-		 fmt_write(userout,'Invalidated view %s:%s\n',args(View,VInst))
+		 fmt_write('Invalidated view %s:%s\n',args(View,VInst))
 	 )
 	).
 
@@ -1057,7 +1084,7 @@ out_of_date_view_instance(View,VInst) :-
 	once((member(SuppView,SuppViews),
 	      filetime_later(SuppView,VInst,FileTime,SuppFile))
 	    ),
-	writeln(userout,[ood_file=FileName,newer_file=SuppFile]),
+	writeln([ood_file=FileName,newer_file=SuppFile]),
 	true.
 
 maxList([],Max,Max).
@@ -1100,13 +1127,13 @@ reset_unfinished(ViewSys,ProcName) :-
 	 do_all
 	 retractall(viewInst(View,ViewInst,being_generated(ProcName),_,_)),
 	 assert(viewInst(View,ViewInst,not_generated,Datime,Began)),
-	 fmt_write(userout,'Unfinished view %s:%s reset\n',args(View,ViewInst))
+	 fmt_write('Unfinished view %s:%s reset\n',args(View,ViewInst))
 	),
-	(consViewInst(View,ViewInst,being_generated(ProcName),_DT,Began)
+	(consViewInst(View,ViewInst,being_generated(ProcName),_DT0,Began)
 	 do_all
-	 retractall(consViewInst(View,ViewInst,being_generated(ProcName),_DT,_)),
+	 retractall(consViewInst(View,ViewInst,being_generated(ProcName),_DT1,_)),
 	 assert(consViewInst(View,ViewInst,not_generated,Datime,Began)),
-	 fmt_write(userout,'Unfinished consistency view %s:%s reset\n',args(View,ViewInst))
+	 fmt_write('Unfinished consistency view %s:%s reset\n',args(View,ViewInst))
 	),
 	save_viewfile(ViewSys).
 
@@ -1130,9 +1157,9 @@ show_failed(VSDir,VInstInd) :-
 	 view(View,_type,FileTempl,StdoutFileTempl,_InpViews,_Opts,_ShCmd),
 	 generate_file_from_template(FileTempl,VInst,File),
 	 generate_file_from_template(StdoutFileTempl,VInst,StdFile),
-	 fmt_write(userout,'\nFailed view: %s:%s  began: %S\n',args(View,VInst,Began)),
-	 fmt_write(userout,'    bad view file: %s\n',atgs(File)),
-	 fmt_write(userout,'      stdout file: %s\n',atgs(StdFile))
+	 fmt_write('\nFailed view: %s:%s  began: %S\n',args(View,VInst,Began)),
+	 fmt_write('    bad view file: %s\n',atgs(File)),
+	 fmt_write('      stdout file: %s\n',atgs(StdFile))
 	),
 	
 	(member(VInst,VInstList),
@@ -1141,11 +1168,11 @@ show_failed(VSDir,VInstInd) :-
 	 consView(View,ChkedView,CTempl,StdoutFileTempl,_InpViews,_ShCmd),
 	 generate_file_from_template(CTempl,VInst,File),
 	 generate_file_from_template(StdoutFileTempl,VInst,StdFile),
-	 fmt_write(userout,'\nFailed consistency view: %s:%s, began: %S\n',
+	 fmt_write('\nFailed consistency view: %s:%s, began: %S\n',
 		   args(View,VInst,Began)),
-	 fmt_write(userout,'    checking view: %s\n',args(ChkedView)),
-	 fmt_write(userout,'  bad output file: %s\n',atgs(File)),
-	 fmt_write(userout,'      stdout file: %s\n',atgs(StdFile))
+	 fmt_write('    checking view: %s\n',args(ChkedView)),
+	 fmt_write('  bad output file: %s\n',atgs(File)),
+	 fmt_write('      stdout file: %s\n',atgs(StdFile))
 	).
 
 :- comment(reset_failed(ViewSys,VInst), "
@@ -1167,7 +1194,7 @@ reset_failed_1(all) :- !,
 	 do_all
 	 retractall(viewInst(View,ViewInst,generation_failed,_,_)),
 	 assert(viewInst(View,ViewInst,not_generated,Datime,Began)),
-	 fmt_write(userout,'Failed view %s:%s reset\n',args(View,ViewInst))
+	 fmt_write('Failed view %s:%s reset\n',args(View,ViewInst))
 	),
 	(consViewInst(View,ViewInst,generation_failed,_,Began)
 	 do_all
@@ -1178,7 +1205,7 @@ reset_failed_1(all) :- !,
 	  do_all
 	  retractall(viewInst(ChkedView,ViewInst,_,_,_)),
 	  assert(viewInst(ChkedView,ViewInst,not_generated,DT,CBegan)),
-	  fmt_write(userout,'Failed view %s:%s reset\n',args(ChkedView,ViewInst))
+	  fmt_write('Failed view %s:%s reset\n',args(ChkedView,ViewInst))
 	 )
 	).
 reset_failed_1(ViewInstPar) :-
@@ -1187,13 +1214,13 @@ reset_failed_1(ViewInstPar) :-
 	 do_all
 	 retractall(viewInst(View,ViewInstPar,generation_failed,_,_)),
 	 assert(viewInst(View,ViewInstPar,not_generated,Datime,Began)),
-	 fmt_write(userout,'Failed view %s:%s reset\n',args(View,ViewInstPar))
+	 fmt_write('Failed view %s:%s reset\n',args(View,ViewInstPar))
 	),
 	(consViewInst(View,ViewInstPar,generation_failed,_DT,Began)
 	 do_all
 	 retractall(consViewInst(View,ViewInstPar,generation_failed,_,_)),
 	 assert(consViewInst(View,ViewInstPar,not_generated,Datime,Began)),
-	 fmt_write(userout,'Failed consistency view %s:%s reset\n',args(View,ViewInstPar))
+	 fmt_write('Failed consistency view %s:%s reset\n',args(View,ViewInstPar))
 	).
 
 :- comment(check_viewsys(ViewDir), " @pred{check_viewsys(+ViewDir)}
@@ -1205,56 +1232,56 @@ check_viewsys(ViewDir) :-
 	(do_all
 	 view_defined_from(View,DefView),
 	 \+ view_name(DefView),
-	 fmt_write(userout,'***ERROR: View "%s" used but not defined.\n',
+	 fmt_write('***ERROR: View "%s" used but not defined.\n',
 		   args(DefView))
 	),
 	(do_all
 	 view_name(View),
 	 transitively_depends_on(View,View),
-	 fmt_write(userout,'***ERROR: View "%s" depends on itself, which is illegal.\n',
+	 fmt_write('***ERROR: View "%s" depends on itself, which is illegal.\n',
 		   args(View))
 	),
 	(do_all
 	 consView(ConsView,View,_,_,_,_),
 	 \+ view(View,_,_,_,ViewsDep,_,_),
 	 ViewsDep \== [],
-	 fmt_write(userout,'***ERROR: Consistency View "%s" checks view "%s", which does not exist.\n',
+	 fmt_write('***ERROR: Consistency View "%s" checks view "%s", which does not exist.\n',
 		   args(ConsView,View))
 	),
 	(do_all
 	 view(View,_,_,_,[],_,_),
 	 view(View,_,_,_,ViewsDep,_,_), ViewsDep \== [],
-	 fmt_write(userout,'***ERROR: View "%s" is both a base and derived view.\n',
+	 fmt_write('***ERROR: View "%s" is both a base and derived view.\n',
 		   args(View))
 	),
 	(do_all
 	 view(View,_,_,_,[],_,_),
 	 consView(View,_,_,_,_,_),
-	 fmt_write(userout,'***ERROR: View "%s" is both a base and consistency view.\n',
+	 fmt_write('***ERROR: View "%s" is both a base and consistency view.\n',
 		   args(View))
 	),
 	(do_all
 	 view(View,_,_,_,ViewsDep,_,_), ViewsDep \== [],
 	 consView(View,_,_,_,_,_),
-	 fmt_write(userout,'***ERROR: View "%s" is both a derived and consistency view.\n',
+	 fmt_write('***ERROR: View "%s" is both a derived and consistency view.\n',
 		   args(View))
 	),
 	(do_all
 	 view(View,A,B,C,D,E,F),view(View,A1,B1,C1,D1,E1,F1),
 	 p(A,B,C,D,E,F) \= p(A1,B1,C1,D1,E1,F1),
-	 fmt_write(userout,'***ERROR: View "%s" has two definitions.\n',
+	 fmt_write('***ERROR: View "%s" has two definitions.\n',
 		   args(View))
 	),
 	(do_all
 	 consView(View,A,B,C,D,E),consView(View,A1,B1,C1,D1,E1),
 	 p(A,B,C,D,E) \= p(A1,B1,C1,D1,E1),
-	 fmt_write(userout,'***ERROR: Consistency view "%s" has two definitions.\n',
+	 fmt_write('***ERROR: Consistency view "%s" has two definitions.\n',
 		   args(View))
 	),
 	(do_all
 	 view(View,A,B,C,[],_,_),view(View,A1,B1,C1,[],_,_),
 	 p(A,B,C) \= p(A1,B1,C1),
-	 fmt_write(userout,'***ERROR: View "%s" has two definitions.\n',
+	 fmt_write('***ERROR: View "%s" has two definitions.\n',
 		   args(View))
 	),
 	(do_all
@@ -1263,7 +1290,7 @@ check_viewsys(ViewDir) :-
 	 SuppView =.. [SView,SFile],
 	 view(SView,SType,_,_,_,_,_),
 	 \+ (SType =.. [dir|SFiles], member(SFile,SFiles)),
-	 fmt_write(userout,'***ERROR: View %s uses directory subfile %s from view %s that is not defined in that view.\n',
+	 fmt_write('***ERROR: View %s uses directory subfile %s from view %s that is not defined in that view.\n',
 		   args(View,SFile,SView))
 	),
 	(do_all
@@ -1271,12 +1298,27 @@ check_viewsys(ViewDir) :-
 	 I =\= 7,
 	 functor(ViewTerm,view,I),
 	 predicate_defined(ViewTerm),
-	 fmt_write(userout,'***WARNING: view/%d is defined; should only be view/7\n',args(I))
+	 fmt_write('***WARNING: view/%d is defined; should only be view/7\n',args(I))
 	),
 
-	fmt_write(userout,'View system: "%s" has been checked for consistency.',
+	fmt_write('View system: "%s" has been checked for consistency.',
 		  args(ViewDir)).
 	
+:- comment(viewsys_view_status/3, "
+@pred{viewsys_view_status(+ViewDir,+View:Inst,-Status)} returns the
+Status of the indicated view in the indicated view instance.").
+
+viewsys_view_status(ViewDir,ViewVInst,Status) :-
+	load_viewfile(ViewDir),
+	(is_list(ViewVInst)
+	 ->	findall(Status1,
+			(member(View:VInst,ViewVInst),
+			 viewInst(View,VInst,Status1,_,_)
+			),Status)
+	 ;	ViewVInst = View:VInst,
+		viewInst(View,VInst,Status,_,_)
+	).
+
 :- comment(viewsys_status/1, " @pred{viewsys_status(+ViewDir)} prints
 out the status of the view system indicated in @var{ViewDir} for all
 the options in @pred{viewsys_status/2}. ").
@@ -1317,19 +1359,19 @@ status a long-running invocation of @pred{update_views/4}.
 viewsys_status(ViewDir,Opt) :-
 	load_viewfile(ViewDir),
 	(member(Opt,[all,active])
-	 ->	write(userout,'View Instances being generated:\n'),
+	 ->	write('View Instances being generated:\n'),
 		(viewInst(View,VInst,being_generated(Proc),Date,_)
 		 do_all
-		 fmt_write(userout,"  %s:%s by %s started %S.\n",
+		 fmt_write("  %s:%s by %s started %S.\n",
 			   args(View,VInst,Proc,Date))
 		 if_none
-		 writeln(userout,'  None')
+		 writeln('  None')
 		),
 		nl(userout)
 	 ;	true
 	),
 	(member(Opt,[all,roots])
-	 ->	write(userout,'Root View Instances:\n'),
+	 ->	write('Root View Instances:\n'),
 		(root_view_instance(View,VInst)
 		 do_all
 		 viewInst(View,VInst,VStatus,Date,_),
@@ -1342,63 +1384,63 @@ viewsys_status(ViewDir,Opt) :-
 		  ->	 PStat = 'Not passed'
 		  ;	 PStat = 'Passed'
 		 ),
-		 fmt_write(userout,"  %s:%s status %S %S (%s checks).\n",
+		 fmt_write("  %s:%s status %S %S (%s checks).\n",
 			   args(View,VInst,VStatus,Date,PStat))
 		 if_none
-		 writeln(userout,'  None')
+		 writeln('  None')
 		),
 		nl(userout)
 	 ;	true
 	),
 	(member(Opt,[all,waiting])
-	 ->	write(userout,'View Instances awaiting generation:\n'),
+	 ->	write('View Instances awaiting generation:\n'),
 		(viewInst(View,VInst,not_generated,_Date,_)
 		 do_all
-		 fmt_write(userout,"  %s:%s\n",
+		 fmt_write("  %s:%s\n",
 			   args(View,VInst))
 		 if_none
-		 writeln(userout,'  None')
+		 writeln('  None')
 		),
 		nl(userout)
 	 ;
 	 true
 	),
 	(member(Opt,[all,failed])
-	 ->	write(userout,'View Instances whose generation failed:\n'),
+	 ->	write('View Instances whose generation failed:\n'),
 		(viewInst(View,VInst,generation_failed,Date,_)
 		 do_all
-		 fmt_write(userout,"  %s:%s failed at %S.\n",
+		 fmt_write("  %s:%s failed at %S.\n",
 			   args(View,VInst,Date))
 		 if_none
-		 writeln(userout,'  None')
+		 writeln('  None')
 		),
 		nl(userout)
 	 ;	true
 	),
 	(member(Opt,[all,checks_waiting])
-	 ->	write(userout,'View Instances awaiting consistency checks:\n'),
+	 ->	write('View Instances awaiting consistency checks:\n'),
 		(viewInst(View,VInst,generated,Date,_),
 		 consView(ConsView,View,_,_,_,_),
 		 consViewInst(ConsView,VInst,being_generated(Proc),CDate,_)
 		 do_all
-		 fmt_write(userout,"  %s:%s, generated at %S, is awaiting consistency check %s, by %s started %S.\n",
+		 fmt_write("  %s:%s, generated at %S, is awaiting consistency check %s, by %s started %S.\n",
 			   args(View,VInst,Date,ConsView,Proc,CDate))
 		 if_none
-		 writeln(userout,'  None')
+		 writeln('  None')
 		),
 		nl(userout)
 	 ;	true
 	),
 	(member(Opt,[all,checks_failed])
-	 ->	write(userout,'View Instances whose consistency checks failed:\n'),
+	 ->	write('View Instances whose consistency checks failed:\n'),
 		(viewInst(View,VInst,generated,Date,_),
 		 consView(ConsView,View,_,_,_,_),
 		 consViewInst(ConsView,VInst,generation_failed,CDate,_)
 		 do_all
-		 fmt_write(userout,"  %s:%s has failed consistency check %s, failed at %S.\n",
+		 fmt_write("  %s:%s has failed consistency check %s, failed at %S.\n",
 			   args(View,VInst,ConsView,CDate))
 		 if_none
-		 writeln(userout,'  None')
+		 writeln('  None')
 		)
 	 ;      true
 	).
@@ -1420,22 +1462,22 @@ print_viewsys_tree([],_,Printed,Printed).
 print_viewsys_tree([ViewTerm|Views],Ind,Printed0,Printed) :-
 	functor(ViewTerm,View,_),
 	(member(View,Printed0)
-	 ->	tab(Ind),write(userout,'*'), % previously expanded.
-		writeln(userout,View),
+	 ->	tab(Ind),write('*'), % previously expanded.
+		writeln(View),
 		Printed2 = Printed0
 	 ; view(View,VType,VFileTempl,StdOutTempl,SuppViews,Opts,Script), SuppViews \== []
-	 ->	tab(Ind),fmt_write(userout,"%s (view) %S\n",args(View,VType)),
-		tab(Ind),fmt_write(userout,"        file template  : %s\n",args(VFileTempl)),
-		tab(Ind),fmt_write(userout,"        stdout template: %s\n",args(StdOutTempl)),
-		tab(Ind),fmt_write(userout,"        options        : %S\n",args(Opts)),
-		tab(Ind),fmt_write(userout,"        command        : %s\n",args(Script)),
+	 ->	tab(Ind),fmt_write("%s (view) %S\n",args(View,VType)),
+		tab(Ind),fmt_write("        file template  : %s\n",args(VFileTempl)),
+		tab(Ind),fmt_write("        stdout template: %s\n",args(StdOutTempl)),
+		tab(Ind),fmt_write("        options        : %S\n",args(Opts)),
+		tab(Ind),fmt_write("        command        : %s\n",args(Script)),
 		Ind1 is Ind+3,
 		print_cons_tree(View,Ind1,[View|Printed0],Printed1),
 		print_viewsys_tree(SuppViews,Ind1,Printed1,Printed2)
 	 ; view(View,VType,VFileTempl,Src,[],_,_)
-	 ->	tab(Ind),fmt_write(userout,"%s (base) %S\n",args(View,VType)),
-		tab(Ind),fmt_write(userout,"        file template  : %s\n",args(VFileTempl)),
-		tab(Ind),fmt_write(userout,"        source         : %s\n",args(Src)),
+	 ->	tab(Ind),fmt_write("%s (base) %S\n",args(View,VType)),
+		tab(Ind),fmt_write("        file template  : %s\n",args(VFileTempl)),
+		tab(Ind),fmt_write("        source         : %s\n",args(Src)),
 		print_cons_tree(View,Ind,[View|Printed0],Printed2)
 	),
 	print_viewsys_tree(Views,Ind,Printed2,Printed).
@@ -1447,10 +1489,10 @@ print_cons_tree(View,Ind,Printed0,Printed1) :-
 print_cons_trees([],_Ind,Printed,Printed).
 print_cons_trees([CView|CViews],Ind,Printed0,Printed) :-
 	consView(CView,View,FileTempl,StdoutTempl,SuppViews,Script),
-	tab(Ind),fmt_write(userout,"%s Consistency view for %s\n",args(CView,View)),
-	tab(Ind),fmt_write(userout,"        file template  : %s\n",args(FileTempl)),
-	tab(Ind),fmt_write(userout,"        stdout template: %s\n",args(StdoutTempl)),
-	tab(Ind),fmt_write(userout,"        command        : %s\n",args(Script)),
+	tab(Ind),fmt_write("%s Consistency view for %s\n",args(CView,View)),
+	tab(Ind),fmt_write("        file template  : %s\n",args(FileTempl)),
+	tab(Ind),fmt_write("        stdout template: %s\n",args(StdoutTempl)),
+	tab(Ind),fmt_write("        command        : %s\n",args(Script)),
 	Ind1 is Ind+3,
 	print_viewsys_tree(SuppViews,Ind1,[CView|Printed0],Printed1),
 	print_cons_trees(CViews,Ind,Printed1,Printed).
@@ -1589,7 +1631,7 @@ load_viewfile_for_update(ViewDir) :-
 	readin_viewfile(ViewInstFile).
 
 readin_viewfile(ViewFile) :-
-	%%writeln(userout,readin_file(ViewFile)),
+	%%writeln(readin_file(ViewFile)),
 	(file_exists(ViewFile)
 	 ->	open(ViewFile,read,IStr),
 		repeat,
@@ -1638,7 +1680,7 @@ view_inst_info_pred(consViewInst(_,_,_,_,_)).
 
 save_viewfile(ViewDir) :-
 	view_instance_file_name(ViewDir,ViewFile),
-	%%writeln(userout,saving_file(ViewFile)),
+	%%writeln(saving_file(ViewFile)),
 	open(ViewFile,write,OStr),
 	(view_inst_info_pred(Goal),
 	 call_c(Goal),
@@ -1696,7 +1738,7 @@ lock_view(Dir) :-
 
 unlock_view(Dir) :-
 	view_lockfile_name(Dir,ViewLockFile),
-	%%writeln(userout,removing_lockfile),
+	%%writeln(removing_lockfile),
 	rm(ViewLockFile).
 
 view_lockfile_name(Dir,ViewLockFile) :-
@@ -1713,9 +1755,9 @@ view_instance_file_name(ViewDir,ViewInstFile) :-
 
 get_lock(LockFile,N) :-
 	(create_lockfile(LockFile)
-	 ->	true %,writeln(userout,created_lockfile)
+	 ->	true %,writeln(created_lockfile)
 	 ;	(N mod 5 =:= 0
-		 ->	writeln(userout,'Failed to get lock, still trying '(N,LockFile))
+		 ->	writeln('Failed to get lock, still trying '(N,LockFile))
 		 ;	true
 		),
 		N1 is N+1,
@@ -1792,14 +1834,42 @@ modays(10,31).
 modays(11,30).
 modays(12,31).
 
-substitute_strings(Subs,String0,String) :-
-	substitute_strings(Subs,100,String0,String).
+substitute_terms(Subs,Term0,Term) :-
+	substitute_terms(Subs,100,Term0,Term).
+
+substitute_terms(_Subs,N,_Term0,_Term) :-
+	N =< 0, !,
+	throw(error('ERROR: loop in substitutions in substitute_terms/2?',[])).
+substitute_terms(Subs,N,Term0,Term) :-
+	atom(Term0),
+	!,
+	(member(s(Term0,Repl),Subs)
+	 ->	N1 is N-1,
+		substitute_terms(Subs,N1,Repl,Term)
+	 ;	substitute_strings(Subs,N,Term0,Term)
+	).
+substitute_terms(_Subs,_N,Term0,Term) :-
+	number(Term0),
+	!,
+	Term = Term0.
+substitute_terms(Subs,N,Term0,Term) :-
+	Term0 =.. [String0|SubTerms0],
+	substitute_strings(Subs,N,String0,String),
+	substitute_terms_list(Subs,N,SubTerms0,SubTerms),
+	Term =.. [String|SubTerms].
+
+:- index substitute_terms_list/4-3.
+substitute_terms_list(_Subs,_N,[],[]).
+substitute_terms_list(Subs,N,[Term0|Terms0],[Term|Terms]) :-
+	substitute_terms(Subs,N,Term0,Term),
+	substitute_terms_list(Subs,N,Terms0,Terms).
 
 substitute_strings(Subs,N,String0,String) :-
 	(N =< 0
 	 ->	throw(error('ERROR: loop in substitutions in substitute_strings/2?',[]))
 	 ; ASub = s(Sub,Repl),
 	   append(Pre,[ASub|Post],Subs),
+	   atom(Repl),
 	   str_match(Repl,String0,forward,Beg,End)
 	 ->	string_substitute(String0,[s(Beg,End)],[Sub],String1),
 		append(Post,[ASub|Pre],ReSubs),
@@ -1861,9 +1931,9 @@ those LOGFILEs, each with the root directory abstracted.
 generate_required_dirs(Substitutions,XSB_LFs) :-
 	(do_all
 	 logfile_directory(XSB_LFs,Dir0),
-	 substitute_strings(Substitutions,Dir0,Dir),
-	 writeq(userout,viewsys_required_file(Dir)),
-	 writeln(userout,'.')
+	 substitute_terms(Substitutions,Dir0,Dir),
+	 writeq(viewsys_required_file(Dir)),
+	 writeln('.')
 	).
 
 :- comment(copy_required_files/2, " This predicate can be used
@@ -1902,8 +1972,8 @@ copy_required_files(VSDir,FromToSubs) :-
 	findall(s(ToVal,Var),member(s(Var,_,ToVal),FromToSubs),ToSubList),
 	(do_all
 	 viewsys_required_file(FileTempl),
-	 substitute_strings(FromSubList,FileTempl,FromDirectory),
-	 substitute_strings(ToSubList,FileTempl,ToDirectory),
+	 substitute_terms(FromSubList,FileTempl,FromDirectory),
+	 substitute_terms(ToSubList,FileTempl,ToDirectory),
 	 ensure_directories_exist(ToDirectory,userout),
 	 shell(['cp -r "',FromDirectory,'" "',ToDirectory,'"'])
 	).
