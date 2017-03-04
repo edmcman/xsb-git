@@ -683,7 +683,7 @@ current_prolog_flag(Flag, Value) :-
   	           xsb_flag(FA,A)
   	         ; Value = limit(P),
   	           xsb_flag(F,P) )
-         ;      atom(Flag),\+ compound(Value),xsb_flag(Flag,Value)
+         ;      \+compound(Flag),\+ compound(Value),xsb_flag(Flag,Value)
   	 ;	prolog_commons_flag(Flag,Value)
 	).
 
