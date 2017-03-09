@@ -1153,6 +1153,7 @@ void init_builtin_table(void)
   set_builtin_table(DIRNAME_CANONIC, "dirname_canonic");
 
   set_builtin_table(PSC_INSERT, "psc_insert");
+  set_builtin_table(PSC_FIND, "psc_find");
   set_builtin_table(PSC_IMPORT, "psc_import");
   set_builtin_table(PSC_IMPORT_AS, "psc_import_as");
   set_builtin_table(PSC_DATA, "psc_data");
@@ -1577,12 +1578,6 @@ int builtin_call(CTXTdeclc byte number)
       modpsc = global_mod;
     } else {
       modpsc = pair_psc(insert_module(0,modname));
-    }
-    /*    if (!colon_psc) colon_psc = pair_psc(insert(":",2,global_mod,&new));*/
-    while (termpsc == colon_psc) {
-      term = get_str_arg(term,2);
-      XSB_Deref(term);
-      termpsc = term_psc(term);
     }
     newtermpsc = pair_psc(insert_psc(get_name(termpsc),get_arity(termpsc),modpsc,&new));
     if (import_from_usermod) {
@@ -2030,6 +2025,31 @@ int builtin_call(CTXTdeclc byte number)
       env_type_set(CTXTc sym, (addr?T_IMPORTED:T_GLOBAL) , T_ORDI, (xsbBool)value);
     }
     ctop_addr(3, sym);
+    break;
+  }
+
+  case PSC_FIND: {  /* R1: +String, functor name to find
+		       R2: +Integer, arity of functor to find
+		       R3: +String, module name in which to look for functor
+		       R4: -PSC if named functor is in indicated module; 0 if not
+		    */
+    Psc mod_psc;
+    Pair *search_ptr, pair;
+    char *name = ptoc_string(CTXTc 1);
+    int arity = (int)ptoc_int(CTXTc 2);
+    char *mod_name = ptoc_string(CTXTc 3);
+    if (mod_name) mod_psc = pair_psc(insert_module(0, mod_name));
+    else mod_psc = (Psc)flags[CURRENT_MODULE];
+    if ((Cell)get_data(mod_psc) == USERMOD_PSC) {
+      search_ptr = (Pair *)(symbol_table.table +
+	           hash(name, arity, symbol_table.size));
+    }
+    else {
+      search_ptr = (Pair *)&(get_data(mod_psc));
+    }
+    pair = search_psc_in_module(arity, name, search_ptr);
+    if (pair==NULL) ctop_addr(4,NULL);
+    else ctop_addr(4,pair_psc(pair));
     break;
   }
 

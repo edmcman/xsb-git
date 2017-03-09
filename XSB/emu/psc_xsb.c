@@ -296,7 +296,7 @@ static int is_globalmod(Psc mod_psc)
  *  Returns a pointer to the PSC-PAIR structure which points to the
  *  PSC record of the desired symbol.
  */
-static Pair search_psc_in_module(int arity, char *name, Pair *search_ptr)
+Pair search_psc_in_module(int arity, char *name, Pair *search_ptr)
 {
     Psc psc_ptr;
     /*    Pair *init_search_ptr = search_ptr; */

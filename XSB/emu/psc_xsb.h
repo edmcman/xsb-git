@@ -192,6 +192,7 @@ extern Pair insert_module(int, char *);
   //extern Pair insert(char *, byte, Psc, int *);
 extern Pair insert(char *, int, Psc, int *);
 extern Pair insert_psc(char *, int, Psc, int *);
+extern Pair search_psc_in_module(int, char *, Pair *);
 
 DllExport extern char* call_conv string_find(const char*, int);
 
