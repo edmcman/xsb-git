@@ -36,7 +36,7 @@
         get_magic_num/2,
         load_dyn/1, load_dyn/2, load_dyn/3,
         load_dyn_module/1,
-        load_dync/1, load_dync/2, load_dync/3,
+   load_dync/1, load_dync/2, load_dync/3, load_dync/4,
         read_canonical/1,read_canonical/2,
         if_file_loaded/1,
         (thread_shared)/1,
@@ -82,7 +82,7 @@
 	  conpsc/2, psc_type/2, slash/1, psc_arity/2, 
 	  existing_file_extension/2, almost_search_module/5, db_get_prref/2,
 	  term_psc/2, psc_set_shared/2, psc_set_private/2, stat_flag/2,
-	  term_new/2, term_new_mod/3, stat_set_flag/2, psc_insertmod/3
+	  term_new/2, term_new_mod/3, stat_set_flag/2, psc_import_as/2
      from machine.
 :- import
 	check_xpp_process_status/3,
@@ -97,11 +97,13 @@
 	  seeing/1, see/1, seen/0, call/1, goal_cut_trans/3,
 	  expand_term/2, read/1, op/3, (table)/1, (index)/3, (index)/2,
 	  (=..)/2, writeln/1, write_canonical/1, tell/1,
-	  told/0, telling/1, functor/3, cputime/1, (import)/1,
+	  told/0, telling/1, functor/3, cputime/1, %%(import)/1,
    	  catch/3, throw/1
      from standard.
+:- import '->'/2, ';'/2 from standard.
 :- import str_cat/3, str_sub/2 from string.
 :- import xsb_configuration/2 from xsb_configuration.
 :- import file_write0/2, file_nl/1 from xsb_writ.
 :- import library_directory/1 from usermod.
 :- import parse_filename/4 from machine.
+:- import standard_symbol/3 from std_xsb.
