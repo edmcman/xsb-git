@@ -522,7 +522,7 @@ Flags:
 \end{verbatim}
 }
 
-\paragraph*{Command-line Options}  These options tend to be most useful for developers.
+\subsection{Command-line Options}  These options tend to be most useful for developers.
 
 \begin{description}
 \item[{\tt -t}] Traces through code at SLG-WAM instruction level.
@@ -536,11 +536,10 @@ Flags:
     {\tt stdout} and exits.
 \end{description}
 
-\paragraph*{Flags}
-The order in which flags appear makes no difference.
+%\paragraph*{Flags}
 
-\begin{description}
-\item {\bf General Flags}
+\subsection{General Flags}
+The order in which flags appear makes no difference.
 \begin{description}
 \item[{\tt -e goal}] Pass {\tt goal}  to XSB at startup. This goal is evaluated
     right before the first prompt is issued. For instance, 
@@ -662,15 +661,20 @@ So that XSB can be used to write reasonable scripts.
   subgoal depth: e(rror)/a(bstract)/w(arn)
 \end{description}
 %
-\item {\bf Memory Management Flags}
+%\end{description}
+\subsection{Memory Management Flags} \label{sec:memory-flags}
+
 \begin{description}
 \index{garbage collection}
 \item[{\tt -g gc\_type}] Chooses the heap garbage collection strategy
   that is employed; choice of the strategy is between the default {\tt
-    indirection}; {\tt copying}, which is not fully supported; or {\tt
+    indirection}  or {\tt
     none}. See \cite{CaSC01} for a description of the indirection
-  garbage collector, and \cite{CATmem@ISMM-98} for the copying garbage
-  collector.
+  garbage collector.
+
+%; {\tt copying}, which is not fully supported;
+%, and \cite{CATmem@ISMM-98} for the copying garbage
+%  collector.
 %
 \item[{\tt -c} {\em size [units]}] Allocates {\em initial size\/}
   units of space to the trail/choice-point stack area.  The trail
@@ -680,7 +684,8 @@ So that XSB can be used to write reasonable scripts.
   kilobytes; if {\tt m} or {\tt M} in megabytes; and if {\tt g} or
   {\tt G} in gigabytes.  Because this region is expanded
   automatically, this option is rarely needed.  If this option is not
-  speficied the default initial size is 768 KBytes.
+  specified a default initial size is used; this size may differ for
+  the single-threaded and multi-threaded engine.
 %
 \item[{\tt -m} {\em size [units]}] Allocates {\em initial size\/}
   units of space to the local/global stack area.  The global stack
@@ -689,8 +694,9 @@ So that XSB can be used to write reasonable scripts.
   or is {\tt k} or {\tt K}, the size is allocated in kilobytes; if
   {\tt m} or {\tt M} in megabytes; and if {\tt g} or {\tt G} in
   gigabytes.  Because this region is expanded automatically, this
-  option is rarely needed.  If this option is not specified the
-  default initial size is 768 KBytes.
+  option is rarely needed.  If this option is not
+  specified a default initial size is used; this size may differ for
+  the single-threaded and multi-threaded engine.
 %
 \item[{\tt -o} {\em size [units]}] Allocates {\em initial size\/}
   units of space to the completion stack area.  If units is not
@@ -698,9 +704,12 @@ So that XSB can be used to write reasonable scripts.
   kilobytes; if {\tt m} or {\tt M} in megabytes; and if {\tt g} or
   {\tt G} in gigabytes.  Because this region is expanded
   automatically, this option is rarely needed. If this option is not
-  specified the default initial size is 768 KBytes.
+  specified a default initial size is used; this size may differ for
+  the single-threaded and multi-threaded engine.
+
 \item[{\tt -r}] Turns off automatic stack expansion.  This can
   occasionally be useful for isolating memory management problems.
+  (Usually when working with XSB developers.)
 %
 % \item[{\tt -u} {\em size [units]}] Allocates {\em initial size} KBytes of
 %   space to the unification (and table copy) stack.  If units is not
@@ -715,7 +724,6 @@ So that XSB can be used to write reasonable scripts.
 %\item[{\tt -n}] Formerly used in conjunction when XSB was called from
 %  C.  This option is used only for backward compatibility.
 \end{description}
-\end{description}
 
 \section{Memory Management}\label{memory_management}
 \index{memory management} \index{garbage collection}
@@ -724,10 +732,10 @@ So that XSB can be used to write reasonable scripts.
 All execution stacks are automatically expanded in \version{},
 including the local stack/heap region, the trail/choice point region,
 and the completion stack region.  Execution stacks increase their size
-until it is not possible to do so with available system memory.  At
-that point XSB tries to find the maximal amount of space that will
-still fit in system memory.  For the main thread, each of these
-regions begin with an initial value set by the user at the
+(usually by doubling) until it is not possible to do so with available
+system memory.  At that point XSB tries to find the maximal amount of
+space that will still fit in system memory.  For the main thread, each
+of these regions begin with an initial value set by the user at the
 command-line or with a default value (see
 Section~\ref{sec:EmuOptions}).  When a thread is created within an XSB
 process, the size of the thread's execution stacks may be set by {\tt
@@ -735,7 +743,7 @@ process, the size of the thread's execution stacks may be set by {\tt
 Section~\ref{sec:EmuOptions} are used.  Once XSB is running, these
 default values may be modified using the appropriate Prolog flags (see
 Section~\ref{State}).  In addition, whenever a thread exits, memory
-specific to that thread is reclaimed.  
+specific to that thread is reclaimed.
 
 Heap garbage collection is automatically included in XSB
 \cite{CaSC01,CATmem@ISMM-98}.  (To change the algorithm used for heap

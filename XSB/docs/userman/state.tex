@@ -332,7 +332,8 @@ Page 1252; if set to {\tt latin\_1}, then input/output bytes are
 interpreted as directly representing unicode code points.  Default for
 UNIX-style systems is {\tt utf\_8} and for Windows-style systems is
 {\tt cp1252}, but the flag (and character sets) may be changed at any
-time.  See Section~\ref{sec-charsets} for more details.
+time.  (See section ``Character Sets in XSB'' in XSB User Manual
+Volume 2 for more details.)
 %
 \index{Prolog flags!{\tt errors\_with\_position}}
 \index{Prolog flags!{\tt errors\_with\_position}}
@@ -1486,70 +1487,142 @@ rarely need to be invoked manually.
 \index{tabling!incremental}
 \standarditem{statistics}{statistics/0}
 %
-Displays usage information on the current output stream, including: 
+Outputs time and memory usage information to the current output
+stream.  This information is fairly detailed so the best way to
+explain is through an example.  Figure~\ref{fig:statistics} shows the
+output during a large and heavily tabled program written by XSB users.
+
+%The following printout shows how the {\tt statistics/0}
+%output looks if it is invoked with the {\tt '-s'} option (without it
+%the {\tt Maximum stack used}, and {\tt Maximum table space used} lines
+%are not shown).  Information about the allocation size is provided
+%since the sizes can be changed through emulator options (see
+%Section~\ref{sec:EmuOptions}).
+
+Statistics first displays information about memory, then information
+about tabling operations as well as time.
 \begin{itemize} 
-\item Process-level information about allocated memory excluding
-  execution stacks but including: 
+\item The first subsection of memory statistics, {\tt
+  permanent\_space}, summarizes information about certain kinds of
+  memory  that is not generally under user control and is generally
+  process-level tather than thread-specific.  Allocated memory is
+  broken into different classes including the following.
 \begin{itemize}
-\item {\tt atoms} Space used to maintain global information about
+\item {\tt atoms} Space used to maintain information about all
   predicates and structures. 
 %
-\item {\tt string} Space used to maintain information about atomic
+\item {\tt string} Space used to maintain information about all atomic
   constants in XSB.
 %
 \item {\tt asserted} Space allocated for dynamic code.
 %
-\item {\tt asserted} Space allocated for static code.
+\item {\tt static} Space allocated for static code.
 %
 \item {\tt foreign} Space allocated for foreign predicates.
 %
-\item {\tt table} Space allocated for XSB's tables.
+%\item {\tt table} Space allocated for XSB's tables.
 %
 \item {\tt findall} Space allocated for buffers to support {\tt
   findall/3} and similar predicates.
 %
-\item {\tt mt-private} Private space used by threads.
-%
 \item {\tt profiling} Space used to maintain profiling information, if
-  XSB is called with profiling on.
+  XSB is called with profiling on.  (Not shown in
+  Figure~\ref{fig:statistics}.)
 %
-\item {\tt gc temp} Temporary space for used for heap garbage
-  collector.
+\item {\tt mt-private} Private space used by threads.  (Only for the
+  MT engine and not shown in Figure~\ref{fig:statistics}.)
 %
+\item {\tt buffer} Space used for buffers used by forest logging,
+  message queues and other libraries.  (Not shown in
+  Figure~\ref{fig:statistics}.)
+%
+%\item {\tt gc temp} Temporary space for used for heap garbage
+%  collector. (Rarely shown, and not shown in
+%  Figure~\ref{fig:statistics}.)
+%
+\item {\tt hash} Space used for hash-tables not otherwise classified,
+  such as the storage library.  (Not shown in
+  Figure~\ref{fig:statistics}.)
+
 \item {\tt interprolog} space allocated for the InterProlog XSB/Java
-  interface.
+  interface. (Not shown in Figure~\ref{fig:statistics}.)
 %
-\item {\tt thread} space allocated for the thread table
+\item {\tt thread} In the MT engine, space allocated for the 
+  thread table, mutex array, and other global structures. (Not shown in
+  Figure~\ref{fig:statistics}.)
 %
-\item the space occupied by subgoal and answer tables (in the form of
-  tries) \cite{RRSSW98,CuSW99b,TST99}.  In the multi-threaded
-  configuration process level table space includes shared tables but
-  not private tables.
+\item {\tt other} Other unclassified memory (usually this is a small
+  amount).
+
+%\item the space occupied by subgoal and answer tables (in the form of
+%  tries) \cite{RRSSW98,CuSW99b,TST99}.  In the multi-threaded
+%  configuration process level table space includes shared tables but
+%  not private tables.
 \end{itemize}
 
-\item Thread-specific information about allocation of memory
-  for the calling thread including the  
+\begin{figure}[p] \label{fig:statistics}
+    {\footnotesize
+     \begin{verbatim}
+| ?- statistics.
+ Memory (total)        10674384280 bytes:     10543481920 in use,       130902360 free
+   permanent space        58486184 bytes:        58486184 in use,               0 free
+     atom                                          383976
+     string                                       1736104
+     asserted                                    53237408
+     compiled                                     1267816
+     findall                                      1060560
+     buffer                                        787008
+     other                                          13312
+   glob/loc space        268435456 bytes:       141921760 in use,       126513696 free
+     global                                     140607272
+     local                                        1314488
+   trail/cp space          8388608 bytes:         4631208 in use,         3757400 free
+     trail                                         303176
+     choice point                                 4328032
+   SLG unific. space        131072 bytes:               0 in use,          131072 free
+   SLG completion           262144 bytes:               0 in use,          262144 free
+   SLG table space     10338680816 bytes:     10338442512 in use,          238304 free
+   Incr table space                           620778800 in use
+
+ Tabling Operations
+   0 subsumptive call check/insert ops: 0 producers, 0 variants,
+   0 properly subsumed (0 table entries), 0 used completed table.
+   0 relevant answer ident ops.  0 consumptions via answer list.
+   1251821353 variant call check/insert ops: 979496 producers, 1250841857 variants.
+   11570194 answer check/insert ops: 97921 unique inserts, 11472273 redundant.
+        4 DEs in the tables (space: 98312 bytes allocated,   200 in use)
+        4 DLs in the tables (space: 49160 bytes allocated,   104 in use)
+
+ Total number of incremental subgoals created: 1089296
+ Currently 799432 incremental subgoals, 11240813 dependency edges
+
+6 heap (6 string) garbage collections by sliding: collected 1202735 cells in 0.539478 secs
+
+\end{verbatim}} 
+\caption{Statistics output from a large and heavily tabled program}
+\end{figure}
+
+\item The next section summarizes information about XSB's main stacks.
+  In the MT-engine this information is specific to the calling thread.
+
 \begin{itemize} 
 \item Global stack (heap) and local (environment) stack (see e.g.
   \cite{AitK90}) for the calling thread. Memory for these two WAM
-  stacks is allocated as a single unit so that each stack grows
-  together; information is provided on the current allocation for the
-  stacks as well as on the stack sizes themselves.  (See
-  Section~\ref{sec:EmuOptions} for the memory re-allocation
-  algorithm).  
+ stacks is allocated as a single unit (per thread) so that each stack
+ grows together; information is provided on the current allocation for
+ the stacks as well as on the stack sizes themselves.  (See
+ Section~\ref{sec:memory-flags} for initialization details.)
 %
 \item Trail and choice point stack (see e.g. \cite{AitK90}) for the
-  calling thread.  Memory for these two WAM stacks is allocated as a
-  single unit so that each stack grows together; information is
-  provided on the current allocation for the stacks as well as on the
-  stack sizes themselves.  The (re-)allocation follows the algorithm
-  sketched in Section~\ref{sec:EmuOptions}).  (See
-  Section~\ref{sec:EmuOptions} for the memory re-allocation
-  algorithm).  
+ calling thread.  Memory for these two WAM stacks is allocated as a
+ single unit (per thread) so that each stack grows together;
+ information is provided on the current allocation for the stacks as
+ well as on the stack sizes themselves.  (See
+ Section~\ref{sec:memory-flags} for initialization details.)
 %
-\item SLG unification stack for the calling thread This stack is used
+\item SLG unification stack for the calling thread. This stack is used
   as a space to copy terms from the execution stacks into table space,
-  or back out.  This stack will not be reallocated unless extremely
+  or back out.  This stack is not be reallocated unless extremely
   large terms are tabled.
 %
 \item SLG completion stack for the calling thread.  The completion
@@ -1558,104 +1631,73 @@ Displays usage information on the current output stream, including:
   per tabled subgoal \cite{SaSw98} but the size of these frames is
   version-dependent.
 %
-\item the space occupied by private subgoal and answer tables for the
-  calling thread. 
-
+\item Overall space used for tabling, followed by the amout of that
+ overall space used for incremental tabling.  (Generally speaking,
+ this is the space that is used to contruct the IDG.)
 \end{itemize}
-In XSB's single-threaded configuration, maximum space used by each of
-will be output if the {\tt '-s'} command-line option is used
+%In XSB's single-threaded configuration, maximum space used by each of
+%will be output if the {\tt '-s'} command-line option is used
 
 \item Information about the number of tabling operations performed in
-  the session by any thread.  Note that the statistics are divided up
-  between calls to predicates that use variant tabling and those that
-  use (call) subsumptive tabling (see
-  Section~\ref{sec:SimilarityMeasures} and \cite{TST99}).
+ the session by any thread.  Global counts (per-thread) are given
+ first, followed by a few breakdowns of these counts by different
+ types of tables.
+
 \begin{itemize}
-\item Call Subsumption Subgoal Operations.  For predicates that use
-subsumptive tabling, the total number of subsumptive subgoal calls is
-given, as is the number of new calls ({\tt producers}) and the number
-of repeated calls to non-completed tables ({\tt variants}).
-Furthermore, the number of properly subsumed calls to incomplete
-tables is given, along with the number of subsumed calls to completed
-tables.  Finally, the total number of subsumptive table entries
-overall is given, including all producer and consumer calls.
-%
-\item Call Subsumption Answer Operations.  In call subsumptive
-tabling, answer lists are copied from producer subgoals to subsumed
-consumer subgoals (this operation is not required in variant tabling).
-The number of {\tt answer ident} operations represents the number of
-times this copy is done.  In addition, the number of consumptions
-performed by all consuming subsumptive table entries is also given.
-%
+\item The global information starts with the total number of calls to
+ tabled predicates.  Next is the total number or answer check/insert
+ operations, followed by a breakdown into the number of unique answers
+ generated, and the number of answers that were redundant when they
+ were generated.  Finally comes information about conditional answers,
+ including the number of delay lists, and the total number delay
+ elements: i.e., literals contained in delay lists.  (See
+ Section~\ref{sec:conditional-answers} for a general discussion of
+ delay representation.)
+
+\item Next comes a breakdown of the global numbers according to
+ whether call subsumption or call variance is used. 
+\begin{itemize}
 \item Call Variance Subgoal Operations.  For call variance the number
 of subgoal check/insert operations is given along with the unique
-number of subgoals encountered ({\tt generator}) and the number of
-redundant consumer encountered ({\tt consumer}).
+number of subgoals encountered ({\tt producers}) and the number of
+redundant consumer encountered ({\tt variants}).
 %
-\item Total Answer Operations.  For both variant and subsumptive
-tables, the number of answer check insert operations is given along
-with the number of answers actually inserted into the table and the
-number of redundant answers derived.
+\item Call Subsumption Subgoal Operations.  The total number calls to
+ predicates that use call subsumption is given first.  It is followed
+ by the number of {\tt producers} -- that is, the number of distinct
+ tables that have been created for these predicates.  Next is {\tt
+ variants}, the number of repeated non-subsumed calls to these tables
+ while the tables are non-completed and completed.
+%
+\item Call Subsumption Answer Consumption.  In call subsumptive
+ tabling, answer lists are copied from producer subgoals to subsumed
+ consumer subgoals (this operation is not required in variant
+ tabling).  The number of {\tt answer ident} operations represents the
+ number of times this copy is done.  In addition, the number of
+ consumptions performed by all consuming subsumptive table entries is
+ also given.  Note that these counts indicate the number of times an
+ answer is consumed by a call subsumption table, while the overall
+ count of answers produced is provided above.
+%
 \end{itemize}
-%
+\item Finally, if incremental tabling is used, the total number of
+ producers subgoals for incremental tables is given.  This is followed
+ by a measure of the incremental dependency graph (IDG) in its current
+ state.  The number of nodes in the IDG (incremental subgoals) is
+ given, followed by the number of dependency edges.
+\end{itemize}
+
 \item Garbage Collection Information.  Time spent garbage collecting
   by the calling thread and number of heap cells collected.
 
 \item Information about process CPU and clock time, as well as the
   number of active threads.
-    \end{itemize}
+\end{itemize}
 
-As mentioned above, if XSB is configured with the single-threaded
-engine and is invoked with the {\tt '-s'} option (see
-Section~\ref{sec:EmuOptions}), additional information is printed out
-about maximum use of each execution stack and table space.  However,
-the {\tt '-s'} option can substantially slow down the emulator so
-benchmarks of time should be performed separately from benchmarks of
-space.
-
-{\bf Example}: The following printout shows how the {\tt statistics/0}
-output looks if it is invoked with the {\tt '-s'} option (without it
-the {\tt Maximum stack used}, and {\tt Maximum table space used} lines
-are not shown).  Information about the allocation size is provided
-since the sizes can be changed through emulator options (see
-Section~\ref{sec:EmuOptions}).
-
-    {\footnotesize
-     \begin{verbatim}
-| ?- statistics.
-Memory (total)         2429504 bytes:       726696 in use,      1702808 free
-  permanent space       645520 bytes:       645520 in use,            0 free
-    atom                                    120328
-    string                                  156872
-    asserted                                  3184
-    compiled                                358216
-    other                                     6920
-  glob/loc space        786432 bytes:          652 in use,       785780 free
-    global                                     456 bytes
-    local                                      196 bytes
-  trail/cp space        786432 bytes:          476 in use,       785956 free
-    trail                                       88 bytes
-    choice point                               388 bytes
-  SLG unific. space      65536 bytes:            0 in use,        65536 free
-  SLG completion         65536 bytes:            0 in use,        65536 free
-  SLG table space        80048 bytes:        80048 in use,            0 free
-
-  Maximum stack used: global 436724, local 14780, trail 27304, cp 20292,
-                      SLG completion 0 (0 subgoals)
-  Maximum table space used:  0 bytes
-
-Tabling Operations
-  0 subsumptive call check/insert ops: 0 producers, 0 variants,
-  0 properly subsumed (0 table entries), 0 used completed table.
-  0 relevant answer ident ops.  0 consumptions via answer list.
-  0 variant call check/insert ops: 0 producers, 0 variants.
-  0 answer check/insert ops: 0 unique inserts, 0 redundant.
-
-
-   0 heap (  0 string) garbage collections by copying: collected 0 cells in 0.000000 secs
-
-Time: 0.190 sec. cputime,  13.921 sec. elapsetime
-\end{verbatim}} 
+%As mentioned above, if XSB is configured with the single-threaded
+%engine and is invoked with the {\tt '-s'} option (see
+%Section~\ref{sec:EmuOptions}), additional information is printed out
+%about maximum use of each execution stack and table space.  space.
 
 %===================
 
