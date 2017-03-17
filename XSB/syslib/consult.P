@@ -590,7 +590,7 @@ load_dyn1(Rfname,Dirctry,Dir,Base,Module) :-
 	),
 	!,
 	execute_accumulated_commands(Dirctry),
-	stat_set_flag(43/*CURRENT_MODULE*/,0), % reset to usermod
+	stat_set_flag(CURRENT_MODULE,0), % reset to usermod
 	check_xpp_process_status(Rfname,XPP_process,'Dynamic loading aborted'),
 	%% Release the file descriptor used to read from preprocessor
 	(XPP_process == skip -> true
@@ -715,7 +715,7 @@ load_dync1(Rfname,Dirctry,Dir,Base,Module,FactFlg) :-
 	),
 	!,
 	execute_accumulated_commands(Dirctry),
-	stat_set_flag(43/*CURRENT_MODULE*/,0),  % reset to usermod
+	stat_set_flag(CURRENT_MODULE,0),  % reset to usermod
 	check_xpp_process_status(Rfname,XPP_process,'Dynamic loading aborted'),
 	%% Release the file descriptor used to read from preprocessor
 	(XPP_process == skip -> true
