@@ -570,7 +570,7 @@ dotted_ext(Ext,DExt) :- str_cat('.',Ext,DExt).
 fmod_from_base(Base,FMod) :-
 	(standard:atom_codes(Base,BaseC),
 	 llappend(_,[Slash|FModC],BaseC),
-	 (Slash =:= 0'/' ; Slash =:= 0'\\')
+	 (Slash =:= CH_SLASH ; Slash =:= CH_BACKSLASH)
 	  ->	 standard:atom_codes(FMod,FModC)
 	  ;	 FMod = Base
 	 ).
@@ -614,7 +614,7 @@ close_and_throw(XPP_process,XPPport,Ball) :-
 	 ;	file_close(XPPport)
 	),
 	seen,
-	stat_set_flag(43/*CURRENT_MODULE*/,0),  % reset to usermod
+	stat_set_flag(CURRENT_MODULE,0),  % reset to usermod
 	throw(Ball).
 
 :- dynamic load_dyn_trie_retracted(_).
