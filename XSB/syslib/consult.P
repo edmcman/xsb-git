@@ -835,6 +835,7 @@ do_assert_and_fail(:-(Cmd),_Dir,Base,Mod) :- !, % DIRECTIVE
 			)
 		 ;	assert(load_dyn_module(Base))
 		),
+		add_to_in_mod(PAs,Base),
 		assert(load_dyn_cmds(import(from(PAs,Base))))
 	 ; proc_directive(CmdName,CmdArgs,RMod)
 	 ->	true
@@ -1076,7 +1077,7 @@ add_to_in_mod(PSpec,Mod) :-
 	(in_mod(GTerm,OMod)
 	 ->	(Mod == OMod
 		 ->	true
-		 ;	abort('ERROR: [load_dyn] Import must precede any use of the imported predicate.')
+		 ;	abort(('ERROR: [load_dyn] Import (or export) of a predicate must precede any use: ',GTerm))
 		)
 	 ;	assert(in_mod(GTerm,Mod))
 	).
@@ -1370,7 +1371,11 @@ cvt_head_to_mod(Head,Mod,MHead) :-
 cvt_to_mod(Head,Mod,MHead) :-
 	%%standard:writeln(userout,ctm(Mod,Head)),
 	(in_mod(Head,Mod1)
-	 ->	(Mod1 == usermod
+	 ->	(Mod1 \== Mod, Mod \== usermod
+		 ->	abort(('ERROR: [load_dyn] Definition must precede any use of predicate: ',Head))
+		 ;	true
+		),
+		(Mod1 == usermod
 		 ->	MHead = Head
 		 ;	term_new_mod(Mod1,Head,MHead)
 		)
