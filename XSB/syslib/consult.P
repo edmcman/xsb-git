@@ -1079,7 +1079,7 @@ add_to_in_mod(PSpec,Mod) :-
 		 ->	true
 		 ;	abort(('ERROR: [load_dyn] Import (or export) of a predicate must precede any use: ',GTerm))
 		)
-	 ;	assert(in_mod(GTerm,Mod))
+	 ;	assert(in_mod(GTerm,Mod)) %,standard:writeln(userout,in_mod(GTerm,Mod))
 	).
 
 /*
@@ -1359,20 +1359,21 @@ fix_body_goal(Body,Module,MBody) :-
 
 cvt_head_to_mod(Head,Mod,MHead) :-
 	(atom(Head)
-	 ->	cvt_to_mod(Head,Mod,MHead)
+	 ->	cvt_to_mod(Head,Mod,MHead,known)
 	 ; number(Head)
 	 ->	MHead = Head
 	 ;	Head =.. [Pred|Args],
-		cvt_term_to_mod_list(Args,MArgs),
+		cvt_term_to_mod_list(Args,1,0,unknown,MArgs),
 		Head1 =.. [Pred|MArgs],
-		cvt_to_mod(Head1,Mod,MHead)
+		cvt_to_mod(Head1,Mod,MHead,known)
 	).
 
-cvt_to_mod(Head,Mod,MHead) :-
+%% mod is known (Type=known), or suggested (Type=default)
+cvt_to_mod(Head,Mod,MHead,Type) :-
 	%%standard:writeln(userout,ctm(Mod,Head)),
 	(in_mod(Head,Mod1)
-	 ->	(Mod1 \== Mod, Mod \== usermod
-		 ->	abort(('ERROR: [load_dyn] Definition must precede any use of predicate: ',Head))
+	 ->	(Type == known, Mod1 \== Mod 
+		 ->	abort(('[load_dyn] Definition must precede any use of predicate: ',Head,' ',Mod1,' ',Mod))
 		 ;	true
 		),
 		(Mod1 == usermod
@@ -1389,11 +1390,13 @@ cvt_to_mod_and_add(Head,Mod,MHead) :-
 	 ->	(Mod == usermod
 		 ->	MHead = Head
 		 ;	assert(in_mod(Head,Mod)),
+			%%standard:writeln(userout,in_mod(Head,Mod)),
 			term_new_mod(Mod,Head,MHead)
 		)
 	 ;	functor(Head,Fun,Arity),
 		functor(MGHead,Fun,Arity),
 		assert(in_mod(MGHead,Mod)),
+		%%standard:writeln(userout,in_mod(MGHead,Mod)),
 		(Mod == usermod
 		 ->	MHead = Head
 		 ;	term_new_mod(Mod,Head,MHead)
@@ -1444,7 +1447,7 @@ cvt_body_to_mod(Body,Mod,MBody) :-
 	%%error_handler:psc_modname_filename(PSC,PMOD,_),
 	%%standard:writeln(userout,bpred(Mod,PMOD,Body)),
 	(atom(Body)
-	 ->	cvt_to_mod(Body,Mod,MBody)
+	 ->	cvt_to_mod(Body,Mod,MBody,default)
 	 ; number(Body)
 	 ->	MBody = Body
 	 ; Body = Mod1:NBody, nonvar(Mod1)
@@ -1453,16 +1456,29 @@ cvt_body_to_mod(Body,Mod,MBody) :-
 		 ;	term_new_mod(Mod1,NBody,MBody)
 		)
 	 ;	Body =.. [Pred|Args],
-		cvt_term_to_mod_list(Args,MArgs),
+		functor(Body,Pred,Arity),
+		(standard_metapredicate(Pred,Arity,MetaArgNo)
+		 ->	cvt_term_to_mod_list(Args,1,MetaArgNo,Mod,MArgs)
+		 ;	cvt_term_to_mod_list(Args,1,0,Mod,MArgs)
+		),
 		Body1 =.. [Pred|MArgs],
-		cvt_to_mod(Body1,Mod,MBody)
+		cvt_to_mod(Body1,Mod,MBody,default)
 	).
+
+cvt_term_to_mod_list([],_,_,_,[]).
+cvt_term_to_mod_list([Term|Terms],ArgNo,MArgNo,Mod,[MTerm|MTerms]) :-
+	(ArgNo =:= MArgNo	% if meta arg
+	->     cvt_body_to_mod(Term,Mod,MTerm)
+	;      cvt_term_to_mod(Term,MTerm)
+	),
+	ArgNo1 is ArgNo + 1,
+	cvt_term_to_mod_list(Terms,ArgNo1,MArgNo,Mod,MTerms).
 
 cvt_term_to_mod(Term,MTerm) :-
 	(var(Term)
 	 ->	MTerm = Term
 	 ; atom(Term)
-	 ->	cvt_to_mod(Term,usermod,MTerm)
+	 ->	cvt_to_mod(Term,usermod,MTerm,default)
 	 ; number(Term)
 	 ->	MTerm = Term
 	 ; Term = Mod1:NTerm, nonvar(Mod1)
@@ -1471,12 +1487,8 @@ cvt_term_to_mod(Term,MTerm) :-
 		 ;	term_new_mod(Mod1,NTerm,MTerm)
 		)
 	 ;	Term =.. [Pred|Args],
-		cvt_term_to_mod_list(Args,MArgs),
+		cvt_term_to_mod_list(Args,1,0,unknown,MArgs),
 		Term1 =.. [Pred|MArgs],
-		cvt_to_mod(Term1,usermod,MTerm)
+		cvt_to_mod(Term1,usermod,MTerm,default)
 	).
 
-cvt_term_to_mod_list([],[]).
-cvt_term_to_mod_list([Term|Terms],[MTerm|MTerms]) :-
-	cvt_term_to_mod(Term,MTerm),
-	cvt_term_to_mod_list(Terms,MTerms).

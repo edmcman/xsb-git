@@ -106,4 +106,4 @@
 :- import file_write0/2, file_nl/1 from xsb_writ.
 :- import library_directory/1 from usermod.
 :- import parse_filename/4 from machine.
-:- import standard_symbol/3 from std_xsb.
+:- import standard_symbol/3, standard_metapredicate/3 from std_xsb.
