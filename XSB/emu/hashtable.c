@@ -14,6 +14,9 @@
 #include "auxlry.h"
 #include "memory_xsb.h"
 
+#include "struct_manager.h"
+extern Structure_Manager smKey;
+
 //#define HASHTABLE_DEBUG
 #ifdef HASHTABLE_DEBUG
 #define hashtable_debug(X) printf X
@@ -223,7 +226,9 @@ hashtable1_remove(struct hashtable *h, void *k)
             *pE = e->next;
             h->entrycount--;
             v = e->v;
+	    SM_DeallocateSmallStruct(smKey, e->k);      
             //freekey(e->k);
+	    //	    SM_DeallocateStruct(smCallList,k);      
             mem_dealloc(e,sizeof(struct entry),INCR_TABLE_SPACE);
             return v;
         }
