@@ -639,8 +639,8 @@ init_for_load(Filename,_Mod) :-
 	init_in_mod.
 
 init_in_mod :-
-	retractall(in_mod(_,_)),
-	assert(in_mod([_|_],usermod)).
+	retractall(in_mod(_,_,_)),
+	assert(in_mod([_|_],usermod,known)).
 
 cleanup_for_load :-
 	conset(needs_restart, 0), conset(xpp_on, 0), % Cleanup after XPP
@@ -649,7 +649,7 @@ cleanup_for_load :-
 	retractall(load_dyn_file(_)),
 	retractall(load_dyn_module(_)),
 	retractall(load_dyn_apply(_)).
-%%	retractall(in_mod(_,_)).
+%%	retractall(in_mod(_,_,_)).
 
 %% This version is used for load_dyn1 only!
 read_and_assert(Dir,Base,Module) :-
@@ -743,7 +743,6 @@ read_and_assert(IPort,Dir,Base,Module,FactFlg) :-
 	 ; not_asserted_term(Term)
 	 ->	true
 	 ;	load_dyn_module(RMod),
-	 	%%standard:writeln(userout,short_mod(RMod)),
 		(FactFlg =:= 1
 		 ->	(RMod == usermod
 			 ->	Term1 = Term
@@ -761,7 +760,6 @@ read_and_assert(IPort,Dir,Base,Module,FactFlg) :-
 			),
 			t_assert(Term1, _Flag)
 		 ;	load_dyn_retracted(Opsc,Prref,NArity,Index,Hashsize),
-			%%standard:writeln(userout,short_assert(Term1)),
 			se_assert_code_to_buff(Term1),
 			assert_buff_to_clref(Term1,NArity,Prref,Dir,Index,Hashsize)
 		),
@@ -808,7 +806,6 @@ execute_accumulated_commands(Dir) :-
 	cwd(OldDir),
 	cd(Dir),
 	(load_dyn_cmds(Cmd),
-	 %%standard:writeln(userout,calling_command(Cmd)),
 	 (catch(Cmd,Ball,cd_throw(OldDir,Ball))
 	  ->	 fail
 	  ;	 warning('Command failed.'),
@@ -819,7 +816,6 @@ execute_accumulated_commands(Dir) :-
 	 retractall(load_dyn_cmds(_))
 	).
 
-%%do_assert_and_fail(A,B,C,D) :- standard:writeln(userout,do_assert_and_fail(A,B,C,D)),fail.
 do_assert_and_fail([],_,_,_) :- !, fail.
 do_assert_and_fail(:-(Cmd),_Dir,Base,Mod) :- !, % DIRECTIVE
 	(load_dyn_module(RMod)
@@ -831,7 +827,8 @@ do_assert_and_fail(:-(Cmd),_Dir,Base,Mod) :- !, % DIRECTIVE
 	 ->	(load_dyn_module(RMod0)
 		 ->	(RMod0 == Base
 			 ->	true
-			 ;	abort('ERROR: [load_dyn] An export must precede any predicate definition.')
+			 ;	permission_error(redefine,'assumed module, export must precede ANY definition/use',
+						 p/n,load_dyn/1)
 			)
 		 ;	assert(load_dyn_module(Base))
 		),
@@ -910,7 +907,6 @@ do_assert_and_fail(:-(Head0,Body0),Dir,_Base,Mod) :- !, % RULE
 	assert_buff_to_clref(MHead,NArity,Prref,Dir,Index,Hashsize),
 	fail.
 do_assert_and_fail(Head0,Dir,_Base,Mod) :- % FACT
-	%%standard:writeln(userout,fht(Head0,Mod)),
 	(load_dyn_module(RMod)
 	 ->	true
 	 ;	RMod = Mod
@@ -1074,32 +1070,20 @@ add_to_in_mod(PSpec,Mod) :-
 	 ;	functor(PSpec,Pred,Arity)
 	),
 	functor(GTerm,Pred,Arity),
-	(in_mod(GTerm,OMod)
+	(in_mod(GTerm,OMod,Type)
 	 ->	(Mod == OMod
 		 ->	true
-		 ;	abort(('ERROR: [load_dyn] Import (or export) of a predicate must precede any use: ',GTerm))
+		 ;	functor(GTerm,P,N),
+			(Type == known
+			 ->	permission_error(redefine,'imported (or exported) predicate',
+						 OMod:P/N,load_dyn/1)
+			 ;	permission_error(redefine,'assumed module, import/export must precede use',
+						 OMod:P/N,load_dyn/1)
+			)
 		)
-	 ;	assert(in_mod(GTerm,Mod)) %,standard:writeln(userout,in_mod(GTerm,Mod))
+	 ;	assert(in_mod(GTerm,Mod,known))
 	).
 
-/*
-proc_table_options(shared,Pred) :- !,
-	thread_shared(Pred).
-proc_table_options(private,Pred) :- !,
-	thread_private(Pred).
-proc_table_options(subsumptive,Pred) :- !,
-	use_subsumptive_tabling(Pred).
-proc_table_options(variant,Pred) :- !,
-	use_variant_tabling(Pred).
-proc_table_options(incremental,Pred) :- !,
- 	add_incr_table(Pred,INCREMENTAL).
-proc_table_options(nonincremental,Pred) :- !,
- 	add_incr_table(Pred,NONINCREMENTAL).
-proc_table_options(opaque,Pred) :- !,
- 	add_incr_table(Pred,OPAQUE).
-proc_table_options(TabOpt,Pred) :- !,
-	warning(('table modifier ignored: ',TabOpt,' for ',Pred)).
-*/
 multifile_cvt(Ps,Mod,Skel) :-
 	mpa_to_skel(Ps,Skel0),
 	('_$multifile'(Skel0)
@@ -1335,13 +1319,12 @@ standardize_pathname(F,StandardF) :-
 /* Take a clause with all terms in usermod, and a module, and convert
    all terms in the clause to the right modules. */
 
-:- dynamic in_mod/2.		% (OpenTerm,Mod) (not usermod)
+:- dynamic in_mod/3.		% (OpenTerm,Mod,Type) Type=known,assumed
 
 check_set_mod(Module) :-
 	(load_dyn_module(_)
 	 ->	true
-	 ;	%%standard:writeln(userout,csm(Module)),
-		assert(load_dyn_module(Module))
+	 ;	assert(load_dyn_module(Module))
 	).
 
 fix_head_term(Head,Module,MHead) :-
@@ -1368,35 +1351,38 @@ cvt_head_to_mod(Head,Mod,MHead) :-
 		cvt_to_mod(Head1,Mod,MHead,known)
 	).
 
-%% mod is known (Type=known), or suggested (Type=default)
+%% Mod is known to be right (Type=known), or just to use if unknown (Type=assumed)
 cvt_to_mod(Head,Mod,MHead,Type) :-
-	%%standard:writeln(userout,ctm(Mod,Head)),
-	(in_mod(Head,Mod1)
-	 ->	(Type == known, Mod1 \== Mod 
-		 ->	abort(('[load_dyn] Definition must precede any use of predicate: ',Head,' ',Mod1,' ',Mod))
+	(in_mod(Head,OMod,OType)
+	 ->	(Type == known, OMod \== Mod % Must be Mod, but previously assumed another
+		 ->	functor(Head,P,N),
+			(OType == known
+			 ->	permission_error(redefine,'imported (or exported) predicate',
+						 OMod:P/N,load_dyn/1)
+			 ;	permission_error(redefine,'assumed module, import/export/definition must precede use',
+						 OMod:P/N,load_dyn/1)
+			)
 		 ;	true
 		),
-		(Mod1 == usermod
+		(OMod == usermod
 		 ->	MHead = Head
-		 ;	term_new_mod(Mod1,Head,MHead)
+		 ;	term_new_mod(OMod,Head,MHead)
 		)
 	 ; functor(Head,Pred,Arity),standard_symbol(Pred,Arity,SMod)
-	 ->	cvt_to_mod_and_add(Head,SMod,MHead)
-	 ;	cvt_to_mod_and_add(Head,Mod,MHead)
+	 ->	cvt_to_mod_and_add(Head,SMod,Type,MHead)
+	 ;	cvt_to_mod_and_add(Head,Mod,Type,MHead)
 	).
 
-cvt_to_mod_and_add(Head,Mod,MHead) :-
+cvt_to_mod_and_add(Head,Mod,Type,MHead) :-
 	(atom(Head)
 	 ->	(Mod == usermod
 		 ->	MHead = Head
-		 ;	assert(in_mod(Head,Mod)),
-			%%standard:writeln(userout,in_mod(Head,Mod)),
+		 ;	assert(in_mod(Head,Mod,Type)),
 			term_new_mod(Mod,Head,MHead)
 		)
 	 ;	functor(Head,Fun,Arity),
 		functor(MGHead,Fun,Arity),
-		assert(in_mod(MGHead,Mod)),
-		%%standard:writeln(userout,in_mod(MGHead,Mod)),
+		assert(in_mod(MGHead,Mod,Type)),
 		(Mod == usermod
 		 ->	MHead = Head
 		 ;	term_new_mod(Mod,Head,MHead)
@@ -1443,11 +1429,8 @@ cvt_body_to_mod(call(G1),Mod,call(MG1)) :- !,
 	cvt_body_to_mod(G1,Mod,MG1).
 cvt_body_to_mod(!,_,!) :- !.
 cvt_body_to_mod(Body,Mod,MBody) :-
-	%%machine:term_psc(Body,PSC),
-	%%error_handler:psc_modname_filename(PSC,PMOD,_),
-	%%standard:writeln(userout,bpred(Mod,PMOD,Body)),
 	(atom(Body)
-	 ->	cvt_to_mod(Body,Mod,MBody,default)
+	 ->	cvt_to_mod(Body,Mod,MBody,assumed)
 	 ; number(Body)
 	 ->	MBody = Body
 	 ; Body = Mod1:NBody, nonvar(Mod1)
@@ -1462,7 +1445,7 @@ cvt_body_to_mod(Body,Mod,MBody) :-
 		 ;	cvt_term_to_mod_list(Args,1,0,Mod,MArgs)
 		),
 		Body1 =.. [Pred|MArgs],
-		cvt_to_mod(Body1,Mod,MBody,default)
+		cvt_to_mod(Body1,Mod,MBody,assumed)
 	).
 
 cvt_term_to_mod_list([],_,_,_,[]).
@@ -1478,7 +1461,7 @@ cvt_term_to_mod(Term,MTerm) :-
 	(var(Term)
 	 ->	MTerm = Term
 	 ; atom(Term)
-	 ->	cvt_to_mod(Term,usermod,MTerm,default)
+	 ->	cvt_to_mod(Term,usermod,MTerm,assumed)
 	 ; number(Term)
 	 ->	MTerm = Term
 	 ; Term = Mod1:NTerm, nonvar(Mod1)
@@ -1489,6 +1472,6 @@ cvt_term_to_mod(Term,MTerm) :-
 	 ;	Term =.. [Pred|Args],
 		cvt_term_to_mod_list(Args,1,0,unknown,MArgs),
 		Term1 =.. [Pred|MArgs],
-		cvt_to_mod(Term1,usermod,MTerm,default)
+		cvt_to_mod(Term1,usermod,MTerm,assumed)
 	).
 
