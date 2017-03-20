@@ -87,9 +87,11 @@ psc_shared(PSC, Bool) :- psc_get_env(PSC, Bool, T_SHARED).
 psc_set_private(PSC, IBool) :- RBool is \(IBool), psc_set_shared(PSC, RBool).
 psc_set_tabled(PSC, Bool) :-
 	psc_get_set_env_byte(PSC,255,0,Res),
-	(Res =:= 0 %% Do only if not yet set
+	((Bool =:= 0 ; Res =:= T_UNLOADED ; Res =:= 0) 
 	 ->	psc_set_env(PSC, Bool, T_TABLED)
-	 ;	true
+	 ; (Res =:= T_TABLED ; Res =:= T_TABLED+T_UNLOADED)
+	 ->	true		% already set OK
+	 ;	fail
 	).
 
 % TLS: changed to return values (including variant or subsumptive).

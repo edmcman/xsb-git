@@ -373,6 +373,10 @@ mpa_to_skel(P/A,Skel) :-
 	atom(P),integer(A),!,
 	psc_insert(P,A,PSC,usermod), % to construct psc record for 0-ary
 	term_new(PSC,Skel).
+mpa_to_skel(Atom,Skel) :-	% treat atom as atom/0
+	atom(Atom), !,
+	psc_insert(Atom,0,PSC,usermod), % to construct psc record for 0-ary
+	term_new(PSC,Skel).
 mpa_to_skel(Skel,Skel) :- nonvar(Skel),!.
 mpa_to_skel(_,_):- 
 	instantiation_error(mpa_to_skel/1,1).

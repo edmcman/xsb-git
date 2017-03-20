@@ -119,7 +119,8 @@
 	retract/1, retract_nr/1, retractall/1,
 	system_retract_fact/1,
 	t_assert/2,
-	t_assert_2/2
+	t_assert_2/2,
+	dynamic_pred_has_clauses/2
    from assert.
 
 :- import clause/2 from assert.

@@ -69,11 +69,18 @@ set_tabled_eval(Predicate,EvalMethod) :-
 add_table(Spec) :-
 	mpa_to_skel(Spec,Call),
 	term_psc(Call,Psc),
-	((psc_type(Psc, Type),Type =:= T_PRED) -> /* static and loaded */
+	psc_type(Psc,Type),
+	(Type =:= T_PRED -> /* static and loaded */
 	    ((psc_tabled(Psc, Tabled),Tabled \== 0) ->
 		true
 	      ; permission_error(table,static_code,Spec,(table)/1) )
-	  ; psc_set_tabled(Psc,1)).  %% set it as tabled
+	    ;	   (Type =:= T_DYNA, dynamic_pred_has_clauses(Spec,IfCls), IfCls =:= 1
+		    ->	   permission_error(table,'dynamic predicate with clauses',Spec,(table)/1)
+		    ; psc_set_tabled(Psc,1) %% set it as tabled
+		    ->	   true
+		    ;	   permission_error(table,'predicate tat cannot be tabled',Spec,(table)/1)
+		   )
+	). 
 
 retract_table(Spec) :-
 	mpa_to_skel(Spec,Call),
@@ -402,7 +409,7 @@ tunnumcall(GGoal) :-
 	call(VGoal).
 
 % we've got true and fail -- why not this?
-:- table undefined as opaque.
+:- table undefined/0 as opaque.
 undefined:- tnot(undefined).
 
 /*----------------------------------------------------------------------*/
