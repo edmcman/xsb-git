@@ -960,14 +960,20 @@ READ_ERROR:
     "following" character.
  
 */
+#define EOL_COMMENT_WARN_LENGTH 300
+
 static int com0plain(register FILE *card,	/* source file */
        		     register STRFILE *instr,	/* source string, if non-NULL */
 		     register int endeol)	/* The closing character "!" */
 {
     register int c;
+    int cnt = 0;
  
-    while ((c = GetC(card,instr)) >= 0 && c != '\n' && c != endeol) ;
+    while ((c = GetC(card,instr)) >= 0 && c != '\n' && c != endeol && ++cnt) ;
     if (c >= 0) c = GetC(card,instr);
+    if (cnt > EOL_COMMENT_WARN_LENGTH) {
+      xsb_warn(CTXTc "Extra-long comment to end of line. Bad file format?");
+    }
     return c;
 }
  
