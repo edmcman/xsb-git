@@ -962,7 +962,7 @@ READ_ERROR:
 */
 #define EOL_COMMENT_WARN_LENGTH 300
 
-static int com0plain(register FILE *card,	/* source file */
+static int com0plain(CTXTdeclc register FILE *card,	/* source file */
        		     register STRFILE *instr,	/* source string, if non-NULL */
 		     register int endeol)	/* The closing character "!" */
 {
@@ -1336,7 +1336,7 @@ ASTCOM:             if (com2plain(card, instr, d, intab.endcom)) {
 		    return token;
                 } else
                 if (c == intab.eolcom) {
-                    c = com0plain(card, instr, intab.endeol);
+                    c = com0plain(CTXTc card, instr, intab.endeol);
                     goto START;
                 }
                 *s++ = c, *s = 0;
@@ -1352,7 +1352,7 @@ ASTCOM:             if (com2plain(card, instr, d, intab.endcom)) {
 		    return token;
                 } else
                 if (c == intab.eolcom) {
-                    c = com0plain(card, instr, intab.endeol);
+                    c = com0plain(CTXTc card, instr, intab.endeol);
                     goto START;
                 }
                 d = GetCode(charset,card,instr);
