@@ -2030,7 +2030,7 @@ DllExport int call_conv xsb_close_query(CTXTdecl)
 
 // TLS: not including tr_utils.h because that would disturb CTXT stuff.
 extern void release_all_tabling_resources(CTXTdecl);
-extern void hashtable1_destroy_all(int);
+extern void hashtable1_destroy_all(CTXTdeclc int);
 extern void abolish_wfs_space(CTXTdecl);
 
 DllExport int call_conv xsb_close(CTXTdecl)
@@ -2045,7 +2045,7 @@ DllExport int call_conv xsb_close(CTXTdecl)
     main_thread_gl = NULL;
 #endif
     /* Get rid of any tables */
-    hashtable1_destroy_all(0);  /* free all incr hashtables in use */
+    hashtable1_destroy_all(CTXTc 0);  /* free all incr hashtables in use */
     release_all_tabling_resources(CTXT);
     abolish_wfs_space(CTXT);
 

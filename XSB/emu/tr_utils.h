@@ -135,7 +135,7 @@ extern void delete_delay_trie(CTXTdeclc BTNptr root);
 extern void release_all_tabling_resources(CTXTdecl);
 
 // Perhaps this should be in hashtable.h?
-extern void hashtable1_destroy_all(int);
+extern void hashtable1_destroy_all(CTXTdeclc int);
 
 // from sub_delete.c
 extern void delete_subsumptive_call(CTXTdeclc SubProdSF);

@@ -221,6 +221,9 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
     TIF_CallTrie(tif) = newCallTrie(CTXTc TIF_PSC(tif));
   if ( IsVariantPredicate(tif) ){
     // Return value for term-depth check.
+#if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
+    var_subg_chk_ins_gl++;
+#endif
     if (variant_call_search(CTXTc call_info,results) == XSB_FAILURE) {
       return XSB_FAILURE;
     }
@@ -239,7 +242,8 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
     call_found_flag=CallLUR_VariantFound(*results);
     Paren=CallLUR_Leaf(*results);
 
-    if(call_found_flag!=0){
+    if(call_found_flag!=0){  // the next few lines are executed whether incr or non-oncr.
+      var_subg_inserts_gl++;
       old_call_gl=NULL;
       old_answer_table_gl=NULL;
       
@@ -263,6 +267,9 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
 	  } /* otherwise if dfs_inedges, treat as falsecount = 0, use completed table */
 	}
 	else {    /* COMPUTE_DIRECTLY */
+#if  !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
+	  incr_table_recomputations_gl++;
+#endif
           subg_ans_ctr(sf) = 0;  // Reset answer counter for incremental recomputation
 	  old_call_gl=c;      
 	  call_found_flag=0;  /* treat as a new call */
@@ -399,14 +406,20 @@ int table_call_search_incr(CTXTdeclc TabledCallInfo *call_info,
   if ( IsNULL(TIF_CallTrie(tif)) )
     TIF_CallTrie(tif) = newCallTrie(CTXTc TIF_PSC(tif));
 
+#if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
+    var_subg_chk_ins_gl++;
+#endif
+#if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
+    dyn_incr_chk_ins_gl++;
+#endif
   if ( IsVariantPredicate(tif) ){
     if (variant_call_search(CTXTc call_info,results) == XSB_FAILURE) {
       return XSB_FAILURE;
     }
 
     leaf=CallLUR_Leaf(*results);
-    if (CallLUR_VariantFound(*results)==0){
-      /* new call */      
+    if (CallLUR_VariantFound(*results)==0){      /* new call */      
+      dyn_incr_inserts_gl++;
       cn = makecallnode(CTXTc NULL); 
       BTN_Child(leaf) = (BTNptr)cn;
       callnode_tif_ptr(cn) = tif;

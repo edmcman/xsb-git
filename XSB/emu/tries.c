@@ -72,8 +72,10 @@ extern xsbBool is_cyclic(CTXTdeclc Cell);
 /* The following variables are used in other parts of the system        */
 /*----------------------------------------------------------------------*/
 
-// TES ans_deletes may be taken out.
-counter subg_chk_ins, subg_inserts, ans_chk_ins, ans_inserts, ans_deletes; /* statistics */
+// For statistics: (TES ans_deletes may be taken out)
+counter var_subg_chk_ins_gl, var_subg_inserts_gl, ans_chk_ins, ans_inserts, ans_deletes; 
+// Stats for leaves in the IDG
+counter dyn_incr_chk_ins_gl, dyn_incr_inserts_gl;
 
 #ifndef MULTI_THREAD
 int  num_heap_term_vars;
@@ -2314,9 +2316,6 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
   Integer termsize;
   int second_checking_phase = FALSE;
 
-#if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
-  subg_chk_ins++;
-#endif
   interning_terms = TIF_Interning(CallInfo_TableInfo(*call_info));
   Paren = TIF_CallTrie(CallInfo_TableInfo(*call_info));
   ChildPtrOfParen = &BTN_Child(Paren);
@@ -2484,9 +2483,9 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
    *  If an insertion was performed, do some maintenance on the new leaf.
    */
   if ( flag == 0 ) {
-#if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
-    subg_inserts++;
-#endif
+    //#if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
+    //    subg_inserts++;
+    //#endif
     MakeLeafNode(Paren);
     TN_UpgradeInstrTypeToSUCCESS(Paren,tag);
   }

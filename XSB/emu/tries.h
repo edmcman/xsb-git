@@ -468,7 +468,8 @@ extern CPtr *trieinstr_vars;
 #endif
 
 /* used for statistics */
-extern counter subg_chk_ins, subg_inserts, ans_chk_ins, ans_inserts;
+extern counter var_subg_chk_ins_gl, var_subg_inserts_gl, ans_chk_ins, ans_inserts;
+extern counter dyn_incr_chk_ins_gl,dyn_incr_inserts_gl;
 
 #define undo_answer_bindings					\
   while (VarEnumerator_trail_top >= VarEnumerator_trail) {		\

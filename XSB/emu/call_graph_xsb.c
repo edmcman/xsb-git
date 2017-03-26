@@ -32,11 +32,11 @@
 
 /* Special debug includes */
 /* Remove the includes that are unncessary !!*/
+#include "context.h"   
 #include "hashtable.h"
 #include "hashtable_itr.h"
 #include "debugs/debug_tries.h"
 #include "auxlry.h"
-#include "context.h"   
 #include "cell_xsb.h"   
 #include "inst_xsb.h"
 #include "psc_xsb.h"
@@ -77,8 +77,8 @@ extern ALNptr traverse_variant_answer_trie( VariantSF, CPtr, CPtr) ;
 extern Cell list_of_answers_from_answer_list(VariantSF,int,int,ALNptr);
 
 /* 
-Terminology: outedge -- pointer to calls that depend on call
-             inedge  -- pointer to calls on which call depends
+Terminology: outedge -- pointer to calls that depend on call: affects
+             inedge  -- pointer to calls on which call depends: depends
 */
 
 #define ISO_INCR_TABLING 1
@@ -104,7 +104,6 @@ int current_call_node_count_gl=0;
 int current_call_edge_count_gl=0;
 // total number of incremental subgoals in session.
 int total_call_node_count_gl=0;  
-// not used much -- for statistics
 
 // This array does not need to be resized -- just needs to be > max_arity (TES: ... maybe ...) 
 static Cell incr_heap_cell_array[500];
@@ -122,9 +121,15 @@ Structure_Manager smOutEdge   =  SM_InitDecl(OUTEDGE,OUTEDGE_PER_BLOCK,"Outedge"
 
 #endif
 
+#ifndef MULTI_THREAD
+int incr_table_recomputations_gl=0;
+int incr_dynamic_calls_gl = 0;
+#endif
+
+
 DEFINE_HASHTABLE_INSERT(insert_some, KEY, CALL_NODE);
-DEFINE_HASHTABLE_SEARCH(search_some, KEY, callnodeptr);
 DEFINE_HASHTABLE_REMOVE(remove_some, KEY, callnodeptr);
+DEFINE_HASHTABLE_SEARCH(search_some, KEY, callnodeptr);
 DEFINE_HASHTABLE_ITERATOR_SEARCH(search_itr_some, KEY);
 
 /*****************************************************************************/
@@ -289,9 +294,10 @@ void deleteinedges(CTXTdeclc callnodeptr callnode){
       print_outedges(in->inedge_node->callnode);
 #endif
       //    printf("remove some callnode %x / ownkey %d\n",callnode,ownkey);
-      if (remove_some(hasht,ownkey) == NULL) {
+      if (remove_some(CTXTc hasht,ownkey) == NULL) {
 	xsb_abort("BUG: key not found for removal (deleteinedges)\n");
       }
+      printf("remove_some called from deleteinedges\n");
       current_call_edge_count_gl--;
       in->inedge_node->callnode->outcount--;
       SM_DeallocateStruct(smCallList, in);      
@@ -399,7 +405,7 @@ void deletecallnode(CTXTdeclc callnodeptr callnode){
   current_call_node_count_gl--;
  
   if(callnode->outcount==0){
-    hashtable1_destroy(callnode->outedges->hasht,0);
+    hashtable1_destroy(CTXTc callnode->outedges->hasht,0);
     SM_DeallocateStruct(smOutEdge, callnode->outedges);      
     SM_DeallocateStruct(smCallNode, callnode);        
   }else {
@@ -420,14 +426,15 @@ void deallocate_previous_call(CTXTdeclc callnodeptr callnode){
   struct hashtable* hasht;
   SM_AllocateStruct(smKey, ownkey);
   ownkey->goal=callnode->id;	
+  //  printf("dpc key: %p/%d \n",ownkey,ownkey->goal);
 	
   in = callnode->inedges;
   current_call_node_count_gl--;
-  
+
   while(IsNonNULL(in)){
     tmpin = in->next;
     hasht = in->inedge_node->hasht;
-    if (remove_some(hasht,ownkey) == NULL) {
+    if (remove_some(CTXTc hasht,ownkey) == NULL) {
       /*
       prevnode=in->prevnode->callnode;
       if(IsNonNULL(prevnode->goal)){
@@ -439,6 +446,7 @@ void deallocate_previous_call(CTXTdeclc callnodeptr callnode){
       */
       xsb_abort("BUG: key not found for removal (deallocate previous call)\n");
     }
+    //    printf("remove_some called from dealloc prev call\n");
     in->inedge_node->callnode->outcount--;
     current_call_edge_count_gl--;
     SM_DeallocateStruct(smCallList, in);      
@@ -459,7 +467,7 @@ void initoutedges(CTXTdeclc callnodeptr cn){
   SM_AllocateStruct(smOutEdge,out);
   cn->outedges = out;
   out->callnode = cn; 	  
-  out->hasht =create_hashtable1(HASH_TABLE_SIZE, hashfromkey, equalkeys);
+  out->hasht =create_hashtable1(CTXTc HASH_TABLE_SIZE, hashfromkey, equalkeys);
   return;
 }
 
@@ -1427,7 +1435,7 @@ int  get_incr_sccs(CTXTdeclc Cell listterm) {
     SCCNode * nodes;
     struct hashtable_itr *itr;     struct hashtable* hasht; 
     XSB_Deref(listterm);
-    hasht = create_hashtable1(HASH_TABLE_SIZE, hashid, equalkeys);
+    hasht = create_hashtable1(CTXTc HASH_TABLE_SIZE, hashid, equalkeys);
     orig_listterm = listterm;
     intterm = get_list_head(listterm);
     XSB_Deref(intterm);
@@ -1490,7 +1498,7 @@ int  get_incr_sccs(CTXTdeclc Cell listterm) {
       //      printf("++component for node %d is %d (high %d)\n",i,nodes[i].component,component);
     }
     ret = return_scc_list(CTXTc  nodes, node_num);
-    hashtable1_destroy(hasht,0);
+    hashtable1_destroy(CTXTc hasht,0);
     mem_dealloc(nodes,node_num*sizeof(SCCNode),OTHER_SPACE); 
     mem_dealloc(dfn_stack,node_num*sizeof(int),OTHER_SPACE); 
     return ret;

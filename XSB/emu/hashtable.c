@@ -8,6 +8,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "context.h"
 #include "hashtable.h"
 #include "hashtable_private.h"
 
@@ -15,7 +16,9 @@
 #include "memory_xsb.h"
 
 #include "struct_manager.h"
+#ifndef MULTI_THREAD
 extern Structure_Manager smKey;
+#endif
 
 //#define HASHTABLE_DEBUG
 #ifdef HASHTABLE_DEBUG
@@ -41,11 +44,13 @@ const unsigned int prime_table_length = sizeof(primes)/sizeof(primes[0]);
 const double max_load_factor = 0.65;
 
 /* maintain chain of all hashtables in incr, for use when deleting all tables */
+#ifndef MULTI_THREAD
 struct hashtable *incr_hashtable_chain = NULL;
+#endif
 
 /*****************************************************************************/
 struct hashtable *
-create_hashtable1(unsigned int minsize,
+create_hashtable1(CTXTdeclc unsigned int minsize,
                  unsigned int (*hashf) (void*),
                  int (*eqf) (void*,void*))
 {
@@ -204,7 +209,8 @@ hashtable1_search(struct hashtable *h, void *k)
 
 /*****************************************************************************/
 void * /* returns value associated with key */
-hashtable1_remove(struct hashtable *h, void *k)
+//hashtable1_remove(CTXTdeclc struct hashtable *h, void *k)
+hashtable1_remove(CTXTdeclc struct hashtable *h, void *k)
 {
     /* TODO: consider compacting the table when the load factor drops enough,
      *       or provide a 'compact' method. */
@@ -226,6 +232,7 @@ hashtable1_remove(struct hashtable *h, void *k)
             *pE = e->next;
             h->entrycount--;
             v = e->v;
+	    // for now, this leaves a memory leak in the MT engine.
 	    SM_DeallocateSmallStruct(smKey, e->k);      
             //freekey(e->k);
 	    //	    SM_DeallocateStruct(smCallList,k);      
@@ -241,7 +248,7 @@ hashtable1_remove(struct hashtable *h, void *k)
 /*****************************************************************************/
 /* destroy */
 void
-hashtable1_destroy(struct hashtable *h, int free_values)
+hashtable1_destroy(CTXTdeclc struct hashtable *h, int free_values)
 {
     unsigned int i;
     struct entry *e, *f;
@@ -282,9 +289,9 @@ hashtable1_destroy(struct hashtable *h, int free_values)
 }
 
 void
-hashtable1_destroy_all(int free_values) {
+hashtable1_destroy_all(CTXTdeclc int free_values) {
   while (incr_hashtable_chain != NULL) {
-    hashtable1_destroy(incr_hashtable_chain,free_values);
+    hashtable1_destroy(CTXTc incr_hashtable_chain,free_values);
   }
 }
 

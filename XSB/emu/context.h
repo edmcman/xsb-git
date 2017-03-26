@@ -534,6 +534,8 @@ BTNptr      _old_answer_table_gl;      // is this needed?  Can we use the root p
 calllistptr _lazy_affected;
 int         _incr_table_update_safe_gl;
 int         _unchanged_call_gl;
+int         _incr_table_recomputations_gl;
+int         _incr_dynamic_calls_gl;
 int         _current_call_edge_count_gl;
 int         _current_call_node_count_gl;
 int         _total_call_node_count_gl;  
@@ -874,6 +876,8 @@ typedef struct th_context th_context ;
 #define unchanged_call_gl             (th->_unchanged_call_gl)
 #define current_call_node_count_gl    (th-> _current_call_node_count_gl)
 #define current_call_edge_count_gl    (th-> _current_call_edge_count_gl)
+#define incr_table_recomputations_gl  (th->  _incr_table_recomputations_gl)
+#define incr_dynamic_calls_gl         (th->  _incr_dynamic_calls_gl)
 #define total_call_node_count_gl      (th-> _total_call_node_count_gl) 
 #define incr_heap_cell_array          (th-> _incr_heap_cell_array)
 #define incr_hashtable_chain          (th-> _incr_hashtable_chain)
