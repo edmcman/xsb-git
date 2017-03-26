@@ -537,10 +537,6 @@ void addcalledge(CTXTdeclc callnodeptr fromcn, callnodeptr tocn){
   SM_AllocateStruct(smKey, k1);
   k1->goal = tocn->id;
   
-  // #ifdef INCR_DEBUG
-  //  printf("%d-->%d",fromcn->id,tocn->id);	
-  // #endif
-  
   if (NULL == search_some(fromcn->outedges->hasht,k1)) {
     insert_some(fromcn->outedges->hasht,k1,tocn);
 
@@ -557,19 +553,17 @@ void addcalledge(CTXTdeclc callnodeptr fromcn, callnodeptr tocn){
 #ifdef INCR_DEBUG		
     if(IsNonNULL(fromcn->goal)){
       sfPrintGoal(stdout,(VariantSF)fromcn->goal,NO);printf("(%d)",fromcn->id);
-    }else
-      printf("--------------- addcalledge after  (%d)",fromcn->id);
+    }else      printf("--------------- addcalledge after  (%d)",fromcn->id);
     
     if(IsNonNULL(tocn->goal)){
       printf("-->");	
       sfPrintGoal(stdout,(VariantSF)tocn->goal,NO);printf("(%d)",tocn->id);
-    }
-    printf("\n");	
+    }    printf("\n");	
 #endif
-    
-    
   }
-
+  else {
+    SM_DeallocateSmallStruct(smKey, k1);      
+  }
 #ifdef INCR_DEBUG	
     printf("--------------------------------- addcalledge after \n");
     print_inedges(tocn);
