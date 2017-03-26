@@ -4872,7 +4872,7 @@ void abolish_all_tables(CTXTdeclc int action) {
   }
   reset_freeze_registers;
   openreg = COMPLSTACKBOTTOM;
-  hashtable1_destroy_all(0);             /* free all incr hashtables in use */
+  hashtable1_destroy_all(CTXTc 0);             /* free all incr hashtables in use */
   release_all_tabling_resources(CTXT);
   current_call_node_count_gl = 0; current_call_edge_count_gl = 0;
   abolish_wfs_space(CTXT);               // free wfs stuff that does not use structure managers
@@ -5619,7 +5619,7 @@ int  get_residual_sccs(CTXTdeclc Cell listterm) {
 
     XSB_Deref(listterm);
     orig_listterm = listterm;
-    hasht = create_hashtable1(HASH_TABLE_SIZE, hashid, equalkeys);
+    hasht = create_hashtable1(CTXTc HASH_TABLE_SIZE, hashid, equalkeys);
     //    printf("listptr %p @%p\n",listptr,(CPtr) int_val(*listptr));
     intterm = get_list_head(listterm);
     XSB_Deref(intterm);
@@ -5681,7 +5681,7 @@ int  get_residual_sccs(CTXTdeclc Cell listterm) {
       //      printf("++component for node %d is %d (high %d)\n",i,nodes[i].component,component);
     }
     ret = return_ans_depends_scc_list(CTXTc  nodes, node_num);
-    hashtable1_destroy(hasht,0);
+    hashtable1_destroy(CTXTc hasht,0);
     mem_dealloc(nodes,node_num*sizeof(SCCNode),OTHER_SPACE); 
     mem_dealloc(dfn_stack,node_num*sizeof(int),OTHER_SPACE); 
     return ret;

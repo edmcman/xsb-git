@@ -42,8 +42,8 @@
 extern calllistptr /* affected_gl, changed_gl,*/ lazy_affected;
 extern int current_call_node_count_gl,current_call_edge_count_gl;
 extern BTNptr old_answer_table_gl;
-extern int unchanged_call_gl, total_call_node_count_gl;
 extern callnodeptr old_call_gl;
+extern int unchanged_call_gl, total_call_node_count_gl, incr_table_recomputations_gl, incr_dynamic_calls_gl;
 
 extern Structure_Manager smCallNode;
 extern Structure_Manager smCallList;
