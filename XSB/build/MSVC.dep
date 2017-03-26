@@ -35,7 +35,7 @@ SOURCE=$(INTDIR)\function.c
 SOURCE=$(INTDIR)\hash_xsb.c
 "$(OBJDIR)\hash_xsb.obj" : $(SOURCE) ..\build\windows\xsb_config.h ..\build\windows\xsb_config_aux.h ..\build\windows\xsb_debug.h basictypes.h cell_def_xsb.h auxlry.h basicdefs.h context.h setjmp_xsb.h flag_defs_xsb.h hashtable_xsb.h conc_compl.h cell_xsb.h box_defines.h celltags_xsb.h hash_xsb.h psc_xsb.h psc_defs.h incr_xsb_defs.h export.h flags_xsb.h memory_xsb.h memory_defs.h thread_xsb.h thread_defs_xsb.h
 SOURCE=$(INTDIR)\hashtable.c
-"$(OBJDIR)\hashtable.obj" : $(SOURCE) ..\build\windows\xsb_config.h ..\build\windows\xsb_config_aux.h ..\build\windows\xsb_debug.h hashtable.h hashtable_private.h auxlry.h basicdefs.h basictypes.h cell_def_xsb.h memory_xsb.h memory_defs.h export.h
+"$(OBJDIR)\hashtable.obj" : $(SOURCE) ..\build\windows\xsb_config.h ..\build\windows\xsb_config_aux.h ..\build\windows\xsb_debug.h hashtable.h hashtable_private.h auxlry.h basicdefs.h basictypes.h cell_def_xsb.h memory_xsb.h memory_defs.h export.h struct_manager.h
 SOURCE=$(INTDIR)\hashtable_itr.c
 "$(OBJDIR)\hashtable_itr.obj" : $(SOURCE) ..\build\windows\xsb_config.h ..\build\windows\xsb_config_aux.h ..\build\windows\xsb_debug.h hashtable.h hashtable_private.h hashtable_itr.h auxlry.h basicdefs.h basictypes.h cell_def_xsb.h memory_xsb.h memory_defs.h export.h
 SOURCE=$(INTDIR)\hashtable_xsb.c
