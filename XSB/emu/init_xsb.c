@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 #ifdef WIN_NT
 #include <windows.h>
@@ -1343,6 +1344,8 @@ void init_machine(CTXTdeclc int glsize, int tcpsize,
 		  int complstacksize, int pdlsize)
 {
   void tstInitDataStructs(CTXTdecl);
+
+  setlocale(LC_NUMERIC, "");
 
   // single-threaded engine uses this for tries.
   init_private_trie_table(CTXT);
