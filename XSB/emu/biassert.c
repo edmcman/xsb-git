@@ -2676,6 +2676,26 @@ static int really_delete_clause(CTXTdeclc ClRef);
    delcf frame.
 */
 
+int count_dynamic(int *clause_count, int *pred_count) {
+  DelCFptr delcf_ptr = delcf_chain_begin;
+  *clause_count = 0; *pred_count = 0;
+  //  printf("delcf %p\n",delcf_ptr);
+  while (delcf_ptr) {
+    if (DCF_Type(delcf_ptr) == DELETED_PRREF) {
+      (*pred_count)++;
+    } 
+    else {
+      if (DTF_Type(delcf_ptr) == DELETED_CLREF) {
+	//	printf("deleted clref\n");
+	(*clause_count)++;
+      } else 
+	printf("Unknown DTF type %d\n",DTF_Type(delcf_ptr));
+    }
+    delcf_ptr = DCF_NextDCF(delcf_ptr);
+  }
+  return 0;
+}
+
 int sweep_dynamic(CTXTdeclc DelCFptr *chain_begin,Structure_Manager *SM) { 
   DelCFptr next_delcf_ptr, delcf_ptr = *chain_begin; 
   int dcf_cnt = 0;
@@ -3319,6 +3339,7 @@ static inline void allocate_prref_tab_and_tif(CTXTdeclc Psc psc, PrRef *prref, p
       }
       Loc = 0 ;
       if (!get_nonincremental(psc)) { /* incremental evaluation */
+      //      if (get_incr(psc) && get_tabled(psc)) { /* incremental evaluation */
 	//       	printf("%s is incr prref: %p\n",get_name(psc),*prref);
 	dbgen_inst_ppvww(tabletrysinglenoanswers,get_arity(psc),*prref,tip,tp,&Loc);
       } else {

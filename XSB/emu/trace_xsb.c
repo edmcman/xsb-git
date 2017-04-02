@@ -111,6 +111,8 @@ char *pspace_cat[NUM_CATS_SPACE] =
 
 #define DETAILED_STATISTICS 1
 //-----------------------------------------------------------------------------------------------
+  extern int count_dynamic(int *, int *);
+
 #ifndef MULTI_THREAD
 void total_stat(CTXTdeclc double elapstime) {
 
@@ -137,9 +139,10 @@ void total_stat(CTXTdeclc double elapstime) {
   UInteger de_count, dl_count, de_space_alloc, de_space_used, total_alloc, total_used, 
     dl_space_alloc, dl_space_used, tablespace_sm_alloc, tablespace_sm_used, tablespace_sm_free, pspacetot, 
     incr_tablespace_sm_alloc, 
-    //incr_tablespace_sm_used,  
+    //    incr_tablespace_sm_used,  
     trieassert_alloc, trieassert_used, tc_avail, gl_avail;
   UInteger total_table_space;
+  int clref_count = 0; int predref_count = 0;
 
   abtn = node_statistics(&smAssertBTN);           abtht = hash_statistics(CTXTc &smAssertBTHT);
   trieassert_alloc =    NodeStats_SizeAllocNodes(abtn) + HashStats_SizeAllocTotal(abtht);
@@ -192,60 +195,61 @@ void total_stat(CTXTdeclc double elapstime) {
     ((UInteger) ((size_t)(pdlreg+1) - (size_t)pdl.high) + glstack.size*K - gl_avail) + (tcpstack.size * K - tc_avail + complstack.size) ;
 
   printf("\n");
-  printf("Memory (total)      %15" Intfmt " bytes: %15" Intfmt " in use, %15" Intfmt " free\n",
+  printf("Memory (total)      %'15" Intfmt " bytes: %'15" Intfmt " in use, %'15" Intfmt " free\n",
 	 total_alloc, total_used, total_alloc - total_used);
-  printf("  permanent space   %15" Intfmt " bytes: %15" Intfmt " in use, %15" Intfmt " free\n",
+  printf("  permanent space   %'15" Intfmt " bytes: %'15" Intfmt " in use, %'15" Intfmt " free\n",
 	 pspacetot + trieassert_alloc, pspacetot + trieassert_used, trieassert_alloc - trieassert_used);
   if (trieassert_alloc > 0)
-    printf("    trie-asserted                        %15" Intfmt " in use, %15" Intfmt "\n",
+    printf("    trie-asserted                        %'15" Intfmt " in use, %'15" Intfmt "\n",
 	   trieassert_used,trieassert_alloc-trieassert_used);
 
   for (i=0; i<NUM_CATS_SPACE; i++) 
     if (pspacesize[i] > 0 && i != TABLE_SPACE && i != INCR_TABLE_SPACE)
-      printf("    %s                           %15" Intfmt "\n",pspace_cat[i],pspacesize[i]);
+      printf("    %s                           %'15" Intfmt "\n",pspace_cat[i],pspacesize[i]);
 
-  printf("  glob/loc space    %15" Intfmt " bytes: %15" Intfmt " in use, %15" Intfmt " free\n",
+  printf("  glob/loc space    %'15" Intfmt " bytes: %'15" Intfmt " in use, %'15" Intfmt " free\n",
 	 glstack.size * K, glstack.size * K - gl_avail, gl_avail);
-  printf("    global                                 %15" Intfmt "\n",
+  printf("    global                                 %'15" Intfmt "\n",
 	 (Integer)((top_of_heap - (CPtr)glstack.low + 1) * sizeof(Cell)));
-  printf("    local                                  %15" Intfmt "\n",
+  printf("    local                                  %'15" Intfmt "\n",
 	 (Integer)(((CPtr)glstack.high - top_of_localstk) * sizeof(Cell)));
-  printf("  trail/cp space    %15" Intfmt " bytes: %15" Intfmt " in use, %15" Intfmt " free\n",
+  printf("  trail/cp space    %'15" Intfmt " bytes: %'15" Intfmt " in use, %'15" Intfmt " free\n",
 	 tcpstack.size * K, tcpstack.size * K - tc_avail, tc_avail);
-  printf("    trail                                  %15" Intfmt "\n",
+  printf("    trail                                  %'15" Intfmt "\n",
 	 (Integer)((top_of_trail - (CPtr *)tcpstack.low + 1) * sizeof(CPtr)));
-  printf("    choice point                           %15" Intfmt "\n",
+  printf("    choice point                           %'15" Intfmt "\n",
 	 (Integer)(((CPtr)tcpstack.high - top_of_cpstack) * sizeof(Cell)));
-  printf("  SLG unific. space      %10" Intfmt " bytes: %15" Intfmt " in use, %15" Intfmt " free\n",
+  printf("  SLG unific. space      %'10" Intfmt " bytes: %'15" Intfmt " in use, %'15" Intfmt " free\n",
 	 (UInteger) pdl.size * K, (UInteger) ((size_t)(pdlreg+1) - (size_t)pdl.high),
 	 (UInteger) (pdl.size * K - ((size_t)(pdlreg+1)-(size_t)pdl.high))); 
-  printf("  SLG completion    %15" Intfmt " bytes: %15" Intfmt " in use, %15" Intfmt " free\n",
+  printf("  SLG completion    %'15" Intfmt " bytes: %'15" Intfmt " in use, %'15" Intfmt " free\n",
 	 (UInteger)complstack.size * K,
 	 (UInteger)COMPLSTACKBOTTOM - (UInteger)top_of_complstk,
 	 (UInteger)complstack.size * K -
 	 (UInteger) ((size_t)COMPLSTACKBOTTOM - (size_t)top_of_complstk));
   if (((size_t)COMPLSTACKBOTTOM - (size_t)top_of_complstk) > 0) {
-    printf("        (%" Intfmt " incomplete table(s)",
+    printf("        (%'" Intfmt " incomplete table(s)",
 	   (UInteger) (((UInteger)COMPLSTACKBOTTOM - (UInteger)top_of_complstk)/(COMPLFRAMESIZE*WORD_SIZE)));
-    printf(" in %d SCCs)",count_sccs(CTXT));
+    printf(" in %'d SCCs)",count_sccs(CTXT));
     printf("\n");
   }
-  printf("  SLG table space   %15" Intfmt " bytes: %15" Intfmt " in use, %15" Intfmt " free\n",	
+  printf("  SLG table space   %'15" Intfmt " bytes: %'15" Intfmt " in use, %'15" Intfmt " free\n",	
 	 total_table_space, total_table_space - tablespace_sm_free, tablespace_sm_free);
 
   if (pspacesize[INCR_TABLE_SPACE]) {
-    printf("    Incr table space                       %15" Intfmt " in use\n",
+    printf("    Incr table space                       %'15" Intfmt " allocated\n",
 	   pspacesize[INCR_TABLE_SPACE] + incr_tablespace_sm_alloc);
+    printf("      Hash space%'15" Intfmt " bytes: %'15" Intfmt "allocated\n",pspacesize[INCR_TABLE_SPACE]);
 #ifdef DETAILED_STATISTICS
-    printf("      Callnode space%15" Intfmt " bytes: %15" Intfmt " in use\n",
+    printf("      Callnode space%'15" Intfmt " bytes: %'15" Intfmt " in use\n",
 	   NodeStats_SizeAllocNodes(tot_CallNode),NodeStats_SizeUsedNodes(tot_CallNode));
-    printf("      Outedge space %15" Intfmt " bytes: %15" Intfmt " in use\n",
+    printf("      Outedge space %'15" Intfmt " bytes: %'15" Intfmt " in use\n",
 	   NodeStats_SizeAllocNodes(tot_OutEdge),NodeStats_SizeUsedNodes(tot_OutEdge));
-    printf("      CallList spc  %15" Intfmt " bytes: %15" Intfmt " in use\n",
+    printf("      CallList spc  %'15" Intfmt " bytes: %'15" Intfmt " in use\n",
 	   NodeStats_SizeAllocNodes(tot_CallList),NodeStats_SizeUsedNodes(tot_CallList));
-    printf("      Call2List spc %15" Intfmt " bytes: %15" Intfmt " in use\n",
+    printf("      Call2List spc %'15" Intfmt " bytes: %'15" Intfmt " in use\n",
 	   NodeStats_SizeAllocNodes(tot_Call2List),NodeStats_SizeUsedNodes(tot_Call2List));
-    printf("      Key space     %15" Intfmt " bytes: %15" Intfmt " in use\n",
+    printf("      Key space     %'15" Intfmt " bytes: %'15" Intfmt " in use\n",
 	   NodeStats_SizeAllocNodes(tot_Key),NodeStats_SizeUsedNodes(tot_Key));
 #endif
   }
@@ -263,16 +267,16 @@ void total_stat(CTXTdeclc double elapstime) {
          --------------------- */
       update_maximum_tablespace_stats(&tbtn,&tbtht,&varsf,&prodsf,&conssf,
 				    &aln,&tstn,&tstht,&tsi,&asi);
-    printf("  Maximum table space used:  %" Intfmt " bytes\n",
+    printf("  Maximum table space used:  %'" Intfmt " bytes\n",
 	   maximum_total_tablespace_usage());
     printf("\n");
   }
 
 #if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
   printf("Tabling Operations\n");
-  printf("  %"UIntfmt" subsumptive call check/insert ops: %"UIntfmt" producers, %"UIntfmt" variants,\n"
-	 "  %"UIntfmt" properly subsumed (%"UIntfmt" table entries), %"UIntfmt" used completed table.\n"
-	 "  %"UIntfmt" relevant answer ident ops.  %"UIntfmt" consumptions via answer list.\n",
+  printf("  %'"UIntfmt" subsumptive call check/insert ops: %'"UIntfmt" producers, %'"UIntfmt" variants,\n"
+	 "  %'"UIntfmt" properly subsumed (%'"UIntfmt" table entries), %'"UIntfmt" used completed table.\n"
+	 "  %'"UIntfmt" relevant answer ident ops.  %'"UIntfmt" consumptions via answer list.\n",
 	 NumSubOps_CallCheckInsert,		NumSubOps_ProducerCall,
 	 NumSubOps_VariantCall,			NumSubOps_SubsumedCall,
 	 NumSubOps_SubsumedCallEntry,		NumSubOps_CallToCompletedTable,
@@ -281,51 +285,53 @@ void total_stat(CTXTdeclc double elapstime) {
     UInteger ttl_ops = ans_chk_ins + NumSubOps_AnswerCheckInsert,
 	 	 ttl_ins = ans_inserts + NumSubOps_AnswerInsert;
 
-    printf("  %" UIntfmt " variant table call check/insert ops: %" UIntfmt " producers, %" UIntfmt" variants.\n",
+    printf("  %'" UIntfmt " variant table call check/insert ops: %'" UIntfmt " producers, %'" UIntfmt" variants.\n",
 	   var_subg_chk_ins_gl, var_subg_inserts_gl, var_subg_chk_ins_gl - var_subg_inserts_gl);
-    printf("  %" UIntfmt" answer check/insert ops: %" UIntfmt " unique inserts, %"UIntfmt" redundant.\n",
+    printf("  %'" UIntfmt" answer check/insert ops: %'" UIntfmt " unique inserts, %'"UIntfmt" redundant.\n",
 	   ttl_ops, ttl_ins, ttl_ops - ttl_ins);
   }
   if (de_count > 0) {
-    printf("  %6" Intfmt " DEs in the tables (space: %5" Intfmt " bytes allocated, %5" Intfmt" in use)\n",
+    printf("  %'6" Intfmt " DEs in the tables (space: %'5" Intfmt " bytes allocated, %'5" Intfmt" in use)\n",
 	   de_count, de_space_alloc, de_space_used);
-    printf("  %6" Intfmt " DLs in the tables (space: %5" Intfmt " bytes allocated, %5" Intfmt" in use)\n",
+    printf("  %'6" Intfmt " DLs in the tables (space: %'5" Intfmt " bytes allocated, %'5" Intfmt" in use)\n",
 	   dl_count, dl_space_alloc, dl_space_used);
     printf("\n");
   }
     if (dyn_incr_chk_ins_gl) {
-      printf("  %" UIntfmt " call check/insert ops for incr dyn IDG nodes; %" UIntfmt " unique goals\n",
+      printf("  %'" UIntfmt " call check/insert ops for incr dyn IDG nodes; %'" UIntfmt " unique goals\n",
 	     dyn_incr_chk_ins_gl,dyn_incr_inserts_gl);
     }
     if (incr_table_recomputations_gl) {
-      printf("    incremental table recomputations %d\n",incr_table_recomputations_gl);
+      printf("    incremental table recomputations %'d\n",incr_table_recomputations_gl);
     }
 
   if (total_call_node_count_gl) {
-    printf("Total number of IDG nodes created: %d\n",total_call_node_count_gl);
+    printf("Total number of IDG nodes created: %'d\n",total_call_node_count_gl);
     if (current_call_node_count_gl) {
-      printf("Currently %d IDG nodes, %d dependency edges\n",
+      printf("Currently %'d IDG nodes, %'d dependency edges\n",
 	     current_call_node_count_gl,current_call_edge_count_gl);
 	}
   }
   //    if (incr_dynamic_calls) {
-  //      printf("    call check/insert ops to incr dynamic preds %d\n",incr_dynamic_calls);
+  //      printf("    call check/insert ops to incr dynamic preds %'d\n",incr_dynamic_calls);
   //    }
 
   if (abol_subg_ctr == 1)
     printf("  1 tabled subgoal explicitly abolished\n");
   else if (abol_subg_ctr > 1) 
-    printf("  %" UIntfmt " tabled subgoals explicitly abolished\n",abol_subg_ctr);
+    printf("  %'" UIntfmt " tabled subgoals explicitly abolished\n",abol_subg_ctr);
 
   if (abol_pred_ctr == 1) 
     printf("  1 tabled predicate explicitly abolished\n");
   else if (abol_pred_ctr > 1) 
-    printf("  %" UIntfmt " tabled predicates explicitly abolished\n",abol_pred_ctr);
+    printf("  %'" UIntfmt " tabled predicates explicitly abolished\n",abol_pred_ctr);
   print_abolish_table_statistics();
 
 #endif
 
-  printf("\n");  print_gc_statistics();
+  count_dynamic(&clref_count, &predref_count);
+  printf("   Uncollected clauses %d predrefs %d\n",clref_count,predref_count);
+  print_gc_statistics();
 
   printf("Time: %.3f sec. cputime,  %.3f sec. elapsetime\n",
 	 cputime_count_gl, elapstime);
