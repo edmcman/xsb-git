@@ -190,7 +190,6 @@ inline static  BTNptr newCallTrie(CTXTdeclc Psc predicate) {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 /*
- * used in tabletrysinglenoanswers 
  * Note that the call trie of the TIF is not allocated until the first
  * call is entered.  Upon exit, CallLUR_AnsTempl(*results) points to
  * the size of the answer template on the CPS.  See slginsts_xsb_i.h
@@ -223,6 +222,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
     // Return value for term-depth check.
 #if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
     var_subg_chk_ins_gl++;
+    //    printf("var_subg_chk_ins\n");
 #endif
     if (variant_call_search(CTXTc call_info,results) == XSB_FAILURE) {
       return XSB_FAILURE;
@@ -243,7 +243,8 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
     Paren=CallLUR_Leaf(*results);
 
     if(call_found_flag!=0){  // the next few lines are executed whether incr or non-oncr.
-      var_subg_inserts_gl++;
+      //      printf("cff = 0\n");
+      //      var_subg_inserts_gl++;
       old_call_gl=NULL;
       old_answer_table_gl=NULL;
       
@@ -252,13 +253,14 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
       //      if (IsNonNULL(c))  {
       //	printf("        checking the incremental goal flscnt %d ",c->falsecount);print_subgoal(stddbg,sf);printf("\n");
       //      }
-      /* TLS: if falsecount == 0 && call_found_flag, we know that call
+      /* TES: if falsecount == 0 && call_found_flag, we know that call
          is complete.  Otherwise, dfs_outedges would have aborted */
 
       if(IsNonNULL(c) && (c->falsecount!=0)){
 	//	printf("           recomputing (rcomputable = %d) ",c->recomputable);
 	//	print_subgoal(stddbg,sf);printf(" (sf %p)\n",sf);
 	if (c->recomputable == COMPUTE_DEPENDENCIES_FIRST) {
+	  //	  printf("computing dependencies = 0\n");
 	  lazy_affected = empty_calllist(CTXT);
 	  if ( !dfs_inedges(CTXTc c,  &lazy_affected, CALL_LIST_EVAL) ) {
 	    CallLUR_Subsumer(*results) = CallTrieLeaf_GetSF(Paren);
@@ -267,6 +269,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
 	  } /* otherwise if dfs_inedges, treat as falsecount = 0, use completed table */
 	}
 	else {    /* COMPUTE_DIRECTLY */
+	  //	  printf("recomputing = 0\n");
 #if  !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
 	  incr_table_recomputations_gl++;
 #endif
@@ -290,14 +293,18 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
 	  old_answer_table_gl=sf->ans_root_ptr;
 	  //reclaim_incomplete_table_structs(sf);
 	  CallTrieLeaf_SetSF(Paren,NULL);            
-	}
-      }
+	} // Compute dependencies
+      }  // Recomputation
+    } // call_found_flag != 0
+    else {
+      var_subg_inserts_gl++;
     }
+      
       CallLUR_Subsumer(*results) = CallTrieLeaf_GetSF(Paren);
       CallLUR_VariantFound(*results) = call_found_flag;
       /* incremental evaluation: end */
       //#endif /* not MULTI_THREAD (incremental evaluation) */
-  }
+  }  //IsVariantPredicate
   else
     subsumptive_call_search(CTXTc call_info,results);
   {

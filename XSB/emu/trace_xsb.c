@@ -239,7 +239,7 @@ void total_stat(CTXTdeclc double elapstime) {
   if (pspacesize[INCR_TABLE_SPACE]) {
     printf("    Incr table space                       %'15" Intfmt " allocated\n",
 	   pspacesize[INCR_TABLE_SPACE] + incr_tablespace_sm_alloc);
-    printf("      Hash space%'15" Intfmt " bytes: %'15" Intfmt "allocated\n",pspacesize[INCR_TABLE_SPACE]);
+    printf("      Hash space                           %'15" Intfmt " allocated\n",pspacesize[INCR_TABLE_SPACE]);
 #ifdef DETAILED_STATISTICS
     printf("      Callnode space%'15" Intfmt " bytes: %'15" Intfmt " in use\n",
 	   NodeStats_SizeAllocNodes(tot_CallNode),NodeStats_SizeUsedNodes(tot_CallNode));
@@ -285,8 +285,11 @@ void total_stat(CTXTdeclc double elapstime) {
     UInteger ttl_ops = ans_chk_ins + NumSubOps_AnswerCheckInsert,
 	 	 ttl_ins = ans_inserts + NumSubOps_AnswerInsert;
 
-    printf("  %'" UIntfmt " variant table call check/insert ops: %'" UIntfmt " producers, %'" UIntfmt" variants.\n",
-	   var_subg_chk_ins_gl, var_subg_inserts_gl, var_subg_chk_ins_gl - var_subg_inserts_gl);
+    printf("  %'" UIntfmt " variant table call check/insert ops: \n",var_subg_chk_ins_gl);
+    printf("    %'" UIntfmt " checks/inserts for tabled subgoals; %'"UIntfmt " checks/inserts for IDG leaf nodes \n",
+	   var_subg_chk_ins_gl-(dyn_incr_chk_ins_gl+2*incr_table_recomputations_gl),dyn_incr_chk_ins_gl);   
+    printf("    %'" UIntfmt " check/inserts for incremental recomputations\n",2*incr_table_recomputations_gl);
+    printf("  %'" UIntfmt " distinct variant subgoals\n",var_subg_inserts_gl);
     printf("  %'" UIntfmt" answer check/insert ops: %'" UIntfmt " unique inserts, %'"UIntfmt" redundant.\n",
 	   ttl_ops, ttl_ins, ttl_ops - ttl_ins);
   }
@@ -297,24 +300,21 @@ void total_stat(CTXTdeclc double elapstime) {
 	   dl_count, dl_space_alloc, dl_space_used);
     printf("\n");
   }
-    if (dyn_incr_chk_ins_gl) {
-      printf("  %'" UIntfmt " call check/insert ops for incr dyn IDG nodes; %'" UIntfmt " unique goals\n",
-	     dyn_incr_chk_ins_gl,dyn_incr_inserts_gl);
-    }
-    if (incr_table_recomputations_gl) {
-      printf("    incremental table recomputations %'d\n",incr_table_recomputations_gl);
-    }
 
-  if (total_call_node_count_gl) {
-    printf("Total number of IDG nodes created: %'d\n",total_call_node_count_gl);
-    if (current_call_node_count_gl) {
-      printf("Currently %'d IDG nodes, %'d dependency edges\n",
-	     current_call_node_count_gl,current_call_edge_count_gl);
-	}
-  }
-  //    if (incr_dynamic_calls) {
-  //      printf("    call check/insert ops to incr dynamic preds %'d\n",incr_dynamic_calls);
-  //    }
+    if (total_call_node_count_gl) {
+      //    printf("  Total number of IDG nodes created: %'d\n",total_call_node_count_gl);
+      if (current_call_node_count_gl) {
+	printf("  Currently %'d IDG nodes, %'d dependency edges\n",
+	       current_call_node_count_gl,current_call_edge_count_gl);
+      }
+      if (incr_table_recomputations_gl) {
+	printf("    incremental table recomputations %'d\n",incr_table_recomputations_gl);
+      }
+      if (dyn_incr_chk_ins_gl) {
+	printf("    %'" UIntfmt " call check/insert ops for incr dyn IDG nodes; %'" UIntfmt " unique goals\n",
+	       dyn_incr_chk_ins_gl,dyn_incr_inserts_gl);
+      }
+    }
 
   if (abol_subg_ctr == 1)
     printf("  1 tabled subgoal explicitly abolished\n");
@@ -330,7 +330,7 @@ void total_stat(CTXTdeclc double elapstime) {
 #endif
 
   count_dynamic(&clref_count, &predref_count);
-  printf("   Uncollected clauses %d predrefs %d\n",clref_count,predref_count);
+  printf("\n");printf("  Uncollected clauses %d predrefs %d\n",clref_count,predref_count);
   print_gc_statistics();
 
   printf("Time: %.3f sec. cputime,  %.3f sec. elapsetime\n",
