@@ -1433,8 +1433,8 @@ byte *loader(CTXTdeclc char *file, int exp, prolog_term modpars) // add arg of a
     xsb_abort("Loading a foreign file: %s prohibited in this configuration", file);
 #endif
   } else {
-    xsb_abort("File: %s does not have proper byte code format...\n%s",
-	      file, "\t Please remove it and then recompile");
+    xsb_abort("File: %s does not have proper byte code format...(%x)\n%s",
+	      file, magic_num, "\t Please remove it and then recompile");
     first_inst = NULL;
   }
 
