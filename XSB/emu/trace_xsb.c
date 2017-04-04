@@ -119,10 +119,19 @@ char *pspace_cat[NUM_CATS_SPACE] =
 #define NLoc15Int "%'15ld"
 #define NLocUInt "%'lu" 
 #define NLocInt "%'lu" 
+#define NLocint "%'lu" 
+#else
+#if defined BITS64
+#define NLoc15Int "%15lld"
+#define NLocUInt "%llu" 
+#define NLocInt "%llu" 
+#define NLocint "%lu"
 #else
 #define NLoc15Int "%15ld"
 #define NLocUInt "%lu" 
 #define NLocInt "%lu" 
+#define NLocint "%lu" 
+#endif
 #endif
 
 void total_stat(CTXTdeclc double elapstime) {
@@ -317,11 +326,11 @@ void total_stat(CTXTdeclc double elapstime) {
     if (total_call_node_count_gl) {
       //    printf("  Total number of IDG nodes created: %'d\n",total_call_node_count_gl);
       if (current_call_node_count_gl) {
-	printf("  Currently "NLocInt " IDG nodes, "NLocInt " dependency edges\n",
+	printf("  Currently "NLocint " IDG nodes, "NLocint " dependency edges\n",
 	       (long) current_call_node_count_gl,(long) current_call_edge_count_gl);
       }
       if (incr_table_recomputations_gl) {
-	printf("    incremental table recomputations "NLocInt "\n",(long) incr_table_recomputations_gl);
+	printf("    incremental table recomputations "NLocint "\n",(long) incr_table_recomputations_gl);
       }
       if (dyn_incr_chk_ins_gl) {
 	printf("    "NLocInt " call check/insert ops for incr dyn IDG nodes; "NLocInt " unique goals\n",
