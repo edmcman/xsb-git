@@ -167,7 +167,6 @@ void set_psc_ep_to_psc(CTXTdeclc Psc psc_to_set, Psc target_psc) {
     psc_set_ep(psc_to_set,(byte *)&(target_psc->load_inst));
   } else {
     psc_set_ep(psc_to_set,(byte *)&(target_psc->load_inst));
-    psc_set_type(psc_to_set,get_type(target_psc));
   }
 }
 

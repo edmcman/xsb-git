@@ -2082,7 +2082,10 @@ int builtin_call(CTXTdeclc byte number)
   }
 
   case PSC_IMPORT_AS: {    /* R1: PSC addr of source psc, R2 PSC addr of target psc */
-    set_psc_ep_to_psc(CTXTc (Psc)ptoc_int(CTXTc 2),(Psc)ptoc_int(CTXTc 1));
+    Psc psc_to_set = (Psc)ptoc_int(CTXTc 2);
+    Psc target_psc = (Psc)ptoc_int(CTXTc 1);
+    set_psc_ep_to_psc(CTXTc psc_to_set,target_psc);
+    psc_set_type(psc_to_set,get_type(target_psc));
     break;
   }
 
