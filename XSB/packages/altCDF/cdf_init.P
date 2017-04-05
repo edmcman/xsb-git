@@ -18,15 +18,17 @@ isa_int_prim(cid(Val,cdfpt),cid(Type,cdf)) :-
 	nonvar(Val),
 	prim_type_val(Type,Val).
 
-prim_type_val(allAtoms,Atom) :- atom(Atom), !.
+prim_type_val(Type,Atom) :- atom(Atom), !,
+	(is_number_atom(Atom),
+	 atom_codes(Atom, AIntegerCodes),
+	 number_codes(Integer, AIntegerCodes),
+	 integer(Integer)
+	 ->	Type = atomicIntegers
+	 ;	Type = allAtoms
+	).
 prim_type_val(allIntegers,Integer) :- integer(Integer), !.
 prim_type_val(allStructures,Term) :- structure(Term), !.
 prim_type_val(allFloats,Float) :- float(Float), !.
-prim_type_val(atomicIntegers,AInteger) :- 
-	is_number_atom(AInteger),
-	atom_codes(AInteger, AIntegerCodes),
-	number_codes(Integer, AIntegerCodes),
-	integer(Integer).
 
 /******
 isa_int(oid(Integer,cdfpt),cid(allIntegers,cdf)):- integer(Integer).
