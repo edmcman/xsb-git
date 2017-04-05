@@ -52,6 +52,8 @@ load_cdf_init_cdf.  % to allow altCDF to force loading of this module.
     minAttr_ext/4,   maxAttr_ext/4,
     necessCond_ext/2, coversAttr_ext/3		from usermod.
 
+:- import isa_int_prim/2 from usermod(cdf_init).
+
 :- import  isa_int/2, hasAttr_int/3, minAttr_int/4,
       classHasAttr_int/3, allAttr_int/3,maxAttr_int/4,
       necessCond_int/2, coversAttr_int/3                   from usermod.
@@ -663,7 +665,7 @@ isa_nospec_fx(Sub,Sup):-
     isa_nospec_fx_maybe_table(Sub,Sup).
 
 #if TABLEDISA
-:- table isa_nospec_fx_maybe_table/2.
+:- table isa_nospec_fx_maybe_table/2 as subsumptive.
 isa_nospec_fx_maybe_table(Sub,Sup):-
 	isa_nospec_fx(Mid,Sup),
 	immed_isa1(Sub,Mid).
@@ -2270,7 +2272,7 @@ newExtTerm(Context,Term,Upd0,Upd):-
 %%%%%% TLS: please keep this here -- we want to do the initialization
 %%%%%% LAST upon load.
 
-?- ensure_loaded(cdf_config), writeln(userout,cdf_config_loaded).
+?- ensure_loaded(cdf_config). %, writeln(userout,cdf_config_loaded).
 
 #if TABLEDISA
 ?- cdf_message('Using tabled isa').

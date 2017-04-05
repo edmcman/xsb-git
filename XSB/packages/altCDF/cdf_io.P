@@ -37,8 +37,9 @@
 
 %%:- import pretty_print/1 from newpp.
 :- import newIntRule/3,newDLRule/3,newDLTableFact/2,
-	 newExtTermBatch/2,transform_intensional_rules/4,
-	 abolish_cdf_tables/0, cdf_id_fields/4, cdf_root/1 from cdf_init_cdf.
+	newExtTermBatch/2,transform_intensional_rules/4,newExtTerm/1,
+	retractallExtTerm/1,
+	abolish_cdf_tables/0, cdf_id_fields/4, cdf_root/1 from cdf_init_cdf.
 
 :- import  get_intensional_mfile_expansion/2 from cdf_comps_share.
 
@@ -139,6 +140,7 @@ cdf_ext_inst(minAttr_ext(_,_,_,_)).
 cdf_ext_inst(maxAttr_ext(_,_,_,_)).
 
 dump_extensional_facts_2:- 
+	set_cdf_save_time,
 	cdf_ext_inst(Term),
 	findall(Term,Term,Set),
 	(Term = classHasAttr_ext(_,_,_)
@@ -147,6 +149,20 @@ dump_extensional_facts_2:-
 	),
 	fail.
 dump_extensional_facts_2.
+
+:- import datime/1 from standard.
+set_cdf_save_time :-
+	(classHasAttr_ext(cid('CDF Classes',cdf),crid('Time Last Saved',cdf),cid(_,cdfpt))
+	 ->	retractallExtTerm(classHasAttr_ext(cid('CDF Classes',cdf),crid('Time Last Saved',cdf),cid(_,cdfpt)))
+	 ;	(isa(crid('Time Last Saved',cdf),crid('CDF Class-Object Relations',cdf))
+		 ->	true
+		 ;	newExtTerm(isa_ext(crid('Time Last Saved',cdf),crid('CDF Class-Object Relations',cdf)))
+		)		
+	),
+	datime(Time),
+	newExtTerm(classHasAttr_ext(cid('CDF Classes',cdf),crid('Time Last Saved',cdf),cid(Time,cdfpt))).
+			       
+
 %-----------------------------------------------------------------
 
 /* TLS: Some documentation is probably worthwhile here.  When an
@@ -379,12 +395,12 @@ read_till_slash_1([H|R],[H|R1]):-
 
 merge_intensional_rules(Dir) :-
 	extract_file_name(Dir,Name),
-	writeln(userout,merging_intensional_rules(Dir,Name)),
+	%%writeln(userout,merging_intensional_rules(Dir,Name)),
 	merge_intensional_rules(Dir,Name).
 
 %TLS: dont know if permission error is right here.	   :	
 load_intensional_rules(Path,Name):- 
-	writeln(userout,loading_intensional_rules(Path,Name)),
+	%%writeln(userout,loading_intensional_rules(Path,Name)),
 	retract_intensional_rules(Name),
 	merge_intensional_rules(Path,Name).
 
