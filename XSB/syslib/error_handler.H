@@ -66,3 +66,4 @@
 :- import xsb_flag/2 from curr_sym.
 :- import internal_thread_exit/1, thread_property/2 , xsb_thread_self/1 from thread.
 :- import flush_output/1,stream_property/2 from file_io.
+:- import xsb_filename/2 from consult.

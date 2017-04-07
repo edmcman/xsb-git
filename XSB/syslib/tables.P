@@ -78,7 +78,7 @@ add_table(Spec) :-
 		    ->	   permission_error(table,'dynamic predicate with clauses',Spec,(table)/1)
 		    ; psc_set_tabled(Psc,1) %% set it as tabled
 		    ->	   true
-		    ;	   permission_error(table,'predicate tat cannot be tabled',Spec,(table)/1)
+		    ;	   permission_error(table,'predicate that cannot be tabled',Spec,(table)/1)
 		   )
 	). 
 

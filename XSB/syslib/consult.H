@@ -47,6 +47,8 @@
         remove_file_consultloaded/1,
         file_is_consultloaded/1,
         consult_file_loaded/1.
+:- export
+	xsb_filename/2.
 
 :- local load_dyn_retracted/5,
          load_dyn_trie_retracted/1,
@@ -107,3 +109,4 @@
 :- import library_directory/1 from usermod.
 :- import parse_filename/4 from machine.
 :- import standard_symbol/3, standard_metapredicate/3 from std_xsb.
+:- import atom_codes/2 from standard.

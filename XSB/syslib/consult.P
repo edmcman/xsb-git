@@ -568,10 +568,10 @@ get_HRname(SExt,Base,Hfname,Rfname) :-
 dotted_ext(Ext,DExt) :- str_cat('.',Ext,DExt).
 
 fmod_from_base(Base,FMod) :-
-	(standard:atom_codes(Base,BaseC),
+	(atom_codes(Base,BaseC),
 	 llappend(_,[Slash|FModC],BaseC),
 	 (Slash =:= CH_SLASH ; Slash =:= CH_BACKSLASH)
-	  ->	 standard:atom_codes(FMod,FModC)
+	  ->	 atom_codes(FMod,FModC)
 	  ;	 FMod = Base
 	 ).
 
@@ -1315,6 +1315,24 @@ standardize_pathname(F,StandardF) :-
         %%expand_filename(F,StandardF).
         path_sysop(standardize,F,StandardF).
 
+%% expand and convert back slashes to forward slashes
+xsb_filename(InFile,UnixFile) :-
+	expand_filename(InFile,ExpFile),
+	(str_sub('\\',Expfile)
+	 ->	atom_codes(ExpFile,ExpFileC),
+		cvt_back_to_for(ExpFileC,FExpFileC),
+		atom_codes(UnixFile,FExpFileC)
+	 ;	UnixFile = ExpFile
+	).
+
+cvt_back_to_for([],[]).
+cvt_back_to_for([Ci|ExpFileC],[Co|FExpFileC]) :-
+	(Ci =:= 0'\\
+	 ->	Co = 0'/
+	 ;	Co = Ci
+	),
+	cvt_back_to_for(ExpFileC,FExpFileC).
+	
 
 /* Take a clause with all terms in usermod, and a module, and convert
    all terms in the clause to the right modules. */
