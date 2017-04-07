@@ -2974,7 +2974,7 @@ argument positions.
   /** when we reach here, we are falling through a switch on bound
    * instruction and should build an index using the new DI scheme **/
   XSB_Start_Instr(sob_jump_out, _sob_jump_out) /* PPL */
-    if (flags[LOG_UNINDEXED]) {
+    if (xsb_profiling_enabled && flags[LOG_UNINDEXED]) {
       Integer chainlen;
       if (flags[LOG_UNINDEXED] == 1) *lpcreg = jump; // change inst so unindex test is done only once
       chainlen = length_dyntry_chain(*(((byte **)(lpcreg))+1));
@@ -2982,8 +2982,8 @@ argument positions.
 	if (xsb_profiling_enabled) {
 	  unsigned int i;
 	  Psc psc = psc_from_code_addr(lpcreg);
-	  fprintf(stdout,"%s/%d searched %"Intfmt" unindexed clauses\n",get_name(psc),get_arity(psc),chainlen);
-	  fprintf(stdout,"  %s(",get_name(psc));
+	  fprintf(stdout,"%s/%d searched %"Intfmt" unindexed clauses for goal: ",get_name(psc),get_arity(psc),chainlen);
+	  fprintf(stdout,"%s(",get_name(psc));
 	  for (i=1; i<=get_arity(psc); i++) {
 	    if (isref(reg[i])) {
 	      fprintf(stdout,"_");  // dont care what vars
