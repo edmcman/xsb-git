@@ -205,18 +205,24 @@ int sgml2pl_error(plerrorid id, ...)
   case ERR_MISC:
     { 
       /*Miscellaneous error*/
-      const char *id = va_arg(args, const char *);
-      
+      const char *err_info = va_arg(args, const char *);
       const char *fmt = va_arg(args, const char *);
 
-      vsprintf(msgbuf, fmt, args);
-      msg = msgbuf;
+      if (fmt == NULL)
+        msg = "unidentified error";
+      else {
+        vsprintf(msgbuf, fmt, args);
+        msg = msgbuf;
+      }
+      if (err_info == NULL)
+        err_info = "unidentified error";
 
       c2p_functor(CTXTc "sgml", 1, tmp1);
       tmp = p2p_arg( tmp1, 1);
 
       c2p_functor(CTXTc "miscellaneous", 1, tmp);
-      c2p_string(CTXTc (char*)id, p2p_arg( tmp, 1));
+      c2p_string(CTXTc (char*)err_info, p2p_arg( tmp, 1));
+
       p2p_unify(CTXTc tmp1, formal);
       break; 
     }
