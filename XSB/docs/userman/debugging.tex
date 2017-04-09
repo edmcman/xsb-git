@@ -426,6 +426,7 @@ Currently, \ctrace{} captures the following actions.
 \item {\tt cmp} if $S_1$ is not a new subgoal and has been completed
 \item {\tt incmp} if $S_1$ is not a new subgoal but has {\em not} been
   completed 
+\item {\tt reeval} if $S_1$ is an incremental subgoal being re-evaluated.
 \ei 
 %
 If the call is negative a fact of the form {\tt
@@ -579,22 +580,30 @@ logging off when {\tt Call} is finished.  {\tt Options} is a list of
 possible options.
 %
 \bi
-\item If {\tt Options} contains the term {\tt file(File)} then direct
+\item {\tt Options} may contain the term {\tt file(File)} which directs
   the logging to {\tt File}; otherwise the log will be sent to
   standard output.
-\item If {\tt Options} contains the term {\tt level(Level)} where {\tt
-  Level} = {\tt full} or {\tt partial} then the level of forest
-  logging is set to the respective value.  The default level is {\tt
-    full}.  The level {\tt partial} does not output answer return
-  operations, and so can reduce the size of the log for certain
-  computations.  The actions of partial logging and full logging are
-  otherwise the same.  \ei
-%  Currently, the only option is
-%   {\tt file(File)}, which directs the logging to the file {\tt File}.
-%   If {\tt Options} is an empty list or if {\tt log\_forest/1} is
-%   called, the log will be sent to standard output~\footnote{Future
-%     options will be able to turn on and off the logging of various
-%     types of facts.}.
+\item {\tt Options} may contain the term {\tt level(Level)} where {\tt
+  Level} may be one of the following values.
+\bi
+\item {\tt full} which means that all tabling actions are logged as
+  described above.
+%
+\item {\tt partial} which means that answer return operations are not
+  logged.
+%
+\item {\tt calls\_only} which does not log  answer return, new
+  answer, nor simplification operations.
+\ei 
+%
+The levels {\tt partial} and {\tt calls\_only} both reduce the size of
+  the log which can be useful for analyzing some computations.
+%
+\item {\tt Options} may containt the term {\tt
+  set\_pred(PredSpec,Mode)} where {\tt Mode} is {\tt on} or {\tt off}.
+  This allows certain predicates not to be logged, a useful feature if
+  only part of a program needs to be debuged
+\ei
 
 {\bf Error Cases} 
 \bi
