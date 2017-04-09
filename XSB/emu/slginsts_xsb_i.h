@@ -133,7 +133,7 @@
   }
 
 #define LOG_ANSWER_RETURN(answer,template_ptr)				\
-  if (flags[CTRACE_CALLS] > 1 && !subg_forest_log_off(consumer_sf))  {			\
+  if (flags[CTRACE_CALLS] == FL_FULL && !subg_forest_log_off(consumer_sf))  {			\
     sprintAnswerTemplate(CTXTc forest_log_buffer_1,template_ptr, template_size); \
     sprint_subgoal(CTXTc forest_log_buffer_2,0,(VariantSF)consumer_sf);	\
     sprint_subgoal(CTXTc forest_log_buffer_3,0,(VariantSF)ptcpreg); \
@@ -149,7 +149,7 @@
 
 
 #define LOG_NEW_ANSWER(producer_sf,answer_template,template_size)	\
-  if (flags[CTRACE_CALLS] && !subg_forest_log_off(producer_sf))  {	\
+  if (flags[CTRACE_CALLS] >= FL_PARTIAL && !subg_forest_log_off(producer_sf))  {	\
     memset(forest_log_buffer_1->fl_buffer,0,MAXTERMBUFSIZE);		\
     memset(forest_log_buffer_2->fl_buffer,0,MAXTERMBUFSIZE);		\
     memset(forest_log_buffer_3->fl_buffer,0,MAXTERMBUFSIZE);		\
@@ -352,7 +352,6 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
     subg_tag(producer_sf) = INCOMP_ANSWERS;
     UNLOCK_CALL_TRIE() ;
 #endif
-    LOG_TABLE_CALL("new");
 
 /* --------- for new producer incremental evaluation  --------- */
     /* table_call_search tried to find the affected call, so if it has
@@ -362,6 +361,7 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
        the old call */
 
     if(IsNonNULL(old_call_gl)){
+      LOG_TABLE_CALL("reeval");
       producer_sf->callnode->prev_call=old_call_gl;
       producer_sf->callnode->outedges=old_call_gl->outedges;
       producer_sf->callnode->outcount=old_call_gl->outcount;
@@ -376,6 +376,7 @@ if ((ret = table_call_search(CTXTc &callInfo,&lookupResults))) {
       old_answer_table_gl=NULL;
     } 
     else {
+      LOG_TABLE_CALL("new");
       if(IsIncrSF(producer_sf))
 	initoutedges(CTXTc producer_sf->callnode);
     }
@@ -780,7 +781,7 @@ XSB_Start_Instr(tabletrysinglenoanswers,_tabletrysinglenoanswers)
   Op1(get_xxxxl);
   tip =  (TIFptr) get_xxxxl;
 
-			       //  printf("Subgoal Depth %d\n",TIF_SubgoalDepth(tip));
+//  printf("TTSNY: Subgoal Depth %d\n",TIF_SubgoalDepth(tip));
   if ( TIF_SubgoalDepth(tip) == 65535) {
     int i;
     //    new_heap_functor(hreg, TIF_PSC(tip)); /* set str psc ptr */
