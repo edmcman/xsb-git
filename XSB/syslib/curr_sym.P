@@ -1024,8 +1024,9 @@ xsb_flag(exception_action, Mode) :-
 xsb_flag(ctrace,Mode):- 
 	stat_flag(CTRACE_CALLS, Flag),
 	( Flag =:= 0 -> Mode = off
-          ; (Flag =:= 1 -> Mode = partial
-             ; Mode = full) ).
+          ; (Flag =:= 1 -> Mode = calls_only 
+           ; (Flag =:= 2 -> Mode = partial
+             ; Mode = full) ) ).
 xsb_flag(character_set,Mode):- 
 	stat_flag(CHARACTER_SET, Flag),
 	(Flag =:= LATIN_1
@@ -1304,9 +1305,10 @@ set_xsb_flag_1(alt_semantics,Mode):-
           domain_error([cs,weak_cs,gfp,off],Mode,set_prolog_flag/2,2,'alt_semantics clause') ) ) ) ).
 
 set_xsb_flag_1(ctrace, OnOff) :-!,
-	((OnOff == on ; OnOff == full) -> stat_set_flag(CTRACE_CALLS, 2)
-     ; 	OnOff == partial -> stat_set_flag(CTRACE_CALLS, 1)
-     ;  stat_set_flag(CTRACE_CALLS, 0)).
+	((OnOff == on ; OnOff == full) -> stat_set_flag(CTRACE_CALLS, 3)
+         ; (OnOff == partial -> stat_set_flag(CTRACE_CALLS, 2)
+            ; (OnOff == calls_only -> stat_set_flag(CTRACE_CALLS, 1)
+               ;  stat_set_flag(CTRACE_CALLS, 0) ) ) ).
 set_xsb_flag_1(unify_with_occurs_check, OnOff) :-!,
 	(OnOff == on -> 
 	    stat_set_flag(UNIFY_WITH_OCCURS_CHECK_FLAG, 1)

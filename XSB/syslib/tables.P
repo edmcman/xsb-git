@@ -1002,7 +1002,10 @@ log_forest(Call):-
 
 log_forest(Call,Options):- 
 	check_log_forest_options(Options,File),
-	start_forest_view(File),
+	% dont reset CTRACE_CALLS
+	table_inspection_function(START_FOREST_VIEW,File,_,_,_),
+	set_prolog_flag(backtrace_on_error,off),
+	stat_flag(CTRACE_CALLS, Flag),writeln(log_forest(Flag)),
 	call(Call),
 	stop_forest_view.
 
@@ -1011,10 +1014,13 @@ check_log_forest_options(Options,_File):-
 	fail.
 check_log_forest_options([],File):-
 	(var(File) -> File = userout ; true).
-check_log_forest_options([Option|_Rest],File):- !,
+check_log_forest_options([Option|Rest],File):- !,
 	check_nonvar(Option,log_forest/2,2),
 	(Option = file(LogFile) -> File = LogFile
-	     ; domain_error([file/1],Option,log_forest/2,2,'') ).
+	   ; Option = level(Level) -> set_prolog_flag(ctrace,Level)
+             ; Option = set_pred(PredSpec,Mode) -> set_forest_logging_for_pred(PredSpec,Mode)
+ 	       ; domain_error([file/1,level/1],Option,log_forest/2,2,'') ),
+	check_log_forest_options(Rest,File).
 check_log_forest_options(Culprit,_File):- 
 	type_error(list,Culprit,log_forest/2,2).
 
