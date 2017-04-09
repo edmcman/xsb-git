@@ -1318,7 +1318,7 @@ standardize_pathname(F,StandardF) :-
 %% expand and convert back slashes to forward slashes
 xsb_filename(InFile,UnixFile) :-
 	expand_filename(InFile,ExpFile),
-	(str_sub('\\',Expfile)
+	(str_sub('\\',ExpFile)
 	 ->	atom_codes(ExpFile,ExpFileC),
 		cvt_back_to_for(ExpFileC,FExpFileC),
 		atom_codes(UnixFile,FExpFileC)
