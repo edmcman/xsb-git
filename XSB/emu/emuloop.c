@@ -88,6 +88,7 @@
 #include "cell_xsb_i.h"
 #include "tables_i.h"
 #include "slgdelay.h"
+#include "table_inspection_defs.h"
 
 #ifndef MULTI_THREAD
 BTNptr NodePtr, Last_Nod_Sav;
