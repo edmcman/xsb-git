@@ -68,6 +68,13 @@ void print_pdes(PNDE);
 Structure_Manager smASI      = SM_InitDecl(ASI_Node, ASIs_PER_BLOCK,
 					    "Answer Substitution Info Node");
 
+// This is something of a guess, particularly for the MT engine.
+#ifdef MULTI_THREAD
+#define MAX_SIMPLIFICATION_DEPTH 25
+#else
+#define MAX_SIMPLIFICATION_DEPTH 100
+#endif
+
 /*
  * Global variables for shared/sequential tables.
  */
@@ -755,10 +762,12 @@ static void record_de_usage_private(CTXTdeclc DL dl)
  * simplification).
  */
 
+int simplification_depth_gl;
+
 void do_delay_stuff_shared(CTXTdeclc NODEptr as_leaf, VariantSF subgoal, xsbBool sf_exists)
 {
     DL dl = NULL;
-
+    simplification_depth_gl = 0;
     if (delayreg) {
       //    print_delay_list(CTXTc stddbg,delayreg);fprintf(stddbg,"\n");
       SYS_MUTEX_LOCK( MUTEX_DELAY ) ;
@@ -795,7 +804,7 @@ void do_delay_stuff_shared(CTXTdeclc NODEptr as_leaf, VariantSF subgoal, xsbBool
 void do_delay_stuff_private(CTXTdeclc NODEptr as_leaf, VariantSF subgoal, xsbBool sf_exists)
 {
     DL dl = NULL;
-
+    
     if (delayreg && (!sf_exists || is_conditional_answer(as_leaf))) {
       if ((dl = intern_delay_list_private(CTXTc delayreg, subgoal)) != NULL) {
 	mark_conditional_answer(as_leaf, subgoal, dl, *private_smASI);
@@ -1291,6 +1300,13 @@ void simplify_pos_unconditional(CTXTdeclc NODEptr as_leaf)
 #ifdef MULTI_THREAD
   xsbBool isPrivate = IsPrivateSF(asi_subgoal(asi));
 #endif
+  if (simplification_depth_gl++ > MAX_SIMPLIFICATION_DEPTH) {
+    xsb_exit("++Unrecoverable Error[XSB/Runtime]: [Resource] Too many nested simplifications.  Please report this error.");
+    //    printf("simplification_depth %d\n",simplification_depth_gl);
+    //    xsb_resource_error_nopred("recursion stack", "depth of simplifications is over the allowed limit of ",
+    //			      MAX_SIMPLIFICATION_DEPTH);
+  }
+
   subgoal = asi_subgoal(asi);
   release_all_dls(CTXTc asi);
   unmark_conditional_answer(as_leaf);
@@ -1326,6 +1342,7 @@ void simplify_pos_unconditional(CTXTdeclc NODEptr as_leaf)
   else
 #endif
   SM_DeallocateSharedStruct(smASI,asi);
+  simplification_depth_gl--;
 }
 
 /*******************************************************************
@@ -1366,6 +1383,11 @@ void simplify_neg_fails(CTXTdeclc VariantSF subgoal)
   DE de;
   DL dl;
 
+  if (simplification_depth_gl++ > MAX_SIMPLIFICATION_DEPTH) {
+    xsb_exit("++Unrecoverable Error[XSB/Runtime]: [Resource] Too many nested simplifications.  Please report this error.");
+    //    xsb_resource_error_nopred("recursion stack", "depth of simplifications is over the allowed limit of ",
+    //			      MAX_SIMPLIFICATION_DEPTH);
+  }
   push_neg_simpl(subgoal);
 
   if (in_simplify_neg_fails) {
@@ -1407,6 +1429,7 @@ void simplify_neg_fails(CTXTdeclc VariantSF subgoal)
     }
   }
   in_simplify_neg_fails = 0;
+  simplification_depth_gl--;
 }
 
 /********************************************************************
@@ -1427,7 +1450,11 @@ static void simplify_neg_succeeds(CTXTdeclc VariantSF subgoal)
   NODEptr used_as_leaf;
   DL dl, tmp_dl;
   UNUSED(tmp_dl);
-
+  if (simplification_depth_gl++ > MAX_SIMPLIFICATION_DEPTH) {
+    xsb_exit("++Unrecoverable Error[XSB/Runtime]: [Resource] Too many nested simplifications.  Please report this error.");
+    //    xsb_resource_error_nopred("recursion stack", "depth of simplifications is over the allowed limit of ",
+    //			      MAX_SIMPLIFICATION_DEPTH);
+  }
   //  printf("in simplify neg succeeds: ");print_subgoal(stddbg,subgoal);printf("\n");
   answer_complete_subg(subgoal);
 
@@ -1486,6 +1513,7 @@ static void simplify_neg_succeeds(CTXTdeclc VariantSF subgoal)
       }
     } /* if */
   } /* while */
+  simplification_depth_gl--;
 }
 
 /*********************************************************************
@@ -1516,7 +1544,11 @@ void simplify_pos_unsupported(CTXTdeclc NODEptr as_leaf)
   DE de, tmp_de;
   ASI used_asi, de_asi;
   NODEptr used_as_leaf;
-
+  if (simplification_depth_gl++ > MAX_SIMPLIFICATION_DEPTH) {
+    xsb_exit("++Unrecoverable Error[XSB/Runtime]: [Resource] Too many nested simplifications.  Please report this error.");
+    //    xsb_resource_error_nopred("recursion stack", "depth of simplifications is over the allowed limit of ",
+    //			      MAX_SIMPLIFICATION_DEPTH);
+  }
   //  printf("in simplify pos unsupported: ");print_subgoal(stddbg,asi_subgoal(Delay(as_leaf)));printf("\n");
 
   while ((pde = asi_pdes(asi))) {
@@ -1568,6 +1600,7 @@ void simplify_pos_unsupported(CTXTdeclc NODEptr as_leaf)
       }
     } /* if */
   } /* while */
+  simplification_depth_gl--;
 }
 
 /* Can currently be called with only one active thread: otherwise put
