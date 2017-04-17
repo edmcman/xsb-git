@@ -1261,6 +1261,26 @@ void release_all_dls(CTXTdeclc ASI asi)
  * delay lists that contain them.
  *******************************************************************/
 
+void forest_log_pos_unconditional(VariantSF subgoal,NODEptr as_leaf,PNDE pde) {
+    if (flags[CTRACE_CALLS] && !subg_forest_log_off(subgoal))  {				
+      char buffera[MAXTERMBUFSIZE];			
+      char bufferc[MAXTERMBUFSIZE];			
+      memset(buffera,0,MAXTERMBUFSIZE);
+      memset(bufferc,0,MAXTERMBUFSIZE);
+      //      memset(bufferb,0,MAXTERMBUFSIZE);
+      //      memset(bufferd,0,MAXTERMBUFSIZE);
+      sprintTriePath(CTXTc buffera, as_leaf);
+      sprint_subgoal(CTXTc forest_log_buffer_1,0, subgoal);
+      sprintTriePath(CTXTc bufferc, dl_asl(pnde_dl(pde)));
+      sprint_subgoal(CTXTc forest_log_buffer_2,0, 
+		     asi_subgoal(Delay(dl_asl(pnde_dl(pde)))));
+      //      print_subgoal(stdout, asi_subgoal(Delay(dl_asl(pnde_dl(pde)))));printf("\n");
+      fprintf(fview_ptr,"puc_smpl(%s,%s,%s,%s,%d).\n",buffera,
+	      forest_log_buffer_1->fl_buffer,bufferc,
+	      forest_log_buffer_2->fl_buffer,ctrace_ctr++); 
+    }
+}
+
 void simplify_pos_unconditional(CTXTdeclc NODEptr as_leaf)
 {
   ASI asi = Delay(as_leaf);
@@ -1279,23 +1299,8 @@ void simplify_pos_unconditional(CTXTdeclc NODEptr as_leaf)
   while ((pde = asi_pdes(asi))) {
 
     if (flags[CTRACE_CALLS] && !subg_forest_log_off(subgoal))  {				
-      char buffera[MAXTERMBUFSIZE];			
-      char bufferc[MAXTERMBUFSIZE];			
-      memset(buffera,0,MAXTERMBUFSIZE);
-      memset(bufferc,0,MAXTERMBUFSIZE);
-      //      memset(bufferb,0,MAXTERMBUFSIZE);
-      //      memset(bufferd,0,MAXTERMBUFSIZE);
-      sprintTriePath(CTXTc buffera, as_leaf);
-      sprint_subgoal(CTXTc forest_log_buffer_1,0, subgoal);
-      sprintTriePath(CTXTc bufferc, dl_asl(pnde_dl(pde)));
-      sprint_subgoal(CTXTc forest_log_buffer_2,0, 
-		     asi_subgoal(Delay(dl_asl(pnde_dl(pde)))));
-      //      print_subgoal(stdout, asi_subgoal(Delay(dl_asl(pnde_dl(pde)))));printf("\n");
-      fprintf(fview_ptr,"puc_smpl(%s,%s,%s,%s,%d).\n",buffera,
-	      forest_log_buffer_1->fl_buffer,bufferc,
-	      forest_log_buffer_2->fl_buffer,ctrace_ctr++); 
+      forest_log_pos_unconditional(subgoal,as_leaf,pde);
     }
-
     de = pnde_de(pde);
     dl = pnde_dl(pde);
 #ifdef MULTI_THREAD
@@ -1491,6 +1496,18 @@ static void simplify_neg_succeeds(CTXTdeclc VariantSF subgoal)
  * pointing to that AnswerSubstitution.
  **********************************************************************/
 
+void log_pos_unsupported(NODEptr as_leaf, PNDE pde) {
+      char bufferb[MAXTERMBUFSIZE];			
+      memset(bufferb,0,MAXTERMBUFSIZE);
+      sprint_subgoal(CTXTc forest_log_buffer_1,0,asi_subgoal(Delay(as_leaf)));
+      sprintTriePath(CTXTc bufferb, dl_asl(pnde_dl(pde)));
+      sprint_subgoal(CTXTc forest_log_buffer_3,0, 
+		     asi_subgoal(Delay(dl_asl(pnde_dl(pde)))));
+      fprintf(fview_ptr,"pus_smpl(%s,%s,%s,%d).\n",
+	      forest_log_buffer_1->fl_buffer,bufferb,
+	      forest_log_buffer_3->fl_buffer,ctrace_ctr++); 
+}
+
 void simplify_pos_unsupported(CTXTdeclc NODEptr as_leaf)
 {
   ASI asi = Delay(as_leaf);
@@ -1506,15 +1523,7 @@ void simplify_pos_unsupported(CTXTdeclc NODEptr as_leaf)
 
     // TES: seems to be a problem with printing out as_leaf in this case.
     if (flags[CTRACE_CALLS] && !subg_forest_log_off(asi_subgoal(asi)))  {
-      char bufferb[MAXTERMBUFSIZE];			
-      memset(bufferb,0,MAXTERMBUFSIZE);
-      sprint_subgoal(CTXTc forest_log_buffer_1,0,asi_subgoal(Delay(as_leaf)));
-      sprintTriePath(CTXTc bufferb, dl_asl(pnde_dl(pde)));
-      sprint_subgoal(CTXTc forest_log_buffer_3,0, 
-		     asi_subgoal(Delay(dl_asl(pnde_dl(pde)))));
-      fprintf(fview_ptr,"pus_smpl(%s,%s,%s,%d).\n",
-	      forest_log_buffer_1->fl_buffer,bufferb,
-	      forest_log_buffer_3->fl_buffer,ctrace_ctr++); 
+      log_pos_unsupported(as_leaf, pde);
     }
 
     dl = pnde_dl(pde); /* dl: to be removed */
