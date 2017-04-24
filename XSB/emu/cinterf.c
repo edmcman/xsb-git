@@ -55,6 +55,7 @@
 #include "loader_xsb.h"
 #include "thread_xsb.h"
 #include "cell_xsb_i.h"
+#include "inst_xsb.h"
 
 #ifdef WIN_NT
 #ifndef fileno
@@ -2131,4 +2132,27 @@ else
 return(rc);
 }
 
+/************************************************************************/
+/*                                                                      */
+/*	xsb_add_c_predicate registers a predicate written in C using    */
+/*	foreign language API.  modname may be NULL, in which case the   */
+/*	function will be put in the global module.                      */
+/*                                                                      */
+/************************************************************************/
+DllExport int call_conv xsb_add_c_predicate(CTXTdeclc char *modname, char *predname,
+					    int arity, int (*cfun)()) {
+  Psc psc, modpsc;
+  int new;
+
+  if (modname == NULL || strcmp(modname,"usermod") == 0)
+    modpsc = global_mod;
+  else
+    modpsc = pair_psc(insert_module(0,modname));
+  
+  psc = pair_psc(insert_psc(predname,arity,modpsc,&new));
+  set_forn(psc,(byte *)cfun);
+  psc_set_type(psc,T_FORN);
+  
+  return 0;
+}
 
