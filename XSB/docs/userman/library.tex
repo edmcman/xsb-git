@@ -2077,7 +2077,10 @@ Sets the kind of unindexed profiling to perform.  If {\tt Par} is
 unindexed logging will be done.  This is the default.  If {\tt Par}
 is \texttt{once}  each call to a dynamic predicate that cannot use any index (and
 would backtrack through more than 20 clauses) will generate a log
-message to userout.  Each unindexed call to a predicate will be logged
+message to userout.  Note that the predicate of the goal may have indexes,
+but the particular goal may not be able to take advantage of them.
+E.g., a totally open call to a predicate with many clauses will generate an unindexed message.
+By setting the {\tt once} parameter, each unindexed call to a predicate will be logged
 only once; after logging is done, the log instruction is changed to a
 branch, so it will never produce another log message for that dynamic
 code.  If {\tt Par} is \texttt{on}, logging is done as for \texttt{once}, except every

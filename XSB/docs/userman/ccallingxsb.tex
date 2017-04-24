@@ -42,7 +42,7 @@ describes each C function in the API.
 \section{Calling XSB from C}
 
 XSB provides several C functions (declared in {\tt
-  \$XSBDIR/emu/cinterf.h} and defined in \\ {\tt
+  \$XSBDIR/emu/cinterf.h} and defined in {\tt
   \$XSBDIR/emu/cinterf.c}), which can be called from C to interact
 with XSB as a subroutine. These functions allow a C program to
 interact with XSB in a number of ways.
@@ -1180,6 +1180,25 @@ but otherwise has no effect.
   called while no query is open.
 \ei
 \ei
+  
+\ourCitem{int xsb\_add\_c\_predicate(th\_context *,char *,char *,int,int(*)())}{xsb\_add\_c\_predicate}
+%
+This function, called for example as: \\
+{\tt xsb\_add\_c\_predicate(th, modname, predname, arity, cfunc)}\\
+registers a C function (defined by the caller, here named {\tt cfunc})
+as a foreign function to be invoked by a Prolog predicate.  The
+arguments are: the name of the module of the Prolog predicate being
+defined (NULL indicates usermod), the name of the Prolog predicate,
+the arity of the Prolog predicate, and the function pointer of the
+function defining the foreign routine.  That function must get (and
+return) its arguments using the ctop (and ptoc) functions of the {\tt
+  cinterf} Foreign Language Interface (\ref{foreign}).  This {\tt
+  xsb\_add\_c\_predicate} function always returns 0.  After this
+function has been called, the predicate {\tt modname:predname/arity}
+can be called in Prolog and will result in {\tt cfunc} being invoked
+as a foreign language function.
+
+The {\tt th\_context} argument is used only for the multi-threaded XSB engine.
 
 \end{description}
 

@@ -2110,8 +2110,8 @@ implementation and semantic perspective.
 \index{table\_index}
 
 Tables are implemented in XSB using Tries, which provide powerful
-indexing cabailities.  By default every table has a trie-index based
-on the left-to-roght ordering of its arguments.  This means that any
+indexing capabilities.  By default every table has a trie-index based
+on the left-to-right ordering of its arguments.  This means that any
 lookup to a table which is bound on an initial sequence of the tabled
 predicate's arguments is fully indexed.  But if an initial sequence of
 a table lookup is unbound and only a later argument is bound, indexing
@@ -2125,8 +2125,8 @@ indexed access to any predicate.
 {\tt table\_index} is a compiler directive that causes the compiler to
 generate code to create tables to provide the requested indexing.
 {\tt PredSpec}, of the form {\tt PredName/Arity}, specifies the
-predicate to be indexed (and tabled.)  {\tt IndexSpec} is a list of
-index secifications.  Each index specification is a $+$-term that
+predicate to be indexed (and subsumptively tabled.)  {\tt IndexSpec} is a list of
+index specifications.  Each index specification is a $+$-term that
 indicates a set of argument positions for which an index is required.
 For example, [1$+$2$+$3, 1, 2$+$3, 2] indicates that four indexes are
 desired; a multiple argument index on arguments 1, 2, and 3; a single
@@ -2139,22 +2139,28 @@ used, and finally if argument 2 is bound, then that index will be
 used.  If none of these situations obtain, then a table\_error will be
 thrown.
 
+The declared indexes should describe modes under which the predicate
+will be called.  Since the transformation assumes that the predicate
+will be called in all indicated modes, it will abstract some calls to
+more general calls.  For example if a call is made to the predicate
+with the above example index specification with arguments 1, 2, and 3
+bound, the call will be abstracted to have just argument 1 bound; and
+this more general call to the base predicate will be made (and then
+restricted by arguments 2 and 3.)  This is because it is assumed that
+a call will be made with just argument 1 bound, because an index is
+declared just fot it, and the transformation tries to avoid
+recomputation.
+
 Normally a predicate indicated as {\tt table\_index}-ed should {\bf
   not} be declared as tabled.  The indexes are created using
 subsumptive tables.  An attempt is made to use the minimum number of
 tables as possible, but each index does take (perhaps significant)
-memory.  To abolish an {\tt table\_index}-ed predicate, one must use
-{\tt abolish\_table\_index\_pred/1}.
+memory.  
 
-\ourstandarditem{abolish\_table\_index\_pred(+PredSpec)}{table\_index/2}{Tabling}
-%
-{\tt abolish\_table\_index\_pred} is used to abolish all the tables
-used internally to implement a {\tt table\_index}-ed predicate.  Its
-argument is a most general term indicated the {\tt table\_index}-ed
-predicate to be abolished.
+The tables of table-indexed predicates cannot be modified by {\tt
+  abolish\_table\_subgoals/1} and its variants.  Also these predicates
+cannot be declared as {\tt incremental}.
 
-\comment{TLS: does not appear needed or used.
-  Cf. invaludate_table_call.
 
 \ourstandarditem{invalidate\_tables\_for(+DynamicPredGoal,+Mode)}{invalidate\_tables\_for/2}{Tabling}
 %
@@ -2198,7 +2204,7 @@ The user could use the hook mechanisms in XSB (Chapter~\ref{hooks}) to
 automatically invoke \\ {\tt invalidate\_tables\_for} whenever {\tt
   assert} and/or {\tt retract} is called.
 
-}
+
 
 \end{description}
 
