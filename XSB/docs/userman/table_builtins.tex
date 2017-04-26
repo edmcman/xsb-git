@@ -2125,42 +2125,50 @@ indexed access to any predicate.
 {\tt table\_index} is a compiler directive that causes the compiler to
 generate code to create tables to provide the requested indexing.
 {\tt PredSpec}, of the form {\tt PredName/Arity}, specifies the
-predicate to be indexed (and subsumptively tabled.)  {\tt IndexSpec} is a list of
-index specifications.  Each index specification is a $+$-term that
-indicates a set of argument positions for which an index is required.
-For example, [1$+$2$+$3, 1, 2$+$3, 2] indicates that four indexes are
-desired; a multiple argument index on arguments 1, 2, and 3; a single
-argument index on argument 1; a multi-argument index on 2 and 3, and a
-single argument index on argument 2.  In this case, for a call to the
-indicated predicate, if arguments 1, 2, and 3 are bound, that index
-will be used; if not, but argument 1 is bound, then that index will be
-used; if not but arguments 2 and 3 are bound, then that index will be
-used, and finally if argument 2 is bound, then that index will be
-used.  If none of these situations obtain, then a table\_error will be
-thrown.
+predicate to be indexed (and subsumptively tabled.)  {\tt IndexSpec}
+is a list of index specifications.  Each index specification is a
+$+$-term that indicates a set of argument positions for which indexes
+are required.  For example, [1$+$2$+$3, 1, 2$+$3, 2] indicates that
+four indexes are desired; a multiple argument index on arguments 1, 2,
+and 3; a single argument index on argument 1; a multi-argument index
+on 2 and 3; and a single argument index on argument 2.  In this case,
+for a call to the indicated predicate, if arguments 1, 2, and 3 are
+bound, that index will be used; if not, but argument 1 is bound, then
+that index will be used; if not but arguments 2 and 3 are bound, then
+that index will be used, and finally if argument 2 is bound, then that
+index will be used.  If none of these situations obtain, then a {\tt
+  table\_error} will be thrown.
 
 The declared indexes should describe modes under which the predicate
 will be called.  Since the transformation assumes that the predicate
-will be called in all indicated modes, it will abstract some calls to
-more general calls.  For example if a call is made to the predicate
-with the above example index specification with arguments 1, 2, and 3
-bound, the call will be abstracted to have just argument 1 bound; and
-this more general call to the base predicate will be made (and then
-restricted by arguments 2 and 3.)  This is because it is assumed that
-a call will be made with just argument 1 bound, because an index is
-declared just fot it, and the transformation tries to avoid
-recomputation.
+will be called in all indicated modes, it will normally abstract all
+calls to a more general call.  So any call will be abstracted to the
+call to the base predicate that is bound only on argument positions
+that appear in {\em all} indexes.  For the example above the first
+call will result in a completely open call to the base predicate,
+since the intersection of the four indexes is empty.  An index of {\tt
+  0} can be used (as the last index in the index specification) to
+indicate that any call is permitted, and this will always ensure the
+fully open call is made initially.  For example an index specification
+of {\tt [1,0]} causes the first call to be abstracted to the fully
+open call and the subsumptive table to be completely filled.  Then
+every subsequent call will use that constructed table.  A call to a
+{\tt table\_index}-ed predicate that is not of a mode explicitly
+declared in the index specification may not be optimally indexed.
 
 Normally a predicate indicated as {\tt table\_index}-ed should {\bf
-  not} be declared as tabled.  The indexes are created using
-subsumptive tables.  An attempt is made to use the minimum number of
-tables as possible, but each index does take (perhaps significant)
-memory.  
+  not} be declared as (normally) tabled.  The indexes are created
+using subsumptive tables.  An attempt is made to use the smallest
+number of tables as possible, but each index does take (perhaps
+significant) memory.  For example the above four indexes can be
+accommodated using only two subsumptive tables: with argument orders
+of {\tt [1,2,3,4]} and {\tt [2,3,1,4]}.
 
-The tables of table-indexed predicates cannot be modified by {\tt
-  abolish\_table\_subgoals/1} and its variants.  Also these predicates
-cannot be declared as {\tt incremental}.
-
+The tables of table-indexed predicates can be abolished by \\ {\tt
+  abolish\_table\_pred}, which will abolish all the generated
+subsumptive tables.  But the cannot be modified by {\tt
+  abolish\_table\_subgoals/1} and its finer variants.  Also these
+predicates cannot be declared as {\tt incremental}.
 
 \ourstandarditem{invalidate\_tables\_for(+DynamicPredGoal,+Mode)}{invalidate\_tables\_for/2}{Tabling}
 %
