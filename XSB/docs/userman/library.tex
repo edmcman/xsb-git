@@ -58,7 +58,6 @@ looking at the sources.
     list to obtain log-time access to its elements.
 
 \ourmoditem{log\_ith\_bound(?Index, ?Tree, ?Element)}{log\_ith\_bound/3}{basics}
-
     is like {\tt log\_ith/3}, but only if the ${\tt Index^{th}}$ element
     of {\tt Tree} is non-variable and equal to Element.  This predicate
     can be used in both directions, and is most useful with Index
@@ -66,6 +65,20 @@ looking at the sources.
     each non-variable element in {\tt Tree} (in time proportional to
     $N*logN$, for $N$ the number of non-variable entries in {\tt
     Tree}.)
+
+\ourmoditem{log\_ith\_new(?Index, ?Tree, ?Element)}{log\_ith\_new/3}{basics}
+    binds {\tt Element} to the ``end'' of the log\_list {\tt Tree},
+    and unifies {\tt Index} with its corresponding index.  The ``end''
+    of a log\_list is the first element after the one with the largest
+    index that has been added.  This can be used to simulate adding an
+    element to the end of an open-tailed list, but with better
+    complexity.
+
+\ourmoditem{log\_ith\_to\_list(?Tree, ?List)}{log\_ith\_to\_list/2}{basics}
+    constructs the {\tt List} that contains all bound values in the
+    log\_list {\tt Tree}, in the order they appear in {\tt Tree}.
+    
+
 
 \ourmoditem{length(?List, ?Length)}{length/2}{basics}
     Succeeds if the length of the list {\tt List} is {\tt Length}.
