@@ -297,7 +297,7 @@ void deleteinedges(CTXTdeclc callnodeptr callnode){
       if (remove_some(CTXTc hasht,ownkey) == NULL) {
 	xsb_abort("BUG: key not found for removal (deleteinedges)\n");
       }
-      printf("remove_some called from deleteinedges\n");
+      //printf("remove_some called from deleteinedges\n");
       current_call_edge_count_gl--;
       in->inedge_node->callnode->outcount--;
       SM_DeallocateStruct(smCallList, in);      
