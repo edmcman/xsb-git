@@ -270,10 +270,10 @@ unsigned long dec[8] = {_FULL_ULONG_BITS,_FULL_ULONG_BITS,_FULL_ULONG_BITS,_FULL
   }									\
   else if ((Psc)OP2 == box_psc) {					\
     Cell ignore_addr;							\
-    if (isfloat(OP1)) 							\
-      bld_boxedfloat(CTXTc &ignore_addr, float_val(OP1));		\
-    else if (isointeger(OP1)) 						\
-      {bld_oint(&ignore_addr, oint_val(OP1));}				\
+    if (isofloat(OP1) && isofloat(OP2))					\
+      bld_boxedfloat(CTXTc &ignore_addr, ofloat_val(OP1));		\
+    else if (isointeger(OP1) && isointeger(OP2))			\
+      {bld_boxedint(&ignore_addr, oint_val(OP1));}			\
     else Fail1;								\
     flag = READFLAG;							\
     sreg = hreg - 3;							\
