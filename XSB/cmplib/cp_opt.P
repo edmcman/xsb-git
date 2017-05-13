@@ -622,7 +622,7 @@ subsumption_modes_trans_pred(Sym,Pscs,Oth,Modes,[pred(Sym1,Pscs,Oth)|NewClList],
 	parse_preddef_closed(NewTerm,true,[pred(Sym1,_,_)],SymTab), % add to symtab
 	ensure_imported(table_error/1,error_handler,SymTab).
 
-/*** for when debugging
+/*** for when debugging **
 print_rule(Label,Head,Body) :-
 	(do_all
 	 num_vars:numbervars(p(Head,Body)),
@@ -743,7 +743,6 @@ gen_ind_clause(IOrd,BaseOrd,Pred,Arity,NonAbsPoss,IPred,OrdPred,
 
 	functor(AbsGoal,IPred,Arity),
 	AbsGoal =.. [IPred|AbsGoalVars],
-
 	equate_vars(NonAbsPoss,IOrd,AbsGoalVars,HeadVars),
 	build_equates_as_nec(AbsGoalVars,HeadVars,EquateAbsVars).
 
@@ -771,7 +770,7 @@ gen_sel_clause(Pred,Arity,IndPerms,(Head:-Body)) :-
 
 gen_tests([IndPerm],Pred,HeadArgs,Condition) :- !,
 	gen_test_call(IndPerm,Pred,HeadArgs,Test,Call),
-	(Test == true
+	(fail,Test == true
 	 ->	Condition = Call
 	 ;	length(HeadArgs,Arity),
 		concat_atom(['Illegal Mode in call to ',Pred,'/',Arity],Msg),
@@ -799,6 +798,7 @@ equate_vars([Pos|Poss],OPoss,VarsA,VarsB) :-
 	ith(NPos,VarsB,Var),
 	equate_vars(Poss,OPoss,VarsA,VarsB).
 	
+build_equates_as_nec([],[],true) :- !.
 build_equates_as_nec([Var1|Vars1],[Var2|Vars2],Equates) :-
 	(Vars1 == []
 	 ->	(Var1 == Var2
@@ -818,6 +818,7 @@ select_indir_vars([Pos|Poss],Ord,HeadVars,[Var|AbsVars]) :-
 	ith(Ind,HeadVars,Var),
 	select_indir_vars(Poss,Ord,HeadVars,AbsVars).
 
+build_var_test([],true) :- !.
 build_var_test([Var],var(Var)) :- !.
 build_var_test([Var|Vars],(var(Var),VarTests)) :-
 	       build_var_test(Vars,VarTests).
