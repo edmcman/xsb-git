@@ -251,6 +251,7 @@ the default printer (@pred{write/1}) will print the attributed
 variable like an unbound variable, e.g. @tt{_673}.").
 
 :- multifile portray/1.
+portray(_) :- fail.
 
 :- pred(portray(?Term)
    # "@em{A user defined predicate.} This should either print the @var{Term}
