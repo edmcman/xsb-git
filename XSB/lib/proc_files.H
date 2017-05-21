@@ -33,7 +33,7 @@
 :- export copy_dsv/4.
 :- export load_with_header/2.
 :- export file_header/4.
-:- export read_dsv/3.
+:- export read_dsv/3, read_can/2, read_pro/2.
 :- export break_into_code_fields/5.
 
 :- import append/3 from basics.
@@ -51,3 +51,6 @@
 :- import str_match/5 from machine.
 :- import time_message/2 from auxlry.
 :- import atom_to_term/2 from string.
+:- import read_canonical/2 from consult.
+:- import read/2 from standard.
+   

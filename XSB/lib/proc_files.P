@@ -115,6 +115,7 @@ load_dsv(FileName,PSpec,Sep,Delim,Options) :-
 	dynamic(Spec),
 	retractall(Spec),
         pad_args(Args,Options,ArgsPatched),
+	cputime(T0),
 	(read_dsv(FileName,PSpec,Sep,Delim,Options,Types,ArgsPatched),
 	 (Reverse =:= 0
 	  ->	 assertz(Spec),
@@ -123,11 +124,11 @@ load_dsv(FileName,PSpec,Sep,Delim,Options) :-
 		 fail
 	 )
 	 ;
-	 true
+	 conget('__recsread',RecsRead),
+	 time_message(T0,(FileName,' loaded (delimited) ',RecsRead,' records'))
 	).
 
 read_dsv(FileNameOrStr,PSpec,Sep,Delim,Options,Types,Args) :-
-	cputime(T0),
 	conset('__errcnt',0),
 	conset('__recsread',0),
 	conset('__linesread',0),
@@ -144,8 +145,6 @@ read_dsv(FileNameOrStr,PSpec,Sep,Delim,Options,Types,Args) :-
 	(CodeFields == end_of_file
 	 ->	!,
 		close(Stream),
-		conget('__recsread',RecsRead),
-		time_message(T0,(FileNameOrStr,' loaded (delimited) ',RecsRead,' records')),
 		fail
 	 ;	coninc('__recsread',RecsRead),
 		(RecsRead =:= 1,member(titles,Options)
@@ -654,3 +653,26 @@ pad_args(ArgsIn,Options,ArgsOut) :-
             )
         ; ArgsOut = ArgsIn
         ).
+
+read_can(FileName,Term) :-
+	open(FileName,read,IStr),
+	repeat,
+	read_canonical(IStr,Term0),
+	(Term0 == end_of_file
+	 ->	!,
+		close(IStr),
+		fail
+	 ;	Term = Term0
+	).
+
+read_pro(FileName,Term) :-
+	open(FileName,read,IStr),
+	repeat,
+	read(IStr,Term0),
+	(Term0 == end_of_file
+	 ->	!,
+		close(IStr),
+		fail
+	 ;	Term = Term0
+	).
+
