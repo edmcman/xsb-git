@@ -121,6 +121,7 @@ told :-
 %----------------------------------------------------------------------------------------------------
 
 open(File,Mode,Stream) :- 'open aux'(File,Mode,0,Stream).
+%%open(File,Mode,Stream) :- 'open aux'(File,Mode,1,Stream).
 
 'open aux'(File,_,_,_):-
 	var(File), !, 
@@ -219,7 +220,10 @@ open(url(Atom),Mode,Stream,Options) :-
 
 open(F,Mode,Stream,Options):-
 	examine_open_options(Options,Aliases,_Eof),
-	open(F,Mode,Stream),
+	(member(new,Options)
+	 ->	'open aux'(F,Mode,1,Stream)
+	 ;	open(F,Mode,Stream)
+	),
 	%% writeln(open(F,Mode,Stream)),
 	add_aliases(Aliases,STREAM_ALIAS,Stream,open/4).
 
@@ -246,6 +250,8 @@ examine_open_options([alias(A)|T],[A|Aliases],Eof):- !,
 	 ->	instantiation_error(open/4,4)
 	 ;	domain_error(stream_option,alias(A),open/4,4)
 	).
+examine_open_options([new|T],Aliases,Eof) :- !,
+	examine_open_options(T,Aliases,Eof).
 examine_open_options([Option|_],_,_):- 
 	domain_error(stream_option,Option,open/4,4).
 examine_open_options(Option,_,_):- 
