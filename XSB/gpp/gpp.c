@@ -75,6 +75,11 @@
 
 #define MAX_GPP_NUM_SIZE 18
 
+#define FREEZEMACRO  "__freeze__"
+
+#define DEFINED_MACRO_MARKER  -2
+#define DEFFAST_MACRO_MARKER  -3
+
 typedef struct MODE {
   char *mStart;		/* before macro name */
   char *mEnd;		/* end macro without arg */
@@ -1846,14 +1851,14 @@ char *ArithmEval(int pos1,int pos2)
     m->macrolen=0;
     m->macrotext=malloc(1);
     m->macrotext[0]=0;
-    m->nnamedargs=-2; /* trademark of the defined(...) macro */
+    m->nnamedargs=DEFINED_MACRO_MARKER; /* marker for the defined(...) macro */
   }
   /* process the text in a usual way */
   s=ProcessText(C->buf+pos1,pos2-pos1,FLAG_META);
   /* undefine the defined(...) operator */
   if (i<0) {
     i=findIdent("defined",(int)strlen("defined"),&h);
-    if ((i<0)||(macros[h][i].nnamedargs!=-2))
+    if ((i<0)||(macros[h][i].nnamedargs!=DEFINED_MACRO_MARKER))
       warning("the defined(...) macro was redefined in expression");
     else delete_macro(h,i);
   }
@@ -2548,7 +2553,7 @@ int ParsePossibleMeta()
       m->macrolen = (int)strlen(m->macrotext);
       m->defined_in_comment=C->in_comment;
       m->argnames=NULL;
-      m->nnamedargs=-3; /* special value */
+      m->nnamedargs=DEFFAST_MACRO_MARKER; /* special value */
     } else
       replace_directive_with_blank_line(C->out->f);
     break;
@@ -2583,10 +2588,15 @@ int ParsePossibleUser(void)
   }
 
   if (id<0) return -1;
-  if (lg_end>=0) macend=lg_end; else { macend=sh_end; argc=0; }
+  if (lg_end>=0)
+    macend=lg_end;
+  else {
+    macend=sh_end;
+    argc=0;
+  }
   m=&(macros[h][id]);
 
-  if (m->nnamedargs==-2) { /* defined(...) macro for arithmetic */
+  if (m->nnamedargs==DEFINED_MACRO_MARKER) { /* defined(...) macro for arith */
     char *s,*t;
     if (argc!=1) return -1;
     s=remove_comments(argb[0],arge[0],FLAG_USER);
@@ -2605,16 +2615,55 @@ int ParsePossibleUser(void)
     return 0;
   }
   
-  for (i=0;i<argc;i++)
-    argv[i]=ProcessText(C->buf+argb[i],arge[i]-argb[i],FLAG_USER);
+  /*
+    If the argument has a prefixe __freeze__ (eg, foo(__freeze__ arg1))
+    then do not expand the argument. This is used to prevent IRI prefixes from
+    expanding IRIs that have occurrences of the prefix words in them. For
+    instance, 
+        #deffast   owl http://www.w3.org/2002/07/owl#
+    will expand owl in
+        http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#WineFlavor
+    and thus corrupt the URL.
+   */
+  for (i=0;i<argc;i++) {
+    int arg_realstart, arg_realend;
+
+
+    // remove spaces around the entire argument
+    arg_realstart = argb[i];
+    arg_realend   = arge[i];
+    whiteout(&arg_realstart,&arg_realend);
+
+    if (strncmp(C->buf+arg_realstart,FREEZEMACRO,sizeof(FREEZEMACRO)-1)) {
+      argv[i]=ProcessText(C->buf+argb[i],arge[i]-argb[i],FLAG_USER);
+    } else {
+      // the argument has a prefix __freeze__ -- don't expand this argument
+      char *frozen_arg=malloc(arge[i]-argb[i]-sizeof(FREEZEMACRO)+1);
+      // remove white space around the frozen part of the argument
+      int
+        frozen_arg_realstart = arg_realstart+sizeof(FREEZEMACRO),
+        frozen_arg_realend   = arge[i];
+      whiteout(&frozen_arg_realstart,&frozen_arg_realend);
+
+      argv[i] = frozen_arg;
+      // remove the __freeze__ prefix and leave the pure argument as is
+      memcpy(frozen_arg,C->buf+frozen_arg_realstart,
+             frozen_arg_realend-frozen_arg_realstart);
+      frozen_arg[frozen_arg_realend-frozen_arg_realstart] = '\0';
+    }
+  }
     
   /* fast macros get a short execution */
-  if (m->nnamedargs==-3) {
+  if (m->nnamedargs==DEFFAST_MACRO_MARKER) {
     char *s;
     for (s=m->macrotext;*s!=0;s++) {
-      if (*s>=1 && *s<=8)
-        { if (*s-1<argc) sendout(argv[*s-1],(int)strlen(argv[*s-1]),0); }
-      else { if (!commented[iflevel]) outchar(*s); }
+      if (*s>=1 && *s<=8) {
+        if (*s-1<argc)
+          sendout(argv[*s-1],(int)strlen(argv[*s-1]),0);
+      }
+      else {
+        if (!commented[iflevel]) outchar(*s);
+      }
     }
     for (i=0;i<argc;i++) free(argv[i]);
     shiftIn(macend);
