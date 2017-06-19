@@ -29,8 +29,8 @@ This RDF parsing package is adapted from SWI Prolog.
 :- module(rdf,
 	  [ load_rdf/2,			% +File, -Triples
 	    load_rdf/3,			% +File, -Triples, :Options
-	    xml_to_rdf/3,		% +XML, -Triples, +Options
-	    process_rdf/3		% +File, :OnTriples, :Options
+	    %%process_rdf/3,		% +File, :OnTriples, :Options
+	    xml_to_rdf/3		% +XML, -Triples, +Options
 	  ]).
 
 :- use_module(library(sgml), [load_structure/4]).
