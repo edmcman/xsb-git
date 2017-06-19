@@ -188,6 +188,7 @@
 :- import (use_variant_tabling)/1, (use_subsumptive_tabling)/1 from tables.
 
 :- import (:-)/2 from usermod.
+:- import term_expansion/2 from usermod.
 :- import load_page/5 from curl.
 :- import start_sleeper_thread/1 from machine.
 :- import assert/1 from assert.
