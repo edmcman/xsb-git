@@ -66,7 +66,7 @@
 :- import warning/1, time_message/2, current_xsb_compiler_option/1 from auxlry.
 :- import xpp_is_off/0 from parse.
 :- import banner_control/1 from banner.
-:- import append/3, memberchk/2 from basics.
+:- import append/3, memberchk/2, member/2 from basics.
 :- import compile/5 from compile.
 :- import predicate_property/2, current_input_port/1 from curr_sym.
 :- import default_assert_size/1 from config.
@@ -100,7 +100,7 @@
 	  expand_term/2, read/1, op/3, (table)/1, (index)/3, (index)/2,
 	  (=..)/2, writeln/1, write_canonical/1, tell/1,
 	  told/0, telling/1, functor/3, cputime/1, %%(import)/1,
-   	  catch/3, throw/1
+	  catch/3, throw/1, is_list/1
      from standard.
 :- import '->'/2, ';'/2 from standard.
 :- import str_cat/3, str_sub/2 from string.

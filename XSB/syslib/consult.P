@@ -654,7 +654,11 @@ cleanup_for_load :-
 %% This version is used for load_dyn1 only!
 read_and_assert(Dir,Base,Module) :-
 	read(Term1),
-	expand_term(Term1,Term),
+	expand_term(Term1,Terms),
+	(is_list(Terms)
+	 ->	member(Term,Terms) % since expand_term can return a list
+	 ;	Term = Terms
+	),
 	(Term == end_of_file
 	 ->	!, fail
 	 ;	do_assert_and_fail(Term,Dir,Base,Module)
