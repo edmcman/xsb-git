@@ -314,7 +314,11 @@ search_module(FileName, Dir, Mod, Ext, Base, Obj) :-
 		Mod = M,
 		real_search_module(Mod, Dir, Base, Ext)
 	 ; acceptable_extension(E)
-	 ->	Dir = D, Mod = M, Ext = E, Base = B
+	 ->	Dir = D, Mod = M, Ext = E, Base = B,
+		(Dir \== '', Ext == XSB_OBJ_EXTENSION_ATOM_SANS_DOT
+		 ->	file_exists(FileName)
+		 ;	true
+		)
 	 ;	Dir = D,
 		Ext = '',
 		str_cat(B,'.',B1),
