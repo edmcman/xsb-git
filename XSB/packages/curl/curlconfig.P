@@ -101,8 +101,8 @@
     (   %% avoid recompilation
 	search_module(Basename,Dir,_Mod,_Ext,BaseDir,ModuleO),
 	str_cat(Module, '.c', ModuleSourceFile),
-	str_cat(ConfigBinDir, 'libcurl.dll', LibcurlDLL),
-	str_cat(ConfigBinDir, 'curl2pl.dll', Curl2plDLL),
+	str_cat(ConfigBinDir, '\\libcurl.dll', LibcurlDLL),
+	str_cat(ConfigBinDir, '\\curl2pl.dll', Curl2plDLL),
 	path_sysop(newerthan,ModuleO,ModuleSourceFile),
 	path_sysop(newerthan,ConfigSharedMod,ModuleSourceFile),
 	((xsb_running_under(windows) ; xsb_running_under(cygwin)) ->

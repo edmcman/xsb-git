@@ -407,7 +407,7 @@ DllExport void* call_conv mem_realloc(void *addr, size_t oldsize, size_t newsize
 
 /* === dealloc permanent memory ============================================ */
 
-void mem_dealloc(void *addr, size_t size, int category)
+DllExport void call_conv mem_dealloc(void *addr, size_t size, int category)
 {
   //  int i;
     size = (size+7) & ~0x7 ;	      /* round to 8 */

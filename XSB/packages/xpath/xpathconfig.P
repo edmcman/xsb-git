@@ -42,7 +42,7 @@
 	xsb_configuration(configuration, XSBconfiguration),
 	xpath_info(ldflags, LoaderFlagsBase),
         concat_atom([LoaderFlagsBase, ' -lcurl'], LoaderFlags),
-	(xsb_running_under(unix) ->
+	((xsb_running_under(unix) ; xsb_running_under(darwin)) ->
 	    LD_flags = LoaderFlags
 	; %% Cygwin. Under Windows loader options are ignored
 	    str_cat(' -lwsock32 ', LoaderFlags, LD_flags)
