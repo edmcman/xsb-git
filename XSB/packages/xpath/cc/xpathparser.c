@@ -27,6 +27,8 @@
 #define MAXSTRLEN 256
 #define MAXSTRINGLEN 32000
 
+#define SRC_NOT_FOUND  -1
+
 
 #ifdef MULTI_THREAD
 #define xsb_get_main_thread_macro xsb_get_main_thread()
@@ -165,10 +167,10 @@ DllExport int call_conv parse_xpath__()
    * to '/\*'
    */
   if (!strcmp((char *)xpath_expr, "/")) {
-      free(xpath_expr);
-      xpath_expr = (xmlChar *)malloc(3); // 3 = length("/*")+1
-      strcpy((char *)xpath_expr, "/*");
-    }		     
+    //free(xpath_expr);  // incorrect to free here: wasn't allocated!
+    xpath_expr = (xmlChar *)malloc(3); // 3 = length("/*")+1
+    strcpy((char *)xpath_expr, "/*");
+  }		     
 
   /*Extract the namespace prefix list from the prolog input*/
   ns_term = reg_term(CTXTc 4);
@@ -178,7 +180,9 @@ DllExport int call_conv parse_xpath__()
   /*This is the function which evaluates the xpath expression on xml input*/
   ret = execute_xpath_expression(source, xpath_expr, namespace, output_term, flag);
   if (ret == FALSE){
-    return xpath_error(ERR_MISC, "xpath", "Unable to parse the xpath expression");
+    return xpath_error(ERR_MISC, "xpath", "cannot parse XPath expression");
+  } else if (ret == SRC_NOT_FOUND) {
+    return xpath_error(ERR_MISC, "xpath", "cannot fetch or parse input XML document");
   }
   xmlCleanupParser();
   return TRUE;
@@ -205,7 +209,7 @@ execute_xpath_expression(const char * xmlsource, const xmlChar* xpathExpr, const
   if (flag == 1){
     doc = xmlParseFile(xmlsource);
     if (doc == NULL){
-      return FALSE;
+      return SRC_NOT_FOUND;
     }
   }
   else{
@@ -470,7 +474,7 @@ xpath_error(plerrorid id, ...)
       }
     case ERR_EXISTENCE:
       { 
-	/*Resource not in existence error*/
+	/*Resource not exists error*/
 	const char *type = va_arg(args, const char *);
 	prolog_term obj  = va_arg(args, prolog_term);
 

@@ -133,43 +133,13 @@ doctype(Parser, Doctype, 'Yes', Warn) :-
 	pl_doctype(Parser, Doctype),
 	throw_error(Error).
 
-dtd('HTML', Dtd, Warn):-
-	dtd_warn(html, Dtd, Warn),
-	pl_finalize_warn(Warn).
-
-dtd(html, Dtd , Warn):- 
-	dtd_warn(html, Dtd , Warn),
-	pl_finalize_warn(Warn).
-
-dtd_warn('html', Dtd , Warn):- 
-	pl_allocate_error_term(Error, Warn),
-	pl_new_dtd('html', Dtd), 
-	filesdir(Dtdfile, 'HTML4.dtd'),
-	pl_open_dtd(Dtd, [source(file(Dtdfile))]),
-	throw_error(Error).
-
 load_html_structure(Source, Term, Warn) :- 
 	dtd_warn('html', Dtd, Warn), 
 	load_structure_warn(Source, Term,[Dtd, dialect(sgml)], Warn),
 	pl_finalize_warn(Warn).
 
-dtd('xhtml', Dtd, Warn):-
-	dtd_warn('xhtml', Dtd, Warn),
-	pl_finalize_warn(Warn).
-
-dtd('XHTML', Dtd, Warn):-
-	dtd_warn('xhtml', Dtd, Warn),
-	pl_finalize_warn(Warn).
-
-dtd_warn('xhtml', Dtd, Warn):-
-        pl_allocate_error_term(Error, Warn),
-	pl_new_dtd('xhtml', Dtd), 
-	filesdir(Dtdfile, 'xhtml1-transitional.dtd'),
-	pl_open_dtd(Dtd, [source(file(Dtdfile))]),
-	throw_error(Error).
-
 load_xhtml_structure(Source, Term, Warn) :- 
-	dtd_warn('xhtml', Dtd, Warn), 
+	dtd_warn(xhtml, Dtd, Warn), 
 	load_structure_warn(Source, Term,[Dtd, dialect(xml)], Warn),
 	pl_finalize_warn(Warn).
 
@@ -181,9 +151,37 @@ load_sgml_structure(Source, Term, Warn) :-
 	load_structure_warn(Source, Term,  [dialect(sgml)], Warn),
 	pl_finalize_warn(Warn).
 
+%% dtd
+dtd('HTML', Dtd, Warn):-
+        dtd(html, Dtd , Warn).
+dtd(html, Dtd , Warn):- 
+	dtd_warn(html, Dtd , Warn),
+	pl_finalize_warn(Warn).
+
+dtd('XHTML', Dtd, Warn):-
+        dtd(xhtml, Dtd, Warn).
+dtd(xhtml, Dtd, Warn):-
+	dtd_warn(xhtml, Dtd, Warn),
+	pl_finalize_warn(Warn).
+%% catch-all
 dtd(Type, Dtd, DtdFile, Warn) :- 
 	dtd_warn(Type, Dtd, DtdFile, Warn),
 	pl_finalize_warn(Warn).
+
+%% dtd_warn
+dtd_warn(html, Dtd , Warn):- 
+	pl_allocate_error_term(Error, Warn),
+	pl_new_dtd(html, Dtd), 
+	filesdir(Dtdfile, 'HTML4.dtd'),
+	pl_open_dtd(Dtd, [source(file(Dtdfile))]),
+	throw_error(Error).
+
+dtd_warn(xhtml, Dtd, Warn):-
+        pl_allocate_error_term(Error, Warn),
+	pl_new_dtd('xhtml', Dtd), 
+	filesdir(Dtdfile, 'xhtml1-transitional.dtd'),
+	pl_open_dtd(Dtd, [source(file(Dtdfile))]),
+	throw_error(Error).
 
 dtd_warn(Type, Dtd, DtdFile, Warn) :- 
 	pl_allocate_error_term(Error, Warn),
@@ -191,6 +189,7 @@ dtd_warn(Type, Dtd, DtdFile, Warn) :-
 	pl_open_dtd(Dtd, [source(DtdFile)]),
 	throw_error(Error).
 
+%% parse
 parse(Parser, Options, Document, In, Warn) :-
 	set_parser_options(Parser, Options),
 	sgml_parse_warn(Parser,
