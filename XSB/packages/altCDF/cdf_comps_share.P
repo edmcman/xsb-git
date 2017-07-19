@@ -262,7 +262,7 @@ get_component_intensional(Term,Body,Component):-
 	arg(Arg,Term,SourceArg),
 	(nonvar(SourceArg),arg(2,SourceArg,Source),atom(Source) -> 
 	    Source = Component
-	 ; var(SourceArg),Term = isa_int(_,SourcArg2),arg(2,SourcArg2,Source),atom(Source) ->
+	 ; var(SourceArg),Term = isa_int(_,SourcArg2),compound(SourcArg2),arg(2,SourcArg2,Source),atom(Source) ->
 	    Source = Component
 	 ; cdf_warning(component,
 	                ['Cannot find component for intensional rule: ',
