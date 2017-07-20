@@ -778,13 +778,13 @@ read_and_assert(IPort,Dir,Base,Module,FactFlg) :-
 		fail
 	 ; Term == read_canonical_error
 	 ->	conget('_$load_dync_line_no',BadLineNo),
-		file_write0(STDMSG,'     READ_CAN_ERROR at (or about) term (usu. line) number '),
+		file_write0(STDMSG,'     read_canonical warning at (or about) term (usu. line) number '),
 		file_write0(STDMSG,BadLineNo),
 		file_nl(STDMSG),
 		coninc('_$load_dync_error_cnt',ErrCnt),
 		(ErrCnt > 25
 		 ->	!,
-			file_write0(STDMSG,'TOO MANY READ_CAN_ERRORS, loading aborted'),
+			file_write0(STDMSG,'Too many read_canonical warnings: loading aborted'),
 			file_nl(STDMSG)
 		 ;	true
 		),

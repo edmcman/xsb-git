@@ -770,7 +770,7 @@ static int read_can_error(CTXTdeclc int stream, int prevchar, Cell prologvar, in
 {
   char *ptr;
 
-  xsb_error("READ_CAN_ERROR: illegal format. Next tokens:");
+  xsb_warn(CTXTc "[read_canonical] illegal format near these tokens:");
   while ((token->type != TK_EOC) && (token->type != TK_EOF)) {
     ptr = token->value;
     switch (token->type) {
