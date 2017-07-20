@@ -173,7 +173,7 @@ reconsult0(Path, Options, Ensure_loaded) :-
                        )
                    )
                )
-           )
+	   )
         ;   existence_error('file/module',Path,consult/1,1)
 	).
 
@@ -316,7 +316,8 @@ search_module(FileName, Dir, Mod, Ext, Base, Obj) :-
 	 ; acceptable_extension(E)
 	 ->	Dir = D, Mod = M, Ext = E, Base = B,
 		(Dir \== '', Ext == XSB_OBJ_EXTENSION_ATOM_SANS_DOT
-		 ->	file_exists(FileName)
+		 ->	add_xsb_obj_ext_if_nec(FileName,OFileName),
+			file_exists(OFileName)
 		 ;	true
 		)
 	 ;	Dir = D,
@@ -326,6 +327,12 @@ search_module(FileName, Dir, Mod, Ext, Base, Obj) :-
 		Mod = Base
 	),
 	str_cat(Base, XSB_OBJ_EXTENSION_ATOM, Obj).
+
+add_xsb_obj_ext_if_nec(FileName,OFileName) :-
+	(concat_atom([_,'.',XSB_OBJ_EXTENSION_ATOM_SANS_DOT],FileName)
+	 ->	OFileName = FileName
+	 ;	concat_atom([FileName,'.',XSB_OBJ_EXTENSION_ATOM_SANS_DOT],OFileName)
+	).
 
 acceptable_extension('').
 %%acceptable_extension('P').
@@ -778,7 +785,7 @@ read_and_assert(IPort,Dir,Base,Module,FactFlg) :-
 		fail
 	 ; Term == read_canonical_error
 	 ->	conget('_$load_dync_line_no',BadLineNo),
-		file_write0(STDMSG,'     read_canonical warning at (or about) term (usu. line) number '),
+		file_write0(STDMSG,'     read_canonical warning at (or about) term number (and line number if one term per line) '),
 		file_write0(STDMSG,BadLineNo),
 		file_nl(STDMSG),
 		coninc('_$load_dync_error_cnt',ErrCnt),

@@ -103,7 +103,7 @@
 	  catch/3, throw/1, is_list/1
      from standard.
 :- import '->'/2, ';'/2 from standard.
-:- import str_cat/3, str_sub/2 from string.
+:- import str_cat/3, str_sub/2, concat_atom/2 from string.
 :- import xsb_configuration/2 from xsb_configuration.
 :- import file_write0/2, file_nl/1 from xsb_writ.
 :- import library_directory/1 from usermod.
