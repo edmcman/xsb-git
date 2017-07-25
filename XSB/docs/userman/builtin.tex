@@ -3114,6 +3114,43 @@ than {\tt U} the predicate fails.
 \item 	{\tt type\_error(integer,L)}
 \ei
 \ei
+
+\standarditem{(do\_all +Goal)}{do\_all/1}\index{\texttt{do\_all/1}}
+Defines a failure driven loop, as if defined by:
+	\begin{center}
+	\begin{minipage}{2.10in}
+	\begin{verbatim}
+	(do_all Goal) :- (Goal, fail ; true).
+	\end{verbatim}
+	\end{minipage}
+	\end{center}
+The control operator, {\tt do\_all/1} is defined as a prefix operator
+with precedence 1150.
+
+\standarditem{(+CGoal do\_all +Goal)}{do\_all/2}\index{\texttt{do\_all/1}}
+Defines a failure driven loop, as if defined by:
+	\begin{center}
+	\begin{minipage}{2.10in}
+	\begin{verbatim}
+	  (CGoal do_all Goal) :-
+               common_vars(CGoal,Goal,CommonVars),
+               findall(CommonVars,CGoal,Vals),
+               sort(Vals,UniqueVals),
+               (basics:member(CommonVars,UniqueVals),
+                call(Goal),
+                fail
+                ;
+                true
+               ).
+	\end{verbatim}
+	\end{minipage}
+	\end{center}
+where {\tt common\_vars/3} collects the variables that occur
+both in {\tt P} and {\tt Q}.
+The control operator, {\tt do\_all/2} is defined as an infix operator
+with precedence 1150.
+
+
 \end{description}
 
 %-------------------------------------------------------------------------
