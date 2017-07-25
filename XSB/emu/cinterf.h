@@ -256,6 +256,7 @@ DllExport extern xsbBool call_conv c2p_list(CTXTdeclc prolog_term);
 DllExport extern xsbBool call_conv c2p_nil(CTXTdeclc prolog_term);
 DllExport extern void call_conv ensure_heap_space(CTXTdeclc int, int);
 DllExport extern xsbBool call_conv c2p_functor(CTXTdeclc char *, int, prolog_term);
+DllExport extern xsbBool call_conv c2p_functor_in_mod(CTXTdeclc char *, char *, int, prolog_term);
 DllExport extern void call_conv c2p_setfree(prolog_term);
 DllExport extern void call_conv c2p_chars(CTXTdeclc char *str, int regs_to_protect, prolog_term term);
 

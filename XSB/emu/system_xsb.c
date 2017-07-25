@@ -120,7 +120,8 @@ int sys_syscall(CTXTdeclc int callno)
   case SYS_exit: {
     int exit_code;
     exit_code = (int)ptoc_int(CTXTc 3);
-    xsb_error("\nXSB exited with exit code: %d", exit_code);
+    if (exit_code != 0)
+      xsb_error("\nXSB exited with exit code: %d", exit_code);
     exit(exit_code); break;
   }
   case SYS_getpid :

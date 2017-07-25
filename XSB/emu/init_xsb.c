@@ -1345,7 +1345,7 @@ void init_machine(CTXTdeclc int glsize, int tcpsize,
 {
   void tstInitDataStructs(CTXTdecl);
 
-  setlocale(LC_NUMERIC, "");
+  //  setlocale(LC_NUMERIC, ""); % in some locations, changes atof to want ',' as decimal.
 
   // single-threaded engine uses this for tries.
   init_private_trie_table(CTXT);

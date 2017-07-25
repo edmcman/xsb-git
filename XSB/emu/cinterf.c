@@ -285,6 +285,28 @@ DllExport xsbBool call_conv c2p_functor(CTXTdeclc char *functor, int arity,
     }
 }
 
+DllExport xsbBool call_conv c2p_functor_in_mod(CTXTdeclc char *modname,
+					       char *functor, int arity,
+					       prolog_term var)
+{
+    Cell v = (Cell)var;
+    Pair sym;
+    int i;
+    if (is_var(v)) {
+      XSB_Deref(v);
+      sym = (Pair)insert_psc(functor, arity, pair_psc(insert_module(0,modname)), &i);
+	sreg = hreg;
+	hreg += arity + 1;
+	bind_cs(vptr(v), sreg);
+	new_heap_functor(sreg, sym->psc_ptr);
+	for (i=0; i<arity; sreg++,i++) { bld_free(sreg); }
+	return TRUE;
+    } else {
+	xsb_warn(CTXTc "[C2P_FUNCTOR] Argument 3 must be a variable");
+	return FALSE;
+    }
+}
+
 DllExport Integer call_conv p2c_int(prolog_term term)
 {
     Cell t = (Cell)term;
