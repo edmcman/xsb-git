@@ -27,10 +27,10 @@ reason1
 reason2
 reason2
 reason2
-reasonmerge1(findint(_h238,_h245))
-reasonmerge1(findint(_h312,_h345))
-reasonmerge1(findint(_h408,_h433))
-reasonmerge1(findint(_h495,_h512))
+reasonmerge1(findint(A,B))
+reasonmerge1(findint(A,B))
+reasonmerge1(findint(A,B))
+reasonmerge1(findint(A,B))
 reasonmerge2(C,Class)
 reasonmerge2(C,Class)
 reasonmerge2(C,Class)
