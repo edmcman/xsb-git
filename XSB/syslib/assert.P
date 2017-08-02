@@ -439,6 +439,7 @@ exec_pre_dynamic_option(shared,PredList) :- !,
 	thread_shared(PredList).
 exec_pre_dynamic_option(intern,PredList) :- !,
 	set_predlist_intern(PredList).
+exec_pre_dynamic_option(none,_PredList) :- !.
 
 set_predlist_intern((Pred,Preds)):- !,
 	set_predlist_intern(Pred),
@@ -533,6 +534,7 @@ check_dynamic_option(intern,Options,PredCList) :- !,
 			    ' as dynamic with options intern and opaque'))
 	 ;	true
 	).
+check_dynamic_option(none,_,_PredCList) :- !.
 check_dynamic_option(Option,_,_PredCList) :- !,
 	domain_error(dynamic_option,Option,(dynamic)/1,1,
 	'must be one of tabled,variant,incremental,opaque,private,shared').
