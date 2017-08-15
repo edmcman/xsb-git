@@ -25,7 +25,7 @@
 :- import bootstrap_package/2 from packaging.
 
 init_viewsys :- 
-	bootstrap_package(['viewsys',cdftp],'viewsys'),
+	bootstrap_package(['viewsys'],'viewsys'),
 	[view_sys]. % to load and define exported preds in usermod
 
 :- init_viewsys.
