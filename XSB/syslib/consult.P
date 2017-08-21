@@ -433,16 +433,25 @@ add_lib_dir(Path) :-
 
 add_lib_dir1(a(Path)) :- !,
 	standardize_pathname(Path, FullPath),
+	check_dir_exists(FullPath),
 	retractall(library_directory(FullPath)), % remove if it was there
 	asserta(library_directory(FullPath)).	 % put at front.
 %% push onto the top of the stack - don't remove anything
 add_lib_dir1(push(Path)) :- !,
 	standardize_pathname(Path, FullPath),
+	check_dir_exists(FullPath),
 	asserta(library_directory(FullPath)).	 % put at front.
 add_lib_dir1(Path) :-
 	standardize_pathname(Path, FullPath),
+	check_dir_exists(FullPath),
 	(library_directory(FullPath) ->	true
         ;  assert(library_directory(FullPath))
+	).
+
+check_dir_exists(FullPath) :-
+	(is_directory(FullPath)
+	 ->	true
+	 ;	warning(('add_lib_dir/1 or /2: Directory does not exist: ',FullPath),'Runtime/P')
 	).
 
 add_lib_dir(Root,(A,B)) :- !,
