@@ -465,6 +465,7 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	globalize(var,0,SymTab),
 	ensure_imported(breg_retskel/4,machine,SymTab),
 	ensure_imported(excess_vars/4,setof,SymTab),
+	ensure_imported(findall/3,setof,SymTab),
 	ensure_imported(copy_term/2,basics,SymTab),
 	ensure_imported(instantiation_error/3,error_handler,SymTab),
 	ensure_imported('_$$get_returns_and_tvs'/4,tables,SymTab),
@@ -480,6 +481,7 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	ensure_imported(early_complete_on_nth/2,tables,SymTab),
 	ensure_imported(term_set_arg/4,machine,SymTab),
 	ensure_imported(early_complete_on_delta/4,tables,SymTab).
+
 
 generate_agg_clauses(termset,_Sym,PredTerm,Var1,[],Pred1Term,Var,ClList2,SymTab) :- !,
 	functor(Pred1Term,NPred,Arity),
@@ -903,16 +905,20 @@ collect_arg_pos([set(_,_,List)|Sets],PList,ArgPoses0,ArgPoses) :-
 %% argument positions, and each OrdArgPosList in such a list is a
 %% (proper) subset of the following one.
 find_orders(Indexes,OrdSets) :-
+	%% strange, findall/3 doesn't correctly cause setof mod to be loaded(loops),
+	%%     but findall/4 seems to????  So this is findall/4 (for call from table_index.)
 	findall(set(Len,I,BoundArgs),
-		(ith(I,Indexes,Index),
-		 index_to_list(Index,BoundArgs0),
-		 sort(BoundArgs0,BoundArgs),
-		 length(BoundArgs,Len)
-		),
-		IndexSets0),
+	      an_indexset(Indexes,Len,I,BoundArgs),
+	      IndexSets0),
 	check_for_bad_order(IndexSets0),
 	parsort(IndexSets0,[desc(1),asc(2),asc(3)],0,IndexSets),
 	add_all_to_chains(IndexSets,[],OrdSets).
+
+an_indexset(Indexes,Len,I,BoundArgs) :-
+	ith(I,Indexes,Index),
+	index_to_list(Index,BoundArgs0),
+	sort(BoundArgs0,BoundArgs),
+	length(BoundArgs,Len).	
 
 check_for_bad_order(IndexSets) :-
 	(append(_,[set(_,_,IndList)|Rest],IndexSets),
