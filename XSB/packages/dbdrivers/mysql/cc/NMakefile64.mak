@@ -3,12 +3,18 @@
 # !!!!
 # !!!! TOO DAMN HARD TO LINK WITH MySQL ON WINDOWS.
 # !!!! Replace with a correct path to MySQL!!! No quotes around!!
+# mysqlclient.lib -static library; libmysql.lib - used with dynamic library
 #MySQLLib=<Insert Proper Path>\mysqlclient.lib
+#MySQLLib=<Insert Proper Path>\libmysql.lib
 #MySQLIncludeDir=<Insert Proper Path>
 # !!!! Dont't put quotes around!
-MySQLLib=C:\Program Files\MySQL\MySQL Server 5.7\lib\mysqlclient.lib
+#MySQLLib=C:\Program Files\MySQL\MySQL Server 5.7\lib\mysqlclient.lib
+MySQLLib=C:\Program Files\MySQL\MySQL Server 5.7\lib\libmysql.lib
 MySQLIncludeDir=C:\Program Files\MySQL\MySQL Server 5.7\include
+
+# For MariaDB
 #MySQLLib=C:\Program Files\MariaDB 10.1\lib\mysqlclient.lib
+#MySQLLib=C:\Program Files\MariaDB 10.1\lib\libmysql.lib
 #MySQLIncludeDir=C:\Program Files\MariaDB 10.1\include\mysql
 
 XSBDIR=..\..\..\..
@@ -31,7 +37,9 @@ CLEAN :
 	-@if exist "$(INTDIR)\*.exp" erase "$(INTDIR)\*.exp"
 
 
-CPP_PROJ=/nologo /MT /W3 /EHsc /O2 /I "$(ARCHDIR)" \
+# /MT - static linking; /MD - dynamic linking
+#CPP_PROJ=/nologo /MT /W3 /EHsc /O2 /I "$(ARCHDIR)" \
+CPP_PROJ=/nologo /MD /W3 /EHsc /O2 /I "$(ARCHDIR)" \
 		 /I "$(XSBDIR)\emu" /I "$(XSBDIR)\prolog_includes" \
 		 /I "$(XSBDIR)\packages\dbdrivers\cc" \
 		 /I "$(MySQLIncludeDir)" \
