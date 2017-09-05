@@ -328,96 +328,64 @@ XSB \emph{cannot} be built under CygWin32 if the latter is installed on a
    unzip386 xsb.zip
 \end{verbatim}
    which will install XSB in the subdirectory {\tt xsb}.
-
- \item If you decide to move XSB to some other place, make sure that the
-   entire directory tree is moved --- XSB executable looks for the files it
+\item If, instead of downloading \texttt{xsb.zip} you checked XSB out of SVN,
+  the instructions below still apply.
+ \item After compiling XSB, it is OK to move it to some other place, if needed.
+   However, make sure that the
+   entire directory tree is moved --- the XSB executable looks for the files it
    needs relatively to its current position in the file system.
-
 \end{enumerate}
 
 
-You can compile XSB under Microsoft Visual C++ compiler 
+\noindent
+One can compile XSB with the Microsoft Visual C++ compiler 
 by following these steps:
 
 \begin{enumerate}
-\item Download the free of charge Microsoft Visual C++ Express Edition from
+\item \emph{Download the free of charge Microsoft Visual C++ Community
+    Edition} from
 %% 
 \begin{verbatim}
-  http://www.microsoft.com/express/vc/ 
+  https://www.visualstudio.com/vs/community/
 \end{verbatim}
 %% 
-By default, this program is installed in
-\texttt{C:$\backslash$Program Files$\backslash$Microsoft Visual Studio 10.0},
-and we shall assume this
-directory below (at the time of this writing, the latest version was 10.0,
-but the version number may change).
-\item Go to Start Menu then Control Panel then System (depending on your
-version of Windows, the System panel might not be directly inside Control
-Panel, but one or two levels below. Then click ``Change Settings,'' select
-the ``Advanced'' tab, and then click the ``Environment Variables'' button.
-In the panel that is now selected,
-choose the PATH variable and click Edit. At the end of the string that
-represents the value of PATH, add
-%% 
-\begin{verbatim}
- ;C:\Program Files\Microsoft Visual Studio 10.0\VC\BIN
-\end{verbatim}
-
-On a 64-bit machine, add both of these:
-%% 
-\begin{verbatim}
- ;C:\Program Files\Microsoft SDKs\Windows\v7.1\bin
- ;C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\BIN
-\end{verbatim}
-
-Note: to compile XSB as 64 bit application you must install Microsoft
-Windows SDK found at
-\url{http://msdn.microsoft.com/en-us/windows/bb980924.aspx}.
-The version numbers, \texttt{v7.1} and \texttt{10.0}, may vary, of course. 
-
-Visual C++ has a command file called \texttt{vcvars32.bat},
-which you should find and drag into the command window (and press Return).
-This will set all the necessary environment variables. On a 64 bit machine,
-this command file is called \texttt{vcvarsx86\_amd64.bat} or 
-\texttt{vcvarsx86\_ia64.bat} ---
-whichever is appropriate for your configuration. 
-In Visual Studio Express 9.0, these files are in
-%% 
-\begin{verbatim}
- C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\BIN\vcvars32.bat
- C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\BIN\ia64\vcvarsx86_ia64.bat
- C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\BIN\amd64\vcvarsx86_amd64.bat
-\end{verbatim}
-%% 
-At some point, Microsoft eliminated \texttt{vcvarsx86\_*} in Visual Studio 10.0
-and introduced
-\texttt{SetEnv.cmd} instead, requiring the users to download Microsoft
-Windows SDK. This command file is usually found in 
-%% 
-\begin{verbatim}
- C:\Program Files\Microsoft SDKs\Windows\v7.1\bin\SetEnv.cmd
-\end{verbatim}
-%% 
-As far as we know, \texttt{SetEnv.cmd} is the only file from the entire
-SDK that is necessary to build XSB as a 64-bit application.
-For 32 bit applications, the file
-%% 
-\begin{verbatim}
-C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\BIN\vcvars32.bat 
-\end{verbatim}
-%% 
-is still there and installation does not require the Windows SDK.
-
-
+Make sure you select the C++ compiler as one of the additional components
+to include (e.g., choose ``Desktop development with C++''). The installer will place the studio in
+\texttt{C:$\backslash$Program Files$\backslash$Microsoft Visual Studio}.
+At the time of this writing, the latest version was 2017.
+but the version number may change and the directory path might be slightly
+different.
+\item \emph{Find the settings file, which you need to execute in a command
+  window in order to set the compilation environment.}\\
+  For compiling XSB as a 64-bit application (\emph{recommended}), these settings are
+  found in the batch file \texttt{vcvarsx86\_amd64.bat}. For 32-bit
+  applications, the file is \texttt{vcvars32.bat}.
+  In Visual Studio 2017, Community edition, both of these files
+  are found in the directory
+  \vspace{1mm}\\
+\noindent
+  {\small
+    \texttt{
+      C:$\backslash$Program Files\,(x86)$\backslash$Microsoft Visual Studio$\backslash$2017$\backslash$Community$\backslash$VC$\backslash$Auxiliary$\backslash$Build
+    }
+  }
+\\
+    Earlier versions of that studio used other locations. In that case, you
+    would need to search for the above files using the Windows search widget.
+    We do not advice to use versions of VC++ older than 2013.
+  \item
+    Open a Windows command prompt window and
+    drag the appropriate batch file (\texttt{vcvarsx86\_amd64.bat} or
+    \texttt{vcvars32.bat}) into it. Type \texttt{<Enter>} to execute that
+    batch file. 
 \item
    {\tt cd \$XSB\_DIR$\backslash$build}  
 \item
-  On a 32 bit machine, type:\\
-  {\tt makexsb ["CFG=opt"] ["ORACLE=yes"] ["MY\_LIBRARY\_DIRS=libs"] ["MY\_INCLUDE\_DIRS=opts"]}
+To compile XSB as a 64 bit application, use the following command, where the
+items in square brackets are optional and usually can be dropped:\\
+  {\small{\tt makexsb64\,["CFG=opt"]\,["ORACLE=yes"]\,["MY\_LIBRARY\_DIRS=libs"]\,["MY\_INCLUDE\_DIRS=opts"]}}
   %%
   \begin{itemize}
-  \item The items in square brackets are optional and usually are not
-    necessary.
   \item The options for {\tt CFG} are: \emph{release} (default) or \emph{debug}.  The
     latter is used when you want to compile XSB with debugging enabled.
   \item The {\tt ORACLE} parameter (default is ``no'') compiles XSB with
@@ -435,13 +403,13 @@ is still there and installation does not require the Windows SDK.
   \end{itemize}
   %%
   Instead of specifying the options on command line,
-  it might be more convenient, however, to create the file
+  it might be more convenient (and more general) to create the file
   %% 
 \begin{verbatim}
-  XSB\build\windows\custom_settings.mak  
+  XSB\build\windows64\custom_settings.mak  
 \end{verbatim}
   %% 
-  and put the options there. For instance,
+  and put the required options there. For instance,
   %% 
 \begin{verbatim}
 XSB_INTERPROLOG=yes 
@@ -451,23 +419,12 @@ MY_LIBRARY_DIRS=/LIBPATH:"C:\pthreads\pthreadVC1.lib" /libpath:"C:\oracle"
 ORACLE=yes
 \end{verbatim}
   %% 
+Make sure you do not misspell the name of that file or else none of the
+specified options will take effect!
    
  \item The above command will compile XSB as requested and will put the XSB 
    executable and its DLL in:
 %%
-\[
-\begin{array}{l}
- \tt
- \$XSB\_DIR\backslash{}config\backslash\texttt{x86-pc-windows}\backslash{}bin\backslash{}xsb.exe
-\\
- \tt
- \$XSB\_DIR\backslash{}config\backslash\texttt{x86-pc-windows}\backslash{}bin\backslash{}xsb.dll
- \end{array}
-\]
-
-\item On a 64 bit machine, use \texttt{makexsb64} instead of
-  \texttt{makexsb}. The compiled code will be installed   in
-  %%
 \[
 \begin{array}{l}
  \tt
@@ -477,28 +434,41 @@ ORACLE=yes
  \$XSB\_DIR\backslash{}config\backslash\texttt{x64-pc-windows}\backslash{}bin\backslash{}xsb.dll
  \end{array}
 \]
+
+\item To compile XSB as a 32 bit application (\textbf{not} recommended),
+  use \texttt{makexsb} instead of
+  \texttt{makexsb64}. The compiled code will be installed   in
+  %%
+\[
+\begin{array}{l}
+ \tt
+ \$XSB\_DIR\backslash{}config\backslash\texttt{x86-pc-windows}\backslash{}bin\backslash{}xsb.exe
+\\
+ \tt
+ \$XSB\_DIR\backslash{}config\backslash\texttt{x86-pc-windows}\backslash{}bin\backslash{}xsb.dll
+ \end{array}
+\]
 %%
 \end{enumerate}
 %%
-The \texttt{custom\_settings.mak} file must be in
+The \texttt{custom\_settings.mak} file must then be in
 %% 
 \begin{verbatim}
-  XSB\build\windows64\custom_settings.mak  
+  XSB\build\windows\custom_settings.mak  
 \end{verbatim}
 %% 
-Make sure you do not misspell the name of that file or else none of the
-specified options will take effect!
 
+\noindent
 {\bf Note}: if you compiled XSB with one set of parameters and then want to
 recompile with a different set, it is recommended that you run
 %%
 \begin{verbatim}
- makexsb  clean  
+ makexsb64  clean  
 \end{verbatim}
 %%
-in between the compilations (or \texttt{makexsb64 clean} in the 64-bit
+in between the compilations (or \texttt{makexsb clean} in the 32-bit
 case).  
-This also applies to recompilations for 32/64 bits.
+This also applies to recompilations for 64/32 bits.
 
 
 \section{Invoking XSB}
