@@ -306,31 +306,28 @@ external C code.
   \ei
 
 \section{Installing XSB under Windows}
-\subsection{Using Cygnus Software's CygWin32 and Cygwin64}
+\subsection{Using Cygwin32 and Cygwin64}
 \label{quick:cygwin}
 
 This is easy: just follow the Unix instructions.
 XSB can be built under CygWin64 or CygWin32, but in the latter case
 CygWin32 must be installed on a 32 bit version of Windows.
 XSB \emph{cannot} be built under CygWin32 if the latter is installed on a
-64 bit Windows. 
+64 bit Windows.
+
+\noindent
+\textbf{Note}: XSB is not fully functional under Cygwin---external C modules
+cannot be linked and so several packages will not work.
 
 \subsection{Using Microsoft Visual C++}
 \label{quick:DOS}
 %==========================================
 
 \begin{enumerate}
-\item 
-   XSB will unpack into a subdirectory named {\tt xsb}.
-   Assuming that you have {\tt XSB.ZIP} in the {\tt \$XSB\_DIR} directory,
-   you can issue the command
-\begin{verbatim}
-   unzip386 xsb.zip
-\end{verbatim}
-   which will install XSB in the subdirectory {\tt xsb}.
-\item If, instead of downloading \texttt{xsb.zip} you checked XSB out of SVN,
-  the instructions below still apply.
- \item After compiling XSB, it is OK to move it to some other place, if needed.
+\item Check XSB out from SVN:\\
+  \texttt{svn checkout} \url{svn://svn.code.sf.net/p/xsb/src/trunk xsb-src}
+\item Compile XSB as described below.
+\item After compiling XSB, it is OK to move it to some other place, if needed.
    However, make sure that the
    entire directory tree is moved --- the XSB executable looks for the files it
    needs relatively to its current position in the file system.
