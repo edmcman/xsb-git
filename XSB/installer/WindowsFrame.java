@@ -316,7 +316,7 @@ public class WindowsFrame extends JFrame {
 	    String message =
 		"<html><body>"
 		+"<h1>XSB Installation</h1><br/><br/>"
-		+"<h3>Please enter the full file name of a Visual Studio's settings file in your installation of the studio.<br/>A settings file has one of these names:<br/>&nbsp;&nbsp;&nbsp;  vcvarsx86_amd64.bat, vcvars62.bat, or similar (to compile XSB as a 64 bit app - <i>recommended</i>)<br/>&nbsp;&nbsp;&nbsp;  vcvars32.bat (to compile as a 32 bit app)</h3><br/>"
+		+"<h3>Please enter the full path name of a Visual Studio's settings file in your installation of the studio.<br/>A settings file has one of these names:<br/><br/>&nbsp;&nbsp;&nbsp;  vcvarsx86_amd64.bat, vcvars62.bat, or similar (to compile XSB as a 64 bit app - <i>recommended</i>)<br/>&nbsp;&nbsp;&nbsp;  vcvars32.bat (to compile as a 32 bit app)</h3><br/>Use Windows search for the appropriate file, if the exact full path is not known.<br/>"
 		+"</body></html>";
 	    vsPathLabel.setText(message);
 	    vsPathLabel.setBounds(30,20,800,250);
@@ -328,7 +328,7 @@ public class WindowsFrame extends JFrame {
 	if(vsPathChooseButton == null) {
 	    vsPathChooseButton = new JButton();
 	    vsPathChooseButton.setText("Browse");
-	    vsPathChooseButton.setBounds(340, 240, 100, 30);
+	    vsPathChooseButton.setBounds(340, 280, 100, 30);
 			
 	    vsPathChooseButton.addActionListener(new VsPathChooseListener());
 	}
@@ -338,7 +338,7 @@ public class WindowsFrame extends JFrame {
     private JTextField getVsPathTextField() {
 	if(vsPathTextField == null) {
 	    vsPathTextField = new JTextField();
-	    vsPathTextField.setBounds(30, 240, 300, 30);
+	    vsPathTextField.setBounds(30, 280, 300, 30);
 	}
 	return vsPathTextField;
     }
@@ -347,7 +347,7 @@ public class WindowsFrame extends JFrame {
 	if(vsPathUseJavaCheckBox == null) {
 	    vsPathUseJavaCheckBox = new JCheckBox();
 	    vsPathUseJavaCheckBox.setText("Check if you require faster XSB-Java interface");
-	    vsPathUseJavaCheckBox.setBounds(30, 285, 300, 30);
+	    vsPathUseJavaCheckBox.setBounds(30, 320, 300, 30);
 	}
 	return vsPathUseJavaCheckBox;
     }
