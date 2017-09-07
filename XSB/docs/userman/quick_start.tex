@@ -327,6 +327,7 @@ cannot be linked and so several packages will not work.
 \item Check XSB out from SVN:\\
   \texttt{svn checkout} \url{svn://svn.code.sf.net/p/xsb/src/trunk xsb-src}
 \item Compile XSB as described below.
+  This requires that Microsoft Visual Studio is installed.
 \item After compiling XSB, it is OK to move it to some other place, if needed.
    However, make sure that the
    entire directory tree is moved --- the XSB executable looks for the files it
@@ -334,43 +335,56 @@ cannot be linked and so several packages will not work.
 \end{enumerate}
 
 
-\noindent
-One can compile XSB with the Microsoft Visual C++ compiler 
-by following these steps:
-
-\begin{enumerate}
-\item \emph{Download the free of charge Microsoft Visual C++ Community
+The first thing is to ensure that
+Microsoft Visual Studio that includes a C++ compiler, so
+\emph{download the free of charge Microsoft Visual Studio, Community
     Edition} from
 %% 
 \begin{verbatim}
   https://www.visualstudio.com/vs/community/
 \end{verbatim}
 %% 
-Make sure you select the C++ compiler as one of the additional components
-to include (e.g., choose ``Desktop development with C++''). The installer will place the studio in
-\texttt{C:$\backslash$Program Files$\backslash$Microsoft Visual Studio}.
-At the time of this writing, the latest version was 2017.
-but the version number may change and the directory path might be slightly
-different.
-\item \emph{Find the settings file, which you need to execute in a command
-  window in order to set the compilation environment.}\\
-  For compiling XSB as a 64-bit application (\emph{recommended}), these settings are
-  found in the batch file \texttt{vcvarsx86\_amd64.bat}. For 32-bit
-  applications, the file is \texttt{vcvars32.bat}.
-  In Visual Studio 2017, Community edition, both of these files
-  are found in the directory
+Make sure you \emph{select the C++ compiler}   as one of the additional components
+to include (e.g., choose ``Desktop development with C++'').
+The installer will place the studio in
+\texttt{C:$\backslash$Program Files$\backslash$Microsoft Visual
+  Studio$\backslash$}.
+
+One way to compile XSB under Windows is to use the automatic installer:
+%% 
+\begin{quote}
+\texttt{cd \$XSB\_DIR}   
+\\
+\texttt{java -jar InstallXSB.jar}
+\end{quote}
+%% 
+where \texttt{\$XSB\_DIR} is the XSB's instalation directory,
+and follow the prompts. The trickiest of these prompts will ask you to provide the
+full file name of the studio's settings batch file.
+For Visual Studio 2017, Community Edition,
+that file is \texttt{vcvarsx86\_amd64.bat} (for 64 bit apps) or
+  \texttt{vcvars32.bat} (for 32 bit apps), located in the directory
   \vspace{1mm}\\
-\noindent
-  {\small
-    \texttt{
+\texttt{
       C:$\backslash$Program Files\,(x86)$\backslash$Microsoft Visual Studio$\backslash$2017$\backslash$Community$\backslash$VC$\backslash$Auxiliary$\backslash$Build
     }
-  }
-\\
-    Earlier versions of that studio used other locations. In that case, you
-    would need to search for the above files using the Windows search widget.
-    We do not advice to use versions of VC++ older than 2013.
-  \item
+    \\
+    In other versions of the studio, that file is elsewhere and can be
+    found using the Windows search widget. For instance, in the 2015
+    version of the studio, that directory is
+\texttt{
+      C:$\backslash$Program Files\,(x86)$\backslash$Microsoft Visual Studio 2015$\backslash$VC$\backslash$bin
+    }
+
+If the automatic method just described
+does not work or if one needs customized installation,
+one has to compile XSB the ``hard
+way,'' as described below.
+
+\begin{enumerate}
+\item \emph{Find the settings file, which you need to execute in a command
+  window in order to set the compilation environment}, as described above.
+\item
     Open a Windows command prompt window and
     drag the appropriate batch file (\texttt{vcvarsx86\_amd64.bat} or
     \texttt{vcvars32.bat}) into it. Type \texttt{<Enter>} to execute that
@@ -410,8 +424,8 @@ items in square brackets are optional and usually can be dropped:\\
   %% 
 \begin{verbatim}
 XSB_INTERPROLOG=yes 
-MY_INCLUDE_DIRS=/I"C:\Program Files\Java\jdk1.6.0_26\include" \
-      /I"C:\Program Files\Java\jdk1.6.0_26\include\win32" 
+MY_INCLUDE_DIRS=/I"C:\Program Files\Java\jdk1.8.0_131\include" \
+      /I"C:\Program Files\Java\jdk1.8.0_131\include\win32" 
 MY_LIBRARY_DIRS=/LIBPATH:"C:\pthreads\pthreadVC1.lib" /libpath:"C:\oracle"
 ORACLE=yes
 \end{verbatim}
