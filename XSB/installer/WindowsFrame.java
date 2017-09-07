@@ -47,7 +47,7 @@ public class WindowsFrame extends JFrame {
     private String vsPath;
     private String jdkPath;
     private int requireJDK;
-    private String errorMessage="\n\n\nList of error messages:\n";
+    private String errorMessage="\n\n\nError messages:\n";
     private int countError=0;
     private int installSuccess;
     private String currentDir="";
@@ -188,7 +188,7 @@ public class WindowsFrame extends JFrame {
 		+"<h1>XSB Installation</h1><br/><br/>"
 		+"<h3>Operating system: "+osType
 		+".</h3><br/>"
-		+"<h3>Please make sure that Visual Studio C++ is installed in your system.<br/>"
+		+"<h3>Please make sure that Visual Studio with the C++ compiler is installed on your system.<br/>"
 		+"<h3>If not, you can download it for free from:</h3>"
 		+"</body></html>";
 	    infoLabel.setText(message);
@@ -251,7 +251,7 @@ public class WindowsFrame extends JFrame {
 
 	    String message = "<html><body><h3>Since you are using a 64-bit Windows system, you may also need</h3><br/><h3>&nbsp;&nbsp;<a href=\"\">.Net Framework</a>.</h3></html>";
 	    infoSDKLinkLabel.setText(message);
-	    infoSDKLinkLabel.setBounds(30,350,400,120);
+	    infoSDKLinkLabel.setBounds(30,350,450,120);
 			
 	    infoSDKLinkLabel.addMouseListener(new MouseAdapter() {
 		    public void mouseClicked(MouseEvent e) {
@@ -733,8 +733,12 @@ public class WindowsFrame extends JFrame {
 		
 	    String makexsb;
 	    String setvcvar;
-	    if(osType.contains("32")) {
+            String xsbarch = "";
+            // on a 64 bit machine we may still choose vcvars32.bat
+            // to compile for 32 bits
+	    if(osType.contains("32") || vsPath.contains("vcvars32.bat")) {
 		makexsb="makexsb.bat";
+                xsbarch = "x86-pc-windows";
                 if (vsPath.contains("vcvars32.bat"))
                     setvcvar=vsPath;
                 else {
@@ -744,6 +748,7 @@ public class WindowsFrame extends JFrame {
 	    }
 	    else {
 		String cpuType=System.getProperty("sun.cpu.isalist");
+                xsbarch = "x64-pc-windows";
 		    
 		if(cpuType.contains("amd64")) {
                     // TODO: this is redundant. See if needed in the future.
@@ -762,7 +767,7 @@ public class WindowsFrame extends JFrame {
 					  + "\""+setvcvar+"\" "
 					  +vsDisk + " " + xsbDisk
 					  +" \""+currentDir+"\" "
-					  +makexsb);
+					  +makexsb + " " + xsbarch);
         	
 	    final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	    final BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
@@ -773,7 +778,7 @@ public class WindowsFrame extends JFrame {
 			try {
 			    while ((line = bufferedReader.readLine()) != null) {
 				if(line.contains("=== done ===")) {
-				    JOptionPane.showMessageDialog(WindowsFrame.this, "Compilation is complete. Click OK then Next.");
+				    JOptionPane.showMessageDialog(WindowsFrame.this, "Compilation is complete. Scroll down to see if there were any errors.");
 				    compileNextButton.setEnabled(true);
 				    if(countError==0) {
 					errorMessage=errorMessage+"No\n";
