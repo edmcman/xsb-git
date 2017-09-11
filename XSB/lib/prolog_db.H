@@ -1,5 +1,5 @@
-:- export empty_db/1, assert_in_db/3, retractall_in_db/3, clause_in_db/3,
-	call_in_db/2, load_in_db/3, load_in_db/2.
+:- export empty_db/1, assert_in_db/3, assert_in_db/2, retractall_in_db/3,
+	clause_in_db/3, call_in_db/2, load_in_db/3, load_in_db/2.
 :- export union_db/3, dump_db/2.
 :- export pure_call_in_db/2.
 

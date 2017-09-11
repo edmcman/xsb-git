@@ -6,10 +6,16 @@ database.  The interface predicates are:
 empty_db(-DB) returns an empty database.
 
 assert_in_db(+Clause,+DB0,-DB) adds the clause Clause to the database
-DB0 returning DB.  A Database is a *set* of clauses, so asserting a
-clause that is already in the database returns the same database.  No
-ordering of clauses is preserved, so cuts don't make sense and cannot
-be used in clauses.  if-then-else should be used instead.
+DB0 returning DB.  Clause may also be a list of clauses in which call
+all clauses in the list are added to the database.  A Database is a
+*set* of clauses, so asserting a clause that is already in the
+database returns the same database.  No ordering of clauses is
+preserved, so cuts don't make sense and cannot be used in clauses.
+if-then-else should be used instead.
+
+assert_in_db(+Clause,-DB) adds Clause (of clauses if Clause is a list)
+to the empty DB, returning the DB containing exactly the clause(s) of
+Clause.
 
 retractall_in_db(+ClauseHead,+DB0,-DB) removes all clauses whose heads
 unify with ClauseHead from DB0 returning DB.
@@ -78,6 +84,10 @@ assert_in_db(Clause,DB0,DB) :-
 		Body = true
 	),
 	add_to_trie(Head,Body,DB0,DB).
+
+assert_in_db(Clauses,DB) :-
+	empty_db(DB0),
+	assert_in_db(Clauses,DB0,DB).
 
 retractall_in_db([],DB,DB) :- !.
 retractall_in_db([Head|Heads],DB0,DB) :- !,
@@ -626,5 +636,7 @@ my_unnumbervars_list([Term|Terms],Vars,[NTerm|NTerms]) :-
 
 % load_in_db('prolog_db.P',_DB),call_in_db((cputime(T0),empty_db(DB0),assert_in_db(app([],L,L),DB0,DB1),assert_in_db((app([X|L1],L2,[X|L3]):-app(L1,L2,L3)),DB1,DB2),(pure_call_in_db(app(RES1,RES2,[a,b,c,d,e]),DB2),fail;true),cputime(T1),Time is T1-T0),_DB).
 
-% empty_db(D0),assert_in_db(t(a),D0,D1),assert_in_db(t(b),D1,D2),assert_in_db(t(c),D2,D3),assert_in_db(t(d),D3,D4),assert_in_db(t(e),D4,D5),assert_in_db(t(f),D5,D6),assert_in_db(t(g),D6,D7),assert_in_db(t(h),D7,D8),assert_in_db(t(i),D8,D9),assert_in_db(t(j),D9,D10),assert_in_db(t(k),D10,D11),assert_in_db(t(l),D11,D12),assert_in_db(t(m),D12,D13),assert_in_db(t(n),D13,D14),assert_in_db(t(o),D14,D15),assert_in_db(t(p),D15,D16),assert_in_db(t(q),D16,D17),retractall_in_db(t(q),D17,D18), D18 = D16, retractall_in_db(t(p),D18,D19),D19==D15,retractall_in_db(t(o),D19,D20),D20==D14, retractall_in_db(t(_),D20,D0).
+/*
+empty_db(D0),assert_in_db(t(a),D0,D1),assert_in_db(t(b),D1,D2),assert_in_db(t(c),D2,D3),assert_in_db(t(d),D3,D4),assert_in_db(t(e),D4,D5),assert_in_db(t(f),D5,D6),assert_in_db(t(g),D6,D7),assert_in_db(t(h),D7,D8),assert_in_db(t(i),D8,D9),assert_in_db(t(j),D9,D10),assert_in_db(t(k),D10,D11),assert_in_db(t(l),D11,D12),assert_in_db(t(m),D12,D13),assert_in_db(t(n),D13,D14),assert_in_db(t(o),D14,D15),assert_in_db(t(p),D15,D16),assert_in_db(t(q),D16,D17),retractall_in_db(t(q),D17,D18), D18 = D16, retractall_in_db(t(p),D18,D19),D19==D15,retractall_in_db(t(o),D19,D20),D20==D14, retractall_in_db(t(_),D20,D0).
+*/
 
