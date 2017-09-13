@@ -462,7 +462,15 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	       ),
 	parse_preddef_closed(PredTerm,Body,ClList2,SymTab),
 	globalize('/',2,SymTab),
-	globalize(var,0,SymTab),
+	%%globalize(var,0,SymTab),
+	ensure_imported(nonvar/1,standard,SymTab),
+	ensure_imported((->)/2,standard,SymTab),
+	ensure_imported((';')/2,standard,SymTab),
+	ensure_imported((',')/2,standard,SymTab),
+	ensure_imported(('\==')/2,standard,SymTab),
+	ensure_imported(('==')/2,standard,SymTab),
+	ensure_imported(('=:=')/2,standard,SymTab),
+	ensure_imported(('=')/2,standard,SymTab),
 	ensure_imported(breg_retskel/4,machine,SymTab),
 	ensure_imported(excess_vars/4,setof,SymTab),
 	ensure_imported(findall/3,setof,SymTab),
@@ -1171,7 +1179,6 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 		 ;	Init
 		)
 	       ),
-	parse_preddef_closed(PredTerm,Body,ClList2,SymTab),
 	globalize('/',2,SymTab),
 	globalize(var,0,SymTab),
 	ensure_imported(breg_retskel/4,machine,SymTab),
@@ -1183,4 +1190,5 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	ensure_imported('_$member'/2,basics,SymTab),
 	% TLS: for approximations (whether or not used)
 	ensure_imported(early_complete_on_nth/2,tables,SymTab),
-	ensure_imported(early_complete_on_delta/4,tables,SymTab).
+	ensure_imported(early_complete_on_delta/4,tables,SymTab),
+	parse_preddef_closed(PredTerm,Body,ClList2,SymTab).

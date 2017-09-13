@@ -47,5 +47,7 @@
 :- import findall/3, sort/2 from setof.
 :- import concat_atom/3 from string.
 :- import ith/3, member/2 from basics.
-:- import ','/2 from standard.
+:- import (',')/2 from standard.
+:- import (';')/2 from standard.
+:- import ('->')/2 from standard.
 :- import undefined/0 from tables.
