@@ -1193,9 +1193,9 @@ set_xsb_flag_1(warning_action,Action):- !,
 set_xsb_flag_1(cyclic_check_size, Size) :-!,
 	stat_set_flag(CYCLIC_CHECK_SIZE,Size).
 set_xsb_flag_1(max_table_subgoal_var_num, Size) :-!,
-	( (integer(Size),Size > 0, Size =< 16000) -> 
+	( (integer(Size),Size > 0, Size =< 40000) -> 
 	  stat_set_flag(MAX_TABLE_SUBGOAL_VAR_NUM, Size)
-	 ; misc_error('Value must be an integer between 1 and 16000 for the flag max_table_subgoal_var_num') ).
+	 ; misc_error('Value must be an integer between 1 and 64000 for the flag max_table_subgoal_var_num') ).
 set_xsb_flag_1(max_table_answer_var_num, Size) :-!,
 	( (integer(Size),Size > 0, Size =< 40000) -> 
 	  stat_set_flag(MAX_TABLE_ANSWER_VAR_NUM, Size)
