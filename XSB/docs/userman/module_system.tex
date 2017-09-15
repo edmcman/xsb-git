@@ -430,7 +430,7 @@ XSB currently treats:
 \noindent and a warning is issued if $File$ is {\tt usermod}, since
 that should never be a file name.
 
-\subsection{Parameterized Modules in XSB}
+\subsection{Parameterized Modules in XSB}†
 
 The XSB module system now supports parameterized modules: A module can
 be parameterized by other modules.  A parameterized module is declared
@@ -443,12 +443,13 @@ $atom_n$, are formal module parameters; when the module is loaded,
 those module names will be replaced by actual module names passed to
 the load operation.  Therefore, module names are now specified by
 ground terms: the main structure symbol specifies the base name of the
-file containing the module code (as before); the fields of the module
-term indicate the names of (the other modules that are) the actual
-parameters to the (parameterized) module defined in this file.  Note
-that the parameters to modules {\em must} be other modules, and cannot
-be constants or any XSB term.  Parameterized modules are a
-conservative extension of the former unparameterized module system.
+file containing the module code (as before); the (optional) arguments
+of the module term indicate the names of (the other modules that are)
+the actual parameters to the (parameterized) module defined in this
+file.  Note that the parameters to modules {\em must} be other
+modules, and cannot be constants or any XSB term.  Parameterized
+modules are a conservative extension of the former unparameterized
+module system.
 
 Parameterized modules support a form of higher-order programming which
 makes it possible to program some tasks more declaratively.  As a
@@ -459,7 +460,7 @@ parameterized module for this task, named {\tt search}, is:
 \begin{verbatim}
 %% file: search.P
 
-:- module_parameter(example_mod).
+:- module_parameters(example_mod).
 :- export reachable_final/1.
 :- import initial/1, move/2, final/1 from example_mod.
 
@@ -469,15 +470,15 @@ reachable_final(F) :- reachable(F), final(F).
 reachable(N) :- initial(N).
 reachable(N) :- reachable(P), move(P,N).
 \end{verbatim}
-This search module is parameterized by another module that defines and
-exports (at least) 3 predicates: {\tt initial/1}, {\tt move/2}, and
-{\tt final/1}.  When this module is loaded, a particular such module
-exporting those predicates, must be provided to the loader, and the
-formal parameter {\tt example\_mod} will be replaced by that module and
-the predicates imported from that module will be used here in the
-definitions of {\tt reachable\_final/1} and {\tt reachable/1}.  So
-assuming a (non-parameterized) module named {\tt simple\_ex} exports
-those 3 predicates, both:
+This module, {\tt search}, is parameterized by another module that
+defines and exports (at least) 3 predicates: {\tt initial/1}, {\tt
+  move/2}, and {\tt final/1}.  When this module is loaded, a
+particular such module exporting those predicates, must be provided to
+the loader, and the formal parameter {\tt example\_mod} will be
+replaced by that module and the predicates imported from that module
+will be used here in the definitions of {\tt reachable\_final/1} and
+{\tt reachable/1}.  So assuming a (non-parameterized) module named
+{\tt simple\_ex} exports those 3 predicates, both:
 \begin{verbatim}
 | ?- import reachable_final/1 from search(simple_ex).
 | ?- reachable_final(ReachableFinalState).
@@ -507,42 +508,44 @@ explicitly written the module with the actual parameter modules, and
 2) every instance of a parameterized module has its own version of the
 module code.  So loading a thousand different instances of a
 parameterized module will take a thousand times the space of a single
-instance.  In most uses (that I know of so far) this is not a
-significant problem, but it should be kept in mind.
+instance.  In most uses 
+%(that I know of so far) 
+this is not a significant problem, but it should be kept in mind.
 
 One could load another instance of the above module to test the search
 algorithm with a different example by:
 \begin{verbatim}
 | ?- search(hard_ex):reachable_final(ReachableFinalState).
 \end{verbatim}
-This would load another instance of the search module, named
-search(hard\_ex).  Both would be in memory and usable by the user and
-by other programs and modules.
+This would load another, different, instance of the search module,
+named {\tt search(hard\_ex)}.  Both would be in memory and usable by
+the user and by other programs and modules.
 
-So modules in XSB's runtime system are now identified by module names
-that are terms, not simply constants.  So anywhere a module name is
-required, a parameterized module name, i.e., a module term, can be
-used.  The module name must be ground at the time it is required for
-use to load specific code, and all structure symbols and atoms in the
-structured module name must identify actual files that contain the
-appropriate module's code, and those files must be able to be found by
-the XSB loader.
+So modules in XSB's runtime system can now identified by module names
+that are terms, not simply constants. Accordingly, anywhere a module
+name is required, a parameterized module name, i.e., a module term,
+can be used.  The module name must be ground at the time it is
+required for use in order to load specific code; and all structure
+symbols and atoms in the structured module identifier must identify
+actual files that contain the appropriate module's code; and finally
+those files must be able to be found by the XSB loader.
 
-To write well-structured and maintainable code, I strongly recommend
-that all uses of parameterized modules be done through {\tt import}
-directives explicitly appearing in XSB code, and the explicit form of
-using the ':' operator to give a module name at runtime be avoided.
-(The sole exception is when the user types in such a goal on the
-top-level command line.) Using only explicit import directives allows
-compile-time analysis of module dependencies which can be critical in
-maintaining large XSB code bases. This also requires that the contents
-of the {\tt library\_directory/1} predicate can be known at compile
-time, which implies programmer discipline in changing that predicate
-as well.\footnote{As may be obvious, this has been learned through
-  much painful experience. -dsw}.
+To write well-structured and maintainable code, it is strongly
+recommended that all uses of parameterized modules be done through
+{\tt use\_module/2} or {\tt import} directives explicitly appearing in
+XSB code.  The explicit form of using the ':' operator to give a
+module name at runtime should be avoided.  (The sole exception is when
+the user types in such a goal on the top-level command line.)  Using
+only explicit import directives allows compile-time analysis of module
+dependencies which can be critical in maintaining large XSB code
+bases. This also requires that the extension of the {\tt
+  library\_directory/1} predicate can be known at compile time, which
+implies programmer discipline in changing that predicate as
+well.\footnote{As may be obvious, this has been learned through much
+  painful experience. -dsw}.
 
-While parameterized modules can be used in many ways, I think the most
-important is in the construction of so-call ``view systems.''  A view
+While parameterized modules can be used in many ways, one of the most
+important is in the construction of so-called ``view systems.''  A view
 (in the traditional relational database sense) is a relational
 operator that takes a set of input relations and views, and produces
 an output relation.  By composing views one can build large and
@@ -557,7 +560,7 @@ defined in base modules, and a view module is parameterized by the
 base modules it depends on.  Then the same view module can be applied
 to the particular input tables obtained from a particular source.
 
-[-dsw: Provide a simple example of a view system...]
+%[-dsw: Provide a simple example of a view system...]
 
 
 
