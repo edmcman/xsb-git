@@ -6,14 +6,14 @@ database.  The interface predicates are:
 empty_db(-DB) returns an empty database.
 
 assert_in_db(+Clause,+DB0,-DB) adds the clause Clause to the database
-DB0 returning DB.  Clause may also be a list of clauses in which call
+DB0 returning DB.  Clause may also be a list of clauses in which case
 all clauses in the list are added to the database.  A Database is a
 *set* of clauses, so asserting a clause that is already in the
 database returns the same database.  No ordering of clauses is
 preserved, so cuts don't make sense and cannot be used in clauses.
-if-then-else should be used instead.
+The if-then-else should be used instead.
 
-assert_in_db(+Clause,-DB) adds Clause (of clauses if Clause is a list)
+assert_in_db(+Clause,-DB) adds Clause (or clauses if Clause is a list)
 to the empty DB, returning the DB containing exactly the clause(s) of
 Clause.
 

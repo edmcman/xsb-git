@@ -411,15 +411,18 @@ save_dsv(FileName,PSpec,Options) :-
 	save_dsv(FileName,PSpec,Sep,Delim,Options).
 
 
-:- comment(save_dsv/5, "@pred{save_dsv(FileName,PSpec,Sep,Delim,Options)}
-writes out a separated/delimited file from an internal predicate.
-@var(FileName) is the name of the file to create.  @var{PSpec}
-specifies the predicate to use: it may be of the form Pread/Arity or a
-most-general term, or it may be an atom in which case the unary
-predicate of that name is called to get a list of fields to output.
-@var{Sep} is a separator ascii-code or list of ascii-codes.  Delim is
-currently ignored, but should get used when necessary.  The final
-argument is for future expansion if/when we get options.").
+:- comment(save_dsv/5,
+"@pred{save_dsv(FileName,PSpec,Sep,Delim,Options)} writes out a
+separated/delimited file from an internal predicate.  @var(FileName)
+is the name of the file to create.  @var{PSpec} specifies the
+predicate to use: it may be of the form Pread/Arity or a most-general
+term, or it may be an atom in which case the unary predicate of that
+name is called to get a list of fields to output.  @var{Sep} is a
+separator ascii-code or list of ascii-codes.  Delim is currently
+ignored, but should get used when necessary.  The final argument is
+for future expansion if/when we get options. (It should support types,
+to write the arguments correctly.  In particular it should support the
+term type.  But this is not (yet) done.)  ").
 
 save_dsv(FileName,PSpec,Sep0,Delim0,Options) :-
 	(atom(PSpec)
