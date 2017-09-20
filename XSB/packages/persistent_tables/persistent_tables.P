@@ -48,13 +48,13 @@ related processes over time.  XSB programmers can declare a predicate
 to be persistently tabled, and the system will then, when a subgoal
 for the predicate is called, look to see if the corresponding table
 exists on disk, and, if it does, read the tuples that are answers for
-the subgoal on demand from the persistent table.  If the persistent
-table for the subgoal does not exist, the XSB subgoal will be called
-and the tuples that are returned as answers will be stored on disk,
-and then returned to the call.  Persistent tables cannot be
-recursively self-dependent, unlike internal XSB tables.  Normally the
-tables are subsumptive tables and abstracted from the original call.
-They act like (internal) subsumptive tables with call abstraction.
+the subgoal on demand from the data file.  If the persistent table for
+the subgoal does not exist, the XSB subgoal will be called and the
+tuples that are returned as answers will be stored on disk, and then
+returned to the call.  Persistent tables cannot be recursively
+self-dependent, unlike internal XSB tables.  Normally the tables are
+subsumptive tables and abstracted from the original call.  They act
+like (internal) subsumptive tables with call abstraction.
 
 A persistent table can serve to communicate between two XSB processes:
 a process that requests the evaluation of a subgoal and a sub-process
@@ -198,7 +198,9 @@ that this argument may take on.  So it is similar to a ""@tt{-}"" mode
 in that it is abstracted, but differs in that it generates multiple
 tables, one for each distinct value this argument takes on.  This can
 be used to split data into separate files to be processed
-concurrently.
+concurrently.  (A future implementation may use a single indexed file
+to store the generated set of tables, indexed on the @tt{-+}
+argument.)
 
 There may be multiple such mode-lists and the first one that a
 particular call of @var{Goal} matches will be used to determine the
@@ -243,13 +245,13 @@ filled by spawning an xsb process to evaluate the goal and fill the table.
 @end{itemize}
 
 @item{@var{DemandGoal}}: a goal that will be called just before the
-main persistently tabled goal is called to compute and fill a persistent
-table.  The main use of this goal is to invoke @pred{pt_need/1}
-commands (see below) to indicate to the system that the persistent
-tables that this goal depends on are needed.  This allows tables that
-will be needed by this computation to be computed by other processes.
-This is the way that parallel computation of a complex query is
-supported.
+main persistently tabled goal is called to compute and fill a
+persistent table.  The main use of this goal is to invoke
+@pred{pt_need/1} commands (see below) to indicate to the system that
+the persistent tables that this goal depends on are needed.  This
+allows tables that will be needed by this computation to be computed
+concurrently by other processes.  This is the way that parallel
+computation of a complex query is supported.
 
 [Note: A future extension may try to automatically generate these goals from
 the source program, or from a previous execution of the program.  The
@@ -493,6 +495,7 @@ larger.
 :- export pt_abolish_subgoals/1. % remove tables for all given subgoals
 :- export pt_add_table/2, pt_add_table/3. % add a table for a goal.  To add base tables from outside.
 :- export pt_add_tables/2, pt_add_tables/3. % add tables for goals.
+:- export pt_delete_table/1.		    % delete tables for goals.
 :- export pt_spawn_call/1.    % for top-level handling of spawned goal
 :- export pt_delete_later/2.		% to delete timestamped tables later than a given time
 :- export pt_delete_earlier/2.  % to delete timestamped tables earlier than a given time
@@ -657,8 +660,8 @@ schedule_table(Goal0) :-
 
 ensure_mod_loaded(Goal0,Goal,Module,ModuleDir) :-
 	(Goal0 = Module:Goal1
-	 ->	term_new_mod(Module,Goal1,Goal),
-		term_psc(Goal,PSC)
+	 ->	term_new_mod(Module,Goal1,Goal)
+		%%term_psc(Goal,PSC)
 	 ;	Goal = Goal0,
 		term_psc(Goal,PSC),
 		psc_modname(PSC,Module0),
@@ -794,8 +797,7 @@ wait_till_table_ready(being_generated(_,_),ModuleDir,Module,TableId,NewStatus) :
 	 ;	true
 	),
 	(table_instance(TableId,_Goal,_Module,NStatus,_GoalArgs,_AnsArgs,_TableInfo,_FileName)
-	 ->	writeln(userout,callit_wttr(NStatus,ModuleDir,Module,TableId)),
-		wait_till_table_ready(NStatus,ModuleDir,Module,TableId,NewStatus)
+	 ->	wait_till_table_ready(NStatus,ModuleDir,Module,TableId,NewStatus)
 	 ;	unlock_tables(ModuleDir,Module,_),
 		misc_error(('[PERSISTENT TABLES: pt_fill] ERROR: Table ',TableId,' disappeared!?!?'))
 	).
@@ -821,7 +823,7 @@ find_needs_generation_and_fill(ModuleDir) :-
 	%%writeln(userout,try_compute_ahead),
 	(table_instance(TableId,Goal0,Module,needs_generation(_),_GoalArgs,_AnsArgs,TableInfo,FileName)
 	 ->	term_new_mod(Module,Goal0,Goal),
-		writeln(userout,took_table_to_gen(TableId,Goal0)),
+		%%writeln(userout,took_table_to_gen(TableId,Goal0)),
 		update_instance_and_gen_table(ModuleDir,Goal,Module,TableInfo,TableId,FileName,__AnsArgs,Status),
 		wait_till_table_ready(Status,ModuleDir,Module,TableId,NewStatus),
 		%% only need following to keep last used data for generated, more efficient if we dont
@@ -951,7 +953,7 @@ call_and_write_in_fmt(Fmt,SubGoal,TableFileName,AnsVars) :- !,
 	fmt_write(userout,'Wrote Persistent Table: %d records to %s for %S\n',args(NumAns,TableFileName,SubGoalDef)).
 
 update_table_instance_for_groups(TableId,GGoal,AbsArgs,GrpArgs,AnsArgs,ModuleDir,Module,TableInfo,Groups) :-
-	writeln(userout,update_table_instance_for_groups(TableId,GGoal,AbsArgs,GrpArgs,AnsArgs,ModuleDir,Module,TableInfo,Groups)),
+	%%writeln(userout,update_table_instance_for_groups(TableId,GGoal,AbsArgs,GrpArgs,AnsArgs,ModuleDir,Module,TableInfo,Groups)),
 	datime(Datime),
 	(retract(table_instance(TableId,NSubGoal,Module,_,TVars,AArgs,TableInfo1,FileName))
 	 do_all
@@ -960,7 +962,7 @@ update_table_instance_for_groups(TableId,GGoal,AbsArgs,GrpArgs,AnsArgs,ModuleDir
 	(do_all
 	 member(grp(GrpArgs,GTableId),Groups),
 	 get_table_filename(ModuleDir,Module,GTableId,TableInfo,FileName),
-	 writeln(userout,table_instance(GTableId,GGoal,Module,generated(Datime,Datime),AbsArgs,AnsArgs,TableInfo,FileName)),
+	 %%writeln(userout,table_instance(GTableId,GGoal,Module,generated(Datime,Datime),AbsArgs,AnsArgs,TableInfo,FileName)),
 	 assert(table_instance(GTableId,GGoal,Module,generated(Datime,Datime),AbsArgs,AnsArgs,TableInfo,FileName))
 	),
 	writeln(userout,completed_group_generation(GGoal)).
@@ -1283,6 +1285,30 @@ pt_delete_tables_by_time(Module,GoalList0,When,TimeStamp) :-
 	unlock_tables(ModuleDir,Module),
 	delete_files_for(TableIds,ModuleDir,Module).
 
+:- comment(pt_delete_table/1, " @pred{pt_delete_table(+Goal)} deletes
+the table for @var{Goal} in its @file{PT_Directory.P} file, so it will
+need to be regenerated when next invoked.  The actual file containing
+the table data is @em{not} removed.  (It may be a file in another
+directory that defines the table via a call to @pred{pt_add_table/2}
+or friend.)  To remove a local file that contains the tabled data, use
+@pred{pt_remove_unused_tables/1}.  ").
+
+pt_delete_table(Goal0) :-
+	ensure_mod_loaded(Goal0,Goal,Module,ModuleDir),
+	term_new_mod(usermod,Goal,UGoal),
+	term_variables(Goal,GoalVars),
+	lock_tables(ModuleDir,Module),
+	load_pt_directory(ModuleDir,Module),
+	(table_instance(TableId,UGoal,Module,_Status,_GoalArgs,AnsArgs,_TableInfo,_FileName),
+	 is_most_general_term(GoalVars), % first at least as general
+	 is_most_general_term(AnsArgs)	 % variant
+	 ->	retractall(table_instance(TableId,_,_,_,_,_,_,_)),
+	 	fmt_write(userout,'Removed table for : %s:%S (%s)\n',args(Module,UGoal,TableId)),
+		save_pt_directory(ModuleDir,Module)
+	 ;	fmt_write(userout,'Unable to Remove table for: %s:%S\n',args(Module,UGoal))
+	),
+	unlock_tables(ModuleDir,Module).
+
 goals_to_usermod([],[]).
 goals_to_usermod([Goal|GoalList],[UGoal|UGoalList]) :-
 	term_new_mod(usermod,Goal,UGoal),
@@ -1433,14 +1459,15 @@ pt_add_tables([Goal|Goals],[File|Files],Time,Modules) :-
 	(member(Module,Modules)
 	 ->	pt_add_table(Goal,File,Time),
 		pt_add_tables(Goals,Files,Time,Modules)
-	 ;	(var(Time)
+	 ;	/*(var(Time)
 		 ->	pt_add_table(Goal,File,Time) % need to bind Time in Goal, if there
 		 ;	pt_add_table(Goal,File,Time0),
 			(Time0 =:= Time
 			 ->	true
 			 ;	misc_error(('[PERSISTENT TABLES: pt_add_tables] ERROR: inconsistent timestamp in module ',Module))
 			)
-		),
+		),*/
+		pt_add_table(Goal,File,Time), % need to bind Time in Goal, if there	
 		pt_add_tables(Goals,Files,Time,[Module|Modules])
 	).
 
@@ -1453,13 +1480,34 @@ pt_spawn_call(Goal) :-
 	 ->	fmt_write(userout,'SUCCESSFUL Completion of goal %S\n',args(Goal)),
 		halt
 	 ;	fmt_write(userout,'[PERSISTENT TABLES: pt_spawn_call] ERROR: Spawned goal failed: %S\n',args(Goal)),
+		set_invalid(Goal),
 		halt(4)
 	).
 
 pt_proc_ball(Goal,Ball) :-
 	fmt_write(userout,'[PERSISTENT TABLES: pt_spawn_call] ERROR: Spawned goal: %S threw an error\n',args(Goal)),
 	default_error_handler(Ball),
+	set_invalid(Goal),
 	halt(4).
+
+%% Mark tabled goal to be invalid.
+set_invalid(Goal0) :-
+	ensure_mod_loaded(Goal0,Goal,Module,ModuleDir),
+	term_new_mod(usermod,Goal,UGoal),
+	term_variables(Goal,GoalVars),
+	lock_tables(ModuleDir,Module),
+	load_pt_directory(ModuleDir,Module),
+	datime(Datime),
+	(table_instance(TableId,UGoal,Module,_Status,GoalArgs,AnsArgs,TableInfo,FileName),
+	 is_most_general_term(GoalVars), % first at least as general
+	 is_most_general_term(AnsArgs)	 % variant
+	 ->	retractall(table_instance(TableId,UGoal,Module,_,_,_,_,_)),
+		assert(table_instance(TableId,UGoal,Module,invalid(Datime),GoalArgs,AnsArgs,TableInfo,FileName))
+	 ;	fmt_write(userout,'[PERSISTENT TABLES: pt_spawn_call] ERROR: Tabled goal not found: %s:%S',
+			  args(Module,UGoal))
+	),
+	save_pt_directory(ModuleDir,Module),
+	unlock_tables(ModuleDir,Module).
 
 :- comment(pt_eval_viewsys/5," The predicate
 @pred{pt_eval_viewsys(+GoalList, +FileList, -Time, +FillList, +NProcs)}
