@@ -446,6 +446,7 @@ get_call(CallTerm, TableEntryHandle, ReturnTemplate) :-
 get_producer_call(CallTerm, ProducerTableEntry, ReturnTemplate) :-
 	get_producer_call(CallTerm, ProducerTableEntry, ReturnTemplate).
 
+:- export get_calls/1.
 
 /*
  * get_calls(#CallTerm, -TableEntryHandle, -ReturnTemplate)

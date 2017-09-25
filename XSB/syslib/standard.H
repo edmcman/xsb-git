@@ -125,7 +125,7 @@
 :- export (do_all)/1, (do_all)/2.
 
 :- import (dynamic)/1, asserta/1, assert0/4, retract/1 from assert.
-:- import member/2,append/3,comma_member/2,memberchk/2 from basics.
+:- import member/2,append/3,comma_member/2,memberchk/2,length/2 from basics.
 :- import consult/1, reconsult/1 from consult.
 :- import predicate_property/2, current_op/3 from curr_sym.
 :- import dcg/2 from dcg.
@@ -137,9 +137,9 @@
   fd2iostream/3      from file_io.
 :- import fmt_write/2 from file_io.
 :- import file_function/3, xsb_stream_lock/1,xsb_stream_unlock/1 from file_io.
-
 :- import add_ops/3, add_index/3, '_$index'/3,
    add_trie_index/1  from file_op.
+:- import format/2 from format.
 
 :- import add_table/1, add_incr_table/2 from tables.
 
@@ -184,8 +184,10 @@
      from xsb_writ.
 :- import xsb_thread_self/1 from thread.
 :- import (thread_shared)/1, (thread_private)/1 from consult.
-:- import findall/3, term_variables/2, sort/2, excess_vars/4 from setof.
+:- import findall/3, term_variables/2, sort/2, excess_vars/4,setof/3 from setof.
+
 :- import (use_variant_tabling)/1, (use_subsumptive_tabling)/1 from tables.
+:- import get_calls/1 from tables.
 
 :- import (:-)/2 from usermod.
 :- import term_expansion/2 from usermod.
