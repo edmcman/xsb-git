@@ -1,9 +1,6 @@
 \chapter{System Description} \label{chap:system}
 \label{system}
 
-% TLS: changing object file extensions.
-% TLS: discuss relative paths.
-
 Throughout this chapter, we use \verb'$XSB_DIR' to refer to the
 directory in which XSB was installed.
 
@@ -211,7 +208,7 @@ an associated fact in {\tt \$XSB\_DIR/syslib/std\_xsb.P}.
 \section{The Dynamic Loader and its Search Path} \label{LibPath}
 \index{load search path}
 
-XSB differs from some other Prolog system in its ability to {\tt
+XSB differs from some other Prolog systems in its ability to {\em
   dynamically} load modules.  In XSB, the loading of user modules and
 Prolog libraries (such as the XSB compiler) is delayed until
 predicates in them are actually needed, saving program space for large
@@ -235,50 +232,50 @@ than for subsequent compilations.
 
 \subsection{Changing the Default Search Path and the Packaging System}
 %=========================================================
-
-\begin{description}
-\standarditem{library\_directory(+Path)}{library\_directory/1}
-\end{description}
+%\begin{description}
+%\repeatstandarditem{add\_lib\_dir(+Directories)}{consult}
+%\standarditem{add\_lib\_dir(+Root,+Directories)}{consult}
+%\end{description}
 \index{xsbrc.P initialization file} 
 The default search path of the dynamic loader is based on the dynamic
 predicate {\tt library\_directory/1} so it can easily be changed.  For
 instance, to make sure a user's home directory is loaded, the goal
-\verb|assert(library_directory('~/'))| needs to be executed from the
-command line or from within a program.  If you always want XSB to
-search particular directories, the easiest way is to have a file named
-{\verb|.xsb/xsbrc.P|} in the user's home directory.  User-supplied
-library directories are searched by the dynamic loader {\em before}
-searching the default library directories.  The {\verb|.xsb/xsbrc.P|}
-file, which is automatically consulted by the XSB interpreter, might
-look like the following:
+\verb|add_lib_dir(('~/'))|  needs to be executed from the
+%\verb|assert(library_directory('~/'))| needs to be executed from the
+command line or from within a program (assuming this is not the
+current working directory).  If you always want XSB to search
+particular directories, the easiest way is to have a file named
+{\verb|.xsb/xsbrc.P|} in your home directory.  User-supplied library
+directories are searched by the dynamic loader {\em before} searching
+the default library directories.  The {\verb|.xsb/xsbrc.P|} file,
+which is automatically consulted by the XSB interpreter, might look
+like the following:
 \begin{verbatim}
-             :- assert(library_directory('~/')).
-             :- assert(library_directory('/usr/lib/xsbprolog')).
+             :- add_lib_dir(('~/')).
+             :- add_lib_dir(('/usr/lib/xsbprolog')).
 \end{verbatim}
 
-The recommended way to add directories to the {\tt
-  library\_directory/1} predicate is to use the standard predicate
-{\tt add\_lib\_dir/1} or {\tt add\_lib\_dir/2}.
+%The recommended way to add directories to the {\tt
+%  library\_directory/1} predicate is to use the standard predicate
+%{\tt add\_lib\_dir/1} or {\tt add\_lib\_dir/2}.
 
 \begin{description}
 \repeatstandarditem{add\_lib\_dir(+Directories)}{consult}
 \standarditem{add\_lib\_dir(+Root,+Directories)}{consult}
 %
-The standard predicate {\tt add\_lib\_dir/(Directories)} adds the
+The standard predicate {\tt add\_lib\_dir(Directories)} adds the
 directories of {\tt Directories} to the system predicate {\tt
   library\_directory/1}.  {\tt Directories} is either a single
 directory name or a comma-list of directory names.  A directory name
 may be an atom or a simple structure of the form {\tt a(DirName)}
 which indicates that the directory {\tt DirName} should be added as
 the first directory in the {\tt library\_directory/1} facts; otherwise
-it will be added as the last directory.  For example, the above
-asserts would be replaced by:
-\begin{verbatim}
-:- add_lib_dir( ('~/','/usr/lib/xsbprolog') ).
-\end{verbatim}
-(Note that the ``extra parentheses'' are needed since {\tt
-  add\_lib\_dir/1} takes a single argument, here a comma-pair.  Also
-the trailing slash in a directory name is optional.)
+it will be added as the last directory.  
+
+In the example above \verb|add_lib_dir(('~/'))|, note that the ``extra
+parentheses'' are needed since {\tt add\_lib\_dir/1} takes a single
+argument, here a comma-pair.  Also the trailing slash in a directory
+name is optional.
 
 The standard predicate {\tt add\_lib\_dir(+Root,+RelativeDirectories)}
 concatenates the directory indicated by {\tt Root} to each of the
@@ -299,27 +296,36 @@ If {\tt Root} is a term of the form {\tt ancestordir(DirFileName)}
 where {\tt DirFileName} is an atom, the system will search up from the
 current directory to find a containing directory named {\tt
   DirFileName}, and the full pathname of that directory will be
-considered as the {\tt Root} directory.  (This can be used to help in
+considered as the {\tt Root} directory.  This can be used to help in
 making XSB code less dependent at compile-time on the exact full
 filename of XSB code files, and allowing directories of libraries to
-be moved.)
+be moved.
 \end{description}
 
-Returning to the first example above, after loading the module with the two
-asserts (or better the {\tt add\_lib\_dir/1}), the user's home
-directory is searched first, then {\tt "/usr/lib/xsbprolog/"}, and
-finally XSB's system library directories ({\tt lib, syslib}, {\tt
-  cmplib}) as well as the current working directory.  XSB also uses
-{\tt library\_directory/1} for internal purposes.  For instance,
-before the user's {\verb|.xsb/xsbrc.P|} is consulted, XSB puts the
-{\tt packages} directory and the directory
-\verb|.xsb/config/$CONFIGURATION| on the library search path.  The
-directory \verb'.xsb/config/$CONFIGURATION' is used to store user
-libraries that are machine or OS dependent. (\verb'$CONFIGURATION' for
-a machine is something that looks like {\tt sparc-sun-solaris2.6} or
-{\tt pc-linux-gnu}, and is selected by XSB automatically at run time).
-If a user wished, say, to search the current working directory {\em
-  before} her home directory, she could simply add 
+\subsubsection{A user's configuration file: {\tt xsbrc.P}}
+
+%TES -- stopped here ___
+
+Returning to the previous example, executing the two directives causes
+the user's home directory to be searched first, then {\tt
+  "/usr/lib/xsbprolog/"}, and finally XSB's system library directories
+({\tt lib, syslib}, {\tt cmplib}), and finally the current working
+directory.  The directives themselves can be executed by expicitly
+loading an XSB file, by executing the directives at the command line,
+or automatically using an {\tt xsbrc.P} file.  
+
+%Xsb also uses {\tt library\_directory/1} for internal
+%purposes.  
+This file works as follows.  Before the user's {\verb|.xsb/xsbrc.P|}
+is consulted, XSB puts both the {\tt packages} directory and the
+directory \verb|.xsb/config/$CONFIGURATION| on the library search
+path.  The directory \verb'.xsb/config/$CONFIGURATION' is used to
+store user libraries that are machine or OS
+dependent. (\verb'$CONFIGURATION' for a machine is something that
+looks like {\tt sparc-sun-solaris2.6} or {\tt pc-linux-gnu}, and is
+selected by XSB automatically at run time).  If a user wished, say, to
+search the current working directory {\em before} her home directory,
+she could simply add
 \begin{verbatim}
              :- asserta(library_directory('./')).
 \end{verbatim}
@@ -340,6 +346,7 @@ predicates.  The list of module names in XSB's system library
 directories can be found by looking through the directories {\tt
 \$XSB\_DIR/\{syslib,cmplib,lib\}}.
 
+\paragraph{Packages}
 \index{packages}
 Apart from the user libraries, XSB now has a simple packaging system.
 A {\em package\/} is an application consisting of one or more files that

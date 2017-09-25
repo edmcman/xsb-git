@@ -1734,7 +1734,14 @@ Total Strings:	1702
             unused buckets:            14783
             maximum bucket size:       3  (#: 2318)
 \end{verbatim}}
-%
+
+\index{Incremental Dependency Graph (IDG)!displaying}
+\item {\tt statistics(summarize\_idg)} Outputs a simple but sometimes
+useful summary of the IDG.  This summary consists of counts of IDG
+nodes grouped at a predicate level.  Counts are displayed for both
+tabled subgoals for incremental predicates along with subgoals to
+dynamic incremental predicates.
+
 \item {\tt statistics(table)} Outputs {\em very} detailed statistics
   about table space, including breakdowns into variant and subsumptive
   call- and answer- trie nodes and hash tables; answer return list
