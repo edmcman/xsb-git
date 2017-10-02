@@ -199,7 +199,7 @@ ability of constraint solving.  Our low-level API for constraints
 closely resembles that of hProlog~\cite{hprolog} and
 SWI~\cite{SWI-manual}.
 
-\subsection{Lowlevel Interface}
+\subsection{Low-level Interface}
 %
 Attributes of variables are pairs of attribute module names and
 values.  An attribute module name can be any atom.  A value can be any
@@ -272,7 +272,7 @@ i.e. the handler is a post-unify handler.
 
 Here, by giving the implementation of a simple finite domain
 constraint solver (see the file \texttt{fd.P} below), we show how
-these lowlevel predicates for attributed variables can be used.  In
+these low-level predicates for attributed variables can be used.  In
 this example, an attribute in the module \texttt{fd} is used and the
 value of this attribute is a list of terms.
 
@@ -280,7 +280,7 @@ value of this attribute is a list of terms.
 \begin{verbatim}
 %% File: fd.P
 %%
-%% A simple finite domain constrait solver implemented using the lowlevel 
+%% A simple finite domain constrait solver implemented using the low-level 
 %% attributes variables interface.  
 
 :- import put_attr/3, get_attr/3, del_attr/2, 
@@ -2613,13 +2613,13 @@ parameters.
 %================================
 
 The {\tt xsb\_lint\_impexp.P} file contains a simple tool to analyze
-import/exports and definitions and uses of predicates.  It tries to
-find possible inconsistencies, producing warnings when it finds them
-and generating {\tt document\_import}/{\tt document\_export}
-declarations that might be useful.  It can be used after a large
-multi-file, multi-module XSB program has been written to find possible
-inconsistencies in (or interesting aspects of) how predicates are
-defined and used.
+import/exports along with definitions and uses of predicates.  It
+tries to find possible inconsistencies, producing warnings when it
+finds them and generating {\tt document\_import}/{\tt
+  document\_export} declarations that might be useful.  It can be used
+after a large multi-file, multi-module XSB program has been written to
+find possible inconsistencies in (or interesting aspects of) how
+predicates are defined and used.
 
 XSB source files that contain an {\tt export} compiler directive are
 considered as modules.  Predicates defined in modules, but not
@@ -2629,13 +2629,13 @@ defined or defined but not used.  All predicates that are defined in
 source files that do not contain an {\tt export} directive are
 compiled to be defined in a global module, called {\tt usermod}, and
 no warning messages are generated.  The user may add {\tt
-document\_export} and {\tt document\_import} compiler directives
+  document\_export} and {\tt document\_import} compiler directives
 (exactly analogous to the {\tt export} and {\tt import} directives) to
 non-module source files.  These directives are ignored by the compiler
-for its compilation, but cause the define-use analysis to be done and
-any warning messages to be issued, if appropriate.  This allows a user
-to get the benefit of the define-use analysis without using modules.
-(See Volume 1, Chapter 3 for more details.)
+in terms of code generation, but cause the define-use analysis to be
+performed, issuing warning messages as appropriate.  This allows a
+user to get the benefit of the define-use analysis without using
+modules.  (See Volume 1, Chapter 3 for more details.)
 
 The {\tt xsb\_lint\_impexp} utility processes both modules and regular
 XSB source files that contain {\tt document\_export} statements.
@@ -2675,10 +2675,10 @@ details of how {\tt checkImpExps} should work.
    but it produces many warnings for predicates in multi-use
    libraries.
 \item
-   {\tt unused}: Print a warning message in the case of a predicate that is
-   exported but never used.  This can be useful to see if predicate is
-   not used anywhere, and thus could be deleted.  Again this produces
-   many warnings for predicates in multi-use libraries.
+   {\tt unused}: Print a warning message in the case of a predicate
+   that is exported but never used.  This can be useful to see if
+   predicate could be deleted.  Again this option produces many
+   warnings for predicates in multi-use libraries.
 \item
    {\tt all\_files}: By default, only predicates in files that contain a {\tt
    :- document\_export} or {\tt :- export} declaration are processed.
@@ -2693,15 +2693,36 @@ details of how {\tt checkImpExps} should work.
    predicate uses for the purpose of generating imports.
 \end{enumerate}
 
-We further explain the final two options, which allow the user to
-determine more precisely what uses of a symbol are considered as uses
-of it as the predicate symbol.  All uses of symbols that appear in a
-``predicate context", i.e., in the body of a rule or in a
-meta-predicate argument position of a use of a meta-predicate, are
-considered uses of that predicate symbol.  The default is also to
-allow nonconstant symbols appearing in any other context to also count
-as uses of that symbol as that predicate symbol.  This is useful for
-programs that define their own meta-predicates.
+% TES -- I couldn't understand this, so I tried rewriting it below.
+%We further explain the final two options, which allow the user to
+%determine more precisely what uses of a symbol are considered as uses
+%of it as the predicate symbol.  All uses of symbols that appear in a
+%``predicate context", i.e., in the body of a rule or in a
+%meta-predicate argument position of a use of a meta-predicate, are
+%considered uses of that predicate symbol.  The default is also to
+%allow nonconstant symbols appearing in any other context to also count
+%as uses of that symbol as that predicate symbol.  This is useful for
+%programs that define their own meta-predicates.
+
+The final two options allow the user to control {\em predicate usage
+  analysis} -- analysis of when a symbol $s$ might be used as a
+predicate symbol.  We term occurrences of $s$ as a body literal of a
+rule or in a callable argument in a meta-predicate, as {\em strict
+  predicate contexts}.  The default behavior of this library is as
+follows.
+\begin{itemize}
+\item if $s$ is a constant symbol, the predicate usage analysis of $s$
+  is restricted to strict predicate contexts.
+\item if $s$ is not a constant symbol, the predicate usage analysis of
+  $s$ is based on non-strict predicate contexts.  I.e, {\em all}
+  occurrences of $s$ count as predicate contexts.
+\end{itemize}
+Predicate usage analysis can be restricted to strict predicate
+contexts for all symbols by the option {\tt
+  no\_symbol\_uses}. Alternatively analysis can be expanded so that
+non-struct predicate contexts are used for all symbols (including
+constants) by the option {\tt all\_symbol\_uses}.
+
 
 \ourmoditem{checkImpExps(+FileNameList)}{checkImpExps/1}{xsb\_lint}
 %
