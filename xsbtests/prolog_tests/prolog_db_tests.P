@@ -1,0 +1,78 @@
+:- import empty_db/1, assert_in_db/2, assert_in_db/3, call_in_db/2 from prolog_db.
+:- import load_in_db/2, pure_call_in_db/2 from prolog_db.
+:- import concat_atom/2 from string.
+:- import reverse/2 from basics.
+
+test :-
+	(do_all
+	 empty_db(_DB0),
+	 assert_in_db(app([],_L,_L),_DB0,_DB1),
+	 assert_in_db((app([_X|_L1],_L2,[_X|_L3]):-app(_L1,_L2,_L3)),_DB1,_DB2),
+	 call_in_db(app(XX,YY,[a,b,c]),_DB2),
+	 writeln(test1(app(XX,YY,[a,b,c])))
+	),
+	fail.
+test :- 
+	(do_all
+	 empty_db(_DB0),
+	 assert_in_db(app([],_L,_L),_DB0,_DB1),
+	 assert_in_db((app([_X|_L1],_L2,[_X|_L3]):-app(_L1,_L2,_L3)),_DB1,_DB2),
+	 assert_in_db(nrev([],[]),_DB2,_DB3),
+	 assert_in_db((nrev([_X|_LL],_RR) :- nrev(_LL,_RR1),app(_RR1,[_X],_RR)),_DB3,_DB4),
+	 pure_call_in_db((cputime(_T0),
+			  (nrev([a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z],REV),writeln(test2(REV)),fail ; true),
+			  cputime(_T1),_Time is _T1-_T0
+			 ),
+			 _DB4)
+	),
+	fail.
+test :-
+	(do_all
+	 xsb_configuration(libdir,LibDir),
+	 concat_atom([LibDir,'/prolog_db.P'],Prolog_db_file),
+	 load_in_db(Prolog_db_file,_DB),
+	 call_in_db((empty_db(_DB0),
+		     assert_in_db(app([],_L,_L),_DB0,_DB1),
+		     assert_in_db((app([_X|_L1],_L2,[_X|_L3]):-app(_L1,_L2,_L3)),_DB1,_DB2),
+		     assert_in_db(nrev([],[]),_DB2,_DB3),
+		     assert_in_db((nrev([_X|_LL],_RR) :- nrev(_LL,_RR1),app(_RR1,[_X],_RR)),_DB3,_DB4),
+		     pure_call_in_db((cputime(_T0),
+				      (nrev([a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z],REV),writeln(test3(REV)),fail ; true),
+				      cputime(_T1),_Time is _T1-_T0
+				     ),_DB4)
+		    ),_DB)
+	),
+	fail.
+test :-
+	empty_db(DBa0),
+	assert_in_db(app([],_L,_L),DBa0,DBa1),
+	assert_in_db((app([_X|_L1],_L2,[_X|_L3]):-app(_L1,_L2,_L3)),DBa1,DBa2),
+	empty_db(DBb0),
+	assert_in_db((app([_X|_L1],_L2,[_X|_L3]):-app(_L1,_L2,_L3)),DBb0,DBb1),
+	assert_in_db(app([],_L,_L),DBb1,DBb2),
+	(DBa2 == DBb2
+	 ->	writeln('test4 succeeded')
+	 ;	writeln('test4 failed')
+	),
+	fail.
+test :-
+	Clauses = [p(0),p(1),p(2),p(3),p(4),p(5),p(6),p(7),p(8),p(9),
+		   p(80),p(81),p(82),p(83),p(84),p(85),p(86),p(87),p(88),p(89),
+		   p(10),p(11),p(12),p(13),p(14),p(15),p(16),p(17),p(18),p(19),
+		   p(20),p(21),p(22),p(23),p(24),p(25),p(26),p(27),p(28),p(29),
+		   p(40),p(41),p(42),p(43),p(44),p(45),p(46),p(47),p(48),p(49),
+		   p(30),p(31),p(32),p(33),p(34),p(35),p(36),p(37),p(38),p(39),
+		   p(60),p(61),p(62),p(63),p(64),p(65),p(66),p(67),p(68),p(69),
+		   p(70),p(71),p(72),p(73),p(74),p(75),p(76),p(77),p(78),p(79),
+		   p(50),p(51),p(52),p(53),p(54),p(55),p(56),p(57),p(58),p(59),
+		   p(90),p(91),p(92),p(93),p(94),p(95),p(96),p(97),p(98),p(99)],
+	reverse(Clauses,RClauses),
+	assert_in_db(Clauses,DB1),
+	assert_in_db(RClauses,DB2),
+	(DB1 == DB2
+	 ->	writeln('test5 succeeded')
+	 ;	writeln('test5 failed')
+	),
+	fail.
+test.
+

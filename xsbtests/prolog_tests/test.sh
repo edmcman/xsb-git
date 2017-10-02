@@ -16,15 +16,15 @@ u=`uname`;
 echo "uname for this system is $u";
 
 #VALGRIND
-if test $u  != "" && test "$valgrind" != "true"; then
-    echo "removing xeddis object files"
-    rm -f xeddis.dylib xeddis.so
-    $XEMU -e "catch(consult(compile_xeddis),Ball,(writeln(userout,Ball),halt))."
-    echo "-------------------------------------------------------"
-    else
-    echo "not removing object files"
-    echo "-------------------------------------------------------"
-fi
+#if test $u  != "" && test "$valgrind" != "true"; then
+#    echo "removing xeddis object files"
+#    rm -f xeddis.dylib xeddis.so
+#    $XEMU -e "catch(consult(compile_xeddis),Ball,(writeln(userout,Ball),halt))."
+#    echo "-------------------------------------------------------"
+#    else
+#    echo "not removing object files"
+#    echo "-------------------------------------------------------"
+#fi
 
 # Doing this here to support valgrind testing.
 rm -f unsafe1.xwam
@@ -168,6 +168,9 @@ rm -f varcond.xwam
 #------------------------------------------------------------------------
 ../gentest.sh "$XEMU $options" large_arity_prolog "test."
 #------------------------------------------------------------------------
+../gentest.sh "$XEMU $options" range_tree_tests "test."
+#------------------------------------------------------------------------
+../gentest.sh "$XEMU $options" prolog_db_tests "test."
 
 
 #------------------------------------------------------------------------
@@ -179,49 +182,49 @@ rm -f varcond.xwam
 OBJEXT=.xwam
 os_type=`uname -s`
 echo "config tag is $config_tag"
-if test "$os_type" = "HP-UX" || test "$config_tag" = "-mt" || test "$valgrind" = "true"; then
-	echo "Foreign language interface tests bypassed"
-else
+#if test "$os_type" = "HP-UX" || test "$config_tag" = "-mt" || test "$valgrind" = "true"; then
+#	echo "Foreign language interface tests bypassed"
+#else
 #------------------------------------------------------------------------
-	rm -f xeddis.o xeddis.so xeddis$OBJEXT
-	../gentest.sh "$XEMU $options" cinter1 "test."
+#	rm -f xeddis.o xeddis.so xeddis$OBJEXT
+#	../gentest.sh "$XEMU $options" cinter1 "test."
 #------------------------------------------------------------------------
-	rm -f zero.o zero.so zero$OBJEXT
-	../gentest.sh "$XEMU $options" cinter2 "test."
+#	rm -f zero.o zero.so zero$OBJEXT
+#	../gentest.sh "$XEMU $options" cinter2 "test."
 #------------------------------------------------------------------------
-	rm -f c_calls_xsb.o c_calls_xsb$OBJEXT c_calls_xsb_make$OBJEXT
-	../gentest.sh "$XEMU $options" c_calls_xsb_make "test."
+#	rm -f c_calls_xsb.o c_calls_xsb$OBJEXT c_calls_xsb_make$OBJEXT
+#	../gentest.sh "$XEMU $options" c_calls_xsb_make "test."
 #------------------------------------------------------------------------
-	rm -f cfixedstring.o c_fixedstring_make$OBJEXT
-	../gentest.sh "$XEMU $options" cfixedstring_make "test."
+#	rm -f cfixedstring.o c_fixedstring_make$OBJEXT
+#	../gentest.sh "$XEMU $options" cfixedstring_make "test."
 #------------------------------------------------------------------------
-	rm -f cvarstring.o c_varstring_make$OBJEXT
-	../gentest.sh "$XEMU $options" cvarstring_make "test."
+#	rm -f cvarstring.o c_varstring_make$OBJEXT
+#	../gentest.sh "$XEMU $options" cvarstring_make "test."
 #------------------------------------------------------------------------
-	rm -f cregs.o c_regs_make$OBJEXT
-	../gentest.sh "$XEMU $options" cregs_make "test."
-fi
+#	rm -f cregs.o c_regs_make$OBJEXT
+#	../gentest.sh "$XEMU $options" cregs_make "test."
+#fi
 
 #------------------------------------------------------------------------
 rm -f test_cond_comp.xwam
 	../gentest.sh "$XEMU $options" test_cond_comp "test."
 
 
-if test "$valgrind" = "true"; then
-	echo "Skipping foreign compilation"
-else
+#if test "$valgrind" = "true"; then
+#	echo "Skipping foreign compilation"
+#else
 #------------------------------------------------------------------------
 # TLS: need to remove dylib/so due to 64/32 bit confusion
 
-rm -f second_foreign.dylib second_foreign.so
+#rm -f second_foreign.dylib second_foreign.so
 
-../gentest.sh "$XEMU $options" cinter3 "test."
+#../gentest.sh "$XEMU $options" cinter3 "test."
 
-rm -f fibr.dylib fibr.so
+#rm -f fibr.dylib fibr.so
 
-../gentest.sh "$XEMU $options" fibp "test."
+#../gentest.sh "$XEMU $options" fibp "test."
 
 #------------------------------------------------------------------------
-../gentest.sh "$XEMU $options" test_importas "test."
-fi
+#../gentest.sh "$XEMU $options" test_importas "test."
+#fi
 
