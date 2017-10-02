@@ -39,7 +39,7 @@ ALL = 	aggregs${OBJEXT} array${OBJEXT} assoc_xsb${OBJEXT} \
 	xsb_profiling${OBJEXT} xsb_lint_impexp${OBJEXT} \
 	dump_table${OBJEXT} \
 	globalvar${OBJEXT} pairlist${OBJEXT} pretty_print${OBJEXT} \
-	prolog_db${OBJEXT}
+	prolog_db${OBJEXT} range_trees$(OBJEXT)
 
 EMU_INCLUDES = ../emu/builtin.h ../emu/celltags_xsb.h ../emu/flag_defs_xsb.h \
 	../emu/io_defs_xsb.h ../emu/syscall_xsb.h ../emu/sig_xsb.h \
@@ -51,6 +51,7 @@ Option = [sysmod,optimize,quit_on_error]
 #-----------------------------------------------------------------------#
 #
 XSB=../bin/xsb 
+#XSB=../config/x64-pc-windows/bin/xsb.exe
 Prolog = $(XSB) -e "segfault_handler(warn)."
 #
 #-----------------------------------------------------------------------#
