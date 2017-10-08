@@ -123,6 +123,7 @@
 :- export bounded_call/3.
 :- export get_interpreter_index/1.
 :- export (do_all)/1, (do_all)/2.
+:- export table_index_predicates/2.	% used in [tables]
 
 :- import (dynamic)/1, asserta/1, assert0/4, retract/1 from assert.
 :- import member/2,append/3,comma_member/2,memberchk/2 from basics.
@@ -136,7 +137,9 @@
   check_stream_or_alias/4, check_open_stream_or_alias/5, add_aliases/4, remove_alias/3,
   fd2iostream/3      from file_io.
 :- import fmt_write/2 from file_io.
-:- import file_function/3, xsb_stream_lock/1,xsb_stream_unlock/1 from file_io.
+:- import xsb_stream_lock/1,xsb_stream_unlock/1 from file_io.
+:- import file_function/3 from machine.
+
 
 :- import add_ops/3, add_index/3, '_$index'/3,
    add_trie_index/1  from file_op.
