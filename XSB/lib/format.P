@@ -34,9 +34,10 @@
 %:- import write/1, nl/0,writeln/1 from standard.
 
 :- import  put_code/2, nl/1, write/2, writeq/2, print/2,
-	write_canonical/2, current_output/1, 'C'/3, % C/2 used in -->
+	write_canonical/2, current_output/1, %%'C'/3, % C/2 used in -->
 	atom_codes/2, xsb_configuration/2
 	from usermod.
+:- import 'C'/3 from dcg.
 
 :-  import throw/1 from standard.
 
@@ -378,7 +379,7 @@ position movement to @var{N}, where @var{N} defaults to @key{SPC}.
 
 % ------------------------------------------------------------------------
 
-format_control(C) :- string(C).
+format_control(C) :- isString(C).
 format_control(C) :- atom(C).  
 
 % format(+Control, +Arguments)
@@ -632,7 +633,7 @@ putn_list(Str,N, [C|Chars]) :-
 preproc_newlines_list(H,T):- 
 	xsb_configuration(host_os,Type),
 	(Type == windows -> 
-	    (nonvar(H),string(H) -> 
+	    (nonvar(H),isString(H) -> 
 	        preproc_newlines(H,T) 
 	      ;
 	        (isList(H) -> 
@@ -670,8 +671,8 @@ preproc_newlines1([92,110|Tin],[10|Tout]):- !,  %\n
 preproc_newlines1([H|Tin],[H|Tout]):- 
 	preproc_newlines1(Tin,Tout).
 
-string([]).
-string([H|T]):- integer(H),string(T).
+isString([]).
+isString([H|T]):- integer(H),isString(T).
 
 isList([]).
 isList([_|_]).
