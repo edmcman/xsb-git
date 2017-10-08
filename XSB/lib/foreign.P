@@ -243,7 +243,7 @@ compile_c(Modname, OrigBase, Ext, Options, Dir, LdOption, CompComm, TempFile) :-
 		xsb_configuration(config_bindir,BINDIR),
 		fmt_write_string(DLLbin, '%s\%s.dll', arg(BINDIR,Modname)),
 		((file_exists(DLLhere) ; file_exists(DLLbin)) -> true
-		; warning(('You must create the DLL ', Modname,'.dll first'))
+		; misc_error(('You must create the DLL ', Modname,'.dll first'))
 		)
 	    ;	shell([CC_Name, ' -c ', Base, Ext, TempFile, ' ', CC_Opts]),
 	        /* The following is here because C compilers usually put 

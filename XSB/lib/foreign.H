@@ -33,7 +33,8 @@
 :- import asm_magic/2 from asm.
 :- import asm_putlength/2 from asmpass2.
 :- import assert/1, retractall/1 from assert.
-:- import message/1, warning/1, time_message/2 from auxlry.
+:- import message/1, time_message/2 from auxlry.
+:- import misc_error/1 from error_handler.
 :- import memberchk/2 from basics.
 :- import current_compiled_module/1 from compile.
 :- import engine_mode_magic_num/3 from consult.
