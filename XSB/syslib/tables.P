@@ -832,7 +832,7 @@ abolish_nonincremental_tables(Option):-
            ; domain_error([on_incomplete/1],Option,abolish_nonincremental_tables,1,'') ),
        table_inspection_function(ABOLISH_NONINCREMENTAL_TABLES,C_action,_Two,_Three,_Four).
 
-:- export abolish_nonincremental_tables.
+:- export abolish_nonincremental_tables/0.
 abolish_nonincremental_tables:- 
        table_inspection_function(ABOLISH_NONINCREMENTAL_TABLES,ERROR_ON_INCOMPLETE,_Two,_Three,_Four).
 
@@ -1841,7 +1841,8 @@ max_incomplete_subgoals_handler:-
     max_incomplete_subgoals_default_handler.
 
 max_incomplete_subgoals_default_handler:- 
-   break_for_tripwires([tables:max_incomplete_subgoals_header]).
+%   break_for_tripwires([tables:max_incomplete_subgoals_header]).
+   break_for_tripwires([max_incomplete_subgoals_header()]).
 
 max_incomplete_subgoals_header:- 
   inc_subg_analysis_info(SubgNum,SCCNumber),
@@ -1876,7 +1877,8 @@ max_scc_subgoals_handler:-
    max_scc_subgoals_default_handler.
 
 max_scc_subgoals_default_handler:- 
-	      break_for_tripwires([tables:max_scc_subgoals_header]).
+%	      break_for_tripwires([tables:max_scc_subgoals_header]).
+	      break_for_tripwires([max_scc_subgoals_header()]).
 
 max_scc_subgoals_header:- 
   current_prolog_flag(max_scc_subgoals,Max),
@@ -1919,7 +1921,8 @@ max_table_subgoal_size_handler:-
     max_table_subgoal_size_default_handler.
 
 max_table_subgoal_size_default_handler:- 
-	      break_for_tripwires([tables:max_table_subgoal_size_header]).
+%	      break_for_tripwires([tables:max_table_subgoal_size_header]).
+	      break_for_tripwires([max_table_subgoal_size_header()]).
 
 max_table_subgoal_size_header:- 
   current_prolog_flag(max_table_subgoal_size,Max),
@@ -1945,7 +1948,8 @@ max_table_answer_size_handler:-
     max_table_answer_size_default_handler.
 
 max_table_answer_size_default_handler:- 
-	      break_for_tripwires([tables:max_table_answer_size_header]).
+%	      break_for_tripwires([tables:max_table_answer_size_header]).
+	      break_for_tripwires([max_table_answer_size_header()]).
 
 max_table_answer_size_header:- 
   current_prolog_flag(max_table_answer_size,Max),
@@ -1971,7 +1975,8 @@ max_answers_for_subgoal_handler:-
     max_answers_for_subgoal_default_handler.
 
 max_answers_for_subgoal_default_handler:- 
-	      break_for_tripwires([tables:max_answers_for_subgoal_header]).
+%	      break_for_tripwires([tables:max_answers_for_subgoal_header]).
+	break_for_tripwires([max_answers_for_subgoal_header()]).
 
 max_answers_for_subgoal_header:- 
   current_prolog_flag(max_answers_for_subgoal,Max),
@@ -1996,7 +2001,8 @@ max_memory_handler:-
     max_memory_default_handler.
 
 max_memory_default_handler:- 
-	      break_for_tripwires([tables:max_memory_header]).
+%	      break_for_tripwires([tables:max_memory_header]).
+	      break_for_tripwires([max_memory_header()]).
 
 max_memory_header:- 
   current_prolog_flag(max_memory,Max_mem),
