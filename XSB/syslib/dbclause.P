@@ -51,6 +51,9 @@ db_retract(Head,Body,PredEP,PSC) :-
 		db_do_retract(Typ,Clref,0,PSC)
 	).
 
+db_retract_fact(_Head,_PredEP,_PSC) :-
+	misc_error('dbclause:db_retract_fact/3 not defined.').
+
 %-------
 
 % db_retractall(+Call,+PredEP,+PSC) deletes all clauses matching a pattern

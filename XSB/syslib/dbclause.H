@@ -25,6 +25,7 @@
 	  
 :- export db_retract/4, db_retract_nr/4, db_reclaim_space/2.
 :- export db_clause/4, db_retractall/3, db_abolish/1, '_$clause_int'/1.
+:- export db_retract_fact/3. % but not yet defined. Currently throws error.
 
 :- import abort/1, atom/1, call_c/1, repeat/0, is_most_general_term/1
      from standard.
@@ -36,4 +37,4 @@
 	  globalvar/1, term_set_arg/4, psc_ep/2,
 	  trie_assert_hdr_info/3
      from machine.
-
+:- import misc_error/1 from error_handler.
