@@ -198,21 +198,21 @@ open_url(url(Atom),read,Stream,Options) :-
 		permission_error(open,file,url(Atom),open/4); 
 		true
 	), 
-	www_cache_filename(Options,FileBase,Suffix,FileUnEnc), 
-	set_tmp_file(DirEnc, FileUnEnc, TmpFile), 
+	curl:www_cache_filename(Options,FileBase,Suffix,FileUnEnc), 
+	curl:set_tmp_file(DirEnc, FileUnEnc, TmpFile), 
 	open(TmpFile, write, W),
 	write(W, Doc),
 	close(W),
 	open(TmpFile, read, Stream), 
-	post_us_pair(Atom, read, Stream).
+	curl:post_us_pair(Atom, read, Stream).
 
 open_url(url(Atom),write,Stream,_) :- 
 	!, 
 	load_page(url(Atom),[redirect(false)],[DirEnc,FileBase,Suffix,_,_],_Doc,_),
-	www_cache_filename([redirect(false)],FileBase,Suffix,FileUnEnc), 
-	set_tmp_file(DirEnc, FileUnEnc, TmpFile), 
+	curl:www_cache_filename([redirect(false)],FileBase,Suffix,FileUnEnc), 
+	curl:set_tmp_file(DirEnc, FileUnEnc, TmpFile), 
 	open(TmpFile, write, Stream), 
-	post_us_pair(Atom, write, Stream).
+	curl:post_us_pair(Atom, write, Stream).
 
 open(url(Atom),Mode,Stream,Options) :-
 	!, 
@@ -297,9 +297,9 @@ close(user_output,_) :- !.
 close(user_error,_) :- !.
 
 close(url(Atom),Options) :- 
-	get_us_pair(Atom, Mode, S_or_A), 
+	curl:get_us_pair(Atom, Mode, S_or_A), 
 	close(S_or_A, Options), 
-	post_data(Atom, Mode), 
+	curl:post_data(Atom, Mode), 
 	!.
 
 close(url(Atom),_) :- 
@@ -1908,67 +1908,17 @@ walltime(X) :- stat_walltime(X0), X is X0/1000.
 
 statistics :- stat_sta(STAT_DEFAULT).
 
-%--- statistics/1
-%%:- import incr_is_invalid/3 from increval.
-:- import format/2 from format.
-:- import member/2,length/2 from basics.
-:- import get_calls/1 from tables.
-:- import setof/3 from setof.
-
 statistics(X) :- 
 	check_statistics_input(X,N),
-        (N == summarize_idg -> 
-           summarize_idg
-	 ; stat_sta(N)).
+	stat_sta(N).
 
 check_statistics_input(X,X):- integer(X),!.
 check_statistics_input(reset,STAT_RESET):-!.
 check_statistics_input(table,STAT_TABLE):- !.
 check_statistics_input(mutex,STAT_MUTEX):- !.
 check_statistics_input(atom,STAT_ATOM):- !.
-check_statistics_input(summarize_idg,summarize_idg):- !.
 check_statistics_input(X,_):-
 	domain_error(statisticsInputDomain,X,statistics/1,1).
-
-summarize_idg:-
-    writeln('=============== Interior Nodes (Tabled Subgoals) =============='), 
-    summarize_idg_get_incr_subgoals(SubgoalList),
-    summarize_idg_print(SubgoalList),
-    writeln('=============== Leaf Nodes (Calls to Dynamic Predicates) =============='),
-    summarize_idg_get_incr_dyns(DynList), 
-    summarize_idg_print(DynList).
-
-summarize_idg_get_incr_subgoals(List):-
-    setof(PredSpec,summarize_idg_get_incr_subgoals_1(PredSpec),List).
-
-summarize_idg_get_incr_subgoals_1(Term):- 
-    predicate_property(Term,incremental),
-    predicate_property(Term,tabled).
-
-summarize_idg_get_incr_dyns(List):-
-    setof(PredSpec,summarize_idg_get_incr_dyns_1(PredSpec),List).
-    
-summarize_idg_get_incr_dyns_1(Term):- 
-    predicate_property(Term,incremental),
-    predicate_property(Term,dynamic).
-
-summarize_idg_print(List):-
-    member(Elt,List),
-    count_calls(Elt,Count),
-    functor(Elt,F,A),
-    format("~a/~d : ~d~n",[F,A,Count]),
-    fail.
-summarize_idg_print(_List).
-    
-count_calls(Term,Count):-
-    setof(Term,get_calls(Term),List),
-    length(List,Count).
-
-%--- statistics/2
-
-statistics(Type,Result):- 
-	statistics_2_trans(Type,Num),
-	statistics_1(Num,Result).
 
 statistics_2_trans(runtime,RUNTIME):- !.
 statistics_2_trans(walltime,WALLTIME):- !.
@@ -1990,6 +1940,10 @@ statistics_2_trans(idg,IDG_COUNTS):- !.
 statistics_2_trans(table_ops,TABLE_OPS):- !.
 statistics_2_trans(X,_):-
 	domain_error(statisticsInputDomain,X,statistics/2,1).
+
+statistics(Type,Result):- 
+	statistics_2_trans(Type,Num),
+	statistics_1(Num,Result).
 
 statistics_1(RUNTIME,[R1,R2]):- 
 	sys_syscall(STATISTICS_2,_RES,RUNTIME,R1,R2).
@@ -2025,9 +1979,8 @@ statistics_1(IDG_COUNTS,[R1,R2]):-
 statistics_1(TABLE_OPS,[SubsGoalChkIns,SubsGoalUniq,VarGoalChkIns,VarGoalUniq,AnsChkIns,AnsUniq]):- 
 	sys_syscall(STATISTICS_2,_RES,TABLE_OPS,SubsGoalChkIns,SubsGoalUniq,VarGoalChkIns,VarGoalUniq,AnsChkIns,AnsUniq).
 
-%=============  End Statistics
-
 %%	time(+Goal)
+%
 %	Time the execution of Goal.  Possible choice-points of Goal are removed.
 %	Based on the SWI-Prolog definition minus reporting the number of inferences,
 %	which XSB does not currently support
@@ -2511,11 +2464,11 @@ call_attribute_handlers([Mod,Attr|Rest],Value) :-
 */
 
 delete_curl_pair(X,Y,Z) :-
-	if_file_loaded(curl) -> delete_us_pair(X,Y,Z)
+	consult:if_file_loaded(curl) -> curl:delete_us_pair(X,Y,Z)
 	; true.
 get_curl_pair(X,Y,Z) :-
-	if_file_loaded(curl), 
-	get_us_pair(X,Y,Z). 
+	consult:if_file_loaded(curl), 
+	curl:get_us_pair(X,Y,Z). 
 
 
 :- import existence_error/4 from error_handler.
