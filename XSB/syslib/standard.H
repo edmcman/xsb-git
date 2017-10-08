@@ -23,6 +23,8 @@
 **
 */
 
+%% uses the curl package...
+:- bootstrap_package([curl, cc], curl).
 
 /* ------------------------------ */
 /*  exported built-in predicates  */
@@ -95,7 +97,7 @@
 
 :- export memory_bounded_call/3.
 
-   :- export expand_atom/2.
+:- export expand_atom/2.
 
 /* --------------------------------------------------------------- */
 /*  exported predicates used in other modules (but not "standard")  */
@@ -123,10 +125,11 @@
 :- export bounded_call/3.
 :- export get_interpreter_index/1.
 :- export (do_all)/1, (do_all)/2.
+:- export table_index_predicates/2.	% used in [tables]
 
 :- import (dynamic)/1, asserta/1, assert0/4, retract/1 from assert.
 :- import member/2,append/3,comma_member/2,memberchk/2,length/2 from basics.
-:- import consult/1, reconsult/1 from consult.
+:- import consult/1, reconsult/1, if_file_loaded/1 from consult.
 :- import predicate_property/2, current_op/3 from curr_sym.
 :- import dcg/2 from dcg.
 %%:- import eval/2 from eval.
@@ -136,11 +139,12 @@
   check_stream_or_alias/4, check_open_stream_or_alias/5, add_aliases/4, remove_alias/3,
   fd2iostream/3      from file_io.
 :- import fmt_write/2 from file_io.
-:- import file_function/3, xsb_stream_lock/1,xsb_stream_unlock/1 from file_io.
+:- import xsb_stream_lock/1,xsb_stream_unlock/1 from file_io.
 :- import add_ops/3, add_index/3, '_$index'/3,
    add_trie_index/1  from file_op.
 :- import format/2 from format.
 
+:- import file_function/3 from machine.
 :- import add_table/1, add_incr_table/2 from tables.
 
 :- import '_$hilog_symbol'/1, add_hilog_symbol/1 from hilogsym.
@@ -191,10 +195,12 @@
 
 :- import (:-)/2 from usermod.
 :- import term_expansion/2 from usermod.
-:- import load_page/5 from curl.
+:- import load_page/5, www_cache_filename/4, set_tmp_file/3, post_us_pair/3,
+   post_data/2, delete_us_pair/3, get_us_pair/3 from curl.
 :- import start_sleeper_thread/1 from machine.
 :- import assert/1 from assert.
 
 :- import sys_exit/1 from shell.
+:- import bootstrap_package/2 from packaging.
 
 /* --------------------- end of file standard.H ----------------------- */
