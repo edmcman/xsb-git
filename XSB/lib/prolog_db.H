@@ -11,3 +11,4 @@
 :- import numbervars/3 from num_vars.
 :- import copy_term/2 from basics.
 
+:- import (:)/2 from standard.  %??
