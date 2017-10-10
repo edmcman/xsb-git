@@ -485,7 +485,7 @@ load(PModName) :-
 
 	(search_file(ModName, [FileName_O,FileName_H|SourceFileNames],
 		     [XSB_OBJ_EXTENSION_ATOM,XSB_HDR_EXTENSION_ATOM,XSB_SRC_EXTENSION_ATOM,'.pl','.prolog','.c',
-		      '.cpp']),
+		      '.cpp','']),
 	 (local_file_exists(FileName_O),
 	  %% byte-code file exists
 	  (system_mod(FileName_O)	% Always load byte-code file from system
@@ -593,6 +593,10 @@ ll_code_call(A,B,C) :- code_call(A,B,C).
 
 search_file(ModName0, AbsFileNames, Extensions) :-
 	(integer(ModName0) -> intern_string(ModName0,ModName) ; ModName = ModName0),
+	(atom(ModName)
+	 ->	true
+	 ;	throw(error(type_error(atom,ModName),'Illegal module specification'))
+	),
 	tilde_expand_filename(ModName,ExpandedModName),
 	(is_absolute_filename(ExpandedModName)
 	 ->	WholePath = [ExpandedModName]
