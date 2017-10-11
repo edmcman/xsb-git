@@ -51,3 +51,4 @@
 :- import (';')/2 from standard.
 :- import ('->')/2 from standard.
 :- import undefined/0 from tables.
+:- import '_$$get_returns'/3 from tables.
