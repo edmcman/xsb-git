@@ -397,40 +397,66 @@ When the module system is used to import predicates, code files for
 modules are automatically found and dynamically (compiled and) loaded
 on first access.  But normally non-module source files must be
 explicitly consulted or ensure\_load-ed by some executing program.  To
-provide the convenience of dynamic loading to usermod source files,
-XSB supports a directive of the form:
+provide the convenience (and declarativity) of dynamic loading to
+usermod source files, XSB supports a directive of the form:
 
 \demo{:- import $Pred/Arity$ from usermod($File$).}
 
 \noindent Here $File$ must be the name of a file that contains XSB
-source code and is {\bf not} a module, i.e., defines its predicates in
-{\tt usermod}.  It must define the predicate $Pred/Arity$.  In this
+source code and is {\bf not} a module, i.e., it defines its predicates
+in {\tt usermod}.  It must define the predicate $Pred/Arity$.  In this
 case, when a goal to $Pred/Arity$ is called and does not yet have a
 definition, the file $File$ is (compiled and) loaded, and the goal is
-called.  If the predicate already has a definition, that one is
-used.\footnote{If the existing definition can be determined to have
-  come from a different file, a warning is generated.}
+called.  If $File$ is a base filename (without a slash), then the
+{\tt library\_directory/1} paths are used to find the correct file (as
+for normal modules.)  If the predicate already has a definition, that
+one is used.\footnote{If the existing definition can be determined to
+  have come from a different file, a warning is generated.}
 
 So this facility allows code in non-module files to be treated
-somewhat like module files.  But it is the user's responsibility to
-ensure that different imported non-module files do not define the same
-predicate.  This facility, when carefully used, can eliminate the need
-for runtime {\tt consult/1} and {\tt ensure\_loaded/1} commands.  The
-form {\tt usermod($File$)} is called a pseudo-module reference, and
-can be used in place of module references in import statements.
+somewhat like module files.  But, as usual, it is the user's
+responsibility to ensure that different imported non-module files do
+not define the same predicate.  This facility, when carefully used,
+can eliminate the need for runtime {\tt consult/1} and {\tt
+  ensure\_loaded/1} commands.  The form {\tt usermod($File$)} is
+called a pseudo-module reference, and can be used in place of module
+references in import statements.
 
-XSB currently treats:
+Note that:
 
 \demo{:- document\_import $Pred/Arity$ from $File$.}
 
-\noindent as
+\noindent can be replaced with
 
 \demo{:- import $Pred/Arity$ from usermod($File$).}
   
-\noindent and a warning is issued if $File$ is {\tt usermod}, since
-that should never be a file name.
+\noindent XSB does not automatically treat the former as the latter,
+for backwards compatibility.  They can have differing effects if the
+given file does not define the given predicate.
 
-\subsection{Parameterized Modules in XSB}†
+XSB also supports a similar import directive form, exemplified by the
+following:
+
+\demo{:- import $Pred/Arity$ from usermod(load\_dyn($File$)).}
+
+\noindent This will cause the file $File$ to be loaded dynamically on
+first use.  It must, of course, define $Pred/Arity$.  The {\tt
+  load\_dyn} in this example may be replaced by any file-loading
+predicate whose first argument is the name of the file to load.  For
+example, one might also use:
+
+\demo{:- import $Pred/Arity$ from usermod(consult:load\_dync($File$,0)).}
+
+\noindent to dynamically load a file whose contents are canonical terms to be
+asserted in reverse order.  In fact, one may use:
+
+\demo{:- import $Pred/Arity$ from usermod(proc\_files:load\_dsv($File$,$Pred/Arity$,[])).}
+
+\noindent to load a comma-separated file with each line containing two
+fields to define the predicate $Pred/Arity$.  (See \ref{sec:procfiles}
+for details.)
+
+\subsection{Parameterized Modules in XSB}
 
 The XSB module system now supports parameterized modules: A module can
 be parameterized by other modules.  A parameterized module is declared
@@ -473,7 +499,7 @@ reachable(N) :- reachable(P), move(P,N).
 This module, {\tt search}, is parameterized by another module that
 defines and exports (at least) 3 predicates: {\tt initial/1}, {\tt
   move/2}, and {\tt final/1}.  When this module is loaded, a
-particular such module exporting those predicates, must be provided to
+particular such module, exporting those predicates, must be provided to
 the loader, and the formal parameter {\tt example\_mod} will be
 replaced by that module and the predicates imported from that module
 will be used here in the definitions of {\tt reachable\_final/1} and
