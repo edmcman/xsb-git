@@ -695,8 +695,8 @@ Hello 42 world!
 respectively.
 
 \item ~@var{N}D
-(Print decimal.) The argument is an integer.  Identical to @tt{~@var{N}d}
-except that @tt{,} will separate groups of three digits to the left of the
+(Print decimal.) The argument is an integer.  Identical to {\tt ~@var{N}d}
+except that {\tt ,} will separate groups of three digits to the left of the
 decimal point.  Example:  
 
 \begin{verbatim}
@@ -713,7 +713,7 @@ Hello 1,234.5 world!
 \item ~@var{N}r
 (Print radix.) The argument is an integer. @var{N} is interpreted as a radix.
 @var{N} should be >= 2 and <= 36.  If @var{N} is missing the radix defaults to
-8.  The letters @tt{a-z} will denote digits larger than 9.  Example:  
+8.  The letters {\tt a-z} will denote digits larger than 9.  Example:  
 
 \begin{verbatim}
 ?- format("Hello ~2r world!", [15]).
@@ -732,8 +732,8 @@ Hello f world!V
 respectively.
 
 \item ~@var{N}R
-(Print radix.) The argument is an integer.  Identical to @tt{~@var{N}r} except
-that the letters @tt{A-Z} will denote digits larger than 9.  Example:  
+(Print radix.) The argument is an integer.  Identical to {\tt ~@var{N}r} except
+that the letters {\tt A-Z} will denote digits larger than 9.  Example:  
 
 \begin{verbatim}
 ?- format("Hello ~16R world!", [15]).
@@ -2083,26 +2083,28 @@ Clears the table that accumulates counts of calls in particular modes
 \end{description}
 
 \begin{description}
+
 \ourmoditem{profile\_unindexed\_calls(+Par)}{profile\_unindexed\_calls/1}{xsb\_profiling}
 
 Sets the kind of unindexed profiling to perform.  If {\tt Par} is
-\texttt{off},  no
-unindexed logging will be done.  This is the default.  If {\tt Par}
-is \texttt{once}  each call to a dynamic predicate that cannot use any index (and
-would backtrack through more than 20 clauses) will generate a log
-message to userout.  Note that the predicate of the goal may have indexes,
-but the particular goal may not be able to take advantage of them.
-E.g., a totally open call to a predicate with many clauses will generate an unindexed message.
-By setting the {\tt once} parameter, each unindexed call to a predicate will be logged
-only once; after logging is done, the log instruction is changed to a
-branch, so it will never produce another log message for that dynamic
-code.  If {\tt Par} is \texttt{on}, logging is done as for \texttt{once}, except every
-unindexed call to any dynamic predicate will be logged; i.e. the
-logging instruction is not changed after logging.  If {\tt Par} is a
-predicate specification (of the form Pred/Arity, Module:Pred/Arity,
-Term, or Module:Term), only unindexed calls to the indicated goal will
-be logged, and when each is logged a back-trace will be printed.  This
-allows the programmer to find the location of an unindexed call.
+\texttt{off}, no unindexed logging will be done.  This is the default.
+If {\tt Par} is \texttt{once} each call to a dynamic predicate that
+cannot use any index (and would backtrack through more than 20
+clauses) will generate a log message to userout.  Note that the
+predicate of the goal may have indexes, but the particular goal may
+not be able to take advantage of them.  E.g., a totally open call to a
+predicate with many clauses will generate an unindexed message.  By
+setting the {\tt once} parameter, each unindexed call to a predicate
+will be logged only once; after logging is done, the log instruction
+is changed to a branch, so it will never produce another log message
+for that dynamic code.  If {\tt Par} is \texttt{on}, logging is done
+as for \texttt{once}, except every unindexed call to any dynamic
+predicate will be logged; i.e. the logging instruction is not changed
+after logging.  If {\tt Par} is a predicate specification (of the form
+Pred/Arity, Module:Pred/Arity, Term, or Module:Term), only unindexed
+calls to the indicated goal will be logged, and when each is logged a
+back-trace will be printed.  This allows the programmer to find the
+location of an unindexed call.
 \end{description}
 
 %----------------------------------------------------------------------
@@ -2766,9 +2768,14 @@ intern these DB's, and to table them (as intern).
 
 The predicates provided by the Prolog DB interface are as follows:
 \begin{description}
-\ourmoditem{empty\_db(-EmptyPrologDB)}{empty\_db/1}{prolog\_db}
-{\tt empty\_db/1} returns an empty Prolog DB.  It is used to create an
-initial Prolog DB to pass to the other in\_db predicates.
+\ourmoditem{empty\_db(-EmptyPrologDB)}{empty\_db/1}{prolog\_db} {\tt
+  empty\_db/1} returns an empty Prolog DB.  It is used to create an
+initial Prolog DB to pass to the other in\_db
+predicates.~\footnote{Since a Prolog DB is a term and must be passed
+  as an argument, it differs from other implementations of tries in
+  XSB, such as interned tries (cf. Chapter~\ref{chap:tries}), or
+  trie-indexed facts (cf. Section~\ref{sec:assert}), which are
+  persistent.}
 
 \ourmoditem{assert\_in\_db(+Clause,+DB0,-DB)}{assert\_in\_db/3}{prolog\_db}
 {\tt assert\_in\_db/3} adds the clause, {\tt Clause}, to the Prolog
@@ -2814,6 +2821,192 @@ clauses in {\tt DB1} and {\tt DB2}.
 
 \end{description}
 
+\section{Range Trees}
+\index{Code authors!Warren, David S.}
+
+This library contains predicates that provide support for range
+queries via {\em range trees}.  Range trees store a set of keys and
+associated values.  Arbitrary ranges of keys (along with their
+associated values) can be retrieved efficiently; such keys do not need
+to be numeric..  Such a library is needed because all engine-level
+indexes in XSB are hash-based and as such do not support efficient
+range queries.
+
+%Range trees can be used directly to implement key-value stores that
+%provide efficient range access.  
+Given a set of ground facts to be range-indexed on various arguments,
+several predicates support the easy construction of range trees from
+these facts.  This basic interface includes predicates to create, add
+to, retrieve from, and delete from range trees.
+
+Range trees use a balanced sort tree, similar to a B-Tree in that all
+leaf nodes are equidistant from the root, and nodes are at least half
+full. (Deletion of key-value pairs is supported, but trees are not
+rebalanced on delete, so significant use of delete can seriously
+degrade performance.)  Range trees are stored in dynamic predicates 
+% in the Prolog database 
+and are identified by user-provided handles.
+
+%The user defines a predicate {\tt range\_tree\_compare/2} that defines
+%the comparison operation ({\tt =<}) that is used for the range
+%ordering.  If no such predicate is defined by the user in {\tt
+%  usermod}, Prolog's {\tt @@=<} is used.  If the user defines
+%{\tt range_tree_compare/2}, she must also define predicates
+%{\tt range_tree_min_value/1} and {\tt range_tree_max_value/1},
+%giving minimum and maximum values that can ever appear in a range.
+%").
+
+{\bf Example}
+A user may have a predicate {\tt data(Key,Val1,Val2,Val3)}
+and want to be able to do efficient range-valued queries for the
+second field, {\tt Val1}, or for the fourth field, {\tt Val3}.  {\tt
+  Key} is a key for the {\tt data/4} relation, i.e., no two different
+tuples have the same value for the {\tt Key} fields.  The user would
+make the following definitions: (See the specific predicate
+documentation below for these range predicates to understand their
+parameters in detail.)
+
+\begin{verbatim}
+:- import range_call/4, range_assert/3, range_retractall/4 from range_trees.
+
+% to retrieve data by range from a range-indexed predicate
+range_data(K,RV1,V2,RV3) :- range_call(data(K,_,V2,_),[1],[2,4],[RV1,RV3]).
+
+% to add data to range-indexed predicate
+assert_data(K,V1,V2,V3) :- range_assert(data(K,V1,V2,V3),[1],[2,4]).
+
+% to delete data from range-indexed predicate
+retractall_data(K,RV1,V2,RV3) :- 
+      range_retractall(data(K,_,V2,_),[1],[2,4],[RV1,RV3]).
+\end{verbatim}	   
+
+With these definitions, the user will (init) and then add all data to
+{\tt data/4} using {\tt assert\_data/4}, which will both assert a
+tuple to {\tt data}/4 and add the tuples to the necessary range trees
+to support efficient range queries on the second or fourth argument.
+
+A range query to {\tt data/4} now is posed by calling the
+user-defined predicate {\tt range\_data/4}.  For example to retrieve
+all tuples whose second field is between 4000 and 5000 (inclusive),
+the user would pose the query:
+
+\begin{verbatim}
+| ?- range_data(K,V1:[4000,5000],V2,V3).
+\end{verbatim}
+
+ This query will bind {\tt K,V1,V2,V3} to quadruples in the
+{\tt data/4} relation where {\tt V1} is between 4000 and 5000
+(inclusive.)  Ranges are indicated by terms of the form
+{\tt Var:[Low,High]}, where {\tt Var} is the variable that will be
+bound on return, and {\tt Low} and {\tt High} are ground values
+indicating the lower and upper bounds of the desired range,
+respectively.  The order of answers returned to a range query is
+indeterminate (i.e., not necessarily in increasing order on the range
+variable.)
+
+One may also use a query such as:
+\begin{verbatim}
+| ?- range_data(K,4015,V2,V3).
+\end{verbatim}
+\noindent
+which is treated as a range query with the same lower and upper
+bounds.  For the declarations shown above, which indicate two
+range-indexed fields for {\tt data/4}, one may also pose a query:
+
+\begin{verbatim} 
+| ?- range_data(K,V1,V2,V3:[6015,7000]).  
+\end{verbatim} 
+
+\noindent
+ which would efficiently retrieve data/4 tuples whose fourth
+field is between 6015 and 7000 (inclusive.)
+
+When multiple range-indexed arguments are given ranges (or constants)
+in a range query, only the first will be used for indexing.
+
+
+\begin{description}
+
+\ourmoditem{init\_range\_tree(+TreeId)}{init\_range\_trees/1}{range\_trees}
+This predicate initializes a named tree which will provide access to
+key-value pairs through range queries on the keys.  {\tt TreeId} is an
+arbitrary user-supplied ground term that identifies the particular
+tree.
+
+\ourmoditem{get\_from\_range\_tree(+TreeId,+Lo,+Hi,?Key,-Val)}{get\_from\_range\_tree/6}{range\_trees}
+Gets a range of Keys (and their associated values) between {\tt Lo}
+and {\tt Hi} (inclusive), using the ordering defined by {\tt
+  range\_tree\_compare/2}.  {\tt TreeId} is a user-provided tree
+identifier.  
+%{\tt Key} is the value of a key in the tree in the Lo-Hi
+%range, and Val is its associated value..
+
+\ourmoditem{add\_to\_range\_tree(+TreeId,+Key,+Val)}{add\_to\_range\_tree/3}{range\_trees}
+  Adds a key-value pair to a range tree.
+
+\ourmoditem{delete\_from\_range\_tree(+TreeId,+Key,?Val)}{delete\_from\_range\_tree/3}{range\_trees}
+Deletes all key-value pairs with the given {\tt Key} and {\tt Val}
+from the range tree.  It does not re-balance the range tree, so after
+many deletes the tree may give bad performance.
+
+\ourmoditem{delete\_from\_range\_tree(+TreeId,+Key)}{delete\_from\_range\_tree/2}{range\_trees}
+%
+Deletes all key-value pairs with the given {\tt Key} from the range
+tree.  It does not re-balance the range tree, so after many deletes
+the tree may give bad performance.
+
+\ourmoditem{delete\_range\_tree(+TreeId)}{delete\_range\_tree/1}{range\_trees}
+Deletes everything from the named tree (i.e., deletes the tree).
+
+\ourmoditem{delete\_all\_range\_trees}{delete\_all\_range\_trees/0}{range\_trees}
+Deletes all range trees, reinitializing everything.
+
+%\ourmoditem{print\_rt/1, {range\_trees}
+%print\_re(+TreeId) prints out the range tree
+%with ID TreeId, in indented format.  Mainly for debugging..
+
+\ourmoditem{range\_call(Goal,KeyPosList,RangePosList,RangeFormList)}{range\_call/4}{range\_trees}
+  Calls {\tt Goal} using range indexing specifications in {\tt
+    RangeFormList}, which binds variables in Goal in positions {\tt
+    RangePosList}.  For example, to call a predicate {\tt data/4},
+  whose key is field 1 and which has range indexes on fields 2 and 4,
+  one could call:
+
+\begin{verbatim}
+| ?- range_call(data(K,X,Y,Z),[1],[2,4],[_,_:[4000,4500]]).
+\end{verbatim}
+
+This will efficiently return all triples of the stored predicate {\tt
+  data/4} whose fourth field is in the range 4000-4500.  It is assumed
+that range indexes have been built for the second and fourth fields of
+{\tt data/4} (normally by using {\tt range\_assert/3}.)  This
+predicate is intended to be used by the user to define a predicate
+that can be used to get range-indexed access to another data
+predicate, as in the example above.
+
+The {\tt KeyPosList} is the list of positions in {\tt Goal} that
+provide a key to the base predicate of {\tt Goal}.  That predicate
+should be indexed on this key.  (If it is not a key or if it is not
+indexed on this key, there may be serious degradation of performance.)
+The {\tt RangeFormList} is a list of range specifications, i.e., terms
+of form {\tt Var:[Low,High]}, or constants or variables.  The first in
+this list that has a value or range-specification (i.e., not a
+variable) will be used for range-indexing.  The {\tt RangePosList} is
+the (corresponding) list of argument positions in {\tt Goal} that are
+range-indexed.  These argument position lists must correspond to those
+used in {\tt range\_assert/3}. 
+
+\ourmoditem{range\_retractall(Goal,KeyPosList,RangePosList,RangeFormList)}{range\_retractall/4}{range\_trees}
+%
+Removes all tuples in the database that would be retrieved by a call
+to {\tt range\_call/4}, with the same arguments.  This also updates
+the range-indexes for this predicate.  Notice that this supports
+efficient retraction through use of range-restricted arguments in
+{\tt Goal}.  Note also, however, that since range trees are not
+rebalanced after deletion, heavy use of this predicate may cause
+performance degradation.  
+
+\end{description}
 
 
 %=======================================================================
