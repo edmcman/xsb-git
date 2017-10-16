@@ -18,13 +18,79 @@
 
 <h1>ChangeLog</h1>
 
+<h2> Version 3.8 ()</h2> 
+
+Many of the changes for Version 3.8 of XSB have been motivated by the
+needs of our commercial and research users.  To this end, XSB contains
+several new libraries as well as a great number of changes to improve
+robustness for various XSB features.
+
+<ul>
+<li><b> Enhancements </b></li>
+<ul>
+<li> XSB now supports <i>parameterized modules</i> which support a type
+of higher-order programming by allowing executable module directives.
+This allows a module <i>m</i> to determine at run time which other modules
+should be used to load predicates in <i>m</i>.</li>
+<li>The view consistency feature of incremental tabling has been made
+significantly more robust and memory usage for incremental tables is
+now significantly more efficient.</li>
+<li>The <tt>persistant tables</tt> package allows tables to be written to
+files so that they can be saved between sessions, or communicated
+between different XSB processes. </li>
+<li>The <tt>viewsys</tt> package provides a structured approach to transforming
+data that XSB or other programs can use.</li>
+<li>Situations where a compilation error gave rise to a corrupt
+object file are now fixed.  <tt>call/1</tt> has been
+made more efficient in static code.</li>
+<li> <tt>load_dyn/[1,2]</tt> has been made more robust, and expanded so
+that files are handled in a manner more consistent with compiled
+code. For instance, addition <tt>load_dyn(c)</tt> now supports
+analysis features like usage inference</li>
+<li> Terms now have a maximum arity of 2^16 when used in tabling,
+asserted in dynamic code, or created as structures.  Terms in compiled
+files have the old limit of 2^8 arguments.</li>
+<li> The <tt>range tree</tt> library allows data to be indexed via numeric or
+other ranges.</li>
+</ul>
+
+
+<li><b> Smaller Bug fixes and Minor Changes </b></li>
+<ul>
+<li> File handling is now more consistent among XSB's predicates,
+among the forms of names, and among platforms.</li>
+<li>Numerous changes have been made to XSB's <tt>statistics/[0,2]</tt> to
+present information about tabled compuations in a clear, consistent,
+and thorough manner.</li>
+<li>Character sets are now easier to set and change at a stream level,
+and handling of general character codes is more robust.</li>
+<li>XSB now responds consistently to command-line
+interrupts (e.g., ctrl-c, ctrl-d) across different platforms.</li>
+<li> Various bug fixes and improvements to
+the <tt>sgml</tt>, <tt>xpath</tt>, and <tt>rdf</tt> packages.</li>
+<li> Answer set cardinality has been added to XSB's set of tripwires,
+which support dynamic debugging of heavily tabled computations.</li>
+<li> A new predicate, <tt>truth_value/2</tt> that indicates the truth
+value of a given atom in the well-founded semantics whenever it is
+sensible to do so within the operational semantics of XSB.</li>
+<li> XSB's C interface has been expanded to allow dynamic registration
+of C functions as XSB predicates, and to allow direct creation of a
+term in a given module.</li>
+<li> <tt>predicate_property/2</tt> now gives more reliable and clearer
+information for undefined or non-loaded predicates.</li>
+<li> The <tt>log_ith</tt> functionality has been expanded so that it
+can simulate open-tailed lists, though with a lower complexity.</li>
+<li> Forest logging has been expanded to support information specific
+to incremental tabling.</li>
+<li> Improvements in unification of floating point numbers.</li>
+<li> Small fixes for interned tables when used with <tt>findall</tt>.
+</ul>
+
 <h2> Version 3.7 (Clan MacGregor)</h2> 
 
 <ul>
 <li><b> Enhancements </b></li>
 <ul>
-<li> XSB now supports a novel set of related debugging techniques that
-allow dynamic inspection of a logical derivation.<ul>
 <li> A derivation may be suspended and inspected via its table state,
 its subgoal dependency graph, its incremental dependency graph, and
 its residual dependency graph.  The graph views may also be abstracted
