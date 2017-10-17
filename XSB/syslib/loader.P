@@ -101,7 +101,7 @@ local_member(X,[_|L]) :- local_member(X,L).
 %%  'usermod(filename)' or
 %%  'usermod(load_cmd(filename,...))' or
 %%  'usermod(module:load_cmd(filename,...)'
-unstructure_modname(PModName,ModName,ModPars) :-
+unstructure_modname(PModName,ModName,ModPars,ModTerm) :-
 	%%(atom(PModName) -> local_fmt_write(STDMSG,"unstructure string: %s\n",arg(PModName)) ; true),
 	(possibly_structured(PModName) % check so early loads dont need to load string.
 	 ->	(atom_to_term(PModName,ModTerm)
@@ -122,7 +122,8 @@ unstructure_modname(PModName,ModName,ModPars) :-
 			ModPars = PModName
 		)
 	 ;	ModName = PModName,
-		ModPars = PModName
+		ModPars = PModName,
+		ModTerm = PModName
 	).
 
 possibly_structured(Atom) :-
@@ -371,7 +372,7 @@ load_pred1(PSC) :-
                 %% a file was loaded lazily.  This would only happen if
                 %% an unloaded predicate were called via explict module
                 %% qualification -- e.g., via bar:pred(A,B)
-                unstructure_modname(ModName,HModName,_ModPars),
+                unstructure_modname(ModName,HModName,_ModPars,_ModTerm),
                 search_module(HModName, _Dir, _Mod, _SExt, _Base, Obj),
                 %% record_file_consultloaded also expands file names
                 record_file_consultloaded(Obj)
@@ -481,11 +482,11 @@ load(PModName) :-
 	 ->	local_fmt_write(STDMSG, "[ load module %S ]\n", arg(PModName))
 	 ;	true
 	),
-	unstructure_modname(PModName,ModName,ModPars),
+	unstructure_modname(PModName,ModName,ModPars,ModTerm),
 
 	(search_file(ModName, [FileName_O,FileName_H|SourceFileNames],
 		     [XSB_OBJ_EXTENSION_ATOM,XSB_HDR_EXTENSION_ATOM,XSB_SRC_EXTENSION_ATOM,'.pl','.prolog','.c',
-		      '.cpp','']),
+		      '.cpp']), % search_file below for null suffix
 	 (local_file_exists(FileName_O),
 	  %% byte-code file exists
 	  (system_mod(FileName_O)	% Always load byte-code file from system
@@ -499,9 +500,10 @@ load(PModName) :-
 	  compile_and_load(FileName_X,PModName)
 	 )
 	 ->	true
-	 ; (PModName = usermod(_),
+	 ; (ModTerm = usermod(_),
 	    search_file(ModName, [FileName], ['']),
-	    local_is_directory(FileName)
+	    local_file_exists(FileName),
+	    \+ local_is_directory(FileName)
 	   )
 	 ->	compile_and_load(FileName,PModName)
 	 ;	tilde_expand_filename(ModName,ExpandedModName), % file not found
@@ -564,11 +566,17 @@ local_is_directory(File) :- sys_system(IS_DIRECTORY, File,_,_,_,_,_).
 %% compile the source file, and then reload the module
 compile_and_load(FileNameList,PModName) :-
 	(atom_to_term(PModName,usermod(LoadFile)), compound(LoadFile)
-	 ->	call_c(LoadFile)
+	 ->	(LoadFile = CMod:CLoadFile
+		 ->	term_new_mod_inline(CMod,CLoadFile,MLoadFile),
+			call_c(MLoadFile)
+		 ;	call_c(LoadFile)
+		)
 	 ;	str_cat_list(FileNameList,FileName_P),
 		compile(FileName_P),
 		load(PModName)
 	).
+
+term_new_mod_inline(Mod,Term,NewTerm) :- term_new_mod_inline(Mod, Term, NewTerm).
 
 str_cat_list([Seg],Seg) :- !.
 str_cat_list([Seg|Segs],AllSegs) :-
