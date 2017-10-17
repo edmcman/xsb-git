@@ -29,23 +29,25 @@ robustness for various XSB features.
 <li><b> Enhancements </b></li>
 <ul>
 <li> XSB now supports <i>parameterized modules</i> which support a type
-of higher-order programming by allowing executable module directives.
+of higher-order programming by allowing modules to be parameterized by other modules.
 This allows a module <i>m</i> to determine at run time which other modules
-should be used to load predicates in <i>m</i>.</li>
+should be used to load predicates in <i>m</i>.
+This extension also allows non-modules (defining predicates in usermod) to be loaded by
+the dynamic module loader</li>
 <li>The view consistency feature of incremental tabling has been made
-significantly more robust and memory usage for incremental tables is
+significantly more robust, and memory usage for incremental tables is
 now significantly more efficient.</li>
 <li>The <tt>persistant tables</tt> package allows tables to be written to
 files so that they can be saved between sessions, or communicated
 between different XSB processes. </li>
 <li>The <tt>viewsys</tt> package provides a structured approach to transforming
-data that XSB or other programs can use.</li>
+data (stored in files or database tables) that XSB or other programs can use.</li>
 <li>Situations where a compilation error gave rise to a corrupt
 object file are now fixed.  <tt>call/1</tt> has been
 made more efficient in static code.</li>
 <li> <tt>load_dyn/[1,2]</tt> has been made more robust, and expanded so
 that files are handled in a manner more consistent with compiled
-code. For instance, addition <tt>load_dyn(c)</tt> now supports
+code. For instance, <tt>load_dyn(c)</tt> now loads modules and supports
 analysis features like usage inference</li>
 <li> Terms now have a maximum arity of 2^16 when used in tabling,
 asserted in dynamic code, or created as structures.  Terms in compiled
