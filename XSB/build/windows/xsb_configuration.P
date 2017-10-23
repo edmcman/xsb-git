@@ -52,7 +52,7 @@ xsb_configuration(compiler, 'cl.exe').
 xsb_configuration(compiler_flags, '').
 xsb_configuration(loader_flags, '').
 
-xsb_configuration(build_date, '2017-09-15').
+xsb_configuration(build_date, '2017-10-23').
 
 /* Packages */
 
@@ -90,14 +90,14 @@ xsb_configuration(word_size, '32').
 %%
 
 xsb_configuration(major_version, '3').
-xsb_configuration(minor_version, '7').
+xsb_configuration(minor_version, '8').
 xsb_configuration(patch_version, '0').
 xsb_configuration(beta_version, '').
-xsb_configuration(version, '3.7.0').
+xsb_configuration(version, '3.8.0').
 
-xsb_configuration(codename, 'Clan MacGregor').
+xsb_configuration(codename, 'Three-Buck Chuck').
 xsb_configuration(release_date,
-		  date(2016, 7, 6)).
+		  date(2017, 10, 28)).
 
 %% Configuration looks as follows: machine-vendor-os-tag
 xsb_configuration(configuration, 'x86-pc-windows').
