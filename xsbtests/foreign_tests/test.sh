@@ -67,12 +67,12 @@ rm -f fibr.dylib fibr.so
 ../gentest.sh "$XEMU $options" test_importas "test."
 fi
 
-if test "$valgrind" = "true"; then
-	echo "Skipping cvarconstr_make in table_tests"
-else
+#if test "$valgrind" = "true"; then
+#	echo "Skipping cvarconstr_make in table_tests"
+#else
 # test of C-calling XSB w. constraints.
-../gentest.sh "$XEMU $opts" cvarconstr_make "test."
-fi
+#../gentest.sh "$XEMU $opts" cvarconstr_make "test."
+#fi
 
 # VALGRIND
 if test "$valgrind" = "true"; then
