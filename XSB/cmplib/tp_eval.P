@@ -129,6 +129,7 @@ eval_binoptab(>>,R1,R2,logshiftr(R2,R1)).
 eval_binoptab(min,R1,R2,minreg(R2,R1)).
 eval_binoptab(max,R1,R2,maxreg(R2,R1)).
 eval_binoptab(**,R1,R2,powreg(R2,R1)).
+eval_binoptab(^,R1,R2,powreg(R2,R1)). % integer?
 eval_binoptab(><,R1,R2,xorreg(R2,R1)).
 eval_binoptab(xor,R1,R2,xorreg(R2,R1)).
 eval_binoptab(div,R1,R2,fdivreg(R2,R1)).
@@ -148,6 +149,7 @@ eval_binop(>>).
 eval_binop(min).
 eval_binop(max).
 eval_binop(**).
+eval_binop(^).
 eval_binop(><).
 eval_binop(xor).
 eval_binop(div).
@@ -355,18 +357,18 @@ eval_binop(Op,E1,E2,R1,Pil,Pilr,HoldR,Tin,Tout,EPN) :-
 eval_binop(rem,E1,E2,R,Pil,Pilr,HoldR,Tin,Tout,EPN) :-
 	eval_exp_vc(E1,R0,Pil,Pilm0,HoldR,Tin,Tmid,EPN),
 	eval_exp_vc(E2,R1,Pilm0,Pilm1,HoldR,Tmid,Tmid1,EPN),
-	getreg(Tmid1,R),
+	getreg(Tmid1,R), hold(R,Tmid1,Tmid2),
 	Pilm1 = [movreg(R0,R),idivreg(R1,R0),mulreg(R1,R0),subreg(R0,R)|Pilr],
-	release_if_done0(E1,R0,HoldR,Tmid1,Tmid2),
-	release_if_done0(E2,R1,HoldR,Tmid2,Tout).
+	release_if_done0(E1,R0,HoldR,Tmid2,Tmid3),
+	release_if_done0(E2,R1,HoldR,Tmid3,Tout).
 eval_binop(mod,E1,E2,R,Pil,Pilr,HoldR,Tin,Tout,EPN) :-
 	eval_exp_vc(E1,R0,Pil,Pilm0,HoldR,Tin,Tmid,EPN),
 	eval_exp_vc(E2,R1,Pilm0,Pilm1,HoldR,Tmid,Tmid1,EPN),
-	getreg(Tmid1,R),
+	getreg(Tmid1,R), hold(R,Tmid1,Tmid2),
 	Pilm1 = [movreg(R0,R),divreg(R1,R0),unifunc(14,R0),
 		 mulreg(R1,R0),subreg(R0,R)|Pilr],
-	release_if_done0(E1,R0,HoldR,Tmid1,Tmid2),
-	release_if_done0(E2,R1,HoldR,Tmid2,Tout).
+	release_if_done0(E1,R0,HoldR,Tmid2,Tmid3),
+	release_if_done0(E2,R1,HoldR,Tmid3,Tout).
 eval_binop(Op,_,_,_,_Pilr,_Pil,_,_Tin,_Tout,e(PredSym,NC)) :-
 	sym_name(PredSym, P, A),
 	error(('Unknown function ', Op, '/2 in an arithmetic expression',
