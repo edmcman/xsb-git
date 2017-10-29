@@ -10,7 +10,6 @@ manual1:
 	latex manual1	
 	bibtex manual1
 	makeindex manual1
-	makeindex manual1.prdx -o manual1.pnd
 	latex manual1
 	latex manual1
 	dvips manual1.dvi -o manual1.ps
