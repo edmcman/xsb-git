@@ -51,6 +51,77 @@ not use a view as input to another view that it supports if it is
 deemed not consistemt.  A single view may have zero or more
 consistency views associated with it.
 
+
+\section{An Example}
+
+Consider a situation in which we are collecting data from four
+institutions of higher education and want to integrate that data into
+a dataset that allows us to make coherent queries across the data from
+all institutions.  We might want to answer questions about the
+possibility of transferring classes between the schools, or perhaps
+whether a student might take a class scheduled at one that would be
+equivalent to one at another, if schedules don't conflict.
+
+Say we have two community colleges, AJC and ACC, and two 4-year
+colleges, UC and UD.  And we collect information from each of them
+concerning, say, currently scheduled classes at their institutions.
+
+To integrate data from all four institutions, we might create the
+following view system:
+
+\begin{verbatim}
+    clnajc
+ajc ------> ajc-cleaned--+
+                         | comb2
+    clnacc               |------>2-year-info--+
+acc ------> acc-cleaned--+                    |
+                                              |  comb24
+    clnuc                                     |--------> 2-4-info
+UC -------> uc-cleaned--+                     |
+                        | comb4               |
+    clnud               |------>4-year-info---+
+UD -------> ud-cleaned--+
+\end{verbatim}
+
+For each raw-data input from an institution, we have a process to
+``clean'' that data (indicated in the diagram by a name {\tt
+  cln<inst>}), that generates a file (view) containing ``cleaned''and
+``standardized'' data (indicated in the diagram by {\tt
+  <inst>-cleaned}.)  Then we have a process, {\tt comb2}, that
+combines the two cleaned community college datasets to create a view,
+2-year-info; and another, {\tt comb4}, that combines the two cleaned
+4-year college datasets to create the view, 4-year-info.  And finally,
+we have a process, {\tt comb24}, that takes those two views and
+generates a fully combined dataset (i.e., view), 2-4-info.
+
+This viewsys system has 11 views, 4 of which are base views and 7
+derived views.  And it has 7 processes, one to generate each derived
+view.
+
+We can imagine what these processes might do: the cleaning processes
+would do institution-specific transformations of the input data, maybe
+standardizing names of equivalent classes; inferring a new variable of
+the level of the classe (intro, intermediate, advanced) from the class
+naming/numbering conventions of the particular institution;
+standardizing class-time representations given different scheduling
+conventions; etc.  The {\tt comb<?>} processes might simply project
+and union their inputs, but in the real world, they are more likely to
+perform other more complex inferences and transformations.
+
+We could easily imagine having other (mostly static) data inputs (not
+shown here) to these cleaning processes that provide
+institution-specific information necessary to do such transformations.
+We can also imagine that we have another process that uses, say, the
+2-year-info view, to combine it with other information we've gleaned
+from 2-year colleges to provide another view that can answer other
+questions of interest.
+
+We can imagine that the datasets we get from the source institutions
+arrive at different times but we want the best data in the coherent
+eviews to be available to any query.  So if a new file from, say, {\tt
+  UC}, shows up, we need only run the processes {\tt clnuc}, {\tt
+  comb4}, and {\tt comb24} to be sure that all data is up to date.
+
 \section{The ViewSys Data Model}
 
 A ViewSys workflow is specified by a set of facts of the following
