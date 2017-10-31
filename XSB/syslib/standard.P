@@ -1906,19 +1906,67 @@ cputime(X) :- stat_cputime(X0), X is X0/1000.
 
 walltime(X) :- stat_walltime(X0), X is X0/1000.
 
+
+%== statistics/[0,1,2]
+
 statistics :- stat_sta(STAT_DEFAULT).
+
+%== statistics/1 
 
 statistics(X) :- 
 	check_statistics_input(X,N),
-	stat_sta(N).
+        (N == summarize_idg -> 
+            summarize_idg
+	;   stat_sta(N)).
 
 check_statistics_input(X,X):- integer(X),!.
 check_statistics_input(reset,STAT_RESET):-!.
 check_statistics_input(table,STAT_TABLE):- !.
 check_statistics_input(mutex,STAT_MUTEX):- !.
 check_statistics_input(atom,STAT_ATOM):- !.
+check_statistics_input(summarize_idg,summarize_idg):- !.
 check_statistics_input(X,_):-
 	domain_error(statisticsInputDomain,X,statistics/1,1).
+
+summarize_idg:-
+    writeln('=============== Interior Nodes (Tabled Subgoals) =============='),
+    summarize_idg_get_incr_subgoals(SubgoalList),
+    summarize_idg_print(SubgoalList),
+    writeln('=============== Leaf Nodes (Calls to Dynamic Predicates) =============='),
+    summarize_idg_get_incr_dyns(DynList),
+    summarize_idg_print(DynList).
+
+summarize_idg_get_incr_subgoals(List):-
+    setof(PredSpec,summarize_idg_get_incr_subgoals_1(PredSpec),List).
+
+summarize_idg_get_incr_subgoals_1(Term):-
+    predicate_property(Term,incremental),
+    predicate_property(Term,tabled).
+
+summarize_idg_get_incr_dyns(List):-
+    setof(PredSpec,summarize_idg_get_incr_dyns_1(PredSpec),List).
+
+summarize_idg_get_incr_dyns_1(Term):-
+    predicate_property(Term,incremental),
+    predicate_property(Term,dynamic).
+
+summarize_idg_print(List):-
+    member(Elt,List),
+    count_calls(Elt,Count),
+    functor(Elt,F,A),
+    format("~a/~d : ~d~n",[F,A,Count]),
+    fail.
+summarize_idg_print(_List).
+
+count_calls(Term,Count):-
+    setof(Term,get_calls(Term),List),
+    length(List,Count).
+
+%== statistics/2 
+
+statistics(Type,Result):- 
+	statistics_2_trans(Type,Num),
+	statistics_1(Num,Result).
 
 statistics_2_trans(runtime,RUNTIME):- !.
 statistics_2_trans(walltime,WALLTIME):- !.
@@ -1940,10 +1988,6 @@ statistics_2_trans(idg,IDG_COUNTS):- !.
 statistics_2_trans(table_ops,TABLE_OPS):- !.
 statistics_2_trans(X,_):-
 	domain_error(statisticsInputDomain,X,statistics/2,1).
-
-statistics(Type,Result):- 
-	statistics_2_trans(Type,Num),
-	statistics_1(Num,Result).
 
 statistics_1(RUNTIME,[R1,R2]):- 
 	sys_syscall(STATISTICS_2,_RES,RUNTIME,R1,R2).
@@ -1978,6 +2022,8 @@ statistics_1(IDG_COUNTS,[R1,R2]):-
 	sys_syscall(STATISTICS_2,_RES,IDG_COUNTS,R1,R2).
 statistics_1(TABLE_OPS,[SubsGoalChkIns,SubsGoalUniq,VarGoalChkIns,VarGoalUniq,AnsChkIns,AnsUniq]):- 
 	sys_syscall(STATISTICS_2,_RES,TABLE_OPS,SubsGoalChkIns,SubsGoalUniq,VarGoalChkIns,VarGoalUniq,AnsChkIns,AnsUniq).
+
+%== end statistics.
 
 %%	time(+Goal)
 %

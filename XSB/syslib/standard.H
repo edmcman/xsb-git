@@ -140,6 +140,10 @@
 :- import xsb_stream_lock/1,xsb_stream_unlock/1 from file_io.
 :- import file_function/3 from machine.
 
+:- import format/2 from format.
+:- import member/2,length/2 from basics.
+:- import get_calls/1 from tables.
+:- import setof/3 from setof.
 
 :- import add_ops/3, add_index/3, '_$index'/3,
    add_trie_index/1  from file_op.
