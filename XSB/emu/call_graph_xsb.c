@@ -207,10 +207,9 @@ static int equalkeys(void *k1, void *k2)
 
 
 /* Creates a call node */
-callnodeptr makecallnode(CTXTdeclc VariantSF sf){
+callnodeptr makecallnode(CTXTdeclc VariantSF sf, int dyn_leaf){
   
   callnodeptr cn;
-
   SM_AllocateStruct(smCallNode,cn);
   cn->deleted = 0;
   cn->changed = 0;
@@ -220,11 +219,11 @@ callnodeptr makecallnode(CTXTdeclc VariantSF sf){
   cn->prev_call = NULL;
   cn->aln = NULL;
   cn->inedges = NULL;
-  cn->goal = sf;
+  callnode_sf(cn) = sf;
   cn->outedges=NULL;
   cn->id=total_call_node_count_gl++; 
   cn->outcount=0;
-
+  cn->idg_dyn_leaf = dyn_leaf;
   //    print_callnode(stddbg,cn);printf("\n");
 
   current_call_node_count_gl++;
@@ -436,13 +435,14 @@ void deallocate_previous_call(CTXTdeclc callnodeptr callnode){
     hasht = in->inedge_node->hasht;
     if (remove_some(CTXTc hasht,ownkey) == NULL) {
       /*
-      prevnode=in->prevnode->callnode;
-      if(IsNonNULL(prevnode->goal)){
-	sfPrintGoal(stdout,(VariantSF)prevnode->goal,NO); printf("(%d)",prevnode->id);
-      }
-      if(IsNonNULL(callnode->goal)){
-	sfPrintGoal(stdout,(VariantSF)callnode->goal,NO); printf("(%d)",callnode->id);
-      }
+//      prevnode=in->prevnode->callnode;
+//      if(! is_idg_leaf(prevnode)){
+//      if(IsNonNULL(prevnode->goal)){
+//	sfPrintGoal(stdout,(VariantSF)prevnode->goal,NO); printf("(%d)",prevnode->id);
+//      }
+//      if(! is_idg_leaf(callnode)){
+//	sfPrintGoal(stdout,(VariantSF)callnode->goal,NO); printf("(%d)",callnode->id);
+//      }
       */
       xsb_abort("BUG: key not found for removal (deallocate previous call)\n");
     }
@@ -551,13 +551,13 @@ void addcalledge(CTXTdeclc callnodeptr fromcn, callnodeptr tocn){
     fromcn->outcount++;
     
 #ifdef INCR_DEBUG		
-    if(IsNonNULL(fromcn->goal)){
-      sfPrintGoal(stdout,(VariantSF)fromcn->goal,NO);printf("(%d)",fromcn->id);
+    if(!is_idg_leaf(fromcn)){
+      sfPrintGoal(stdout,(VariantSF)callnode_sf(fromcn),NO);printf("(%d)",fromcn->id);
     }else      printf("--------------- addcalledge after  (%d)",fromcn->id);
     
-    if(IsNonNULL(tocn->goal)){
+    if(!is_idg_leaf(tocn)){
       printf("-->");	
-      sfPrintGoal(stdout,(VariantSF)tocn->goal,NO);printf("(%d)",tocn->id);
+      sfPrintGoal(stdout,(VariantSF)callnode_sf(tocn),NO);printf("(%d)",tocn->id);
     }    printf("\n");	
 #endif
   }
@@ -623,7 +623,7 @@ void deallocate_call_list(CTXTdeclc calllistptr cl)  {
 void dfs_outedges_check_non_completed(CTXTdeclc callnodeptr call1) {
   //  char bufferb[MAXTERMBUFSIZE]; 
 
-  if(IsNonNULL(call1->goal) && !subg_is_completed((VariantSF)call1->goal)){
+  if(!is_idg_leaf(call1) && !subg_is_completed((VariantSF)callnode_sf(call1))){
     //    if (calllist_next(affected_gl) != NULL) {
     //      print_call_list(affected_gl);
     //  deallocate_call_list(CTXTc affected_gl);
@@ -676,7 +676,7 @@ static void dfs_outedges(CTXTdeclc callnodeptr call1,xsbBool inval_context){
 					 TABLE_SPACE);
   incr_callgraph_dfs_size = 10000;
   dfs_outedges_check_non_completed(CTXTc call1);
-  if (!is_fact_in_callgraph(call1)) call1->deleted = 1;
+  if (!is_idg_leaf(call1)) call1->deleted = 1;
   h=call1->outedges->hasht;
   if (hashtable1_count(h) > 0){
     //    printf("1-call1: %p \n",call1);
@@ -762,13 +762,14 @@ static void dfs_outedges(CTXTdeclc callnodeptr call1,xsbBool inval_context){
  *  add_callnode(&affected_gl,call1);		
  * }
  * */
+
 // TES: factored out this warning because dfs_inedges is recursive and
 // this makes the stack frames too big. 
 void dfs_inedges_warning(CTXTdeclc callnodeptr call1,calllistptr *lazy_affected_ptr) {
   deallocate_call_list(CTXTc *lazy_affected_ptr);
-  sprint_subgoal(CTXTc forest_log_buffer_1,0,call1->goal);
+  sprint_subgoal(CTXTc forest_log_buffer_1,0,callnode_sf(call1));
     xsb_warn(CTXTc "%d Choice point(s) exist to the table for %s -- cannot incrementally update (dfs_inedges)\n",
-	     subg_visitors(call1->goal),forest_log_buffer_1->fl_buffer);
+	     subg_visitors(callnode_sf(call1)),forest_log_buffer_1->fl_buffer);
   }
 
 
@@ -907,7 +908,8 @@ void throw_dfs_inedges_error(CTXTdeclc callnodeptr call1) {
   sprintf(bufferb,"Incremental tabling is trying to invalidate an incomplete table \n %s\n",
 	  forest_log_buffer_1->fl_buffer);
   xsb_new_table_error(CTXTc "incremental_tabling",bufferb,"in predicate %s/%d",
-		      get_name(TIF_PSC(subg_tif_ptr(call1->goal))),get_arity(TIF_PSC(subg_tif_ptr(call1->goal))));
+		      get_name(TIF_PSC(subg_tif_ptr(callnode_sf(call1)))),
+		      get_arity(TIF_PSC(subg_tif_ptr(callnode_sf(call1)))));
 }
 
 /* If ret != 0 (= CANNOT_UPDATE) then we'll use the old table, and we
@@ -917,16 +919,16 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected_ptr, in
   VariantSF subgoal;
   int ret = 0;
 
-  if(IsNonNULL(call1->goal)) {
-    if (!subg_is_completed((VariantSF)call1->goal)){
+  if(!is_idg_leaf(call1)) {
+    if (!subg_is_completed((VariantSF)callnode_sf(call1))){
 
       deallocate_call_list(CTXTc *lazy_affected_ptr);
       throw_dfs_inedges_error(CTXTc call1);
 
     }
-    if (subg_visitors(call1->goal)) {
+    if (subg_visitors(callnode_sf(call1))) {
       #ifdef ISO_INCR_TABLING
-      find_the_visitors(CTXTc call1->goal);
+      find_the_visitors(CTXTc callnode_sf(call1));
       #else
       dfs_inedges_warning(CTXTc call1,lazy_affected_ptr);
       return CANNOT_UPDATE;
@@ -954,7 +956,7 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected_ptr, in
     }
     inedge_list = inedge_list->next;
   }
-  if(IsNonNULL(call1->goal) & !ret){ /* fact check */
+  if(!is_idg_leaf(call1) & !ret){ /* fact check */
     //    printf(" dfs_i adding "); print_subgoal(stddbg,call1->goal);printf("\n");
     add_callnode(CTXTc lazy_affected_ptr,call1);		
   }
@@ -1054,13 +1056,13 @@ int return_lazy_call_list(CTXTdeclc  callnodeptr call1){
   return unify(CTXTc reg_term(CTXTc 4),reg_term(CTXTc 5));
 
   /*int i;
-    for(i=0;i<callqptr;i++){
-      if(IsNonNULL(callq[i]) && (callq[i]->deleted==1)){
-    sfPrintGoal(stdout,(VariantSF)callq[i]->goal,NO);
-    printf(" %d %d\n",callq[i]->falsecount,callq[i]->deleted);
-    }
-    }
-  printf("-----------------------------\n");   */
+   * for(i=0;i<callqptr;i++){
+   *   if(IsNonNULL(callq[i]) && (callq[i]->deleted==1)){
+   * sfPrintGoal(stdout,(VariantSF)callq[i]->goal,NO);
+   * printf(" %d %d\n",callq[i]->falsecount,callq[i]->deleted);
+   * }
+   * }
+   *printf("-----------------------------\n");   */
 }
 
 //---------------------------------------------------------------------------
@@ -1110,7 +1112,7 @@ int immediate_outedges_list(CTXTdeclc callnodeptr call1){
       do {
 	cn = hashtable1_iterator_value(itr);
 	//	printf("found outedge ");print_callnode(stddbg,cn);printf("\n");
-	if(IsNonNULL(cn->goal)){
+	if(!is_idg_leaf(cn)){
 	  count++;
 	  subgoal = (VariantSF) cn->goal;      
 	  tif = (TIFptr) subgoal->tif_ptr;
@@ -1183,7 +1185,7 @@ int immediate_affects_ptrlist(CTXTdeclc callnodeptr call1){
     if (hashtable1_count(h) > 0){
       do {
 	cn = hashtable1_iterator_value(itr);
-	if(IsNonNULL(cn->goal)){
+	if(!is_idg_leaf(cn)){
 	  count++;
 	  subgoal = (VariantSF) cn->goal;      
 	  check_glstack_overflow(4,pcreg,2); 

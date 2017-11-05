@@ -588,6 +588,7 @@ void abolish_release_all_dls_shared(CTXTdeclc ASI asi)
   DE de, tmp_de;
   DL dl, tmp_dl;
 
+  //  print_subgoal(stddbg,asi_subgoal(asi));printf(" arads \n");
   dl = asi_dl_list(asi);
   SYS_MUTEX_LOCK( MUTEX_DELAY ) ;
   while (dl) {
@@ -1663,7 +1664,7 @@ Integer new_private_trie(CTXTdeclc int props) {
     itrie_array_first_trie = index;
 
     if IS_INCREMENTAL_TRIE(props) {
-	itrie_array[index].callnode = makecallnode(CTXTc NULL);
+	itrie_array[index].callnode = makecallnode(CTXTc NULL,0);
 	(itrie_array[index].callnode)->is_incremental_trie = 1;
 	//	printf("callnode %p\n",itrie_array[index].callnode);
 	initoutedges(CTXTc (callnodeptr)itrie_array[index].callnode);
@@ -4727,7 +4728,7 @@ int index =  itrie_array_first_trie;
  if (index >= 0) {
    do {
      if (itrie_array[index].incremental == 1) {
-       itrie_array[index].callnode = makecallnode(CTXTc NULL);
+       itrie_array[index].callnode = makecallnode(CTXTc NULL,0);
        //       printf("reinitizlizing incremental trie %d %p\n",index,itrie_array[index].callnode);
        initoutedges(CTXTc (callnodeptr)itrie_array[index].callnode);
      }
@@ -5982,7 +5983,8 @@ case CALL_SUBS_SLG_NOT: {
   }
  
   case START_FOREST_VIEW: {
-    char *filename = ptoc_string(CTXTc 2);
+    char *filename = ptoc_string(CTXTc 2);    
+    //    printf("fl = %d\n",(int) flags[CTRACE_CALLS]);
     if (!(strcmp(filename,"userout")))
       fview_ptr = stdout; 
     else fview_ptr = fopen(filename,"w");
