@@ -154,7 +154,7 @@ VariantSF NewProducerSF(CTXTdeclc BTNptr Leaf,TIFptr TableInfo,unsigned int is_n
 /* incremental evaluation start */
 if((get_incr(TIF_PSC(TableInfo))) &&(IsVariantPredicate(TableInfo))){
   //  sfPrintGoal(stdout,pNewSF,NO);printf(" is marked incr\n");
-  subg_callnode_ptr(pNewSF) = makecallnode(CTXTc pNewSF);   
+  subg_callnode_ptr(pNewSF) = makecallnode(CTXTc pNewSF,0);   
  } else{
   //sfPrintGoal(stdout,pNewSF,NO);printf(" is marked NON-incr %s/%d:%d:%u\n",get_name(TIF_PSC(TableInfo)),get_arity(TIF_PSC(TableInfo)),get_incr(TIF_PSC(TableInfo)),TIF_PSC(TableInfo));
   subg_callnode_ptr(pNewSF) = NULL;
@@ -427,7 +427,7 @@ int table_call_search_incr(CTXTdeclc TabledCallInfo *call_info,
     leaf=CallLUR_Leaf(*results);
     if (CallLUR_VariantFound(*results)==0){      /* new call */      
       dyn_incr_inserts_gl++;
-      cn = makecallnode(CTXTc NULL); 
+      cn = makecallnode(CTXTc NULL,1); 
       BTN_Child(leaf) = (BTNptr)cn;
       callnode_tif_ptr(cn) = tif;
       callnode_leaf_ptr(cn) = leaf;
