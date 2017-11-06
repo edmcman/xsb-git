@@ -367,11 +367,12 @@ t_not(Subgoal,PredType,PTCP) :-
 */
 
 /*
-%%:- import writeln/1 from standard.
 %%writeit(0).
 %writeit(1).
 %%mywriteln(Term):- writeit(If),(If =:= 1 -> writeln(Term); true).
 */
+:- import writeln/1 from standard.
+   mywriteln(Term):- writeln(Term).
 
 u_not(Goal) :-
 	(ground_and_acyclic(Goal) ->
@@ -1405,6 +1406,24 @@ get_sdg_info(CSF,Rest):-
 	          get_sdg_info(NewCSF,Rest1) )
 	      ; true).
 
+%--------
+get_idg_info(Graph):- 
+    get_incr_sccs_with_deps(SccList,Deplist),
+    writeln(SccList),
+    writeln(Deplist),
+    idg_scclist_to_adj_grapth(SccList,Graph).
+
+idg_scclist_to_adj_grapth([],[]).
+idg_scclist_to_adj_grapth([ret(Subgoal,SCC)|R],[Term|Graph]):-
+    Term = subgoal(Subgoal,SCC,SF,CallsTo,Answers,PosSFList,[]),
+    get_call(Subgoal, SF, _ReturnTemplate),
+    get_callsto_number(SF,CallsTo),
+    get_answer_number(SF,Answers),
+    all_immed_affects_ptr(SF,PosSFList),
+    idg_scclist_to_adj_grapth(R,Graph).
+
+
+
 remove_gencon_cp([],_Genparent,[]).
 remove_gencon_cp([SF|Rest],SF,Rest):- !.
 remove_gencon_cp([H|T],Genparent,[H|T1]):- 
@@ -1545,10 +1564,10 @@ print_sdg_info(SDG):-
 	reverse(SDG,SDG1),
         get_base_level(SDG1,Base),
 	get_subgoal_avl(SDG1,AVL), % writeln(avl(AVL)),
-	print_each_subgoal(SDG1,Base,AVL).
+	sdg_print_each_subgoal(SDG1,Base,AVL).
 
-print_each_subgoal([],_Base,_AVL).
-print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegSFList)|R],Base,AVL):- 
+sdg_print_each_subgoal([],_Base,_AVL).
+sdg_print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegSFList)|R],Base,AVL):- 
         format("Subgoal: ~q~n",Subgoal),
 	(integer(Level) -> 
 	   Index is Level - Base,
@@ -1562,8 +1581,34 @@ print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegSFLis
           ; get_subgoal_list(NegSFList,AVL,NegSubgList),
 	    format("        Affects negatively ",[]),
 	    print_subgoal_list(NegSubgList),nl),
-	print_each_subgoal(R,Base,AVL).
+	sdg_print_each_subgoal(R,Base,AVL).
 
+%--------
+
+:- export print_idg_info/1.
+print_idg_info(SDG):- 
+	get_subgoal_avl(SDG,AVL), % writeln(avl(AVL)),
+	idg_print_each_subgoal(SDG,AVL).
+
+idg_print_each_subgoal([],_AVL).
+idg_print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegSFList)|R],AVL):-
+        numbervars(Subgoal),
+        format("Subgoal: ~q~n",Subgoal),
+	(integer(Level) -> 
+	   format("        SCC: ~d; Number of calls to this subgoal ~d; Number of answers ~d~n",[Level,CallsTo,Answers])
+         ; format("        Number of calls to this subgoal ~d; Number of answers ~d~n",[CallsTo,Answers]) ),
+	(PosSFList == [] -> true 
+          ; get_subgoal_list(PosSFList,AVL,PosSubgList),
+	    format("        Affects positively ",[]),
+	    print_subgoal_list(PosSubgList),nl),
+	(NegSFList == [] -> true 
+          ; get_subgoal_list(NegSFList,AVL,NegSubgList),
+	    format("        Affects negatively ",[]),
+	    print_subgoal_list(NegSubgList),nl),
+	idg_print_each_subgoal(R,AVL).
+
+%---
+	   
 get_subgoal_list([],_AVL,[]).
 get_subgoal_list([Key|KR],AVL,[Subg|SR]):- 
 	get_assoc(Key,AVL,Subg),
