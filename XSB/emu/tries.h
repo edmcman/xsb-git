@@ -675,7 +675,8 @@ typedef struct callnodetag{
     BTNptr leaf_ptr;
   };
   int id;
-  int idg_dyn_leaf:1,unused:31;
+  unsigned int idg_dyn_leaf:2,
+  unused:30;
   //  unsigned int no_of_undefs;
 }CALL_NODE;
 
@@ -684,7 +685,8 @@ typedef struct callnodetag{
 #define callnode_tif_ptr(Ptr) ( ((callnodeptr)(Ptr)) -> tif_ptr)
 #define callnode_leaf_ptr(Ptr) ( ((callnodeptr)(Ptr)) -> leaf_ptr)
 
-#define is_idg_leaf(Ptr)  (callnode_sf(Ptr) == 0)
+//#define is_idg_leaf(Ptr)  (callnode_sf(Ptr) == 0)
+#define is_idg_leaf(Ptr)  (((callnodeptr)(Ptr))->idg_dyn_leaf == 1)
 
 typedef struct key{
 	prolog_int goal;
