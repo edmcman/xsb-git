@@ -49,7 +49,7 @@
    get_returns_and_dls/3, 
    get_returns_and_tvs/3,     /* table_dump */
    get_returns_for_call/2,
-   get_sdg_info/1,
+   get_sdg_info/1, get_idg_info/1,
    get_unifiable_returns/3,
    get_visitors_number/2,
    invalidate_tables_for/2,
@@ -147,6 +147,8 @@
      from file_op.
 :- import format/2 from format.
 
+:- import get_incr_sccs_with_deps/2,all_immed_affects_ptr/2 from increval.
+   
 :- import abolish_table_info/0, delete_attributes/1, 
    ground_and_acyclic/1,
    psc_set_incr/2, psc_set_tabled/2, psc_tabled/2, psc_type/2,psc_set_alt_semantics/2,
