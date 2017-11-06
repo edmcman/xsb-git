@@ -207,7 +207,7 @@ static int equalkeys(void *k1, void *k2)
 
 
 /* Creates a call node */
-callnodeptr makecallnode(CTXTdeclc VariantSF sf, int dyn_leaf){
+callnodeptr makecallnode(CTXTdeclc void* sf, int dyn_leaf){
   
   callnodeptr cn;
   SM_AllocateStruct(smCallNode,cn);
@@ -1177,8 +1177,9 @@ int immediate_affects_ptrlist(CTXTdeclc callnodeptr call1){
   reg[4] = makelist(hreg);
   new_heap_free(hreg);
   new_heap_free(hreg);
-  
+  //  printf("immed affects call1 %p\n",call1);
   if(IsNonNULL(call1)){ /* This can be called from some non incremental predicate */
+    //    printf("immed affects call2 %p\n",call1);
     h=call1->outedges->hasht;
     
     itr = hashtable1_iterator(h);       
@@ -1220,7 +1221,7 @@ int immediate_depends_ptrlist(CTXTdeclc callnodeptr call1){
     
     while(IsNonNULL(cl)){
       subgoal = (VariantSF) cl->inedge_node->callnode->goal;    
-      if(IsNonNULL(subgoal)){/* fact check */
+      if(! is_idg_leaf(cl->inedge_node->callnode)){/* fact check */
 	count++;
 	check_glstack_overflow(4,pcreg,2); 
 	oldhreg = hreg-2;
@@ -1261,7 +1262,7 @@ int immediate_inedges_list(CTXTdeclc callnodeptr call1){
     
     while(IsNonNULL(cl)){
       subgoal = (VariantSF) cl->inedge_node->callnode->goal;    
-      if(IsNonNULL(subgoal)){/* fact check */
+      if(! is_idg_leaf(cl->inedge_node->callnode)){ /* fact check */
 	count++;
 	tif = (TIFptr) subgoal->tif_ptr;
 	psc = TIF_PSC(tif);

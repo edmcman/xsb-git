@@ -54,7 +54,7 @@ extern Structure_Manager smKey;
 #endif
 
 extern void initoutedges(CTXTdeclc callnodeptr cn);
-extern callnodeptr makecallnode(CTXTdeclc VariantSF, int);
+extern callnodeptr makecallnode(CTXTdeclc void*, int);
 extern void deallocate_previous_call(CTXTdeclc callnodeptr);
 extern void propagate_no_change(callnodeptr);
 extern void addcalledge(CTXTdeclc callnodeptr,callnodeptr);

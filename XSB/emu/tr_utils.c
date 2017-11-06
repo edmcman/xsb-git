@@ -392,13 +392,13 @@ void construct_answer_template(CTXTdeclc Cell callTerm, SubProdSF producer,
  */
 
 // If passed a NULL retTerm, dont bother to build it
-VariantSF get_call(CTXTdeclc Cell callTerm, Cell *retTerm) {
+VariantSF get_call(CTXTdeclc Cell callTerm, Cell *retTerm,int *incr_dyn_leaf_flag) {
 
   Psc  psc;
   TIFptr tif;
   int arity;
   BTNptr root, leaf;
-  VariantSF sf;
+  VariantSF sf = 0;
   Cell callVars[MAX_VAR_SIZE + 1];
 
   //  printf("get_call ");printterm(stddbg,callTerm,25);fprintf(stddbg,"\n");
@@ -410,8 +410,7 @@ VariantSF get_call(CTXTdeclc Cell callTerm, Cell *retTerm) {
 
   tif = get_tip(CTXTc psc);
   if ( IsNULL(tif) )
-    xsb_permission_error(CTXTc "table access","non-tabled predicate",callTerm,
-			   "get_call",3);
+    xsb_permission_error(CTXTc "table access","non-tabled predicate",callTerm,"get_call",3);
   root = TIF_CallTrie(tif);
   if ( IsNULL(root) )
     return NULL;
@@ -420,27 +419,24 @@ VariantSF get_call(CTXTdeclc Cell callTerm, Cell *retTerm) {
   leaf = variant_trie_lookup(CTXTc root, arity, clref_val(callTerm) + 1, callVars);
   if ( IsNULL(leaf) )
     return NULL;
-  else {
 
+  if ( !TIF_IncrDynLeaf(tif) ) {
     sf = CallTrieLeaf_GetSF(leaf);
-
-    /* incremental evaluation: check introduced as because of fact
-       predicates  */
-    
-    if(IsNonNULL(sf) && get_incr(psc) && IsNULL(sf->callnode)) 
-      return NULL;
-    
-    /* incremental evaluation end */
-
-    if ( IsProperlySubsumed(sf) )
+    if ( IsProperlySubsumed(sf) ) 
       construct_answer_template(CTXTc callTerm, conssf_producer(sf), callVars);
-
-    if (retTerm) 
-      *retTerm = build_ret_term(CTXTc (int)callVars[0],&callVars[1]);
-
-    return sf;
   }
+  else { // dyn leaves do not have sf
+    *incr_dyn_leaf_flag = 1;
+  }
+
+  if (retTerm) 
+    *retTerm = build_ret_term(CTXTc (int)callVars[0],&callVars[1]);
+
+  //  printterm(stdout, retTerm, 20);
+
+  return sf;
 }
+
 
 /*======================================================================*/
 /*
@@ -1664,7 +1660,7 @@ Integer new_private_trie(CTXTdeclc int props) {
     itrie_array_first_trie = index;
 
     if IS_INCREMENTAL_TRIE(props) {
-	itrie_array[index].callnode = makecallnode(CTXTc NULL,0);
+	itrie_array[index].callnode = makecallnode(CTXTc NULL,1);
 	(itrie_array[index].callnode)->is_incremental_trie = 1;
 	//	printf("callnode %p\n",itrie_array[index].callnode);
 	initoutedges(CTXTc (callnodeptr)itrie_array[index].callnode);
@@ -4728,7 +4724,7 @@ int index =  itrie_array_first_trie;
  if (index >= 0) {
    do {
      if (itrie_array[index].incremental == 1) {
-       itrie_array[index].callnode = makecallnode(CTXTc NULL,0);
+       itrie_array[index].callnode = makecallnode(CTXTc NULL,1);
        //       printf("reinitizlizing incremental trie %d %p\n",index,itrie_array[index].callnode);
        initoutedges(CTXTc (callnodeptr)itrie_array[index].callnode);
      }

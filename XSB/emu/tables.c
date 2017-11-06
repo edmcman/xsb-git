@@ -427,7 +427,8 @@ int table_call_search_incr(CTXTdeclc TabledCallInfo *call_info,
     leaf=CallLUR_Leaf(*results);
     if (CallLUR_VariantFound(*results)==0){      /* new call */      
       dyn_incr_inserts_gl++;
-      cn = makecallnode(CTXTc NULL,1); 
+      //      cn = makecallnode(CTXTc NULL,1);
+      cn = makecallnode(CTXTc leaf,1);
       BTN_Child(leaf) = (BTNptr)cn;
       callnode_tif_ptr(cn) = tif;
       callnode_leaf_ptr(cn) = leaf;
@@ -928,6 +929,7 @@ inline TIFptr New_TIF(CTXTdeclc Psc pPSC) {
    if ( IsNULL(pTIF) )							
      xsb_resource_error_nopred("memory", "Ran out of memory in allocation of TableInfoFrame");	
    TIF_PSC(pTIF) = pPSC;						
+   TIF_IncrDynLeaf(pTIF) = 0;  /* reset later if needed */
    if (get_tabled(pPSC)==T_TABLED) {					
      TIF_EvalMethod(pTIF) = (TabledEvalMethod)pflags[TABLING_METHOD];	
      if (TIF_EvalMethod(pTIF) == VARIANT_EVAL_METHOD)			
@@ -938,14 +940,17 @@ inline TIFptr New_TIF(CTXTdeclc Psc pPSC) {
       TIF_EvalMethod(pTIF) = VARIANT_EVAL_METHOD;			
    else if (get_tabled(pPSC)==T_TABLED_SUB) 				
      TIF_EvalMethod(pTIF) = SUBSUMPTIVE_EVAL_METHOD;			
-   else {			
-     /* incremental evaluation */
-     if(get_nonincremental(pPSC))					
+   else { /* incremental evaluation: not tabled: incr_dyn_leaf  */
+     if(get_incr(pPSC))
+       TIF_IncrDynLeaf(pTIF) = 1;
+     else {    /* non-tabled, non-incr (TES maybe should aboct?) */
        xsb_warn(CTXTc "%s/%d not identified as tabled in .xwam file, Recompile (variant assumed)", \
-		get_name(pPSC),get_arity(pPSC));				
-      TIF_EvalMethod(pTIF) = VARIANT_EVAL_METHOD;			
-      psc_set_tabled(pPSC,T_TABLED_VAR);					
-   }									
+		get_name(pPSC),get_arity(pPSC));
+     }
+     TIF_EvalMethod(pTIF) = VARIANT_EVAL_METHOD;
+     //     printf("setting eval method\n");
+     psc_set_tabled(pPSC,T_TABLED_VAR);					
+   }
    TIF_CallTrie(pTIF) = NULL;						
    TIF_Mark(pTIF) = 0;                                                  
    TIF_Visited(pTIF) = 0; 

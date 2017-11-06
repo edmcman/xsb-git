@@ -78,7 +78,7 @@ extern VariantSF get_subgoal_frame_for_answer_trie_cp(CTXTdeclc BTNptr,CPtr);
 extern VariantSF get_variant_sf(CTXTdeclc Cell, TIFptr, Cell *);
 extern SubProdSF get_subsumer_sf(CTXTdeclc Cell, TIFptr, Cell *);
 extern BTNptr get_trie_root(BTNptr);
-extern VariantSF get_call(CTXTdeclc Cell, Cell *);
+extern VariantSF get_call(CTXTdeclc Cell, Cell *, int *);
 extern Cell build_ret_term(CTXTdeclc int, Cell[]);
 extern Cell build_ret_term_reverse(CTXTdeclc int, Cell[]);
 extern void construct_answer_template(CTXTdeclc Cell, SubProdSF, Cell[]);

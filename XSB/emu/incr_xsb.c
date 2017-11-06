@@ -209,8 +209,9 @@ xsbBool incr_eval_builtin(CTXTdecl)
 
   case IMMED_DEPENDS_LIST: {
     VariantSF sf;
-
-    sf = get_call(CTXTc ptoc_tag(CTXTc 2), NULL);
+    int idl_flag = 0;
+    sf = get_call(CTXTc ptoc_tag(CTXTc 2), NULL,&idl_flag);
+    //    printf("IDL sf %p\n",sf);
     if (IsNonNULL(sf)) 
       return(immediate_inedges_list(CTXTc sf->callnode));
     else return FALSE;
@@ -219,8 +220,9 @@ xsbBool incr_eval_builtin(CTXTdecl)
 
   case IMMED_AFFECTS_LIST: {
     VariantSF sf;
+    int idl_flag = 0;
 
-    sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL);
+    sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL,&idl_flag);
     if (IsNonNULL(sf)) 
     return immediate_outedges_list(CTXTc sf->callnode);
     else return FALSE;
@@ -230,8 +232,9 @@ xsbBool incr_eval_builtin(CTXTdecl)
   case IS_AFFECTED: {
     
     Psc psc = term_psc((Cell)(ptoc_tag(CTXTc 2)));
-    if (get_type(psc) != T_DYNA && get_incr(psc)) {    /* make sure its incremental, but  isn't a leaf node of the IDG */
-      VariantSF sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL);
+    int idl_flag = 0;
+    if (get_type(psc) != T_DYNA && get_incr(psc)) { /* make sure its incremental, but isn't a leaf node of the IDG */
+      VariantSF sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL,&idl_flag);
       if(IsNonNULL(sf)){
 	callnodeptr c=sf->callnode;
 	if(IsNonNULL(c) &&  (c->falsecount!=0)) {
@@ -272,9 +275,10 @@ xsbBool incr_eval_builtin(CTXTdecl)
       affected calls that the input call depends on, in postorder.         */
   case RETURN_LAZY_CALL_LIST: {
     VariantSF sf;
+    int idl_flag = 0;
     int rc = 0, flag, dfs_ret;
 
-    sf = get_call(CTXTc ptoc_tag(CTXTc 2), NULL);
+    sf = get_call(CTXTc ptoc_tag(CTXTc 2), NULL,&idl_flag);
 
     // maybe check callnodeptr here.
     if (IsNonNULL(sf))  {
@@ -306,12 +310,13 @@ xsbBool incr_eval_builtin(CTXTdecl)
 
   // Will not call incremental facts.
   case CALL_IF_AFFECTED: {
-  VariantSF sf;
-  Cell callTerm;
-
+    VariantSF sf;
+    Cell callTerm;
+    int idl_flag = 0;
+    
   callTerm = ptoc_tag(CTXTc 2);
 
-  sf = get_call(CTXTc callTerm, NULL);
+  sf = get_call(CTXTc callTerm, NULL,&idl_flag);
 
   if(IsNonNULL(sf)){
     callnodeptr c=sf->callnode;
@@ -340,8 +345,9 @@ xsbBool incr_eval_builtin(CTXTdecl)
 
   case GET_SUBGOAL_FRAME: {
     VariantSF sf;
-
-    sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL);
+    int idl_flag = 0;
+    
+    sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL,&idl_flag);
     //    printf("sf1 %p\n",sf);
     if (IsNonNULL(sf)) {
       ctop_int(CTXTc 3, (Integer) sf);
