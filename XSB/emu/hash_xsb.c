@@ -76,7 +76,7 @@ UInteger next_prime(UInteger some_int) {
   while ( (some_int >= primes[i]) && (i < NUM_OF_PRIMES) )
     i++;
 
-  if (i < NUM_OF_PRIMES)
+  if (i < NUM_OF_PRIMES-1)
     return (primes[i]);
   else    /* Ran out of prime numbers */
     return (2 * some_int - 1);
@@ -165,7 +165,6 @@ void expand_symbol_table() {
   mem_dealloc((void *)symbol_table.table,symbol_table.size,ATOM_SPACE);
   symbol_table.size = new_size;
   symbol_table.table = (void **)new_table;
-  /*printf("expanded atom table to: %d\n",new_size);*/
 }
 
 
@@ -185,6 +184,7 @@ void expand_string_table() {
   size_t index, new_size, new_index;
 
   new_size = next_prime(string_table.size);
+  //  printf("expanding string table to %ld (%f)\n",new_size,cpu_time());
   new_table = (void **)mem_calloc(new_size, sizeof(void *),STRING_SPACE);
 
   for (bucket_ptr = string_table.table, index = 0;
