@@ -82,60 +82,26 @@ UInteger next_prime(UInteger some_int) {
     return (2 * some_int - 1);
 }
 
+#define MAX_SHIFT_BITS sizeof(Cell)*8-5
 
 /*
- *  Hash object on first 25 characters of its name, plus its arity.
+ *  Hash object all characters of its name, plus its arity.
  *  Return a bucket number in the range [0 .. (hash_table_size - 1)].
  */
 
-//UInteger hash(const char *obj_name, byte arity, UInteger hash_table_size) {
 UInteger hash(const char *obj_name, int arity, UInteger hash_table_size) {
 
-  UInteger hashval, temp;
-  int i, j, k;
+  UInteger hashval = 0;
+  int shift = 0, msb = MAX_SHIFT_BITS;
 
-  hashval = 0;
-  if (*obj_name != '\0')
-    for (k=0; k<10; k++) {
-      for (i = 4; i >= 0; i--) {
-	temp = 0;
-	for (j = 0; j < 5; j++) {
-	  temp = (temp << i) + *obj_name;
-	  obj_name++;
-	  if (*obj_name == '\0') {
-	    hashval = hashval + temp;
-	    goto Done;
-	  }
-	}
-	hashval = hashval + temp;
-      }
-    }
- Done:
+  while (*obj_name != '\0') {
+    hashval = hashval ^ (*obj_name << shift);
+    obj_name++;
+    shift += 3;
+    if (shift >= msb) shift -= msb;
+  }
   return ((hashval + arity) MOD hash_table_size);
 }
-
-/* unsigned long hash(char *obj_name, byte arity, unsigned long hash_table_size) { */
-
-/*   unsigned long hashval, temp; */
-/*   int i, j; */
-
-/*   hashval = 0; */
-/*   if (*obj_name != '\0') */
-/*     for (i = 4; i >= 0; i--) { */
-/*       temp = 0; */
-/*       for (j = 0; j < 5; j++) { */
-/* 	temp = (temp << i) + *obj_name; */
-/* 	obj_name++; */
-/* 	if (*obj_name == '\0') { */
-/* 	  hashval = hashval + temp; */
-/* 	  goto Done; */
-/* 	} */
-/*       } */
-/*       hashval = hashval + temp; */
-/*     } */
-/*  Done: */
-/*   return ((hashval + arity) MOD hash_table_size); */
-/* } */
 
 
 /*
@@ -184,7 +150,7 @@ void expand_string_table() {
   size_t index, new_size, new_index;
 
   new_size = next_prime(string_table.size);
-  //  printf("expanding string table to %ld (%f)\n",new_size,cpu_time());
+  //  printf("expanding string table from %zd to %zd (%f)\n",string_table.size,new_size,cpu_time());
   new_table = (void **)mem_calloc(new_size, sizeof(void *),STRING_SPACE);
 
   for (bucket_ptr = string_table.table, index = 0;
