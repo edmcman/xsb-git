@@ -944,8 +944,9 @@ inline TIFptr New_TIF(CTXTdeclc Psc pPSC) {
      if(get_incr(pPSC))
        TIF_IncrDynLeaf(pTIF) = 1;
      else {    /* non-tabled, non-incr (TES maybe should aboct?) */
-       xsb_warn(CTXTc "%s/%d not identified as tabled in .xwam file, Recompile (variant assumed)", \
-		get_name(pPSC),get_arity(pPSC));
+       if (get_nonincremental(pPSC)) 
+	 xsb_warn(CTXTc "%s/%d not identified as tabled in .xwam file, Recompile (variant assumed)", \
+		  get_name(pPSC),get_arity(pPSC));
      }
      TIF_EvalMethod(pTIF) = VARIANT_EVAL_METHOD;
      //     printf("setting eval method\n");
