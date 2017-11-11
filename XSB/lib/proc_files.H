@@ -35,17 +35,19 @@
 :- export file_header/4.
 :- export read_dsv/3, read_can/2, read_pro/2.
 :- export break_into_code_fields/5.
+:- export data_records/3.
 
 :- import append/3 from basics.
 :- import length/2 from basics.
 :- import member/2 from basics.
-:- import warning/1, throw/1 from standard.
-:- import conset/2, coninc/2, conget/2, coninc/1 from gensym.
+:- import for/3 from basics.
+:- import warning/1, file_exists/1, call_cleanup/2 from standard.
+:- import conset/2, coninc/2, conget/2, coninc/1, gensym/2 from gensym.
 :- import file_read_line_list/2, file_put/2 from file_io.
-:- import writeln/1, atom_codes/2, repeat/0, '=..'/2,
+:- import atom_codes/2, repeat/0, '=..'/2,
 	functor/3, arg/3, number_codes/2, call/1, 
 	nl/1, writeq/2, write/2, writeln/2, cputime/1,
-	open/3, close/1
+	open/3, open/4, close/1
 	from standard.
 :- import retractall/1, assertz/1, asserta/1, (dynamic)/1 from assert.
 :- import str_match/5 from machine.
@@ -53,4 +55,8 @@
 :- import atom_to_term/2 from string.
 :- import read_canonical/2 from consult.
 :- import read/2 from standard.
-   
+:- import existence_error/4, misc_error/1 from error_handler.   
+:- import search_file/3 from loader.
+:- import concat_atom/2 from string.
+:- import odbc_open/2, odbc_close/1, odbc_sql/4 from odbc_call.
+:- import xsb_configuration/2 from xsb_configuration.
