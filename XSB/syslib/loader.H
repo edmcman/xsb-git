@@ -27,7 +27,8 @@
 :- export load_pred/1, load/1, libpath/1, set_inthandler/2,
 	'_$load_undef'/1, load_object_file/1,
 	%%reset_undef_pred_handlers/0,
-	windows_os_loader/0.
+	windows_os_loader/0,
+	search_file/3.
 
 %%:- import assert/1 from assert.
 :- import not_exists/1 from tables.
