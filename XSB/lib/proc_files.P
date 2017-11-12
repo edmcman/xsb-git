@@ -151,7 +151,10 @@ load_dsv(FileName,PSpec,Options0) :-
 	retractall(Spec),
         pad_args(Args,Options,ArgsPatched),
 	cputime(T0),
-	length(ArgsPatched,NumFields),
+	(var(ArgsPatched)
+	 ->	NumFields = 0
+	 ;	length(ArgsPatched,NumFields)
+	),
 	open(FileName,read,IStr),
 	(do_all
 	 call_cleanup(delim_file_record(IStr,NumFields,Options,_RecNum,ArgsPatched),
@@ -198,10 +201,9 @@ cvt_types([],_,_,Fields,Options) :- !,
 		write(user_error,''(LinesRead)), write(user_error,': '),
 		atom_codes_list(AtomFields,Fields),
 		writeq(user_error,AtomFields), nl(user_error),
-		writeln(user_error,'\tFields from line extended with variables'),nl(user_error),
 		(member(error,Options)
 		 ->	misc_error(('[proc_files] Error: Wrong length line, too few fields'))
-		 ;	true
+		 ;	writeln(user_error,'\tFields from line extended with variables'),nl(user_error)
 		)
 	 ;      ECnt =:= 10
 	 ->	writeln(user_error,'[proc_files] Warning: More wrong length lines...')
@@ -215,16 +217,19 @@ cvt_types(_,_,[],Fields,Options) :- !,
 		write(user_error,''(LinesRead)),write(user_error,': '),
 		atom_codes_list(AtomFields,Fields),
 		writeq(user_error,AtomFields),nl(user_error),
-		writeln(user_error,'\tExtra fields in line truncated'),
 		(member(error,Options)
 		 ->	misc_error(('[proc_files] Error: Wrong length line, too many fields'))
-		 ;	true
+		 ;	writeln(user_error,'\tExtra fields in line truncated')
 		)
 	 ;      ECnt =:= 10
 	 ->	writeln(user_error,'[proc_files] Warning: More wrong length lines...')
 	 ;	true
 	).
-cvt_types([F|Fs],[T|Ts],[A|As],Fields,Options) :-
+cvt_types([F|Fs],Types,[A|As],Fields,Options) :-
+	(Types = [T|Ts]
+	 ->	true
+	 ;	T = string		% pad as string
+	),
 	(var(T)
 	 ->	atom_codes(A,F)
 	 ; T == atom
@@ -326,7 +331,10 @@ delim_parse_quoted(Stream,"\r\n",Sep,Delim,Options,[13,10|TRest],Flg,Out):-!,
     (file_read_line_list(Stream,NextLine)
      ->	    coninc('__linesread'),
 	    delim_parse_quoted(Stream,NextLine,Sep,Delim,Options,TRest,Flg,Out)
-     ;	    warning(('Unexpected end-of-file')),
+     ;	    (member(error,Options)
+	     ->	    misc_error('[proc_files] Error: Unexpected end-of-file')
+	     ;	    warning(('[proc_files] Warning: Unexpected end-of-file'))
+	    ),
 	    TRest=[],
 	    Out=[]
     ).
@@ -334,7 +342,10 @@ delim_parse_quoted(Stream,"\n",Sep,Delim,Options,[10|TRest],Flg,Out):-!,
     (file_read_line_list(Stream,NextLine)
      ->	    coninc('__linesread'),
 	    delim_parse_quoted(Stream,NextLine,Sep,Delim,Options,TRest,Flg,Out)
-     ;	    warning(('Unexpected end-of-file in delimted field')),
+     ;	    (member(error,Options)
+	     ->	    misc_error(('[proc_files] Error: Unexpected end-of-file in delimted field'))
+	     ;	    warning(('[proc_files] Warning: Unexpected end-of-file in delimted field'))
+	    ),
 	    TRest=[],
 	    Out=[]
     ).
@@ -617,17 +628,19 @@ write_code_field(FieldCodes,Stream,Sep,Delim,DelimA) :-
 
 
 pad_args(ArgsIn,Options,ArgsOut) :-
-        (member(pad=N,Options), integer(N) ->
-            length(ArgsIn,LenIn),
-            Take is LenIn+N,
-            (N < 0 -> lists:take_upto(Take,ArgsIn,ArgsOut)
-            ; N > 0 ->
-                length(PatchArgs,N),
-                append(ArgsIn,PatchArgs,ArgsOut)
-            ; ArgsOut = ArgsIn
-            )
-        ; ArgsOut = ArgsIn
-        ).
+        ((member(pad=N,Options) ; member(pad(N),Options)),
+	  integer(N)
+	 ->	length(ArgsIn,LenIn),
+		Take is LenIn+N,
+		(N < 0
+		 ->	take_upto(Take,ArgsIn,ArgsOut)
+		 ; N > 0
+		 ->	length(PatchArgs,N),
+			append(ArgsIn,PatchArgs,ArgsOut)
+		 ;	ArgsOut = ArgsIn
+		)
+	 ;      ArgsOut = ArgsIn
+	).
 
 /*****************************************************/
 
@@ -693,7 +706,7 @@ get_opt_params(Options,Sep,Delim,Titles,Types,Returns) :-
 	),
 	(member(titles,Options)
 	 ->	Titles = 1
-	 ; member(titles(Titles),Options)
+	 ; (member(titles(Titles),Options) ; member(titles=Titles,Options))
 	 ->	true
 	 ;	Titles = 0
 	),
@@ -738,9 +751,9 @@ delim_file_record(InStream,NumFields,Options,RecNum,Fields) :-
 	 ->	delim_file_process(InStream,Sep,Delim,Titles,Options,RecNum,CodeFields)
 	 ;	delim_file_process_fixed(InStream,NumFields,Sep,Delim,Returns,Titles,Options,RecNum,CodeFields)
 	),
+	length(CodeFields,ActNum),
 	(NumFields > 0
-	 ->	length(CodeFields,ActNum),
-		(ActNum =:= NumFields
+	 ->	(ActNum =:= NumFields
 		 ->	true
 		 ;	write(user_error,'[proc_files] Warning: Record with wrong number of fields; '),
 			write(user_error,ActNum),
@@ -752,7 +765,7 @@ delim_file_record(InStream,NumFields,Options,RecNum,Fields) :-
 			),
 			fail
 		)
-		;      true
+	 ;      length(Fields,ActNum)
 	),
 	(Strings =:= 1		% wants all strings, overrides types
 	 ->	Fields = CodeFields

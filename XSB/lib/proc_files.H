@@ -60,3 +60,4 @@
 :- import concat_atom/2 from string.
 :- import odbc_open/2, odbc_close/1, odbc_sql/4 from odbc_call.
 :- import xsb_configuration/2 from xsb_configuration.
+:- import take_upto/3 from lists.
