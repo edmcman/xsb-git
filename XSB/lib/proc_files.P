@@ -437,8 +437,8 @@ save_dsv(FileName,PSpec,Sep0,Delim0,Options) :-
 			Spec =.. [_|Fields]
 		)
 	),
-	(member(outfields=OutFields,Options) % list of vars of fields to output
-	 ->	true
+	((member(outfields=OutFields,Options) ; member(outfields(OutFields),Options)) 
+	 ->	true		% list of vars of fields to output
 	 ;	OutFields = Fields
 	),
 	(integer(Sep0) -> Sep = [Sep0] ; Sep = Sep0),
@@ -503,11 +503,11 @@ put_list(Stream,Field,Delim) :-
 /* this converts to atoms to copy; look into not filling atom table...*/
 copy_dsv(InFileName,NumFields,OutFileName,Options) :-
 	get_opt_params(Options,InSep,InDelim,_Titles,_Types,_Returns),
-	(member(out_separator=OutSep0,Options)
+	((member(out_separator=OutSep0,Options) ; member(out_separator(OutSep0),Options))
 	 ->	std_separator(OutSep0,OutSep)
 	 ;	OutSep = InSep
 	),
-	(member(out_delimiter=OutDelim0,Options)
+	((member(out_delimiter=OutDelim0,Options) ; member(out_delimiter(OutDelim0),Options))
 	 ->	std_separator(OutDelim0,OutDelim)
 	 ;	OutDelim = InDelim
 	),
@@ -695,8 +695,11 @@ read_file_records(dsv(Opts),IStr,RecFields) :-
 	delim_file_record(IStr,NumFields,Opts,_RecNum,RecFields).
 
 get_opt_params(Options,Sep,Delim,Titles,Types,Returns) :-
-	(member(separator=Sep0,Options) -> std_separator(Sep0,Sep) ; Sep = ","),
-	(member(delimiter=Delimiter0,Options)
+	((member(separator=Sep0,Options) ; member(separator(Sep0),Options))
+	 ->	std_separator(Sep0,Sep)
+	 ; Sep = ","
+	),
+	((member(delimiter=Delimiter0,Options) ; member(delimiter(Delimiter0),Options))
 	 ->	std_separator(Delimiter0,Delimiter),
 		(Delimiter = [Delim]
 		 ->	true
@@ -710,8 +713,14 @@ get_opt_params(Options,Sep,Delim,Titles,Types,Returns) :-
 	 ->	true
 	 ;	Titles = 0
 	),
-	(member(types=Types,Options) ->	true ; true),
-	(member(returns=Returns,Options) -> true ; Returns = 0).
+	((member(types=Types,Options) ; member(types(Types),Options))
+	 ->	true
+	 ;	true
+	),
+	((member(returns=Returns,Options) ; member(returns(Returns),Options))
+	 ->	true
+	 ;	Returns = 0
+	).
 
 db_records(SQL,sql(BindVars,ConnectionStr),RecTerm) :-
 	gensym(db_rec_,Connect),
