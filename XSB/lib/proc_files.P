@@ -796,24 +796,30 @@ delim_file_record(InStream,NumFields,Options,RecNum,Fields) :-
      ->	(ActNum =:= NumFields
 	 -> CodeFields=CodeFields_aux,
 	    DesiredNum = ActNum
-	 ;  conget('__linesread',LinesRead), % deal with wrong number of args
-	    write(user_error,'[proc_files] Warning: Wrong number of fields in record on line '),
-	    write(user_error,LinesRead),
-	    write(user_error,'; '),
-	    write(user_error,ActNum),
-	    write(user_error,' read, should have '),
-	    write(user_error,NumFields),
-	    (member(error,Options)
-	     ->	nl(user_error),
-		misc_error(('[proc_files] Error: Wrong number of fields in record on line ', LinesRead))
-	     ;	(NumFields>ActNum
-		 -> writeln(user_error,'; extra fields padded with ''NULL''(_)')
-		 ;  writeln(user_error,'; extra fields ignored')
-		),
-		PadNum is NumFields-ActNum,
-		pad_fields_with_null(CodeFields_aux,PadNum,CodeFields),
-		DesiredNum = NumFields
-	    )
+	 ;  coninc('__errcnt',ECnt),
+	    (ECnt < 10
+	     ->	conget('__linesread',LinesRead), % deal with wrong number of args
+		write(user_error,'[proc_files] Warning: Wrong number of fields in record on line '),
+		write(user_error,LinesRead),
+		write(user_error,'; '),
+		write(user_error,ActNum),
+		write(user_error,' read, expected '),
+		write(user_error,NumFields),
+		(member(error,Options)
+		 -> nl(user_error),
+		    misc_error(('[proc_files] Error: Wrong number of fields in record on line ', LinesRead))
+		 ;  (NumFields>ActNum
+		     ->	writeln(user_error,'; extra fields padded with ''NULL''(_)')
+		     ;	writeln(user_error,'; extra fields ignored')
+		    )
+		)
+	     ; ECnt =:= 10
+	     ->	writeln(user_error,'[proc_files] Warning: More records with wrong numbers of fields ...')
+	     ;	true
+	    ),
+	    PadNum is NumFields-ActNum,
+	    pad_fields_with_null(CodeFields_aux,PadNum,CodeFields),
+	    DesiredNum = NumFields
 	)
      ;	CodeFields=CodeFields_aux,
 	DesiredNum = ActNum
