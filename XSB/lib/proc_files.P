@@ -43,6 +43,9 @@ load_psv(FileName,PSpec) :-
 	load_dsv(FileName,PSpec,[separator="|"]).   %"
 
 read_dsv(FileName,Options,Term) :-
+	conset('__errcnt',0),
+	conset('__recsread',0),
+	conset('__linesread',0),
 	functor(Term,Pred,Arity),
 	Term =.. [Pred|Args],
 	open(FileName,read,IStr),
@@ -141,6 +144,9 @@ issued.
 ").
 
 load_dsv(FileName,PSpec,Options0) :-
+	conset('__errcnt',0),
+	conset('__recsread',0),
+	conset('__linesread',0),
 	(member(order=reverse,Options0) -> Reverse = 1 ; Reverse = 0),
 	process_predspec(PSpec,Spec,Types,Args),
 	(nonvar(Types)
@@ -195,19 +201,19 @@ process_predspec(PSpec,Spec,Types,Args) :-
 cvt_types([],[],[],_,_) :- !.
 cvt_types([],_,_,Fields,Options) :- !,
 	coninc('__errcnt',ECnt),
-	(ECnt < 10
-	 ->	write(user_error,'[proc_files] Warning: wrong length line '),
-		conget('__linesread',LinesRead),
-		write(user_error,''(LinesRead)), write(user_error,': '),
-		atom_codes_list(AtomFields,Fields),
-		writeq(user_error,AtomFields), nl(user_error),
-		(member(error,Options)
-		 ->	misc_error(('[proc_files] Error: wrong length line, too few fields'))
-		 ;	writeln(user_error,'\tFields from line extended with variables'),nl(user_error)
-		)
-	 ;      ECnt =:= 10
-	 ->	writeln(user_error,'[proc_files] Warning: more wrong length lines...')
-	 ;	true
+	(ECnt < 10 ->
+            write(user_error,'[proc_files] Warning: wrong length line '),
+            conget('__linesread',LinesRead),
+            write(user_error,''(LinesRead)), write(user_error,': '),
+            atom_codes_list(AtomFields,Fields),
+            writeq(user_error,AtomFields), nl(user_error),
+            (member(error,Options) ->
+                misc_error(('[proc_files] Error: wrong length line -- too few fields on line ',LinesRead))
+            ;   writeln(user_error,'\tFields from line extended with variables'),nl(user_error)
+            )
+        ;      ECnt =:= 10
+        ->	writeln(user_error,'[proc_files] Warning: more wrong length lines...')
+        ;	true
 	).
 cvt_types(_,_,[],Fields,Options) :- !,
 	coninc('__errcnt',ECnt),
@@ -217,9 +223,9 @@ cvt_types(_,_,[],Fields,Options) :- !,
 		write(user_error,''(LinesRead)),write(user_error,': '),
 		atom_codes_list(AtomFields,Fields),
 		writeq(user_error,AtomFields),nl(user_error),
-		(member(error,Options)
-		 ->	misc_error(('[proc_files] Error: wrong length line, too many fields'))
-		 ;	writeln(user_error,'\tExtra fields in line truncated')
+		(member(error,Options) ->
+                    misc_error(('[proc_files] Error: wrong length line -- too many fields on line ', LinesRead))
+                ;   writeln(user_error,'\tExtra fields in line truncated')
 		)
 	 ;      ECnt =:= 10
 	 ->	writeln(user_error,'[proc_files] Warning: more wrong length lines...')
@@ -245,9 +251,9 @@ cvt_types([F|Fs],Types,[A|As],Fields,Options) :-
 			write(user_error,''(LinesRead)),write(user_error,': '),
 			atom_codes(A,F),
 			writeq(user_error,A), nl(user_error),
-			(member(error,Options)
-			 ->	misc_error(('[proc_files] Error: cannot convert to integer: ',F))
-			 ;	true
+			(member(error,Options) ->
+                            misc_error(('[proc_files] Error: cannot convert to integer: ',F, ' on line ', LinesRead))
+                        ;   true
 			),
 			writeln(user_error,'\tConverting to atom instead')
 		)
@@ -263,7 +269,8 @@ cvt_types([F|Fs],Types,[A|As],Fields,Options) :-
 			atom_codes(A,F),
 			writeq(user_error,A), nl(user_error),
 			(member(error,Options)
-			 ->	misc_error(('[proc_files] Error: cannot convert to float: ',F))
+                        ->
+                            misc_error(('[proc_files] Error: cannot convert to float: ',F, ' on line ', LinesRead))
 			 ;	true
 			),
 			writeln(user_error,'\tConverting to atom instead')
@@ -331,20 +338,24 @@ delim_parse_quoted(Stream,"\r\n",Sep,Delim,Options,[13,10|TRest],Flg,Out):-!,
     (file_read_line_list(Stream,NextLine)
      ->	    coninc('__linesread'),
 	    delim_parse_quoted(Stream,NextLine,Sep,Delim,Options,TRest,Flg,Out)
-     ;	    (member(error,Options)
-	     ->	    misc_error('[proc_files] Error: unexpected end-of-file')
-	     ;	    warning(('[proc_files] Warning: unexpected end-of-file'))
-	    ),
-	    TRest=[],
-	    Out=[]
+     ;
+        conget('__linesread',LinesRead),
+        (member(error,Options) ->
+            misc_error(('[proc_files] Error: unexpected end-of-file on line ', LinesRead))
+        ;   warning(('[proc_files] Warning: unexpected end-of-file on line ',LinesRead))
+        ),
+        TRest=[],
+        Out=[]
     ).
 delim_parse_quoted(Stream,"\n",Sep,Delim,Options,[10|TRest],Flg,Out):-!,
     (file_read_line_list(Stream,NextLine)
      ->	    coninc('__linesread'),
 	    delim_parse_quoted(Stream,NextLine,Sep,Delim,Options,TRest,Flg,Out)
-     ;	    (member(error,Options)
-	     ->	    misc_error(('[proc_files] Error: unexpected end-of-file in delimted field'))
-	     ;	    warning(('[proc_files] Warning: unexpected end-of-file in delimted field'))
+    ;
+        conget('__linesread',LinesRead),
+        (member(error,Options) ->
+            misc_error(('[proc_files] Error: unexpected end-of-file in delimted field on line ',LinesRead))
+        ;   warning(('[proc_files] Warning: unexpected end-of-file in delimted field on line ',LinesRead))
 	    ),
 	    TRest=[],
 	    Out=[]
@@ -722,7 +733,8 @@ get_opt_params(Options,Sep,Delim,Titles,Types,Returns) :-
 	 ->	std_separator(Delimiter0,Delimiter),
 		(Delimiter = [Delim]
 		 ->	true
-		 ;	misc_error('[proc_files] Error: delimiter must be a single character string')
+                ;
+                    misc_error(('[proc_files] Error: delimiter must be a single character string'))
 		)
 	 ;	Delim = 0'"  %"
 	),
@@ -785,14 +797,17 @@ delim_file_record(InStream,NumFields,Options,RecNum,Fields) :-
                 CodeFields=CodeFields_aux,
                 DesiredNum = ActNum
             ; %% deal with wrong number of args
+                conget('__linesread',LinesRead),
                 write(user_error,
-                      '[proc_files] Warning: wrong number of fields in record; '),
+                      '[proc_files] Warning: wrong number of fields in record on line '),
+                write(user_error,LinesRead),
+                write(user_error,'; '),
                 write(user_error,ActNum),
                 write(user_error,' read, should have '),
                 write(user_error,NumFields),
                 (member(error,Options) ->
                     nl(user_error),
-                    misc_error(('[proc_files] Error: wrong number of fields in record'))
+                    misc_error(('[proc_files] Error: wrong number of fields in record on line ', LinesRead))
                 ;  (NumFields>ActNum ->
                        writeln(user_error,'; extra fields padded with \'\'')
                    ; writeln(user_error,'; extra fields ignored')
@@ -859,11 +874,12 @@ delim_file_process_fixed(Stream,Sep,Delim,Returns,Options,NumFields,PrevFields,F
 delim_file_process(InStream,Sep,Delim,Titles,Options,RecNum,CodeFields) :-
 	get_max_int(Max),
 	for(RecNum,1,Max),
-	(file_read_line_list(InStream,CList)
-	 ->	RecNum > Titles,
-		break_into_code_fields(InStream,CodeFields,CList,Sep,Delim,Options)
-	 ;      !,
-		NumRecs is RecNum-1,
-		conset('__recsread',NumRecs),
-		fail
+	(file_read_line_list(InStream,CList) ->
+            coninc('__linesread'),
+            RecNum > Titles,
+            break_into_code_fields(InStream,CodeFields,CList,Sep,Delim,Options)
+        ;   !,
+            NumRecs is RecNum-1,
+            conset('__recsread',NumRecs),
+            fail
 	).
