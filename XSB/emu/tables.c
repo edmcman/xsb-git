@@ -154,7 +154,7 @@ VariantSF NewProducerSF(CTXTdeclc BTNptr Leaf,TIFptr TableInfo,unsigned int is_n
 /* incremental evaluation start */
 if((get_incr(TIF_PSC(TableInfo))) &&(IsVariantPredicate(TableInfo))){
   //  sfPrintGoal(stdout,pNewSF,NO);printf(" is marked incr\n");
-  subg_callnode_ptr(pNewSF) = makecallnode(CTXTc pNewSF,0);   
+  subg_callnode_ptr(pNewSF) = makecallnode(CTXTc pNewSF,0,TableInfo);   
  } else{
   //sfPrintGoal(stdout,pNewSF,NO);printf(" is marked NON-incr %s/%d:%d:%u\n",get_name(TIF_PSC(TableInfo)),get_arity(TIF_PSC(TableInfo)),get_incr(TIF_PSC(TableInfo)),TIF_PSC(TableInfo));
   subg_callnode_ptr(pNewSF) = NULL;
@@ -262,11 +262,11 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
 	if (c->recomputable == COMPUTE_DEPENDENCIES_FIRST) {
 	  //	  printf("computing dependencies = 0\n");
 	  lazy_affected = empty_calllist(CTXT);
-	  if ( !dfs_inedges(CTXTc c,  &lazy_affected, CALL_LIST_EVAL) ) {
+	  if ( !dfs_dependency_edges(CTXTc c,  &lazy_affected, CALL_LIST_EVAL) ) {
 	    CallLUR_Subsumer(*results) = CallTrieLeaf_GetSF(Paren);
 	    //	    printf("        using recompleted table\n");
 	    return XSB_SPECIAL_RETURN;
-	  } /* otherwise if dfs_inedges, treat as falsecount = 0, use completed table */
+	  } /* otherwise if dfs_dependency_edges, treat as falsecount = 0, use completed table */
 	}
 	else {    /* COMPUTE_DIRECTLY */
 	  //	  printf("recomputing = 0\n");
@@ -413,6 +413,7 @@ int table_call_search_incr(CTXTdeclc TabledCallInfo *call_info,
   if ( IsNULL(TIF_CallTrie(tif)) )
     TIF_CallTrie(tif) = newCallTrie(CTXTc TIF_PSC(tif));
 
+
 #if !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
     var_subg_chk_ins_gl++;
 #endif
@@ -428,7 +429,7 @@ int table_call_search_incr(CTXTdeclc TabledCallInfo *call_info,
     if (CallLUR_VariantFound(*results)==0){      /* new call */      
       dyn_incr_inserts_gl++;
       //      cn = makecallnode(CTXTc NULL,1);
-      cn = makecallnode(CTXTc leaf,1);
+      cn = makecallnode(CTXTc leaf,1,tif);
       BTN_Child(leaf) = (BTNptr)cn;
       callnode_tif_ptr(cn) = tif;
       callnode_leaf_ptr(cn) = leaf;

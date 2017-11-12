@@ -511,6 +511,7 @@ int emuloop(CTXTdeclc byte *startaddr)
 /* Used only in the garbage collection test; does not affect emulator o/w */
 #define GC_INFERENCES 66 /* make sure the garbage collection test is hard */
   static int infcounter = 0;
+  printf("running in gc mode\n");
 #endif
   //  jmp_buf xsb_eval_environment; //unused
 
@@ -1392,7 +1393,7 @@ contcase:     /* the main loop */
     if ((infcounter++ > GC_INFERENCES) || heap_local_overflow((Integer)op2))
       {
 	infcounter = 0;
-        fprintf(stddbg, ".");
+	fprintf(stddbg, ".");
 #else
 	//    printf("t_h %d %p\n",(ereg-hreg),hreg);
 	if (heap_local_overflow((Integer)op2))

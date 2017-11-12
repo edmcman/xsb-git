@@ -1270,7 +1270,7 @@ void release_all_dls(CTXTdeclc ASI asi)
  * delay lists that contain them.
  *******************************************************************/
 
-void forest_log_pos_unconditional(VariantSF subgoal,NODEptr as_leaf,PNDE pde) {
+void forest_log_pos_unconditional(CTXTdeclc VariantSF subgoal,NODEptr as_leaf,PNDE pde) {
     if (flags[CTRACE_CALLS] && !subg_forest_log_off(subgoal))  {				
       char buffera[MAXTERMBUFSIZE];			
       char bufferc[MAXTERMBUFSIZE];			
@@ -1306,6 +1306,7 @@ void simplify_pos_unconditional(CTXTdeclc NODEptr as_leaf)
     //    xsb_resource_error_nopred("recursion stack", "depth of simplifications is over the allowed limit of ",
     //			      MAX_SIMPLIFICATION_DEPTH);
   }
+  printf("puc simplification_depth %d\n",simplification_depth_gl);
 
   subgoal = asi_subgoal(asi);
   release_all_dls(CTXTc asi);
@@ -1315,7 +1316,7 @@ void simplify_pos_unconditional(CTXTdeclc NODEptr as_leaf)
   while ((pde = asi_pdes(asi))) {
 
     if (flags[CTRACE_CALLS] && !subg_forest_log_off(subgoal))  {				
-      forest_log_pos_unconditional(subgoal,as_leaf,pde);
+      forest_log_pos_unconditional(CTXTc subgoal,as_leaf,pde);
     }
     de = pnde_de(pde);
     dl = pnde_dl(pde);
@@ -1389,6 +1390,7 @@ void simplify_neg_fails(CTXTdeclc VariantSF subgoal)
     //			      MAX_SIMPLIFICATION_DEPTH);
   }
   push_neg_simpl(subgoal);
+  printf("nf simplification_depth %d\n",simplification_depth_gl);
 
   if (in_simplify_neg_fails) {
     return;
@@ -1456,6 +1458,7 @@ static void simplify_neg_succeeds(CTXTdeclc VariantSF subgoal)
     //			      MAX_SIMPLIFICATION_DEPTH);
   }
   //  printf("in simplify neg succeeds: ");print_subgoal(stddbg,subgoal);printf("\n");
+  printf("ns simplification_depth: %d\n",simplification_depth_gl);
   answer_complete_subg(subgoal);
 
   while ((nde = subg_nde_list(subgoal))) {
@@ -1524,7 +1527,7 @@ static void simplify_neg_succeeds(CTXTdeclc VariantSF subgoal)
  * pointing to that AnswerSubstitution.
  **********************************************************************/
 
-void log_pos_unsupported(NODEptr as_leaf, PNDE pde) {
+void log_pos_unsupported(CTXTdeclc NODEptr as_leaf, PNDE pde) {
       char bufferb[MAXTERMBUFSIZE];			
       memset(bufferb,0,MAXTERMBUFSIZE);
       sprint_subgoal(CTXTc forest_log_buffer_1,0,asi_subgoal(Delay(as_leaf)));
@@ -1549,13 +1552,13 @@ void simplify_pos_unsupported(CTXTdeclc NODEptr as_leaf)
     //    xsb_resource_error_nopred("recursion stack", "depth of simplifications is over the allowed limit of ",
     //			      MAX_SIMPLIFICATION_DEPTH);
   }
-  //  printf("in simplify pos unsupported: ");print_subgoal(stddbg,asi_subgoal(Delay(as_leaf)));printf("\n");
+  //  printf("in simplify pos unsupported: ");print_subgoal(stddbg,asi_subgoal(Delay(as_leaf)));printf("\n")  printf("pus simplification_depth: %d",simplification_depth_gl);
 
   while ((pde = asi_pdes(asi))) {
 
     // TES: seems to be a problem with printing out as_leaf in this case.
     if (flags[CTRACE_CALLS] && !subg_forest_log_off(asi_subgoal(asi)))  {
-      log_pos_unsupported(as_leaf, pde);
+      log_pos_unsupported(CTXTc as_leaf, pde);
     }
 
     dl = pnde_dl(pde); /* dl: to be removed */

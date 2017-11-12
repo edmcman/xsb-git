@@ -54,7 +54,7 @@ extern Structure_Manager smKey;
 #endif
 
 extern void initoutedges(CTXTdeclc callnodeptr cn);
-extern callnodeptr makecallnode(CTXTdeclc void*, int);
+extern callnodeptr makecallnode(CTXTdeclc void*, int,TIFptr);
 extern void deallocate_previous_call(CTXTdeclc callnodeptr);
 extern void propagate_no_change(callnodeptr);
 extern void addcalledge(CTXTdeclc callnodeptr,callnodeptr);
@@ -68,11 +68,11 @@ extern calllistptr empty_calllist(CTXTdecl);
 extern void print_call_list(CTXTdeclc calllistptr ,char *);
 
 extern int immediate_outedges_list(CTXTdeclc callnodeptr);
-extern int immediate_inedges_list(CTXTdeclc callnodeptr call1);
+extern int immediate_depends_list(CTXTdeclc callnodeptr call1);
 extern void add_callnode(CTXTdeclc calllistptr *,callnodeptr);
 //extern void abolish_incr_call(CTXTdeclc callnodeptr);
 extern void free_incr_hashtables(TIFptr);
-extern int  dfs_inedges(CTXTdeclc  callnodeptr, calllistptr *, int);
+extern int  dfs_dependency_edges(CTXTdeclc  callnodeptr, calllistptr *, int);
 extern void print_call_node(callnodeptr);
 
 extern int  get_outedges_num(CTXTdeclc  callnodeptr);
@@ -80,7 +80,7 @@ extern int immediate_affects_ptrlist(CTXTdeclc callnodeptr);
 extern int immediate_depends_ptrlist(CTXTdeclc callnodeptr);
 extern int  get_incr_sccs(CTXTdeclc Cell);
 extern void deleteoutedges(CTXTdeclc callnodeptr);
-extern void deleteinedges(CTXTdeclc callnodeptr);
+extern void delete_dependency_edges(CTXTdeclc callnodeptr);
 extern void deletecallnode(CTXTdeclc callnodeptr);
 
 #endif  // public call graph defs

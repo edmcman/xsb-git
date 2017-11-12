@@ -232,7 +232,6 @@ hashtable1_remove(CTXTdeclc struct hashtable *h, void *k)
             *pE = e->next;
             h->entrycount--;
             v = e->v;
-	    // for now, this leaves a memory leak in the MT engine.
 	    SM_DeallocateSmallStruct(smKey, e->k);      
             //freekey(e->k);
 	    //	    SM_DeallocateStruct(smCallList,k);      

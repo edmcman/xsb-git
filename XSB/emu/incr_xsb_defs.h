@@ -61,7 +61,7 @@
 #define CALL_LIST_INSPECT          1
 #define CALL_LIST_CREATE_EVAL      2
   
-/* dfs_inedges */
+/* dfs_dependency_edges */
 #define CANNOT_UPDATE              1
 
 #define NOT_ABOLISHING             0

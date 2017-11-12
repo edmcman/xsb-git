@@ -1660,7 +1660,7 @@ Integer new_private_trie(CTXTdeclc int props) {
     itrie_array_first_trie = index;
 
     if IS_INCREMENTAL_TRIE(props) {
-	itrie_array[index].callnode = makecallnode(CTXTc NULL,1);
+	itrie_array[index].callnode = makecallnode(CTXTc NULL,1,0);
 	(itrie_array[index].callnode)->is_incremental_trie = 1;
 	//	printf("callnode %p\n",itrie_array[index].callnode);
 	initoutedges(CTXTc (callnodeptr)itrie_array[index].callnode);
@@ -4724,7 +4724,8 @@ int index =  itrie_array_first_trie;
  if (index >= 0) {
    do {
      if (itrie_array[index].incremental == 1) {
-       itrie_array[index].callnode = makecallnode(CTXTc NULL,1);
+       itrie_array[index].callnode = makecallnode(CTXTc NULL,1,0);
+       (itrie_array[index].callnode)->is_incremental_trie = 1;
        //       printf("reinitizlizing incremental trie %d %p\n",index,itrie_array[index].callnode);
        initoutedges(CTXTc (callnodeptr)itrie_array[index].callnode);
      }
@@ -4913,7 +4914,7 @@ void maybe_detach_incremental_call_single(CTXTdeclc VariantSF goal, int invalida
     invalidate_call(CTXTc callnode,ABOLISHING);
   }
   deleteoutedges(CTXTc callnode);
-  deleteinedges(CTXTc callnode);
+  delete_dependency_edges(CTXTc callnode);
   deletecallnode(CTXTc callnode);
   //  SET_TRIE_ALLOCATION_TYPE_SF(goal); // set smBTN to private/shared
   //  tif = subg_tif_ptr(goal);

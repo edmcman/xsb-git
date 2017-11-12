@@ -213,7 +213,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
     sf = get_call(CTXTc ptoc_tag(CTXTc 2), NULL,&idl_flag);
     //    printf("IDL sf %p\n",sf);
     if (IsNonNULL(sf)) 
-      return(immediate_inedges_list(CTXTc sf->callnode));
+      return(immediate_depends_list(CTXTc sf->callnode));
     else return FALSE;
     break;
   }
@@ -289,7 +289,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
       }
       else if (flag == CALL_LIST_CREATE_EVAL) {
 	lazy_affected = empty_calllist(CTXT);
-	dfs_ret = dfs_inedges(CTXTc subg_callnode_ptr(sf),  &lazy_affected, CALL_LIST_EVAL);
+	dfs_ret = dfs_dependency_edges(CTXTc subg_callnode_ptr(sf),  &lazy_affected, CALL_LIST_EVAL);
 	//	fprintf(stddbg,"dfs returned %d flag = %d\n",dfs_ret,flag);
 	if (!dfs_ret ) 
 	  rc = return_lazy_call_list(CTXTc sf->callnode);
@@ -298,7 +298,7 @@ xsbBool incr_eval_builtin(CTXTdecl)
       }
       else if (flag == CALL_LIST_INSPECT)  {
 	lazy_affected = empty_calllist(CTXT);
-	dfs_ret = dfs_inedges(CTXTc subg_callnode_ptr(sf),  &lazy_affected, CALL_LIST_INSPECT);
+	dfs_ret = dfs_dependency_edges(CTXTc subg_callnode_ptr(sf),  &lazy_affected, CALL_LIST_INSPECT);
 	//	fprintf(stddbg,"dfs returned %d flag = %d\n",dfs_ret,flag);
 	rc = return_lazy_call_list(CTXTc sf->callnode);
 	return rc;

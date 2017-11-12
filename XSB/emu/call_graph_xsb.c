@@ -207,7 +207,7 @@ static int equalkeys(void *k1, void *k2)
 
 
 /* Creates a call node */
-callnodeptr makecallnode(CTXTdeclc void* sf, int dyn_leaf){
+callnodeptr makecallnode(CTXTdeclc void* sf, int dyn_leaf,TIFptr tif){
   
   callnodeptr cn;
   SM_AllocateStruct(smCallNode,cn);
@@ -219,11 +219,12 @@ callnodeptr makecallnode(CTXTdeclc void* sf, int dyn_leaf){
   cn->prev_call = NULL;
   cn->aln = NULL;
   cn->inedges = NULL;
-  callnode_sf(cn) = sf;
+  callnode_sf(cn) = sf;  // could be subgoal frame or trieleaf
   cn->outedges=NULL;
   cn->id=total_call_node_count_gl++; 
   cn->outcount=0;
   cn->idg_dyn_leaf = dyn_leaf;
+  if (dyn_leaf) callnode_tif_ptr(cn) = tif;
   //    print_callnode(stddbg,cn);printf("\n");
 
   current_call_node_count_gl++;
@@ -232,10 +233,10 @@ callnodeptr makecallnode(CTXTdeclc void* sf, int dyn_leaf){
 }
 
 //---------------------------------------------------------------------------
-void print_inedges(callnodeptr cn) {
+void print_dependency_edges(callnodeptr cn) {
   calllistptr temp; 
 
-  printf("Inedges of %d = ",cn->id);
+  printf("Dependency edges of %d = ",cn->id);
   temp=cn->inedges;
   while(temp!=NULL){
     printf("   %d",temp->inedge_node->callnode->id);      
@@ -267,7 +268,7 @@ void print_outedges(callnodeptr cn) {
 
 }
 
-void deleteinedges(CTXTdeclc callnodeptr callnode){
+void delete_dependency_edges(CTXTdeclc callnodeptr callnode){
   calllistptr tmpin,in;
   
   KEY *ownkey;
@@ -278,8 +279,8 @@ void deleteinedges(CTXTdeclc callnodeptr callnode){
   in = callnode->inedges;
   
 #ifdef INCR_DEBUG	
-  printf("--------------------------------- deleteinedges (id %d) before \n",callnode->id);
-  print_inedges(callnode);
+  printf("--------------------------------- delete dependency edges (id %d) before \n",callnode->id);
+  print_dependency_edges(callnode);
 #endif
 
   while(IsNonNULL(in)){
@@ -294,9 +295,9 @@ void deleteinedges(CTXTdeclc callnodeptr callnode){
 #endif
       //    printf("remove some callnode %x / ownkey %d\n",callnode,ownkey);
       if (remove_some(CTXTc hasht,ownkey) == NULL) {
-	xsb_abort("BUG: key not found for removal (deleteinedges)\n");
+	xsb_abort("BUG: key not found for removal (delete dependency edges)\n");
       }
-      //printf("remove_some called from deleteinedges\n");
+      //printf("remove_some called from delete dependency edges\n");
       current_call_edge_count_gl--;
       in->inedge_node->callnode->outcount--;
       SM_DeallocateStruct(smCallList, in);      
@@ -305,8 +306,8 @@ void deleteinedges(CTXTdeclc callnodeptr callnode){
   }
   SM_DeallocateSmallStruct(smKey, ownkey);      
 #ifdef INCR_DEBUG	
-  printf("--------------------------------- deleteinedges after \n");
-  //  print_inedges(callnode);
+  printf("--------------------------------- delete dependency edges after \n");
+  //  print_dependency_edges(callnode);
 #endif
 
   return;
@@ -335,7 +336,7 @@ void deleteoutedges(CTXTdeclc callnodeptr callnode){
       cn_itr = hashtable1_iterator_value(itr);        
 #ifdef INCR_DEBUG1
       printf("iterating (id %d)",cn_itr->id);print_callnode(CTXTc stddbg,cn_itr); printf("\n");
-      printf("before deleting link "); print_inedges(cn_itr);
+      printf("before deleting link "); print_dependency_edges(cn_itr);
 #endif
       if (cn_itr != callnode) {  /* messes things up, otherwise.  This will be dealloc'd anyway */
 	in = cn_itr->inedges;
@@ -350,7 +351,7 @@ void deleteoutedges(CTXTdeclc callnodeptr callnode){
 	    }
 	    else last->next =  in->next;  // need to deallcoate
 	    SM_DeallocateStruct(smCallList, in);      
-	    //	  printf("again! ");print_inedges(cn_itr);
+	    //	  printf("again! ");print_dependency_edges(cn_itr);
 	    break;
 	  }
 	//printf("skipping\n");
@@ -359,7 +360,7 @@ void deleteoutedges(CTXTdeclc callnodeptr callnode){
       }
       current_call_edge_count_gl--;
 #ifdef INCR_DEBUG1
-      printf("after deleting link "); print_inedges(hashtable1_iterator_value(itr));
+      printf("after deleting link "); print_dependency_edges(hashtable1_iterator_value(itr));
 #endif
     } while (hashtable1_iterator_advance(itr)); 
     callnode->outcount = 0;  // hashtable will be deallocated in delete callnode
@@ -542,7 +543,7 @@ void addcalledge(CTXTdeclc callnodeptr fromcn, callnodeptr tocn){
 
 #ifdef INCR_DEBUG	
     printf("--------------- addcalledge (from %d to %d) before \n",fromcn->id,tocn->id);
-    print_inedges(tocn);
+    print_dependency_edges(tocn);
     print_outedges(fromcn);
 #endif
     
@@ -566,7 +567,7 @@ void addcalledge(CTXTdeclc callnodeptr fromcn, callnodeptr tocn){
   }
 #ifdef INCR_DEBUG	
     printf("--------------------------------- addcalledge after \n");
-    print_inedges(tocn);
+    print_dependency_edges(tocn);
 #endif
 }
 
@@ -763,12 +764,12 @@ static void dfs_outedges(CTXTdeclc callnodeptr call1,xsbBool inval_context){
  * }
  * */
 
-// TES: factored out this warning because dfs_inedges is recursive and
+// TES: factored out this warning because dfs_dependency_edges is recursive and
 // this makes the stack frames too big. 
-void dfs_inedges_warning(CTXTdeclc callnodeptr call1,calllistptr *lazy_affected_ptr) {
+void dfs_dependency_edges_warning(CTXTdeclc callnodeptr call1,calllistptr *lazy_affected_ptr) {
   deallocate_call_list(CTXTc *lazy_affected_ptr);
   sprint_subgoal(CTXTc forest_log_buffer_1,0,callnode_sf(call1));
-    xsb_warn(CTXTc "%d Choice point(s) exist to the table for %s -- cannot incrementally update (dfs_inedges)\n",
+    xsb_warn(CTXTc "%d Choice point(s) exist to the table for %s -- cannot incrementally update (dfs_dependency_edges)\n",
 	     subg_visitors(callnode_sf(call1)),forest_log_buffer_1->fl_buffer);
   }
 
@@ -902,7 +903,7 @@ void find_the_visitors(CTXTdeclc VariantSF subgoal) {
   //  printf("done with ftv\n");
 }
 
-void throw_dfs_inedges_error(CTXTdeclc callnodeptr call1) {
+void throw_dfs_dependency_edges_error(CTXTdeclc callnodeptr call1) {
   char bufferb[MAXTERMBUFSIZE]; 
   sprint_subgoal(CTXTc forest_log_buffer_1,0,(VariantSF)call1->goal);     
   sprintf(bufferb,"Incremental tabling is trying to invalidate an incomplete table \n %s\n",
@@ -914,7 +915,7 @@ void throw_dfs_inedges_error(CTXTdeclc callnodeptr call1) {
 
 /* If ret != 0 (= CANNOT_UPDATE) then we'll use the old table, and we
    wont lazily update at all. */
-int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected_ptr, int flag ){
+int dfs_dependency_edges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected_ptr, int flag ){
   calllistptr inedge_list;
   VariantSF subgoal;
   int ret = 0;
@@ -923,14 +924,14 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected_ptr, in
     if (!subg_is_completed((VariantSF)callnode_sf(call1))){
 
       deallocate_call_list(CTXTc *lazy_affected_ptr);
-      throw_dfs_inedges_error(CTXTc call1);
+      throw_dfs_dependency_edges_error(CTXTc call1);
 
     }
     if (subg_visitors(callnode_sf(call1))) {
       #ifdef ISO_INCR_TABLING
       find_the_visitors(CTXTc callnode_sf(call1));
       #else
-      dfs_inedges_warning(CTXTc call1,lazy_affected_ptr);
+      dfs_dependency_edges_warning(CTXTc call1,lazy_affected_ptr);
       return CANNOT_UPDATE;
       #endif
     }
@@ -948,7 +949,7 @@ int dfs_inedges(CTXTdeclc callnodeptr call1, calllistptr * lazy_affected_ptr, in
     if(IsNonNULL(subgoal)){ /* fact check */
       //      count++;
       if (inedge_list->inedge_node->callnode->falsecount > 0)  {
-	ret = ret | dfs_inedges(CTXTc inedge_list->inedge_node->callnode, lazy_affected_ptr,flag);
+	ret = ret | dfs_dependency_edges(CTXTc inedge_list->inedge_node->callnode, lazy_affected_ptr,flag);
       }
       else {
 	; //	printf(" dfs_i non_affected "); print_subgoal(stddbg,subgoal);printf("\n");
@@ -1245,9 +1246,10 @@ int immediate_depends_ptrlist(CTXTdeclc callnodeptr call1){
 For a callnode call1 returns a Prolog list of callnode on which call1
 immediately depends.
 */
-int immediate_inedges_list(CTXTdeclc callnodeptr call1){
+int immediate_depends_list(CTXTdeclc callnodeptr call1){
 
-  VariantSF subgoal;
+  callnodeptr cl_callnode; //  VariantSF subgoal;
+  BTNptr subg_leaf;  
   TIFptr tif;
   int j, count = 0,arity;
   Psc psc;
@@ -1261,14 +1263,24 @@ int immediate_inedges_list(CTXTdeclc callnodeptr call1){
     cl= call1->inedges;
     
     while(IsNonNULL(cl)){
-      subgoal = (VariantSF) cl->inedge_node->callnode->goal;    
-      if(! is_idg_leaf(cl->inedge_node->callnode)){ /* fact check */
-	count++;
-	tif = (TIFptr) subgoal->tif_ptr;
+      //      subgoal = (VariantSF) cl->inedge_node->callnode->goal;    
+      //      if(! is_idg_leaf(cl->inedge_node->callnode)){ /* fact check */
+      cl_callnode = cl->inedge_node->callnode;
+      count++;
+      if (is_incr_trie(cl_callnode)) {
+	oldhreg = hreg-2;
+	follow(oldhreg++) = makestring(string_find("incremental_trie",1));
+      }
+      else {
+	if (!is_idg_leaf(cl_callnode)) {
+	  tif = subg_tif_ptr(callnode_sf(cl_callnode));
+	  subg_leaf = subg_leaf_ptr(callnode_sf(cl_callnode));}
+	else {
+	  tif = callnode_tif_ptr(cl_callnode);
+	  subg_leaf = callnode_leaf_ptr(cl_callnode);}
 	psc = TIF_PSC(tif);
 	arity = get_arity(psc);
-	check_glstack_overflow(4,pcreg,2+(sizeof(Cell)*trie_path_heap_size(CTXTc subg_leaf_ptr(subgoal)))); 
-	//	check_glstack_overflow(4,pcreg,2+arity*200); // don't know how much for build_subgoal_args...
+	check_glstack_overflow(4,pcreg,2+(sizeof(Cell)*trie_path_heap_size(CTXTc subg_leaf))); 
 	oldhreg = hreg-2;
 	if(arity>0){
 	  sreg = hreg;
@@ -1279,15 +1291,14 @@ int immediate_inedges_list(CTXTdeclc callnodeptr call1){
 	    new_heap_free(sreg);
 	    incr_heap_cell_array[arity-j] = cell(sreg-1);
 	  }		
-	  load_solution_trie_no_heapcheck(CTXTc arity, 0, &incr_heap_cell_array[arity-1], subg_leaf_ptr(subgoal));
-	  //	  build_subgoal_args(arity,incr_heap_cell_array,subgoal);		
-	}else{
+	  load_solution_trie_no_heapcheck(CTXTc arity,0,&incr_heap_cell_array[arity-1],subg_leaf);
+	}else{  
 	  follow(oldhreg++) = makestring(get_name(psc));
 	}
-	follow(oldhreg) = makelist(hreg);
-	new_heap_free(hreg);
-	new_heap_free(hreg);
       }
+      follow(oldhreg) = makelist(hreg);
+      new_heap_free(hreg);
+      new_heap_free(hreg);
       cl=cl->next;
     }
     if (count>0)
@@ -1640,14 +1651,14 @@ int return_scc_list(CTXTdeclc SCCNode * nodes, Integer num_nodes){
 %%%   callnodeptr c;
 %%%   VariantSF goal;
 %%% 
-%%%   /* first iteration to delete inedges */
+%%%   /* first iteration to delete dependency edges */
 %%%   
 %%%   while(n!=marked_list_gl){    
 %%% %%%     c=n->item;
 %%% %%%     if(c->deleted){
 %%%       /* facts are not deleted */       
 %%%       if(IsNonNULL(c->goal)){
-%%% 	deleteinedges(CTXTc c);
+%%% 	delete_dependency_edges(CTXTc c);
 %%%       }
 %%%     }
 %%%     n=n->next;
