@@ -2823,22 +2823,24 @@ case WRITE_OUT_PROFILE:
     const int regCallTerm = 1;   /* in:  tabled call to look for */
     const int regSF       = 2;   /* out: corresponding subgoal frame */
     const int regRetTerm  = 3;   /* out: answer template in ret/N form */
-
+    const int regCallnode = 4;
     int incr_dyn_leaf_flag = 0;
     Cell ret;
-    VariantSF sf;
+    VariantSF sf; callnodeptr callnode;
 
-    sf = get_call(CTXTc ptoc_tag(CTXTc regCallTerm), &ret,&incr_dyn_leaf_flag);
+    sf = get_call(CTXTc ptoc_tag(CTXTc regCallTerm), &ret,&incr_dyn_leaf_flag,&callnode);
     //    sf = get_call(CTXTc ptoc_tag(CTXTc regCallTerm), &ret);
     if ( IsNonNULL(sf) ) {
       ctop_int(CTXTc regSF, (Integer)sf);
       ctop_tag(CTXTc regRetTerm, ret);
+      ctop_int(CTXTc regCallnode,(Integer) callnode);
       return TRUE;
     }
     else {
       if (incr_dyn_leaf_flag == 1) {
 	ctop_int(CTXTc regSF, 0);
 	ctop_tag(CTXTc regRetTerm, ret);
+	ctop_int(CTXTc regCallnode,(Integer) callnode);
 	return TRUE;
       }
       else

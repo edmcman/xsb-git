@@ -46,6 +46,7 @@
 #define PSC_SET_INTERN            23
 #define PSC_GET_ALT_SEMANTICS     24
 #define PSC_SET_ALT_SEMANTICS     25
+#define IMMED_AFFECTS_CALLNODE_PTRLIST     26
 
 // for psc hacking
 #define NONINCREMENTAL 0

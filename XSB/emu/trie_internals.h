@@ -639,6 +639,9 @@ extern void  hashify_children(CTXTdeclc BTNptr, int);
 #define CallTrieLeaf_SetSF(pBTN,pSF)     BTN_Child(pBTN) = (BTNptr)(pSF)
 #define CallTrieLeaf_GetSF(pBTN)         ((VariantSF)BTN_Child(pBTN))
 
+/* for leaves of the IDG */
+#define CallTrieLeaf_GetCallnode(pBTN)         ((callnodeptr)BTN_Child(pBTN))
+
 /* Allocating New BTNs
    ------------------- */
 #define BTNs_PER_BLOCK   2*K

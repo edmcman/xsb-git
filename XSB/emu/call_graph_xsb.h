@@ -77,6 +77,7 @@ extern void print_call_node(callnodeptr);
 
 extern int  get_outedges_num(CTXTdeclc  callnodeptr);
 extern int immediate_affects_ptrlist(CTXTdeclc callnodeptr);
+extern int immediate_affects_callnode_ptrlist(CTXTdeclc callnodeptr);
 extern int immediate_depends_ptrlist(CTXTdeclc callnodeptr);
 extern int  get_incr_sccs(CTXTdeclc Cell);
 extern void deleteoutedges(CTXTdeclc callnodeptr);

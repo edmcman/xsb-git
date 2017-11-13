@@ -392,7 +392,7 @@ void construct_answer_template(CTXTdeclc Cell callTerm, SubProdSF producer,
  */
 
 // If passed a NULL retTerm, dont bother to build it
-VariantSF get_call(CTXTdeclc Cell callTerm, Cell *retTerm,int *incr_dyn_leaf_flag) {
+VariantSF get_call(CTXTdeclc Cell callTerm, Cell *retTerm,int *incr_dyn_leaf_flag,callnodeptr * callnode) {
 
   Psc  psc;
   TIFptr tif;
@@ -422,11 +422,13 @@ VariantSF get_call(CTXTdeclc Cell callTerm, Cell *retTerm,int *incr_dyn_leaf_fla
 
   if ( !TIF_IncrDynLeaf(tif) ) {
     sf = CallTrieLeaf_GetSF(leaf);
+    *callnode = subg_callnode_ptr(sf);
     if ( IsProperlySubsumed(sf) ) 
       construct_answer_template(CTXTc callTerm, conssf_producer(sf), callVars);
   }
   else { // dyn leaves do not have sf
     *incr_dyn_leaf_flag = 1;
+    *callnode = CallTrieLeaf_GetCallnode(leaf);
   }
 
   if (retTerm) 
@@ -5772,89 +5774,89 @@ int table_inspection_function( CTXTdecl ) {
   switch (ptoc_int(CTXTc 1)) {
 
 #ifdef UNDEFINED
-  case FIND_COMPONENTS: {
-//    int new;    Psc sccpsc;
-    Cell temp;
+    //  case FIND_COMPONENTS: {
+    //    int new;    Psc sccpsc;
+    //    Cell temp;
 
-    dfn = 0;
-    component_stack_top = 0;
-    done_answer_stack_top = 0;
-    table_component_check(CTXTc (NODEptr) ptoc_int(CTXTc 2));
-    print_done_answer_stack(CTXT);
-    alt_print_done_answer_stack(CTXT);
-    unfounded_component(CTXT);
-    printf("done w. unfounded component\n");
+    //    dfn = 0;
+    //    component_stack_top = 0;
+    //    done_answer_stack_top = 0;
+    //    table_component_check(CTXTc (NODEptr) ptoc_int(CTXTc 2));
+    //    print_done_answer_stack(CTXT);
+    //    alt_print_done_answer_stack(CTXT);
+    //    unfounded_component(CTXT);
+    //    printf("done w. unfounded component\n");
     //    print_done_answer_stack(CTXT);
 
-    bind_list(&temp,hreg);                 //[ 
-    bld_list(hreg,hreg+2);    hreg++;      // [
-    new_heap_nil(hreg);                    //]
-    bld_int(hreg,0);  hreg++;              //   0
-    bld_list(hreg,hreg+2); hreg++;         //    ,
-    bld_list(hreg,hreg+2);    hreg++;      //     [
-    bld_list(hreg,hreg+2);    hreg++;      //  
-    new_heap_nil(hreg);                    // ]
-    bld_int(hreg,1);  hreg++;              //      1
-    bld_list(hreg,hreg+2);    hreg++;      //       ,
-    bld_list(hreg,hreg+2);    hreg++;      //         [
-    bld_int(hreg,2);  hreg++;              //          2
-    bld_list(hreg,hreg+2);    hreg++;
-    bld_list(hreg,hreg+2);    hreg++;
-    bld_int(hreg,3);  hreg++;              //          2
-    bld_list(hreg,hreg+2);    hreg++;
-    bld_list(hreg,hreg+2);    hreg++;
-    bld_int(hreg,4);  hreg++;              //          2
-    new_heap_nil(hreg);
+    //    bind_list(&temp,hreg);                 //[ 
+    // bld_list(hreg,hreg+2);    hreg++;      // [
+    //     new_heap_nil(hreg);                    //]
+    // bld_int(hreg,0);  hreg++;              //   0
+    // bld_list(hreg,hreg+2); hreg++;         //    ,
+    // bld_list(hreg,hreg+2);    hreg++;      //     [
+    // bld_list(hreg,hreg+2);    hreg++;      //  
+    // new_heap_nil(hreg);                    // ]
+    // bld_int(hreg,1);  hreg++;              //      1
+    // bld_list(hreg,hreg+2);    hreg++;      //       ,
+    // bld_list(hreg,hreg+2);    hreg++;      //         [
+    // bld_int(hreg,2);  hreg++;              //          2
+    // bld_list(hreg,hreg+2);    hreg++;
+    // bld_list(hreg,hreg+2);    hreg++;
+    // bld_int(hreg,3);  hreg++;              //          2
+    // bld_list(hreg,hreg+2);    hreg++;
+    // bld_list(hreg,hreg+2);    hreg++;
+    // bld_int(hreg,4);  hreg++;              //          2
+    // new_heap_nil(hreg);
     //    ctop_tag(CTXTc 3, temp);
 
     break;
   }
 #endif
 
-  case FIND_FORWARD_DEPENDENCIES: {
-  DL delayList;
-  DE delayElement;
-  BTNptr as_leaf, new_answer;
-  struct answer_dfn stack_node;
+  //  case FIND_FORWARD_DEPENDENCIES: {
+  //  DL delayList;
+  //  DE delayElement;
+  //  BTNptr as_leaf, new_answer;
+  //  struct answer_dfn stack_node;
 
-  printf("find foward dependencies \n");
-  done_answer_stack_top = 0; dfn = 0;
-  as_leaf = (NODEptr) ptoc_int(CTXTc 2);
-  if (is_conditional_answer(as_leaf)) {
-    push_comp_node_1(as_leaf);
-    while (component_stack_top != 0) {
-      //      print_comp_stack(CTXT);
-      pop_comp_node(stack_node);
-      as_leaf = stack_node.answer;
-      push_done_node((component_stack_top),component_stack[component_stack_top].dfn);
-      // print_subgoal(CTXTc stddbg, asi_subgoal((ASI) Child(as_leaf)));printf("\n");
-      delayList = asi_dl_list((ASI) Child(as_leaf));
-      while (delayList) {
-	delayElement = dl_de_list(delayList);
-	while (delayElement) {
-	  if (de_ans_subst(delayElement)) {
-	    if (!VISITED_ANSWER(de_ans_subst(delayElement)))
-	      push_comp_node_1(de_ans_subst(delayElement));
-	  } else {
-	    new_answer = traverse_subgoal(de_subgoal(delayElement));
-	    if (!VISITED_ANSWER(new_answer)) 
-	      push_comp_node_1(new_answer);
-	    }
-	    delayElement = de_next(delayElement);
-	  }
-	  delayList = de_next(delayList);
-	}
-      }
-    printf("component stack %p\n",component_stack);
-    deallocate_comp_stack;
-    print_done_answer_stack(CTXT);
-    // Don't deallocte done stack until done with its information.
-    reset_done_answer_stack();
-    return 0;
-  }
-  else  printf("found unconditional answer %p\n",as_leaf);
-    break;
-  }
+  //  printf("find foward dependencies \n");
+  //  done_answer_stack_top = 0; dfn = 0;
+  //  as_leaf = (NODEptr) ptoc_int(CTXTc 2);
+  //  if (is_conditional_answer(as_leaf)) {
+  //    push_comp_node_1(as_leaf);
+  //    while (component_stack_top != 0) {
+  //      print_comp_stack(CTXT);
+  //    pop_comp_node(stack_node);
+  //as_leaf = stack_node.answer;
+  //      push_done_node((component_stack_top),component_stack[component_stack_top].dfn);
+  // print_subgoal(CTXTc stddbg, asi_subgoal((ASI) Child(as_leaf)));printf("\n");
+  //    delayList = asi_dl_list((ASI) Child(as_leaf));
+  //  while (delayList) {
+  //	delayElement = dl_de_list(delayList);
+  //	while (delayElement) {
+  //      if (de_ans_subst(delayElement)) {
+  //          if (!VISITED_ANSWER(de_ans_subst(delayElement)))
+  //	      push_comp_node_1(de_ans_subst(delayElement));
+  //      } else {
+  //	    new_answer = traverse_subgoal(de_subgoal(delayElement));
+  //	    if (!VISITED_ANSWER(new_answer)) 
+  //	      push_comp_node_1(new_answer);
+  //	    }
+  //	    delayElement = de_next(delayElement);
+  //	  }
+  //	  delayList = de_next(delayList);
+  //	}
+  //      }
+  //    printf("component stack %p\n",component_stack);
+  //    deallocate_comp_stack;
+  //    print_done_answer_stack(CTXT);
+  // Don't deallocte done stack until done with its information.
+  //  reset_done_answer_stack();
+  //    return 0;
+  //  }
+  //  else  printf("found unconditional answer %p\n",as_leaf);
+  //    break;
+  //  }
 
   case GET_CALLSTO_NUMBER: {
     VariantSF subgoal_frame;
@@ -5906,9 +5908,9 @@ int table_inspection_function( CTXTdecl ) {
     break;
   }
 
-  case FIND_ANSWERS: {
-    return find_pred_backward_dependencies(CTXTc get_tip(CTXTc term_psc(ptoc_tag(CTXTc 2))));
-  }
+    //  case FIND_ANSWERS: {
+    //    return find_pred_backward_dependencies(CTXTc get_tip(CTXTc term_psc(ptoc_tag(CTXTc 2))));
+    //  }
 
 /********************************************************************
 
@@ -5969,7 +5971,7 @@ case CALL_SUBS_SLG_NOT: {
   break;
     }
 
-  case GET_PRED_CALLTRIE_PTR: {
+ case GET_PRED_CALLTRIE_PTR: {  /* used for changing table properties */
     
     Psc psc = (Psc)ptoc_int(CTXTc 2);
     if (get_tip(CTXTc psc))
@@ -6004,7 +6006,7 @@ case CALL_SUBS_SLG_NOT: {
     break;
   }
 
-  case TNOT_SETUP: {
+ case TNOT_SETUP: {  /* table_state optimized for tnot. */
     Cell goalTerm;
     TableStatusFrame TSF;
 
@@ -6034,7 +6036,7 @@ case CALL_SUBS_SLG_NOT: {
     break;
   } 
 
-  case GET_CURRENT_SCC: {
+ case GET_CURRENT_SCC: {  /* used by table_dump */
     VariantSF subgoal_frame;
     subgoal_frame = (VariantSF) ptoc_int(CTXTc 2);
     if (subg_is_completed(subgoal_frame) || subg_is_ec_scheduled(subgoal_frame)) return FALSE;
@@ -6079,7 +6081,6 @@ case CALL_SUBS_SLG_NOT: {
   }
     break;
   }
-
 
   case CHECK_VARIANT: {
     //    CPtr addr, val;
@@ -6180,6 +6181,7 @@ case CALL_SUBS_SLG_NOT: {
     break;
   }
 
+    /* finds all delay lists for a given ansewr; used by get_sccs */
   case IMMED_ANS_DEPENDS_PTRLIST: {
     ASI asi;
     DL current_dl = NULL;
@@ -6236,7 +6238,7 @@ case CALL_SUBS_SLG_NOT: {
   }
 
   case SET_FOREST_LOGGING_FOR_PRED: {
-    //    Psc psc =  term_psc((Cell)(ptoc_tag(CTXTc 2)));
+   //    Psc psc =  term_psc((Cell)(ptoc_tag(CTXTc 2)));
     Psc psc =  (Psc)(ptoc_int(CTXTc 2));
     if (get_tabled(psc)) {
       TIF_SkipForestLog(get_tip(CTXTc psc)) = (ptoc_int(CTXTc 3) & 1);
@@ -6249,7 +6251,7 @@ case CALL_SUBS_SLG_NOT: {
     return abolish_nonincremental_tables(CTXTc (int)ptoc_int(CTXTc 2));
   }
 
-  case INCOMPLETE_SUBGOAL_INFO: {
+ case INCOMPLETE_SUBGOAL_INFO: {      /* for get_sdg_info */
     CPtr newcsf;
     CPtr csf = (CPtr) ptoc_int(CTXTc 2);
     if (openreg == COMPLSTACKBOTTOM) { 
@@ -6297,7 +6299,7 @@ case CALL_SUBS_SLG_NOT: {
     return TRUE;
   }
 
-  case GET_POS_AFFECTS: {
+  case GET_POS_AFFECTS: {  /* used for get_sdg_inf */
   CPtr oldhreg = NULL;
   int count = 0;
     VariantSF subgoal = (VariantSF) ptoc_int(CTXTc 2);
@@ -6324,7 +6326,7 @@ case CALL_SUBS_SLG_NOT: {
       reg[4] = makenil;
     return unify(CTXTc reg_term(CTXTc 3),reg_term(CTXTc 4));
   }
-  case GET_NEG_AFFECTS: {
+  case GET_NEG_AFFECTS: {   /* used for get_sdg_inf */
   CPtr oldhreg = NULL;
   int count = 0;
     VariantSF subgoal = (VariantSF) ptoc_int(CTXTc 2);

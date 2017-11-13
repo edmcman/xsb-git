@@ -1207,6 +1207,47 @@ int immediate_affects_ptrlist(CTXTdeclc callnodeptr call1){
   return unify(CTXTc reg_term(CTXTc 3),reg_term(CTXTc 4));
 }
 
+int immediate_affects_callnode_ptrlist(CTXTdeclc callnodeptr call1){
+ 
+  //  VariantSF subgoal;
+  int count = 0;
+  CPtr oldhreg = NULL;
+  struct hashtable *h;	
+  struct hashtable_itr *itr;
+  callnodeptr cn;
+    
+  reg[4] = makelist(hreg);
+  new_heap_free(hreg);
+  new_heap_free(hreg);
+  //  printf("immed affects call1 %p\n",call1);
+  if(IsNonNULL(call1)){ /* This can be called from some non incremental predicate */
+    //    printf("immed affects call2 %p\n",call1);
+    h=call1->outedges->hasht;
+    
+    itr = hashtable1_iterator(h);       
+    if (hashtable1_count(h) > 0){
+      do {
+	cn = hashtable1_iterator_value(itr);
+	//	if(!is_idg_leaf(cn)){
+	  count++;
+	  //	  subgoal = (VariantSF) cn->goal;      
+	  check_glstack_overflow(4,pcreg,2); 
+	  oldhreg=hreg-2;
+          follow(oldhreg++) = makeint(cn);
+	  follow(oldhreg) = makelist(hreg);
+	  new_heap_free(hreg);
+	  new_heap_free(hreg);
+	  //	}
+      } while (hashtable1_iterator_advance(itr));
+    }
+    if (count>0)
+      follow(oldhreg) = makenil;
+    else
+      reg[4] = makenil;
+  }
+  return unify(CTXTc reg_term(CTXTc 3),reg_term(CTXTc 4));
+}
+
 int immediate_depends_ptrlist(CTXTdeclc callnodeptr call1){
 
   VariantSF subgoal;
