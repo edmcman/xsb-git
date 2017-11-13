@@ -189,6 +189,8 @@ rm -f aggregs_test_2.xwam
 ../gentest.sh "$XEMU -l $options" large_arity_tables "test."
 #-------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_get_call "test."
+#-------------------------------------------------
+../gentest.sh "$XEMU -l $options" test_get_idg_info "test."
 
 #VALGRIND
 if test "$valgrind" = "true"; then
