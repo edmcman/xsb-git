@@ -155,7 +155,7 @@ load_dsv(FileName,PSpec,Options0) :-
     ),
     dynamic(Spec),
     retractall(Spec),
-    pad_args(Args,Options,ArgsPatched),
+    pad_args(Args,Options,NumPad,ArgsPatched),
     cputime(T0),
     (var(ArgsPatched)
      ->	NumFields = 0
@@ -163,6 +163,10 @@ load_dsv(FileName,PSpec,Options0) :-
     ),
     open(FileName,read,IStr),
     (do_all
+     (NumPad < 0
+      -> null_after(Args,NumFields)
+      ;	 true
+     ),
      call_cleanup(delim_file_record(IStr,NumFields,Options,_RecNum,ArgsPatched),
 		  load_dsv_cleanup(T0,FileName,IStr)),
      (Reverse =:= 0
@@ -178,6 +182,15 @@ load_dsv_cleanup(T0,FileName,IStr) :-
     conget('__recsread',RecsRead),
     time_message(T0,(FileName,' loaded (delimited) ',RecsRead,' records')).
 
+
+null_after([],_).
+null_after([Arg|ArgsPatched],NumValFields) :-
+    (NumValFields > 0
+     ->	Num1 is NumValFields - 1,
+        null_after(ArgsPatched,Num1)
+     ;	Arg = 'NULL'(_),
+	null_after(ArgsPatched,NumValFields)
+    ).
 
 process_predspec(PSpec,Spec,Types,Args) :-
     (atom(PSpec)
@@ -640,7 +653,7 @@ write_code_field(FieldCodes,Stream,Sep,Delim,DelimA) :-
     ).
 
 
-pad_args(ArgsIn,Options,ArgsOut) :-
+pad_args(ArgsIn,Options,N,ArgsOut) :-
     ((member(pad=N,Options) ; member(pad(N),Options)),
      integer(N)
      ->	length(ArgsIn,LenIn),
@@ -652,9 +665,9 @@ pad_args(ArgsIn,Options,ArgsOut) :-
 	    append(ArgsIn,PatchArgs,ArgsOut)
 	 ;  ArgsOut = ArgsIn
 	)
-	;  ArgsOut = ArgsIn
+     ;  ArgsOut = ArgsIn,
+	N = 0
     ).
-
 
 pad_fields_with_null(ArgsIn,PadNum,ArgsOut) :-
     (PadNum > 0
