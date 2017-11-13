@@ -173,7 +173,7 @@ inline_builtin(dynamic_code_function,5, DYNAMIC_CODE_FUNCTION).
 
 inline_builtin(set_tabled_eval, 2, SET_TABLED_EVAL).
 inline_builtin(table_status, 4, TABLE_STATUS).
-inline_builtin(get_call, 3, TRIE_GET_CALL).
+inline_builtin(get_call, 4, TRIE_GET_CALL).
 inline_builtin(get_delay_lists, 2, GET_DELAY_LISTS).
 
 inline_builtin(get_lastnode_cs_retskel, 4, GET_LASTNODE_CS_RETSKEL).
