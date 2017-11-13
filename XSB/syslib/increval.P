@@ -26,7 +26,6 @@
 #include "incr_xsb_defs.h"
 #include "table_inspection_defs.h"
 
-:- export incr_is_invalid/1,incr_is_invalid/3.
 incr_is_invalid(Call):- 
    incr_is_invalid(Call,_Falsecount,_HasAnswers).
 
@@ -35,7 +34,6 @@ incr_is_invalid(Call,Falsecount,HasAnswers):-
 	incr_eval_builtin(IS_AFFECTED,NewGoal,Falsecount,HasAnswers).
 
 /* Does not use affected_gl which is not always updated by lazy or by abolishes */
-:- export incr_invalid_subgoals/1.
 incr_invalid_subgoals(List):- 
 	(setof(Term,(predicate_property(Term,incremental),
 	            predicate_property(Term,tabled),
@@ -181,7 +179,6 @@ check_incremental(Term,Type,Pred,Arity):-
 
 %-----------
 % returns callnodeptr as handle
-   :- export get_calls_incr/2.
 get_calls_incr(CallTerm, Handle) :-
 	findall(get_calls_incr(CallTerm,Handle),
 		get_calls_incr_each(CallTerm,Handle),
@@ -215,68 +212,69 @@ incr_eval_builtin(_BuiltinNo, _A, _B, _C, _D) :-
 get_subgoal_frame(Call,Ptr):- 
 	incr_eval_builtin(GET_SUBGOAL_FRAME, Call, Ptr).
 
-%:- export trans_connected_ptr/2.
-
 :- table trans_connected_ptr/2 as variant, incremental.
-trans_connected_ptr(CallPtr1,CallPtr2):-
-	immed_connected_ptrlist(CallPtr1,CallPtr2).
-trans_connected_ptr(CallPtr1,CallPtr2):-
-	trans_connected_ptr(CallPtr1,CallPtr3),
-	immed_connected_ptr(CallPtr3,CallPtr2).
+trans_connected_ptr(SF1,SF2):-
+    immed_connected_ptrlist(SF1,SF2).
+trans_connected_ptr(SF1,SF2):-
+	trans_connected_ptr(SF1,SF3),
+	immed_connected_ptr(SF3,SF2).
 
-immed_connected_ptrlist(CallList,CallPtr):- 
-	immed_affects_ptrlist(CallList,CallPtr).
-immed_connected_ptrlist(CallList,CallPtr):- 
-	immed_depends_ptrlist(CallList,CallPtr).
+immed_connected_ptrlist(SFList,SF):- 
+   immed_affects_ptrlist(SFList,SF).
+%        writeln(immed_affects_ptrlist(SFList,SF)).
+immed_connected_ptrlist(SFList,SF):- 
+   immed_depends_ptrlist(SFList,SF).
+%	writeln(immed_depends_ptrlist(SFList,SF)).
 
-immed_connected_ptr(CallPtrIn,CallPtrOut):- 
-	immed_affects_ptr(CallPtrIn,CallPtrOut).
-immed_connected_ptr(CallPtrIn,CallPtrOut):- 
-	immed_depends_ptr(CallPtrIn,CallPtrOut).
+immed_connected_ptr(SFIn,SFOut):- 
+	immed_affects_ptr(SFIn,SFOut).
+immed_connected_ptr(SFIn,SFOut):- 
+	immed_depends_ptr(SFIn,SFOut).
 
 %----------
-%:- export trans_affects_ptr/2.
 :- table trans_affects_ptr/2 as variant, incremental.
-trans_affects_ptr(CallPtr1,CallPtr2):-
-	immed_affects_ptrlist(CallPtr1,CallPtr2).
-trans_affects_ptr(CallPtr1,CallPtr2):-
-	trans_affects_ptr(CallPtr1,CallPtr3),
-	immed_affects_ptr(CallPtr3,CallPtr2).
 
-immed_affects_ptr(CallPtr,CallPtr2):-
-	incr_eval_builtin(IMMED_AFFECTS_PTRLIST, CallPtr, CallPtrList),
-	member(CallPtr2,CallPtrList).		
+trans_affects_ptr(SF1,SF2):-
+	immed_affects_ptrlist(SF1,SF2).
+trans_affects_ptr(SF1,SF2):-
+	trans_affects_ptr(SF1,SF3),
+	immed_affects_ptr(SF3,SF2).
 
-immed_affects_ptrlist(CallList,CallPtr2):-
-	member(CallPtr,CallList),
-	immed_affects_ptr(CallPtr,CallPtr2).
+immed_affects_ptr(SF,SF2):-
+	incr_eval_builtin(IMMED_AFFECTS_PTRLIST, SF, SFList),
+	member(SF2,SFList).		
 
-%-----------
+immed_affects_ptrlist(SFList,SF2):-
+	member(SF,SFList),
+	immed_affects_ptr(SF,SF2).
 
-:- export trans_depends_ptr/2.
+all_immed_affects_ptr(SF,SFList):- 
+   incr_eval_builtin(IMMED_AFFECTS_CALLNODE_PTRLIST, SF, SFList).
+
+   %-----------
+
 :- table trans_depends_ptr/2 as variant, incremental.
-trans_depends_ptr(CallPtr1,CallPtr2):-
-	immed_depends_ptrlist(CallPtr1,CallPtr2).
-trans_depends_ptr(CallPtr1,CallPtr2):-
-	trans_depends_ptr(CallPtr1,CallPtr3),
-	immed_depends_ptr(CallPtr3,CallPtr2).
+trans_depends_ptr(SF1,SF2):-
+	immed_depends_ptrlist(SF1,SF2).
+trans_depends_ptr(SF1,SF2):-
+	trans_depends_ptr(SF1,SF3),
+	immed_depends_ptr(SF3,SF2).
 
-immed_depends_ptrlist(CallList,CallPtr2):-
-	member(CallPtr,CallList),
-	immed_depends_ptr(CallPtr,CallPtr2).
+immed_depends_ptrlist(SFList,SF2):-
+	member(SF,SFList),
+	immed_depends_ptr(SF,SF2).
 
-immed_depends_ptr(CallPtr,CallPtr2):-
-	incr_eval_builtin(IMMED_DEPENDS_PTRLIST, CallPtr, CallPtrList),
-	member(CallPtr2,CallPtrList).		
+immed_depends_ptr(SF,SF2):-
+	incr_eval_builtin(IMMED_DEPENDS_PTRLIST, SF, SFList),
+	member(SF2,SFList).		
 
-:- import setof/3,findall/4 from setof.
+all_immed_depends_ptr(SF,SFList):- 
+   incr_eval_builtin(IMMED_DEPENDS_PTRLIST, SF, SFList).
+
+   :- import setof/3,findall/4 from setof.
 :- import get_calls/3 from tables.
 :- import predicate_property/2 from curr_sym.
 
-:- export get_incr_sccs/1.
-:- export get_incr_sccs/2.
-:- export get_incr_sccs_with_deps/2.
-:- export get_incr_sccs_with_deps/3.
 get_incr_sccs(Scc):-
 	setof(Skel,
 	      (predicate_property(Skel,tabled),predicate_property(Skel,incremental)),
@@ -284,24 +282,24 @@ get_incr_sccs(Scc):-
 	get_sfs_for_skels(Skels,Ptrs,[]),
 	get_incr_sccs_1(Ptrs,Scc).
 
-get_incr_sccs(CallList,Scc):-
-	get_subgoal_frames(CallList,PtrList),
+get_incr_sccs(SFList,Scc):-
+	get_subgoal_frames(SFList,PtrList),
 	get_incr_sccs_1(PtrList,Scc).
 
 get_incr_sccs_with_deps(Scc,Depends):-
 	get_incr_sccs(Scc),
 	get_scc_dependency_structure(Scc,Depends).
 
-get_incr_sccs_with_deps(CallList,Scc,Depends):-
-	get_incr_sccs(CallList,Scc),
+get_incr_sccs_with_deps(SFList,Scc,Depends):-
+	get_incr_sccs(SFList,Scc),
 	get_scc_dependency_structure(Scc,Depends).
 
 get_sfs_for_skels([],L,L).
-get_sfs_for_skels([Skel|Rs],In,Out):- 
+get_sfs_for_skels([Skel|Rs],In,Out):-
+%   writeln(Skel),
 	findall(Ptr,get_calls(Skel,Ptr,_),In,Mid),
 	get_sfs_for_skels(Rs,Mid,Out).
 
-:- export get_subgoal_frame/2.
 get_subgoal_frames([],[]).
 get_subgoal_frames([Call|CR],[Ptr|PR]):- 
 	get_subgoal_frame(Call,Ptr),
@@ -310,6 +308,7 @@ get_subgoal_frames([Call|CR],[Ptr|PR]):-
 :- import (';')/2 from standard.
 :- import abolish_table_call/1 from tables.
 get_incr_sccs_1(PtrList,Scc):-
+%   writeln(get_incr_sccs_1(PtrList,Scc)),
 	abolish_trans_connected_ptr_calls,
 	setof(P,(  member(P,PtrList)
                  ; trans_connected_ptr(PtrList,P) ),Ptrs),
@@ -327,7 +326,7 @@ abolish_trans_connected_ptr_calls.
 :- import current_predicate/1 from curr_sym.
 :- import get_calls/3 from tables.
    :- import writeln/1 from standard.
-:- export is_incremental_subgoal/1.
+
 is_incremental_subgoal(Subgoal):- 
 	(var(Subgoal) -> 
   	   current_predicate(S),
@@ -342,13 +341,11 @@ is_incremental_subgoal(Subgoal):-
          catch(get_calls(Subgoal,_,_),_E,fail).
 	 
 
-%:-export get_scc_dependency_structure/2.
 get_scc_dependency_structure(List,Depends):- 
 	partition_list(List,PartList),
 	scc_depends(PartList,Depends,[]).
 
 :- import sort/2 from setof.
-%:- export partition_list/2.
 partition_list(List,PartList):- 
 %	setof(ret(Index,Goal),member(ret(Goal,Index),List),Parts),
 	reverse_partition(List,Parts_dup),
@@ -386,8 +383,8 @@ scc_depends_1([Scc1|R],Scc2,In,Out):-
 
 scc_depends_2(SCC1,SCC2,depends(Ind1,Ind2)):-
 	member(ret(Ind1,Subgoal),SCC1),
-	incr_eval_builtin(IMMED_DEPENDS_LIST, Subgoal, CallList),
-	member(Sd,CallList),member(ret(Ind2,Sd),SCC2).
+	incr_eval_builtin(IMMED_DEPENDS_LIST, Subgoal, SFList),
+	member(Sd,SFList),member(ret(Ind2,Sd),SCC2).
 
 %--------
 /*
@@ -444,6 +441,9 @@ lazy_reeval_1([Call|Rest]):-
 create_lazy_call_list(Call,Flag,List) :-
 	incr_eval_builtin(RETURN_LAZY_CALL_LIST,Call,Flag,List).
 
+end_of_file.
+==========================================================================================
+
 %/* probably not useful (but in test suite) */
 % lazy_reeval(Call):- 
 %	create_lazy_call_list(Call,CALL_LIST_CREATE_EVAL,List),
@@ -491,8 +491,6 @@ create_lazy_call_list(Call,Flag,List) :-
 %	incr_retract(Term).
 
 
-end_of_file.
-==========================================================================================
 /*
 %incr_eval_builtin(_BuiltinNo) :-
 %	'_$builtin'(INCR_EVAL_BUILTIN).

@@ -36,7 +36,7 @@
    force_truth_value/2, force_answer_true/1, force_answer_false/1,
    forest_log_overview/0,
    get_answer_number/2,       /* table_dump */
-   get_call/3,
+   get_call/3,   get_call/4,
    get_calls/3,
    get_calls_for_table/2,     /* table_dump and others */
    get_callsto_number/2,      /* table_dump */
@@ -49,7 +49,7 @@
    get_returns_and_dls/3, 
    get_returns_and_tvs/3,     /* table_dump */
    get_returns_for_call/2,
-   get_sdg_info/1, get_idg_info/1,
+   get_sdg_info/1, get_idg_info/2,
    get_unifiable_returns/3,
    get_visitors_number/2,
    invalidate_tables_for/2,
@@ -96,10 +96,10 @@
 :- export    abolish_table_call/1,       abolish_table_call/2.
 
 /****** Experimental ********/
-:- export find_components/1,
-	find_forward_dependencies/1,
-	%%find_backward_dependencies/1,
-	find_answers/1.
+%:- export find_components/1,
+%	find_forward_dependencies/1,
+%	%%find_backward_dependencies/1,
+%	find_answers/1.
 :- export early_complete_on_nth/2.
 :- export early_complete_on_delta/4.
 :- export get_scc_dumpfile/1.
