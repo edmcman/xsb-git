@@ -1383,8 +1383,9 @@ fix_head_term(Head,Module,MHead) :-
 	 ;	cvt_head_to_mod(Head,Module,MHead)
 	).
 	
+%fix_body_goal(Body,usermod,Body) :- !.
 fix_body_goal(Body,Module,MBody) :-
-	(load_dyn_module(RMod)
+    (load_dyn_module(RMod)
 	 ->	cvt_body_to_mod(Body,RMod,MBody)
 	 ;	cvt_body_to_mod(Body,Module,MBody)
 	).
@@ -1513,7 +1514,7 @@ cvt_term_to_mod(Term,MTerm) :-
 	 ->	cvt_to_mod(Term,usermod,MTerm,assumed)
 	 ; number(Term)
 	 ->	MTerm = Term
-	 ; Term = Mod1:NTerm, nonvar(Mod1)
+	 ; Term = Mod1:NTerm, nonvar(Mod1), nonvar(NTerm)
 	 ->	(Mod1 == usermod
 		 ->	MTerm = NTerm
 		 ;	term_new_mod(Mod1,NTerm,MTerm)
