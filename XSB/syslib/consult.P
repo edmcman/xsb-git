@@ -1383,7 +1383,6 @@ fix_head_term(Head,Module,MHead) :-
 	 ;	cvt_head_to_mod(Head,Module,MHead)
 	).
 	
-fix_body_goal(Body,usermod,Body) :- !.
 fix_body_goal(Body,Module,MBody) :-
 	(load_dyn_module(RMod)
 	 ->	cvt_body_to_mod(Body,RMod,MBody)
@@ -1488,14 +1487,14 @@ cvt_body_to_mod(Body,Mod,MBody) :-
 		 ->	MBody = Body
 		 ;	term_new_mod(Mod1,NBody,MBody)
 		)
-	 ;	Body =.. [Pred|Args],
-		functor(Body,Pred,Arity),
-		(standard_metapredicate(Pred,Arity,MetaArgNo)
-		 ->	cvt_term_to_mod_list(Args,1,MetaArgNo,Mod,MArgs)
-		 ;	cvt_term_to_mod_list(Args,1,0,Mod,MArgs)
-		),
-		Body1 =.. [Pred|MArgs],
-		cvt_to_mod(Body1,Mod,MBody,assumed)
+	 ;  Body =.. [Pred|Args],
+	    functor(Body,Pred,Arity),
+	    (standard_metapredicate(Pred,Arity,MetaArgNo)
+	     ->	cvt_term_to_mod_list(Args,1,MetaArgNo,Mod,MArgs)
+	     ;	cvt_term_to_mod_list(Args,1,0,Mod,MArgs)
+	    ),
+	    Body1 =.. [Pred|MArgs],
+	    cvt_to_mod(Body1,Mod,MBody,assumed)
 	).
 
 cvt_term_to_mod_list([],_,_,_,[]).
