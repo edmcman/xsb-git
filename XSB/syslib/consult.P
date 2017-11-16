@@ -1514,11 +1514,13 @@ cvt_term_to_mod(Term,MTerm) :-
 	 ->	cvt_to_mod(Term,usermod,MTerm,assumed)
 	 ; number(Term)
 	 ->	MTerm = Term
-	 ; Term = Mod1:NTerm, nonvar(Mod1), nonvar(NTerm)
-	 ->	(Mod1 == usermod
-		 ->	MTerm = NTerm
-		 ;	term_new_mod(Mod1,NTerm,MTerm)
-		)
+%% following is not like compiler, so comment out
+%%	 ; Term = Mod1:NTerm, ground(Mod1), nonvar(NTerm)
+%%	 ->	(Mod1 == usermod
+%%		 -> 	cvt_term_to_mod(NTerm,MTerm)
+%%		 ;	term_new_mod(Mod1,NTerm,MTerm0),
+%%		    	cvt_term_to_mod(MTerm0,MTerm)
+%%		)
 	 ;	Term =.. [Pred|Args],
 		cvt_term_to_mod_list(Args,1,0,unknown,MArgs),
 		Term1 =.. [Pred|MArgs],
