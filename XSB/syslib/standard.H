@@ -126,80 +126,74 @@
 :- export table_index_predicates/2.	% used in [tables]
 
 :- import (dynamic)/1, asserta/1, assert0/4, retract/1 from assert.
+:- import assert/1 from assert.
+:- import clause/2, retractall/1 from assert.
+
 :- import member/2,append/3,comma_member/2,memberchk/2 from basics.
 :- import consult/1, reconsult/1 from consult.
+:- import (thread_shared)/1, (thread_private)/1 from consult.
+:- import load_page/5 from curl.
 :- import predicate_property/2, current_op/3 from curr_sym.
 :- import dcg/2 from dcg.
 %%:- import eval/2 from eval.
+
+:- import domain_error/4, domain_error/5, check_atom/3, check_nonvar/3,check_var/3, check_callable/3,
+	  check_ground/3,resource_error/2, representation_error/3,
+	  type_error/4, permission_error/4, 
+	  instantiation_error/3, instantiation_error/2, check_nonneg_integer/3, check_pos_integer/3,
+	  misc_error/1,misc_error/2, table_error/1     from error_handler.
+:- import  check_nonvar_list/3 from error_handler.
+
 :- import file_open/3, file_open/4, file_close/2, 
 	  file_get_code/2, file_get_byte/2, file_get_char/2, 
 	  file_put/2, file_put_code/2, file_put_char/2,
-  check_stream_or_alias/4, check_open_stream_or_alias/5, add_aliases/4, remove_alias/3,
-  fd2iostream/3      from file_io.
+	  check_stream_or_alias/4, check_open_stream_or_alias/5, add_aliases/4, remove_alias/3,
+	  fd2iostream/3      from file_io.
 :- import fmt_write/2 from file_io.
 :- import xsb_stream_lock/1,xsb_stream_unlock/1 from file_io.
-:- import file_function/3 from machine.
-
-:- import format/2 from format.
-:- import member/2,length/2 from basics.
-:- import get_calls/1 from tables.
-:- import setof/3 from setof.
-
-:- import add_ops/3, add_index/3, '_$index'/3,
-   add_trie_index/1  from file_op.
-
-:- import add_table/1, add_incr_table/2 from tables.
+:- import add_ops/3, add_index/3, '_$index'/3, add_trie_index/1  from file_op.
 
 :- import '_$hilog_symbol'/1, add_hilog_symbol/1 from hilogsym.
-:- import clause/2, retractall/1 from assert.
-   :- import domain_error/4, domain_error/5, check_atom/3, check_nonvar/3,check_var/3, check_callable/3,
-	  check_ground/3,resource_error/2, representation_error/3,
-   type_error/4, permission_error/4, 
-   instantiation_error/3, instantiation_error/2, check_nonneg_integer/3, check_pos_integer/3,
-	  misc_error/1,misc_error/2, table_error/1
-     from error_handler.
-:- import  check_nonvar_list/3 from error_handler.
+:- import summarize_idg/0 from increval.
 :- import '_$load_undef'/1 from loader.
-:- import call0/1, conname/2,
-          dynamic_code_function/5,
-          expand_filename/2, gc_stuff/2,
-          machine_file_exists/1, 
+
+:- import call0/1, conname/2,          dynamic_code_function/5,
+          expand_filename/2, gc_stuff/2,      machine_file_exists/1, 
 	  psc_arity/2, psc_import/3, psc_insert/4,
 	  psc_name/2, psc_type/2, psc_set_shared/2,
 	  stat_set_flag/2, stat_flag/2, term_compare/3,
 	  stat_sta/1, stat_cputime/1, stat_walltime/1,
           %%str_len/2,
-          term_psc/2, term_new/2, term_new_mod/3, term_type/2,
-          cancel_sleeper_thread/0,
+          term_psc/2, term_new/2, term_new_mod/3, term_type/2,          cancel_sleeper_thread/0,
           verify_attribute_handler/4, conget/2
 	  from machine.
+:- import start_sleeper_thread/1 from machine.
+:- import file_function/3 from machine.
 :- import cancel_sleeper_thread/0 from machine.
-:- import calln/3,calln/4,calln/5,calln/6,calln/7,calln/8,calln/9,calln/10,calln/11,calln/12 from machine.
 :- import sys_syscall/5,sys_syscall/9 from machine.
-
+:- import calln/3,calln/4,calln/5,calln/6,calln/7,calln/8,calln/9,calln/10,calln/11,calln/12 from machine.
 :- import '$$set_scope_marker'/0, '$$unwind_stack'/0, 
 	  '$$clean_up_block'/1, xwam_state/2
      from machine. 
 
 %:- import numbervars/1 from num_vars.
 :- import numbervars/4 from num_vars.
+
+:- import findall/3, term_variables/2, sort/2, excess_vars/4 from setof.
+:- import sys_exit/1 from shell.
 :- import calculate_singleton/3 from singlton.
 :- import concat_atom/2, term_to_atom/3  from string.
+
+:- import (use_variant_tabling)/1, (use_subsumptive_tabling)/1 from tables.
+:- import add_table/1, add_incr_table/2 from tables.
+:- import xsb_thread_self/1 from thread.
+
 :- import file_read/2, file_read/3 from xsb_read.
 :- import file_write0/2, file_write/2, file_write_prolog/2, l_write/3,
 	  file_write_quoted/2, file_write_canonical/2, file_nl/1
      from xsb_writ.
-:- import xsb_thread_self/1 from thread.
-:- import (thread_shared)/1, (thread_private)/1 from consult.
-:- import findall/3, term_variables/2, sort/2, excess_vars/4 from setof.
-:- import (use_variant_tabling)/1, (use_subsumptive_tabling)/1 from tables.
-
 :- import (:-)/2 from usermod.
 :- import term_expansion/2 from usermod.
-:- import load_page/5 from curl.
-:- import start_sleeper_thread/1 from machine.
-:- import assert/1 from assert.
 
-:- import sys_exit/1 from shell.
 
 /* --------------------- end of file standard.H ----------------------- */

@@ -147,7 +147,7 @@
      from file_op.
 :- import format/2 from format.
 
-:- import get_incr_sccs_with_deps/2,all_immed_affects_ptr/2 from increval.
+:- import get_incr_sccs_with_deps/2,immed_affects_ptr_set/2 from increval.
    
 :- import abolish_table_info/0, delete_attributes/1, 
    ground_and_acyclic/1,

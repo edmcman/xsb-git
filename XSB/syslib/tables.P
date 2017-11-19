@@ -1428,7 +1428,7 @@ idg_scclist_to_adj_graph([ret(Subgoal,SCC)|R],[Term|Graph]):-
 %	   writeln(get_call(Subgoal, SF, _ReturnTemplate,Callnode)),
     get_callsto_number(SF,CallsTo),
     get_answer_number(SF,Answers),
-    all_immed_affects_ptr(Callnode,PosCallnodeList),
+    immed_affects_ptr_set(Callnode,PosCallnodeList),
     idg_scclist_to_adj_graph(R,Graph).
 
 :- export get_idg_leaf_info/1.
@@ -1448,7 +1448,7 @@ idg_dyn_incr_list_to_adj_graph([],[]).
 idg_dyn_incr_list_to_adj_graph([Subgoal|R],[Term|Graph]):-
     Term = subgoal(Subgoal,na,Callnode,na,na,PosCallnodeList,[]),
     get_call(Subgoal, _SF, _ReturnTemplate,Callnode),
-    all_immed_affects_ptr(Callnode,PosCallnodeList),
+    immed_affects_ptr_set(Callnode,PosCallnodeList),
     idg_dyn_incr_list_to_adj_graph(R,Graph).
 
 idg_get_incr_dyn_preds(List):-

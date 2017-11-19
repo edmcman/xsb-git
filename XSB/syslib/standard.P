@@ -1928,40 +1928,6 @@ check_statistics_input(summarize_idg,summarize_idg):- !.
 check_statistics_input(X,_):-
 	domain_error(statisticsInputDomain,X,statistics/1,1).
 
-summarize_idg:-
-    writeln('=============== Interior Nodes (Tabled Subgoals) =============='),
-    summarize_idg_get_incr_subgoals(SubgoalList),
-    summarize_idg_print(SubgoalList),
-    writeln('=============== Leaf Nodes (Calls to Dynamic Predicates) =============='),
-    summarize_idg_get_incr_dyns(DynList),
-    summarize_idg_print(DynList).
-
-summarize_idg_get_incr_subgoals(List):-
-    setof(PredSpec,summarize_idg_get_incr_subgoals_1(PredSpec),List).
-
-summarize_idg_get_incr_subgoals_1(Term):-
-    predicate_property(Term,incremental),
-    predicate_property(Term,tabled).
-
-summarize_idg_get_incr_dyns(List):-
-    setof(PredSpec,summarize_idg_get_incr_dyns_1(PredSpec),List).
-
-summarize_idg_get_incr_dyns_1(Term):-
-    predicate_property(Term,incremental),
-    predicate_property(Term,dynamic).
-
-summarize_idg_print(List):-
-    member(Elt,List),
-    count_calls(Elt,Count),
-    functor(Elt,F,A),
-    format("~a/~d : ~d~n",[F,A,Count]),
-    fail.
-summarize_idg_print(_List).
-
-count_calls(Term,Count):-
-    setof(Term,get_calls(Term),List),
-    length(List,Count).
-
 %== statistics/2 
 
 statistics(Type,Result):- 
