@@ -112,6 +112,7 @@ do
     esac
 done
 
+
 installdir=$1
 testdir=`pwd`
 if test -z "$installdir" ; then
@@ -138,6 +139,7 @@ fi
 
 
 if test -n "$config_tag" ; then
+    raw_config_tag=$config_tag;
     config_tag="-$config_tag"
 fi
 
@@ -221,9 +223,16 @@ fi
 # greps for errors and prints the results to an output file
 # and then this script can also be used in buildtest
 
-# remove xwams so the test will be clean
-echo "Removing the old .xwams ..."
-make clean  2>&1 1> /dev/null
+# remove xwams so the test will be clean -- except when in gc mode,
+# since compiler doesn't always work w. gc_mode (dont know why)
+
+if [ "$raw_config_tag" = "gc" ]
+then
+    echo "gc mode: not removing the old .xwams":
+else
+    echo "Removing the old .xwams ..."
+    make clean  2>&1 1> /dev/null
+fi
 
 echo "Testing $XEMU"
 echo "The log will be left in  $LOG_FILE"
