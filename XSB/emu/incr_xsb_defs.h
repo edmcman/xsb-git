@@ -38,15 +38,16 @@
 #define RETURN_LAZY_CALL_LIST     15
 #define CALL_IF_AFFECTED          16
 #define CHECK_INCREMENTAL         17
-#define IMMED_AFFECTS_PTRLIST     18
-#define GET_SUBGOAL_FRAME         19
+//#define IMMED_AFFECTS_PTRLIST     18
+//#define GET_SUBGOAL_FRAME         19
 #define GET_INCR_SCCS             20
-#define IMMED_DEPENDS_PTRLIST     21
+#define IMMED_DEPENDS_CALLNODE_PTRLIST     21
 #define PSC_GET_INTERN            22
 #define PSC_SET_INTERN            23
 #define PSC_GET_ALT_SEMANTICS     24
 #define PSC_SET_ALT_SEMANTICS     25
 #define IMMED_AFFECTS_CALLNODE_PTRLIST     26
+#define CN_TO_SF                27
 
 // for psc hacking
 #define NONINCREMENTAL 0

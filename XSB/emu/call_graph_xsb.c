@@ -1248,9 +1248,10 @@ int immediate_affects_callnode_ptrlist(CTXTdeclc callnodeptr call1){
   return unify(CTXTc reg_term(CTXTc 3),reg_term(CTXTc 4));
 }
 
-int immediate_depends_ptrlist(CTXTdeclc callnodeptr call1){
+int immediate_depends_callnode_ptrlist(CTXTdeclc callnodeptr call1){
 
-  VariantSF subgoal;
+  callnodeptr cn;
+  //  VariantSF subgoal;
   int  count = 0;
   CPtr oldhreg = NULL;
   calllistptr cl;
@@ -1262,12 +1263,13 @@ int immediate_depends_ptrlist(CTXTdeclc callnodeptr call1){
     cl= call1->inedges;
     
     while(IsNonNULL(cl)){
-      subgoal = (VariantSF) cl->inedge_node->callnode->goal;    
+      //      subgoal = (VariantSF) cl->inedge_node->callnode->goal;
+      cn = cl->inedge_node->callnode;
       if(! is_idg_leaf(cl->inedge_node->callnode)){/* fact check */
 	count++;
 	check_glstack_overflow(4,pcreg,2); 
 	oldhreg = hreg-2;
-	follow(oldhreg++) = makeint(subgoal);
+	follow(oldhreg++) = makeint(cn);
 	follow(oldhreg) = makelist(hreg);
 	new_heap_free(hreg);
 	new_heap_free(hreg);

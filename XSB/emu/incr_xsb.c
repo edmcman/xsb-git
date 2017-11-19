@@ -339,58 +339,62 @@ xsbBool incr_eval_builtin(CTXTdecl)
     break;
   }
 
-  case IMMED_AFFECTS_PTRLIST: {
-    VariantSF sf;
-			   
-    sf  = (VariantSF) ptoc_int(CTXTc 2);
+    // Using callnodes for dependencies now.
+    //  case IMMED_AFFECTS_PTRLIST: {
+    //    VariantSF sf;
+    //			   
+    //    sf  = (VariantSF) ptoc_int(CTXTc 2);
     //    printf("sf2 %p\n",sf);
-    return immediate_affects_ptrlist(CTXTc sf->callnode);
-    break;
-  }
+    //    return immediate_affects_ptrlist(CTXTc sf->callnode);
+    //    break;
+    //  }
 
-  case GET_SUBGOAL_FRAME: {
-    VariantSF sf;
-    int idl_flag = 0;
-    callnodeptr callnode_ptr;
+    //  case GET_SUBGOAL_FRAME: {
+    //    VariantSF sf;
+    //    int idl_flag = 0;
+    //    callnodeptr callnode_ptr;
     
-    sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL,&idl_flag,&callnode_ptr);
+    //    sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL,&idl_flag,&callnode_ptr);
     //    printf("sf1 %p\n",sf);
-    if (IsNonNULL(sf)) {
-      ctop_int(CTXTc 3, (Integer) sf);
-      return TRUE;
-    }
-    else return FALSE;
-    break;
-  }
+    //    if (IsNonNULL(sf)) {
+    //      ctop_int(CTXTc 3, (Integer) sf);
+    //      return TRUE;
+    //    }
+    //    else return FALSE;
+    //    break;
+    //  }
 
   case GET_INCR_SCCS: {
 
     return get_incr_sccs(CTXTc ptoc_tag(CTXTc 2));
   }
 
-  case IMMED_DEPENDS_PTRLIST: {
-    VariantSF sf;
+  case IMMED_DEPENDS_CALLNODE_PTRLIST: {
+    callnodeptr callnode;
 
-    sf  = (VariantSF) ptoc_int(CTXTc 2);
-    //    printf("sf2 %p\n",sf);
-    return immediate_depends_ptrlist(CTXTc sf->callnode);
+    callnode = (callnodeptr) ptoc_int(CTXTc 2);
+    return immediate_depends_callnode_ptrlist(CTXTc callnode);
     break;
   }
 
   case IMMED_AFFECTS_CALLNODE_PTRLIST: {
-    //    VariantSF sf;
     callnodeptr callnode;
 			   
-    //    sf  = (VariantSF) ptoc_int(CTXTc 2);
-    //    printf("sf2 %p\n",sf);
     callnode = (callnodeptr) ptoc_int(CTXTc 2);
     return immediate_affects_callnode_ptrlist(CTXTc callnode);
     break;
   }
 
+  case CN_TO_SF: {
+    callnodeptr callnode;
+    callnode = (callnodeptr) ptoc_int(CTXTc 2);    
+    ctop_int(CTXTc 3, (Integer) callnode_sf(callnode));
+    break;
+  }
+
   default:
-    xsb_abort("Unknown Incremental Evaluation Builtin");
-    xsb_exit("Unknown Incremental Evaluation Builtin: %d\n.", builtin_number);
+    xsb_abort("Unknown Incremental Evaluation Builtin %d\n",builtin_number);
+    //    xsb_exit("Unknown Incremental Evaluation Builtin: %d\n.", builtin_number);
     break;
   }
   return TRUE;
