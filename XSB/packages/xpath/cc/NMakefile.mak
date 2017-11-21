@@ -18,7 +18,7 @@ CLEAN :
 	-@if exist "$(INTDIR)\*.exp" erase "$(INTDIR)\*.exp"
 
 
-CPP_PROJ=/nologo /MT /W3 /EHsc /O2 /I "$(OUTDIR)" \
+CPP_PROJ=/nologo /MD /W3 /EHsc /O2 /I "$(OUTDIR)" \
 	/I "$(XSBDIR)\emu" /I "$(XSBDIR)\prolog_includes" \
 	/I "$(XSBDIR)\packages\curl\cc" \
 	/I "$(XSBDIR)\packages\xpath\cc"\

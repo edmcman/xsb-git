@@ -87,7 +87,7 @@ extern void gdb_dummy(void);
 
 /* round N to the next multiple of P2, P2 must be a power of 2 */
 
-#ifdef DARWIN 
+#if defined(DARWIN) || defined(WIN_NT)
 #define SQUASH_LINUX_COMPILER_WARN(VAR) 
 #else
 #define SQUASH_LINUX_COMPILER_WARN(VAR) VAR = VAR;

@@ -47,7 +47,7 @@ CLEAN :
 	-@erase "$(OUTDIR)\simple_foreign.exp"
 	-@erase "$(OUTDIR)\simple_foreign.lib"
 
-CPP_PROJ=/nologo /MT /W3 /EHsc /O2 /I "..\..\config\x86-pc-windows"  /I "..\..\emu" /I "..\..\prolog_includes"  /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SIMPLE_FOREIGN_EXPORTS" /Fp"$(INTDIR)\simple_foreign.pch" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=/nologo /MD /W3 /EHsc /O2 /I "..\..\config\x86-pc-windows"  /I "..\..\emu" /I "..\..\prolog_includes"  /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SIMPLE_FOREIGN_EXPORTS" /Fp"$(INTDIR)\simple_foreign.pch" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 MTL_PROJ=/nologo /D "NDEBUG" /mktyplib203 /win32 
 BSC32=bscmake.exe
 BSC32_FLAGS=/nologo /o"$(OUTDIR)\simple_foreign.bsc" 
@@ -84,7 +84,7 @@ CLEAN :
 	-@erase "$(OUTDIR)\simple_foreign.lib"
 	-@erase "$(OUTDIR)\simple_foreign.pdb"
 
-CPP_PROJ=/nologo /MTd /W3 /Gm /EHsc /Zi /Od  /I "..\..\config\x86-pc-windows"  /I "..\..\emu" /I "..\..\prolog_includes" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SIMPLE_FOREIGN_EXPORTS" /Fp"$(INTDIR)\simple_foreign.pch"  /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /RTC1  /c 
+CPP_PROJ=/nologo /MDd /W3 /Gm /EHsc /Zi /Od  /I "..\..\config\x86-pc-windows"  /I "..\..\emu" /I "..\..\prolog_includes" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SIMPLE_FOREIGN_EXPORTS" /Fp"$(INTDIR)\simple_foreign.pch"  /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /RTC1  /c 
 MTL_PROJ=/nologo /D "_DEBUG" /mktyplib203 /win32 
 BSC32=bscmake.exe
 BSC32_FLAGS=/nologo /o"$(OUTDIR)\simple_foreign.bsc" 

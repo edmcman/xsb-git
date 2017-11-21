@@ -43,7 +43,7 @@ CLEAN :
 	-@if exist "$(INTDIR)\*.exp" erase "$(INTDIR)\*.exp"
 
 
-CPP_PROJ=/nologo /MT /W3 /EHsc /O2 /I "$(ARCHDIR)" \
+CPP_PROJ=/nologo /MD /W3 /EHsc /O2 /I "$(ARCHDIR)" \
 	/I "$(XSBDIR)\emu" /I "$(XSBDIR)\prolog_includes" \
 	/I "$(XSBDIR)\packages\curl\cc"\
 	/D "WIN_NT" $(DEBUG_FLAG) /D "_WINDOWS" /D "_MBCS" \
