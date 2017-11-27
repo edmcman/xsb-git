@@ -28,6 +28,8 @@
 
 :- import catch/3 from standard.
 
+:- dynamic cvt_type_hook/2.
+
 :- comment(load_csv(FileName,PSpec), "loads a comma-separated (csv)
 file, where @var{FileName} is the file to load, @var{PSpec} is either
 Name/Arity or Name(_,_,...,_) of the predicate to load the facts
@@ -63,6 +65,10 @@ defining the types of the fields, with 'atom' (or variable) indicating
 atom, 'integer' indicate integer, 'float' indicating float, 'term'
 indicated a Prolog term, and 'string' indicating that its value should
 be returned as a list of ascii codes.
+
+User can define field conversions for other data types (e.g., date) by
+adding type conversion hooks. See @pred{add_cvt_type_hook/2} and
+@pred{remove_cvt_type_hook/1}.
 
 @var{Options} is a list of options to control the processing. Options
 are:
@@ -245,70 +251,97 @@ cvt_types(_,_,[],Fields,Options) :- !,
      ;	true
     ).
 cvt_types([F|Fs],Types,[A|As],Fields,Options) :-
-    (Types = [T|Ts]
-     ->	true
-     ;	T = string		% pad as string
-    ),
-    (F = 'NULL'(_)
-     ->	A = F			% null padding
-     ; var(T)
-     ->	atom_codes(A,F)
-     ; T == atom
-     ->	atom_codes(A,F)
-     ; T == integer
-     ->	remove_commas(F,FC),
-	(FC == []
-	 -> A = 0
-	 ;  catch(number_codes(AN,FC),_,fail)
-	 -> A is floor(AN)
-	 ;  write(user_error,'[proc_files] Warning: Cannot convert to integer, line '),
-	    conget('__linesread',LinesRead),
-	    write(user_error,''(LinesRead)),write(user_error,': '),
-	    atom_codes(A,F),
-	    writeq(user_error,A), nl(user_error),
-	    (member(error,Options)
-	     ->	misc_error(('[proc_files] Error: Cannot convert to integer: ',F, ' on line ', LinesRead))
-	     ;	true
-	    ),
-	    writeln(user_error,'\tConverting to atom instead')
-	)
-     ; T == float
-     ->	remove_commas(F,FC),
-	(FC == []
-	 -> A = 0.0
-	 ;  catch(number_codes(AN,FC),_,fail)
-	 -> A is float(AN)
-	 ;  write(user_error,'[proc_files] Warning: Cannot convert to float, line '),
-	    conget('__linesread',LinesRead),
-	    write(user_error,''(LinesRead)), write(user_error,': '),
-	    atom_codes(A,F),
-	    writeq(user_error,A), nl(user_error),
-	    (member(error,Options)
-	     ->	misc_error(('[proc_files] Error: Cannot convert to float: ',F, ' on line ', LinesRead))
-	     ;	true
-	    ),
-	    writeln(user_error,'\tConverting to atom instead')
-	)
-     ; T == term
-     ->	atom_codes(AF,F),
-	atom_to_term(AF,A)
-     ; T == string
-     ->	A = F
-     ;	misc_error(('Unknown field type ''',T,''' in proc_files load/read operation.')),
-	atom_codes(A,F)
-    ),
-    cvt_types(Fs,Ts,As,Fields,Options).
-	
+        (Types = [T|Ts]
+        ->	true
+        ;	T = string      % pad as string
+        ),
+        (F = 'NULL'(_)
+        ->	A = F           % null padding
+        ; var(T)
+        ->	atom_codes(A,F)
+        ; T == atom
+        ->	atom_codes(A,F)
+        ; T == integer
+        ->	remove_commas_and_spaces(F,FC),
+            (FC == []
+            -> A = 0
+            ;  catch(number_codes(AN,FC),_,fail)
+            -> A is floor(AN)
+            ; cannot_convert_errwarn(T,FC,Options,A)
+            /*
+                write(user_error,'[proc_files] Warning: Cannot convert to integer, line '),
+                conget('__linesread',LinesRead),
+                write(user_error,''(LinesRead)),write(user_error,': '),
+                atom_codes(A,F),
+                writeq(user_error,A), nl(user_error),
+                (member(error,Options)
+                ->	misc_error(('[proc_files] Error: Cannot convert to integer: ',F, ' on line ', LinesRead))
+                ;	true
+                ),
+                writeln(user_error,'\tConverting to atom instead')
+            */
+            )
+        ; T == float
+        ->	remove_commas_and_spaces(F,FC),
+            (FC == []
+            -> A = 0.0
+            ;  catch(number_codes(AN,FC),_,fail)
+            -> A is float(AN)
+            ; cannot_convert_errwarn(T,FC,Options,A)
+            /*
+                write(user_error,'[proc_files] Warning: Cannot convert to float, line '),
+                conget('__linesread',LinesRead),
+                write(user_error,''(LinesRead)), write(user_error,': '),
+                atom_codes(A,F),
+                writeq(user_error,A), nl(user_error),
+                (member(error,Options)
+                ->	misc_error(('[proc_files] Error: Cannot convert to float: ',F, ' on line ', LinesRead))
+                ;	true
+                ),
+                writeln(user_error,'\tConverting to atom instead')
+            */
+            )
+        ; T == term
+        ->	atom_codes(AF,F),
+            atom_to_term(AF,A)
+        ; T == string
+        ->	A = F
+        %% Hook is a binary predicate: +In,-Out
+        ; cvt_type_hook(T,Hook) ->
+            remove_spaces(F,FC),
+            arg(1,Hook,InVar),
+            arg(2,Hook,OutVar),
+            (var(InVar), var(OutVar), InVar \== OutVar ->
+                atom_codes(InVar,FC),
+                (call(Hook) -> A=OutVar
+                ; cannot_convert_errwarn(T,FC,Options,A)
+                )
+            %% This is checked at hook insertion time, but just in case
+            ;   misc_error(('[proc_files] type = ', T, ', hook = ', Hook, ': field type conversion hook must have two unbound distinct arguments.'))
+            )
+        ;
+            misc_error(('Unknown field type ''',T,''' in proc_files load/read operation.')),
+            atom_codes(A,F)
+        ),
+        cvt_types(Fs,Ts,As,Fields,Options).
+
 %% over-general since removes all commas and spaces; could/should
 %% remove only leading/trailing blanks, and commas between triples of
 %% digits (from end/decimal point)
-remove_commas([],[]).
-remove_commas([C|R],NC) :-
+remove_commas_and_spaces([],[]).
+remove_commas_and_spaces([C|R],NC) :-
     ((C =:= 0', ; C =:= 0' )
      ->	NC = NC1
      ;	NC = [C|NC1]
     ),
-    remove_commas(R,NC1).
+    remove_commas_and_spaces(R,NC1).
+
+remove_spaces([],[]).
+remove_spaces([C|R],NC) :-
+    (C =:= 0' -> NC = NC1
+     ;	NC = [C|NC1]
+    ),
+    remove_spaces(R,NC1).
 	
 append_fields([],_,L,L) :- !.
 append_fields([Last],Returns,[First|Rest],[NewField|Rest]) :- !,
@@ -900,3 +933,51 @@ delim_file_process(InStream,Sep,Delim,Titles,Options,RecNum,CodeFields) :-
 	conset('__recsread',NumRecs),
 	fail
     ).
+
+
+
+:- comment(remove_cvt_type_hook/1, "@pred{remove_cvt_type_hook(+Type)}
+removes type conversion hook associated with @var{Type}.
+If no hook is associated with @var{Type}, succeeds silently.").
+remove_cvt_type_hook(Type) :- retractall(cvt_type_hook(Type,_)).
+
+:- comment(add_cvt_type_hook/2, " @pred{add_cvt_type_hook(+Type,+Hook)}
+adds type conversion hook for (user-defined) field type @var{Type}.
+@var{Hook} must be a binary predicate with unbound, distinct arguments; e.g.,
+a hook could be a predicate of the form @pred{convert_date(+InField,-OutField)}.
+If a field declared as being of type @var{Type} is encountered, @var{Hook}
+will be called to convert the field according to the supplied hook-predicate.
+If a hook associated with @var{Type} already exists, an error is issued.").
+add_cvt_type_hook(Type,Hook) :-
+        (\+ atom(Type)
+        ->
+            misc_error(('[proc_files] ', Type, ': field type must be an atom.'))
+        ; cvt_type_hook(Type,_)
+        ->
+            misc_error(('[proc_files] conversion hook for type ', Type, ' already exists. Remove it prior to changing.'))
+        ; compound(Hook), Hook =.. [_F,A1,A2], var(A1), var(A2), A1 \== A2
+        -> fail
+        ;   misc_error(('[proc_files] type = ', Type, ', hook = ', Hook, ': field type conversion hook must have two unbound distinct arguments.'))
+        ).
+        
+add_cvt_type_hook(Type,Hook) :-
+        asserta(cvt_type_hook(Type,Hook)).
+
+
+cannot_convert_errwarn(Type,Item,Options,ItemOut) :-
+        write(user_error,'\n[proc_files] Warning: Cannot convert '),
+        write(user_error,' to '),
+        write(user_error,Type),
+        write(user_error, ': "'),
+        atom_codes(ItemOut,Item),
+        write(user_error, ItemOut),
+        write(user_error,'" on line '),
+        conget('__linesread',LinesRead),
+        write(user_error,''(LinesRead)),
+        nl(user_error),
+        (member(error,Options)
+        -> misc_error(('[proc_files] Error: Cannot convert to ',
+                       Type, ': "',ItemOut, '" on line ', LinesRead))
+        ;	true
+        ),
+        writeln(user_error,'\tConverting to atom instead').

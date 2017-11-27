@@ -2500,7 +2500,22 @@ a float in the loaded fact.
 \item[{\tt term}] The corresponding field must contain a Prolog term in
 canonical form, and it will be converted to that term in the loaded
 fact. 
-\item[\_\_] (A variable) Treated as {\tt atom}.
+\item[\_] (A variable) Treated as {\tt atom}.
+\item[\textnormal{user-defined}]
+  A \emph{user-defined type name} is any atom other than the above.
+  For example,  \texttt{date}   or \texttt{time}.
+  In that case, the user must supply a type conversion hook for that type
+  by calling the predicate  \texttt{add\_cvt\_type\_hook/2}, defined in
+  \texttt{proc\_files}, in advance. For instance, one can use the data type
+  \texttt{date} after executing
+  \texttt{add\_cvt\_type\_hook(date,date\_converter(\_,\_))}, where
+  \texttt{date\_converter/2}  could be a predicate that takes atoms of the form
+  \texttt{'2017-11-26'} in the first argument
+  and binds the second argument to terms of the form
+  \texttt{date(2017,11,26)}.
+  To remove a type conversion hook, use \texttt{remove\_cvt\_type\_hook/1},
+  e.g.,  \texttt{remove\_cvt\_type\_hook(date)}, also in
+  \texttt{proc\_files}.
 \end{itemize}
 
 \ourmoditem{load\_dsv(+FileName,+PredSpec,+Options)}{load\_dsv/3}{proc\_files}
@@ -3072,3 +3087,8 @@ depending on the reason the module name cannot be determined.
 
 \end{description}
 
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual1"
+%%% End: 

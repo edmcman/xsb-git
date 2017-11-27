@@ -37,6 +37,10 @@
 :- export break_into_code_fields/5.
 :- export data_records/3.
 
+:- export
+        add_cvt_type_hook/2,
+        remove_cvt_type_hook/1.
+
 :- import append/3 from basics.
 :- import length/2 from basics.
 :- import member/2 from basics.
