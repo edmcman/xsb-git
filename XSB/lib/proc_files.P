@@ -301,9 +301,15 @@ cvt_types([F|Fs],Types,[A|As],Fields,Options) :-
                 writeln(user_error,'\tConverting to atom instead')
             */
             )
-        ; T == term
-        ->	atom_codes(AF,F),
-            atom_to_term(AF,A)
+        ; T == term ->
+            remove_spaces(F,FC),
+            (atom_codes(AF,F),
+                (FC == [] -> A=''
+                ; atom_to_term(AF,A)
+                ),
+                !
+            ; cannot_convert_errwarn(T,F,Options,A)
+            )
         ; T == string
         ->	A = F
         %% Hook is a binary predicate: +In,-Out
