@@ -23,13 +23,6 @@
 */
 
 
-%%% add printout of file loaded and time; like load_dyn
-%%% add option to ignore first line (as titles)
-
-:- import catch/3 from standard.
-
-:- dynamic cvt_type_hook/2.
-
 :- comment(load_csv(FileName,PSpec), "loads a comma-separated (csv)
 file, where @var{FileName} is the file to load, @var{PSpec} is either
 Name/Arity or Name(_,_,...,_) of the predicate to load the facts
@@ -218,38 +211,10 @@ process_predspec(PSpec,Spec,Types,Args) :-
     ).
 
 cvt_types([],[],[],_,_) :- !.
-cvt_types([],_,_,Fields,Options) :- !,
-    coninc('__errcnt',ECnt),
-    (ECnt < 10
-     ->	write(user_error,'[proc_files] Warning: Wrong length line '),
-	conget('__linesread',LinesRead),
-	write(user_error,''(LinesRead)), write(user_error,': '),
-	atom_codes_list(AtomFields,Fields),
-	writeq(user_error,AtomFields), nl(user_error),
-	(member(error,Options)
-	 -> misc_error(('[proc_files] Error: Wrong length line -- too few fields on line ',LinesRead))
-	 ;  writeln(user_error,'\tFields from line extended with variables'),nl(user_error)
-	)
-     ;  ECnt =:= 10
-     ->	writeln(user_error,'[proc_files] Warning: More wrong length lines...')
-     ;	true
-    ).
-cvt_types(_,_,[],Fields,Options) :- !,
-    coninc('__errcnt',ECnt),
-    (ECnt < 10
-     ->	write(user_error,'[proc_files] Warning: Wrong length line '),
-	conget('__linesread',LinesRead),
-	write(user_error,''(LinesRead)),write(user_error,': '),
-	atom_codes_list(AtomFields,Fields),
-	writeq(user_error,AtomFields),nl(user_error),
-	(member(error,Options)
-	 -> misc_error(('[proc_files] Error: Wrong length line -- too many fields on line ', LinesRead))
-	 ;  writeln(user_error,'\tExtra fields in line truncated')
-	)
-     ;  ECnt =:= 10
-     ->	writeln(user_error,'[proc_files] Warning: More wrong length lines...')
-     ;	true
-    ).
+cvt_types([],_,_,_Fields,_Options) :- !,
+    misc_error('[proc_files] Error: internal, too few fields in type conversion.').
+cvt_types(_,_,[],_Fields,_Options) :- !,
+    misc_error('[proc_files] Error: internal, too many fields in type conversion.').
 cvt_types([F|Fs],Types,[A|As],Fields,Options) :-
         (Types = [T|Ts]
         ->	true
@@ -941,6 +906,7 @@ delim_file_process(InStream,Sep,Delim,Titles,Options,RecNum,CodeFields) :-
     ).
 
 
+:- dynamic cvt_type_hook/2.
 
 :- comment(remove_cvt_type_hook/1, "@pred{remove_cvt_type_hook(+Type)}
 removes type conversion hook associated with @var{Type}.
