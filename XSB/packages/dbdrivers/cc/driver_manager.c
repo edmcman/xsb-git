@@ -272,10 +272,11 @@ DllExport int call_conv queryConnection(void)
     qHandle->state = QUERY_BEGIN;
     QHandles[numQHandles++] = qHandle;
 
-    if (getDriverFunction(qHandle->connHandle->driver, QUERY) != NULL)
+    if (getDriverFunction(qHandle->connHandle->driver, QUERY) != NULL) {
       queryDriver = getDriverFunction(qHandle->connHandle->driver, QUERY)->queryDriver;
-    else
+    } else {
       return FALSE;
+    }
     result = queryDriver(qHandle);
   }
   else {
