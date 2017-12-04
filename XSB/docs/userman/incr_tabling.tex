@@ -766,7 +766,7 @@ error conditions arise, the update will {\tt not} occur.
 %to those of interest.  If {\tt SkelList} is a variable, all affected
 %goals are returned in {\tt GoalList}.
 
-\ourmoditem{incr\_invalidate\_calls(+Goal)}{incr\_invalidate\_calls/1}{increval}
+\ourmoditem{incr\_invalidate\_call(+Goal)}{incr\_invalidate\_call/1}{increval}
 Let $\cT$ be the least set of all incrementally maintained tables
 whose goals that unify with {\tt Goal}, or whose tables are
 (transitively) affected by a goal in $\cT$.  This predicate invalidats
@@ -789,7 +789,7 @@ through the ODBC interface).
 %table when the external relation changes.  
 Of course, in such a case, the application programmer must know when
 the external relation changes and invoke {\tt
-  incr\_invaludate\_calls/1} as necessary.
+  incr\_invalidate\_calls/1} as necessary.
 
 
 {\bf Error Cases}

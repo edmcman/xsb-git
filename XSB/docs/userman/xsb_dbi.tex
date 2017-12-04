@@ -387,7 +387,7 @@ Important to note is that \texttt{p(a)} has to appear as a list
 element above and not be quoted so that Prolog will recognize it as a term.
 
 The \texttt{NULL}  value is represented using the special 0-ary term
-\texttt{'NULL'()} \emph{when retrieved}. When you need to \emph{store} a
+\texttt{'NULL'(\_)} \emph{when retrieved}. When you need to \emph{store} a
 null value, you can use either the above special term or just place \texttt{NULL} in the appropriate place in the SQL
 INSERT statement. For instance,
 %% 
@@ -397,7 +397,7 @@ INSERT statement. For instance,
 \end{verbatim}
 %% 
 However, when retrieved from a database, a \texttt{NULL} is always
-represented by the term \texttt{'NULL'()} (and not by the atom
+represented by the term \texttt{'NULL'(\_)} (and not by the atom
 \texttt{'NULL'}).
 
 

@@ -687,7 +687,7 @@ static int bindReturnList(prolog_term returnList, struct xsb_data** result, stru
       else if (is_var(element) && result[i]->type == FLOAT_TYPE)
 	c2p_float(CTXTc result[i]->val->f_val, element);
       else if (is_var(element) && result[i]->type == NULL_VALUE_TYPE) {
-	c2p_functor(CTXTc "NULL", 0, element);
+	c2p_functor(CTXTc "NULL", 1, element);
       }
       returnList = p2p_cdr(returnList);
       i++;
