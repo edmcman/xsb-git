@@ -114,8 +114,12 @@
 #ifndef fileno				/* fileno may be a  macro */
 extern int    fileno(FILE *f);	        /* this is defined in POSIX */
 #endif
+#ifdef WIN_NT
 /* In WIN_NT, this gets redefined into _fdopen by wind2unix.h */
+__declspec(dllimport) FILE * __cdecl fdopen(int fildes, const char *type);
+#else
 extern FILE *fdopen(int fildes, const char *type);
+#endif
 
 #if defined(GENERAL_TAGGING)
 extern void extend_enc_dec_as_nec(void *,void *);

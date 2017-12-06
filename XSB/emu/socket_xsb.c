@@ -90,9 +90,12 @@ static u_long block_false = 0;
 /* return error code handling */
 static xsbBool set_error_code(CTXTdeclc int ErrCode, int ErrCodeArgNumber,char *Where);
 
+#ifdef WIN_NT
 /* In WIN_NT, this gets redefined into _fdopen by configs/special.h */
-extern FILE *fdopen(int fildes, const char *type);
-
+__declspec(dllimport) FILE * fdopen(int fildes, const char *type);
+#else
+extern FILE * fdopen(int fildes, const char *type);
+#endif
 /* declare the utility functions for select calls (bodies of these functions are below) */
 static void init_connections(CTXTdecl);
 static void set_sockfd(CTXTdeclc int count);

@@ -997,6 +997,9 @@ CPtr excess_vars(CTXTdeclc Cell term, CPtr varlist, int ifExist,
   case XSB_STRUCT: {
     int i, arity;
     Psc psc;
+    if (isinternstr(term)) {
+      return varlist;
+    }
     psc = get_str_psc(term);
     arity = (int) get_arity(psc);
     if (arity == 0) {
@@ -1036,6 +1039,9 @@ CPtr excess_vars(CTXTdeclc Cell term, CPtr varlist, int ifExist,
   }
     goto begin_excess_vars;
   case XSB_LIST:
+    if (isinternstr(term)) {
+      return varlist;
+    } 
     varlist = excess_vars(CTXTc get_list_head(term), varlist, ifExist, templ_trail, var_trail);
     term = get_list_tail(term);
     goto begin_excess_vars;
@@ -3146,24 +3152,56 @@ case WRITE_OUT_PROFILE:
   case INTERN_TERM:
   {
     Integer termsize;
-    prolog_term term;
+    prolog_term term = ptoc_tag(CTXTc 1);
+    prolog_term iterm = ptoc_tag(CTXTc 2);
+    prolog_term iiterm;
+    Integer ifHashIntern = ptoc_int(CTXTc 3);
+    Integer iterm_int;
 
-    term = ptoc_tag(CTXTc 1);
     XSB_Deref(term);
-    if (!isinternstr_really(term)) {
-      termsize = intern_term_size(CTXTc term);
-      check_glstack_overflow(2,pcreg,termsize*sizeof(Cell));
-      term = intern_term(CTXTc ptoc_tag(CTXTc 1));
-    }
-    if (term) {
-      //printf("o %p\n",term);
-      return unify(CTXTc term, ptoc_tag(CTXTc 2));
-    } else {
-      //printf("of\n");
-      return FALSE;
-    }
+    XSB_Deref(iterm);
+    if (isconstr(term) || islist(term)) {
+      if (ifHashIntern && !ground(term))
+	//xsb_instantiation_error(CTXTc "intern_term/hash/2",1);
+	return FALSE;
+      if (!isinternstr_really(term)) {
+	  termsize = intern_term_size(CTXTc term);
+	  check_glstack_overflow(2,pcreg,termsize*sizeof(Cell));
+	  term = intern_term(CTXTc term);
+	}
+	if (term) {
+	  if (!ifHashIntern) {
+	    //printf("o %p\n",term);
+	    return unify(CTXTc term, iterm);
+	  } else {
+	    if (islist(term)) {
+	      return unify(CTXTc makeint(dec_addr(term)+1),iterm);
+	    } else {
+	      return unify(CTXTc makeint(cs_val(term)),iterm);
+	    }
+	  }
+	} else {
+	  //printf("of\n");
+	  return FALSE;
+	}
+    } else if (is_int(iterm)) {
+      iterm_int = int_val(iterm);
+      if (iterm_int & 1) {
+	iiterm = makelist(iterm_int-1);
+      } else {
+	iiterm = makecs(iterm_int);
+      }
+      /* 10000 is hack to try to catch some errors */
+      if (iterm_int > 100000 && isinternstr(iiterm) && isinternstr_really(iiterm)) {
+	return unify(CTXTc term,iiterm);
+      } else {
+	xsb_type_error(CTXTc "Not hash of interned term",iterm,"intern_term/2/3",2);
+      }
+    } else if (isref(term) && isref(iterm)) {
+      xsb_instantiation_error(CTXTc "intern_term/hash/2", 1);
+    } else xsb_type_error(CTXTc "Term to intern",term,"intern_termhash/2",1);
   }
-
+    
   case SEGFAULT_HANDLER: { /* Set the desired segfault handler:
 			      +Arg1:  none  - don't catch segfaults;
 				      warn  - warn and exit;
