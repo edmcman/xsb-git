@@ -73,7 +73,16 @@ struct varstr {
 
 extern DllExport void call_conv varstring_init(VarString *vstr);
 extern DllExport void call_conv varstring_create(VarString **vstr);
+
+/* To compile a C program UNDER WINDOWS that will link with the XSB
+dll and includes this .h file (or cinterf.h, which includes this
+file), the following WINDOWS_IMP flag must be defined when compiling
+the C program. */
+#ifdef WINDOWS_IMP
+_declspec(dllimport) struct varstr_ops VarStrOps;
+#else
 extern DllExport struct varstr_ops VarStrOps;
+#endif
 
 /* calling sequence shortcuts; all expect a VarString pointer */
 #define XSB_StrSet(vstr,str)           (vstr)->op->set(vstr,str)
