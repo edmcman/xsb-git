@@ -82,7 +82,7 @@ UInteger next_prime(UInteger some_int) {
     return (2 * some_int - 1);
 }
 
-#define MAX_SHIFT_BITS sizeof(Cell)*8-5
+#define MAX_SHIFT_BITS sizeof(Cell)*8-7
 
 /*
  *  Hash object all characters of its name, plus its arity.
