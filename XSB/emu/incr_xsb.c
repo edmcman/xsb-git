@@ -57,6 +57,9 @@
 #include "hashtable.h"
 #include "hashtable_itr.h"
 
+// defined in call_graph_xsb.c
+int immediate_depends_callnode_ptrlist(CTXTdeclc callnodeptr);
+
 /* This is already defined in builtin.c; need to factor this out */
 #define ptoc_addr(regnum)	(void *)ptoc_int(CTXTc regnum)
 
