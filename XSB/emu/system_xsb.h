@@ -31,8 +31,13 @@ extern "C" {
 extern int    fileno(FILE *f);	        /* this is defined in POSIX */
 #endif
 
+#ifdef WIN_NT
 /* In WIN_NT, this gets redefined into _fdopen by wind2unix.h */
-extern FILE *fdopen(int fildes, const char *type);
+//extern FILE* __cdecl fdopen(int fildes, const char *type);
+__declspec(dllimport) FILE* __cdecl fdopen(int fildes, const char *type);
+#else
+extern FILE *fdopen(int fildes, const char *type);  
+#endif
 
 #ifndef WIN_NT
 extern int kill(pid_t pid, int sig);
