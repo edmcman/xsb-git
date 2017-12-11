@@ -158,22 +158,50 @@ str_repl(abcdefbcdef,[ab,bc,de],['AB','BC','DE'],'ABcDEfBCDEf').
 str_repl(abcdefbcdef,bc,'BBCC',aBBCCdefBBCCdef). */
 
 str_repl(S0,SourceList,TargetList,S) :-
+    (atom(S0)
+     ->	true
+     ;	instantiation_error(str_repl/4,1,atom)
+    ),
     atom_codes(S0,SC0),
     (atom(SourceList)
-     ->	atom_codes(SourceList,SourceCodes),
-	atom_codes(TargetList,TargetCodes),
-	SourceListC = [SourceCodes],
-	TargetListC = [TargetCodes]
-     ;	atom_codes_list(SourceList,SourceListC),
-	atom_codes_list(TargetList,TargetListC)
+     ->	SourceList1 = [SourceList]
+     ;	SourceList1 = SourceList
     ),
+    (atom(TargetList)
+     ->	TargetList1 = [TargetList]
+     ;	TargetList1 = TargetList
+    ),
+    atom_codes_sou_tar_list(SourceList1,TargetList1,SourceListC,TargetListC),
     repl_all(SC0,SourceListC,TargetListC,SC),
     atom_codes(S,SC).
 
-atom_codes_list([],[]).
-atom_codes_list([A|As],[C|Cs]) :-
-    atom_codes(A,C),
-    atom_codes_list(As,Cs).
+atom_codes_sou_tar_list([],[],[],[]) :- !.
+atom_codes_sou_tar_list([],_,_,_) :- !,
+    misc_error('str_repl/4: Source and Target lists must be the same length').
+atom_codes_sou_tar_list(_,[],_,_) :- !,
+    misc_error('str_repl/4: Source and Target lists must be the same length').
+atom_codes_sou_tar_list([A|As],[B|Bs],[AS|ASs],[BT|BTs]) :-
+    (atom(A)
+     ->	true
+     ;	(var(A)
+	 -> instantiation_error(str_repl/4,2,atom)
+	 ;  type_error(atom,A,str_repl/4,2)
+	)
+    ),
+    (A == ''
+     ->	domain_error(non_empty_atom,'''''',str_repl/4,1)
+     ;	true
+    ),
+    (atom(B)
+     ->	true
+     ;	(var(B)
+	 -> instantiation_error(str_repl/4,3,atom)
+	 ;  type_error(atom,A,str_repl/4,3)
+	)
+    ),
+    atom_codes(A,AS),
+    atom_codes(B,BT),
+    atom_codes_sou_tar_list(As,Bs,ASs,BTs).
 
 repl_all([],_,_,[]) :- !.
 repl_all(SC0,SourceList,TargetList,SC) :-

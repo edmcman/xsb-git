@@ -49,6 +49,7 @@
         file_read/3,
         file_read_foe/3
    from xsb_read.
-:- import domain_error/4, check_nonvar_list/3, type_error/4 from error_handler.
+   :- import domain_error/4, check_nonvar_list/3, type_error/4,
+   instantiation_error/3, misc_error/1 from error_handler.
 
 /* ---------------------- end of file string.H ------------------------ */
