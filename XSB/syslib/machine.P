@@ -354,7 +354,9 @@ ground_cycle_internal(_Term,_Action):- '_$builtin'(GROUND_CYC).
 
 mark_term_cyclic(_Term):- '_$builtin'(MARK_TERM_CYCLIC).
 
-intern_term(_Term,_InternedTerm) :- '_$builtin'(INTERN_TERM).
+intern_term(Term,InternedTerm) :- intern_term(Term,InternedTerm,0).
+intern_termhash(Term,InternedTerm) :- intern_term(Term,InternedTerm,1).
+intern_term(_Term,_InternedTerm,_IfHash) :- '_$builtin'(INTERN_TERM).
 
 '$$set_scope_marker':- '$$set_scope_marker'.
 '$$unwind_stack':- '$$unwind_stack'.
