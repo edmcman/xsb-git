@@ -3943,6 +3943,34 @@ the heap.  The interned representation of ground terms can save space
 and/or time in some situations.  Note that already interned subterms
 or {\tt Term} do not need to be traversed in this operation.
 
+\ourmoditem{intern\_termhash(?Term,?TermHash)}{intern\_termhash/2}{machine}
+\index{interned terms} \label{interntermhash} {\tt intern\_termhash}
+allows a user to create a perfect hash integer for a ground list or
+structure.  If {\tt Term} is bound to a ground term, it term\_intern's
+it and returns an integer in {\tt TermHash} that uniquely represents
+that ground term.  (If {\tt Term} is a nonground structure or list,
+the goal fails.)  If {tt TermHash} is bound to an integer, that
+integer value must have been generated and returned by an earlier call
+to {\tt intern\_termhash}, in which case {\tt Term} will be unified
+with the ground list or structure that the value of {tt TermHash}
+represents.
+
+This predicate can be used to generate integers to represent large
+ground terms, and then passed through tabled predicates, and when the
+value of the large term is needed, it can be used to reconstruct the
+ground term.  In this case the tables need to store only the integer
+hashes, which can be more efficient.  In this way a programmer can
+explicitly get the effect of tabling with interned terms (see Section
+\ref{section:interned-terms}), but with slightly different control.
+In particular one can use this technique to get a subsumptive tabling
+with interned terms.
+
+Note that getting a hash for a
+ground term is linear in the siae of the non-interned subcomponents of
+that term, and getting the ground term given the hash is constant time
+(and quite fast.)  This means that generating and using hashes for
+ground terms can be quite efficient.
+
 \end{description}
 
 %-----------------------------------------------------------------------------------------------
@@ -5328,7 +5356,7 @@ More precisely, {\tt Goal} finishes execution either 1) by failure, 2)
 by determining that the success of {\tt Goal} is deterministic, 3)
 when an error is thrown and not handled by {\tt Goal} or one of its
 subgoals; or 4) when {\tt Goal} is cut over.  In all of these cases,
-{\tt Handler} will be called and will succeed non-deterministically.
+{\tt Handler} will be called and must succeed (but can be non-deterministic).
 We illustrate these cases through examples.
 \begin{itemize}
 \item Failure of {\tt Goal}:
