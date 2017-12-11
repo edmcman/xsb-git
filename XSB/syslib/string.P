@@ -150,6 +150,43 @@ str_match(Sub,Str,Direction,Beg,End) :- str_match(Sub,Str,Direction,Beg,End).
 str_sub(S1, S2, Pos) :- str_match(S1, S2, forward, Pos, _).
 str_sub(S1, S2) :- str_match(S1, S2, forward, _, _).
 
+/* str_repl(+Atom,+SrcAtomList,+TargetAtomList,?NewAtom) replaces in
+Atom occurrences of substrings in SrcAtomList with corresponding atoms
+in TargetAtomList generating NewAtom.  (SrcAtomList and TargetAtomList
+may be single atoms.)  e.g.,
+str_repl(abcdefbcdef,[ab,bc,de],['AB','BC','DE'],'ABcDEfBCDEf').
+str_repl(abcdefbcdef,bc,'BBCC',aBBCCdefBBCCdef). */
+
+str_repl(S0,SourceList,TargetList,S) :-
+    atom_codes(S0,SC0),
+    (atom(SourceList)
+     ->	atom_codes(SourceList,SourceCodes),
+	atom_codes(TargetList,TargetCodes),
+	SourceListC = [SourceCodes],
+	TargetListC = [TargetCodes]
+     ;	atom_codes_list(SourceList,SourceListC),
+	atom_codes_list(TargetList,TargetListC)
+    ),
+    repl_all(SC0,SourceListC,TargetListC,SC),
+    atom_codes(S,SC).
+
+atom_codes_list([],[]).
+atom_codes_list([A|As],[C|Cs]) :-
+    atom_codes(A,C),
+    atom_codes_list(As,Cs).
+
+repl_all([],_,_,[]) :- !.
+repl_all(SC0,SourceList,TargetList,SC) :-
+    (ith(I,SourceList,SourceStr),
+     append(SourceStr,Rest,SC0)
+     ->	ith(I,TargetList,TargetStr),
+	append(TargetStr,SC1,SC)
+     ;	SC0 = [C|Rest],
+	SC = [C|SC1]
+    ),
+    repl_all(Rest,SourceList,TargetList,SC1).
+
+
 /***************************************************************/
 /*                                                             */
 /* term_to_codes (term_to_atom) convert a general XSB term     */
