@@ -489,7 +489,7 @@ default tabling strategy.
 %----------------------------------------------------------------------
 
 \subsection{Tabling with Interned Terms} \label{section:interntabling}
-\index{tabling!interned terms}
+\index{tabling!interned terms} \label{section:interned-terms}
 
 XSB supports, on request, a special representation of {\em ground}
 terms, known as interned terms (see {\tt intern\_term/2}.)  This
@@ -534,8 +534,10 @@ of course, constant time.
 
 Because an interned term is treated just like a atom (with no indexing
 done on its structure), tabling as intern always uses variant tabling,
-and thus cannot be combined with subsumptive tabling.  Also it cannot
-be combined with answer subsumption tabling.
+and thus cannot be combined with subsumptive tabling.  (However, see
+{\tt intern\_termhash/2}, described in Section \ref{interntermhash},
+for a way to program this explicitly, usihg lower-level predicates.)
+Also it cannot be combined with answer subsumption tabling.
 
 For more information on tabling as intern, see
 \cite{ciclops-2013-interning}.

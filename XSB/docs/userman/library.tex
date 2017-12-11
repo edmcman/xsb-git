@@ -1064,6 +1064,38 @@ L = [101,102]
 codes)~\footnote{Currently, {\tt substring/4} works properly for UTF-8
   characters.}.
 
+%-----------------------------------------------------------------------
+
+%%
+\ourmoditem{str\_repl(+String, +SourceList, +TargetList, ?Result)}{substring/4}{string}
+%%
+This predicate, {\tt str\_repl/4}, replaces substrings in an atom with
+new substrings.  {\tt String} is the atom whose substrings are to be
+replaced.  {\tt SourceList} is a list of atoms that are to be replaced
+in {\tt String}.  {\tt TargetList} is a corresponding list of atoms
+that are to replace occurrences of {\tt SourceList} atoms in {\tt
+  String}.  {\tt Result} is the atom resulting from doing the
+replacements.
+
+{\tt SourceList} and {\tt TargetList} may be single atoms if they
+would otherwise be lists of length one.
+
+For example:
+\begin{verbatim}
+| ?- string:str_repl(aaaabcdeaaaabcdefg,[aaa,d,g],['AA','DD','GG'],RES).
+
+RES = AAabcDDeAAabcDDefGG;
+
+no
+
+| ?- string:str_repl(aaba,a,aa,RES).
+
+RES = aaaabaa;
+
+no
+| ?- 
+\end{verbatim}
+
 \end{description}
 %%
 %------------------------------------------------------------------------------
@@ -2493,6 +2525,9 @@ file.  The permitted values of {\tt TypeSpec} are:
 \begin{itemize}
 \item[{\tt atom}] The corresponding field value will become an atom in
 the loaded fact.
+\item[{\tt string}] The corresponding field value will become a string
+  (a list of ascii code integers as produced from an atom by {\tt
+  atom\_codes/2}) in the loaded fact.
 \item[{\tt integer}] The corresponding field value will be converted
 to an integer in the loaded fact.
 \item[{\tt float}] The corresponding field value will be converted to
@@ -2526,15 +2561,121 @@ parameters are exactly as in {\tt load\_csv/2}, as described just
 above.  {\tt Options} is a list of options.  (With an empty list, {\tt
 load\_dsv} acts as {\tt load\_csv/2}.)  The options are:
 \begin{itemize}
-\item[{\tt separator=''Sep''}] which indicates that the character(s) {\tt Sep}
-will be used as the field separator.  There may be one or more
-characters. 
-\item[{\tt delimiter=''C''}] which indicates that the single character {\tt
-C} will be used as the field delimiter (the default being ``'''''',
-and I've yet to find a situation in which I want to change it.)
+\item[{\tt separator=''Sep''}] (or separator(''Sep'')) which indicates
+  that the character(s) {\tt Sep} will be used as the field separator.
+  There may be one or more characters.
+\item[{\tt delimiter=''C''}] (or delimiter(''C'')) which indicates
+  that the single character {\tt C} will be used as the field
+  delimiter, the default being the double quote, ``'''''' (and I've
+  yet to find a situation in which I want to change it).
 \item[{\tt titles}] which indicates that the first line of the file should
-be ignored and not contribute a fact to the dynamic predicate.
+  be ignored and not contribute a fact to the dynamic predicate.
+\item[{\tt titles=$N$}] (or titles($N$)), where $N$ is an integer,
+  indicates that the first $N$ lines of the file should be ignored and
+  not contribute a fact to the dynamic predicate.
+\item[{\tt types=TypeList}] ( or types(TypeList)), where {\tt
+  TypeList} is a list of types (atoms) as described above for {\tt
+  load\_csv/2}.  If types are given both in {\tt PredSpec} and in the
+  options list, the one in {\tt PredSpec} is used.
+\item[{\tt returns=''C''}] (or returns(''C''), where {\tt C} is a
+  string, causes the lines that have newlines in non-delimited fields
+  to be processed specially.  The system tries to recover from such
+  situations and process such fields correctly.  If a newline (or
+  return) is detected in a field, it will be replaced with the string
+  {\tt C} in the output field.
+\item[{reverse}] causes asserta to be used to assert the input terms,
+  so the predicate will contain the file records in reverse order.
+  This can significantly improve performanc if indexing is
+  particularly weak.
+\item[{\tt pad=$N$}] (or {\tt pad($N$)}, where $N$ is a (positive or
+  negative) integer.  If $N$ is negative, then the asserted predicate
+  must have $|N|$ more fields than the input records contain, and they
+  will be padded with terms of the form {\tt 'NULL'(\_\_)}.  If $N$ is
+  positive, then the input records must contain $N$ more fields than
+  the asserted predicate, and the extra fields in the records will be
+  ignored.
 \end{itemize}
+
+\ourmoditem{data\_records(+FileName,+Format,?RecTerm)}{data\_records/3}{proc\_files}
+This predicate is used to read files of various formats.  It succeeds
+once for each record in the file, returning the record contents in
+{\tt RecTerm}.  The details of how it works depend on the value of
+{\tt Format}.  The {\tt FileName} denotes a file, and is found by
+looking through the {\tt file\_directory/1} directors, just as for
+{\tt load\_dyn/1} or dynmaically loaded predicates.
+
+The permissible values for {\tt Format} are:
+\begin{itemize}
+
+\item[{\tt read}] indicates that the file contains Prolog terms that
+  can be read with Prolog's {\tt read/1} predicate, so the terms can
+  use operators.  In this case {\tt RecTerm} will be unified with each
+  term that is read.  So normally {\tt RecTerm} is a variable in this
+  case.
+
+\item[{\tt canonical}] indicates that the file contains Prolog terms
+    that can be read with Prolog's {\tt read\_canonical/1} predicate.
+    So the terms in the file must be canonical terms.  In this case
+    {\tt RecTerm} will be unified with each term that is read.  So
+    normally {\tt RecTerm} is a variable in this case.  This can be
+    significantly faster {\tt read} for large files.
+
+\item[{\tt dsv(Options)}] where {\tt Options} is a list of options as
+  described for {\tt load\_dsv/3} above.  In this case, this predicate
+  will read records (as specified by {\tt Options}) from a
+  delimited-separated file, just as are loaded by {\tt load\_dsv/3}.
+  In this case {\tt RecTerm} will be unified with a list of values in
+  each record (in turn.)
+
+\item[{\tt sql(??)}] reserved for future functionality.
+\end{itemize}
+  
+A common use of this predicate is as in the following example:
+\begin{verbatim}
+:- table_index(employee/6,[1]).
+
+employee(FileName,EmpNum,EmpName,EmpAddr,EmpDept,EmpSalary) :-
+    data_records(FileName,
+                 dsv([separator="\t"]),
+                 [EmpNum,EmpName,EmpAddr,EmpDept,EmpSalary]).
+\end{verbatim}
+Here we define a predicate {\tt employee/6} whose first field is the
+file from which to get the employee records, and whose 2nd through 6th
+fields contain the data about a given employee.  The {\tt
+  table\_index} directive declares that on all calls to employee/6,
+the first argument ([1] indicating here the {\tt FileName}) must be
+bound.  On the first call, the call will be abstracted to having just
+the first argument bound, and that call will be made and
+(subsumptively) tabled.  Every subsequent call will retrieve its
+answer(s) from that table.  So this essentially loads the data from
+the indicated file into the predicate on first call, and from then on
+uses that table.
+
+One can get behavior very similar to {\tt load\_dync(FileName)} where
+file {\tt FileName} contains facts for a single predicate, say pp/3,
+with:
+
+\begin{verbatim}
+:- table_index(pp_f/4,[1]).
+
+pp_f(FileName,F1,F2,F3) :-
+    data_records(FileName,canonical,pp(F1,F2,F3)).
+\end{verbatim}
+
+where {\tt pp\_f/4} contains the data in the file, every tuple having
+the filename as its first field.  Note that since {\tt table\_index/2}
+uses trie indexing, the {\tt FileName} is stored only once in the
+trie, and the records are appropriately indexed.  (See the
+documentation for {\tt table\_index/2} for more details and how to
+handle more situations requiring more complex indexing.)
+
+Notice that this way of loading data from files is declarative; there
+is no need to have an ``initialization'' operation that must be called
+to load the data and then shouldn't be called again.  Here, given the
+above declaration, the programmer simple calls the predicate (e.g.,
+{\tt pp\_f/4}) whenever she needs those values, and the system
+automatically loads the data on the first call, building the necessary
+indexes.  This can greatly simplify programming with data from files.
 
 \end{description}
 
