@@ -5646,23 +5646,6 @@ $as_echo "#define TIME_WITH_SYS_TIME 1" >>confdefs.h
 fi
 
 
-for ac_header in sys/resource.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/resource.h" "ac_cv_header_sys_resource_h" "$ac_includes_default"
-if test "x$ac_cv_header_sys_resource_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SYS_RESOURCE_H 1
-_ACEOF
-
-else
-  have_errors=yes
-fi
-
-done
-
-test "${have_errors}" = "yes" &&
-    as_fn_error $? "sys/resource.h is missing on your system" "$LINENO" 5
-
 for ac_func in malloc
 do :
   ac_fn_c_check_func "$LINENO" "malloc" "ac_cv_func_malloc"
@@ -6381,7 +6364,36 @@ case "$canonical" in
 
                 config_ln_command="cp -fp "
         ;;
+
+     *-mingw*)  $as_echo "#define MINGW 1" >>confdefs.h
+
+                real_host_os=mingw
+
+                                builtins_opt_level=-${with_optimization-"O3 -fno-strict-aliasing"}
+                loader_opt_level=-${with_optimization-"O3 -fno-strict-aliasing"}
+
+                config_ln_command="cp -fp "
+        ;;
 esac
+
+if test "${real_host_os}" != "mingw" ; then
+    for ac_header in sys/resource.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "sys/resource.h" "ac_cv_header_sys_resource_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_resource_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SYS_RESOURCE_H 1
+_ACEOF
+
+else
+  have_errors=yes
+fi
+
+done
+
+    test "${have_errors}" = "yes" &&
+        as_fn_error $? "sys/resource.h is missing on your system" "$LINENO" 5
+fi
 
 if test "${general_tagging}" = "yes" ; then
    $as_echo "#define GENERAL_TAGGING 1" >>confdefs.h

@@ -1049,10 +1049,6 @@ AC_CHECK_HEADERS(sys/time.h)
 dnl defines TIME_WITH_SYS_TIME if both allowed
 AC_HEADER_TIME
 
-AC_CHECK_HEADERS(sys/resource.h, , have_errors=yes)
-test "${have_errors}" = "yes" &&
-    AC_MSG_ERROR([sys/resource.h is missing on your system])
-
 AC_CHECK_FUNCS(malloc, have_malloc=yes,have_malloc=no)
 test "${have_malloc}" = "no" &&
     AC_MSG_ERROR([malloc() is missing on your system])
@@ -1493,7 +1489,23 @@ case "$canonical" in
 
                 config_ln_command="cp -fp "
         ;;
+
+     *-mingw*)  AC_DEFINE(MINGW)
+                real_host_os=mingw
+
+                dnl MK: dunno if the 2 lines below are correct-copied from Cygwin
+                builtins_opt_level=-${with_optimization-"O3 -fno-strict-aliasing"}
+                loader_opt_level=-${with_optimization-"O3 -fno-strict-aliasing"}
+
+                config_ln_command="cp -fp "
+        ;;
 esac
+
+if test "${real_host_os}" != "mingw" ; then
+    AC_CHECK_HEADERS(sys/resource.h, , have_errors=yes)
+    test "${have_errors}" = "yes" &&
+        AC_MSG_ERROR([sys/resource.h is missing on your system])
+fi
 
 if test "${general_tagging}" = "yes" ; then
    AC_DEFINE(GENERAL_TAGGING)

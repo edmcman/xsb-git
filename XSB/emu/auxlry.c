@@ -30,7 +30,7 @@
 /* take care of the time.h problems */
 #include "xsb_time.h"
 
-#ifndef WIN_NT
+#if !defined(WIN_NT) && !defined(MINGW)
 #include <sys/resource.h>
 
 #ifdef SOLARIS
