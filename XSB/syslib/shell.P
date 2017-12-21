@@ -86,6 +86,7 @@ platform(Platform):-
 
 %% Sleep for the specified number of seconds
 sleep(Seconds) :- sys_system(SLEEP_FOR_SECS, Seconds,_,_,_,_,_).
+sleep_ms(MilliSeconds) :- sys_system(SLEEP_FOR_MILLISECS, MilliSeconds,_,_,_,_,_).
 is_plain_file(File) :- sys_system(IS_PLAIN_FILE, File,_,_,_,_,_).
 is_directory(File) :- sys_system(IS_DIRECTORY, File,_,_,_,_,_).
 

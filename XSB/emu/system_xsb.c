@@ -284,6 +284,20 @@ xsbBool sys_system(CTXTdeclc int callno)
     sleep(iso_ptoc_int_arg(CTXTc 2,"sleep/1",1));
 #endif
     return TRUE;
+  case SLEEP_FOR_MILLISECS:
+    {
+#ifdef WIN_NT
+      int milliseconds = (int)iso_ptoc_int_arg(CTXTc 2,"sleep_ms/1",1);
+      Sleep(milliseconds);
+#else
+      int milliseconds = iso_ptoc_int_arg(CTXTc 2,"sleep_ms/1",1);
+      struct timespec ts;
+      ts.tv_sec = milliseconds / 1000;
+      ts.tv_nsec = (milliseconds % 1000) * 1000000;
+      nanosleep(&ts, NULL);
+#endif
+      return TRUE;
+    }
   case GET_TMP_FILENAME:
     ctop_string(CTXTc 2,tempnam(NULL,NULL));
     return TRUE;

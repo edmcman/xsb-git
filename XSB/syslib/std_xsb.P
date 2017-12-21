@@ -437,6 +437,7 @@ standard_symbol(not_exists, 1, tables).
 standard_metapredicate_template(sk_not,1,(0)).
 
 standard_symbol(sleep, 1, shell).
+standard_symbol(sleep_ms, 1, shell).
 standard_symbol(skip, 1, standard).  	 	% TLS do we need this one?
 standard_symbol(sort, 2, setof).
 standard_symbol(spawn_process, 5, shell).

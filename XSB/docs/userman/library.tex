@@ -1890,6 +1890,10 @@ Note that if the timer is not set, the timer-enabled goals execute
 \ourstandarditem{sleep(+Seconds)}{sleep/1}
 Put XSB to sleep for the specified number of seconds. Execution resumes
 after the {\tt Seconds} number of seconds. This goal always succeeds.
+
+\ourstandarditem{sleep_ms(+MilliSeconds)}{sleep_ms/1}
+Like \texttt{sleep/1} but puts 
+XSB to sleep for the specified number of milliseconds instead of seconds.
 \end{description}
 %%
 Here is an example of the use of the timer:
