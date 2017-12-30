@@ -6137,9 +6137,9 @@ case CALL_SUBS_SLG_NOT: {
       break;
     }
     if ((tip = get_tip(CTXTc psc)) ) {
-      if (property == SUBGOAL_DEPTH) 
+      if (property == SUBGOAL_SIZE) 
 	TIF_SubgoalDepth(tip) = val;
-      else if (property == ANSWER_DEPTH) 
+      else if (property == ANSWER_SIZE) 
 	TIF_AnswerDepth(tip) = val;
       else if (property == INTERNING_GROUND)
 	TIF_Interning(tip) = val;
@@ -6168,9 +6168,9 @@ case CALL_SUBS_SLG_NOT: {
       break;
     }
     if ((tip = get_tip(CTXTc psc)) ) {
-      if (property == SUBGOAL_DEPTH) 
+      if (property == SUBGOAL_SIZE) 
 	ctop_int(CTXTc 4,TIF_SubgoalDepth(tip));
-      else if (property == ANSWER_DEPTH) 
+      else if (property == ANSWER_SIZE) 
 	ctop_int(CTXTc 4,TIF_AnswerDepth(tip));
       else if (property == INTERNING_GROUND)
 	ctop_int(CTXTc 4,TIF_Interning(tip));
