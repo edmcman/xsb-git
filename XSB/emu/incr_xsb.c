@@ -243,7 +243,8 @@ xsbBool incr_eval_builtin(CTXTdecl)
       VariantSF sf  = get_call(CTXTc ptoc_tag(CTXTc 2), NULL,&idl_flag,&callnode_ptr);
       if(IsNonNULL(sf)){
 	callnodeptr c=sf->callnode;
-	if(IsNonNULL(c) &&  (c->falsecount!=0)) {
+	//	if(IsNonNULL(c) &&  (c->falsecount!=0)) {
+	if(IsNonNULL(c)) {
 	  ctop_int(CTXTc 3, (Integer) c->falsecount);
 	  //	  ctop_int(CTXTc 4, (Integer) has_answers(sf) );
 	  ctop_int(CTXTc 4, (Integer) c->no_of_answers );

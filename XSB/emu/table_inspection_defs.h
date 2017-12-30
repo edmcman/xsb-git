@@ -72,8 +72,8 @@
 #define USER_DELETE          1
 
 // For xxx_tif_property
-#define SUBGOAL_DEPTH  0
-#define ANSWER_DEPTH   1
+#define SUBGOAL_SIZE  0
+#define ANSWER_SIZE   1
 #define INTERNING_GROUND 2
 
 #define IS_SUBGOAL_FRAME 0
