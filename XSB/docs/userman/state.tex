@@ -1139,6 +1139,55 @@ module {\tt "usermod"} may be enumerated using:
     \end{tabular}
     \end{center}
 
+\standarditem{subgoal\_property(?Subgoal, ?Property)}{subgoal\_property/2}
+%
+Most properties that relate to tabling are set at the predicate level
+and can be examined through {\tt predicate\_property/2}.  However some
+properties of the tabled execution state are specific to each tabled
+subgoal.  If {\tt Subgoal} is a term indicator, this predicate
+backtracks through all tabled subgoals that unify with {\tt Subgoal}
+and unifies {\tt Property} with a representation of each relevant
+property.  Otherwise, if {\tt Subgoal} is a variable, the predicate
+backtracks through all tabled predicates, their current subgoals, and
+their properties.  Specifically, {\tt Property} is bound to a
+2-element list whose first value is the property type and the second
+its value.  Currently supported combinations are:
+
+\begin{itemize}
+\item Property type is {\tt incremental} with value either {\tt valid}
+  or {\tt invalid} exclusively;
+\item Property type is {\tt evaluation state} with value {\tt
+  producer} or {\tt consumer} exclusively, or {\tt incomplete} or {\tt
+  completed} exclusively.
+\item Property type is {\tt calls\_to} with value set at the integer
+  number of calls that have been made to {\tt Subgoal}.  This value
+  disappears whenenever {\tt Subgoal} is abolished through one of the
+  table abolishing routines.
+\item Property type is {\tt answers} with value set at the integer
+  number of answers that subgoal currently has {\tt Subgoal}.
+\end{itemize}
+
+{\bf Error Cases}
+\bi
+\item {\tt Subgoal} is non-variable and does not represent a term that
+  is callible in the present state of the system: 
+\bi
+ \item 	{\tt type\_error}
+\ei
+\item {\tt Subgoal} represents a callable term that does not
+  correspond to a predicate that is tabled, or defined as dynamic and
+  incremental:
+\bi
+\item 	{\tt permission\_error}
+\ei
+\ei
+
+\standarditem{variant\_subgoal\_property(?Subgoal, ?Property)}{variant\_subgoal\_property/2}
+%
+The behavior and error cases for this predicate are the same as for
+{\tt subgoal\_property/2}, except that properties are only returned
+for the tabled subgoal that is a variant of {\tt Subgoal}.
+
 \standarditem{listing}{listing/0}
     Lists in the current output stream the clauses for all dynamic
     predicates found in module {\tt usermod}.  Note that {\tt listing/0}

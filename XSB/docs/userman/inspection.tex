@@ -319,7 +319,7 @@ such that:
 The Subgoal Dependency Graph (SDG) has as vertices those tabled
 subgoals that are incomplete in the state of a suspended derivation.
 A {\em depends} edge exists from $S_1$ to $S_2$ iff a call is made to
-$S_2$ while computing answers for $S_1$, and if there are no
+$S_2$ while computing answers for $S_1$ and there are no
 intervening tabled subgoals between $S_1$ and $S_2$.  An {\em affects}
 edge is the inverse of a depends edge.  Edges in the SDG are signed
 indicating positve or negative dependence.  A subgoal and its incident
@@ -354,8 +354,9 @@ q(M,N):- between(1,N,X),
          (M = N,N = X -> break ; q(X,N)).
 \end{verbatim}
 Execution of this query creates a number of tabled subgoals, but
-breaks before the initial goal is completely evaluated.  The SDG at
-the time of the break is shown in Figure~\ref{fig:sdg-break-1}
+breaks before the initial goal is completely evaluated, suspending the
+computation.  The SDG at the time of the break is shown in
+Figure~\ref{fig:sdg-break-1}
 
 \begin{figure}[htbp]
 \centering
@@ -435,7 +436,7 @@ to be updated or not.
 \ourmoditem{get\_idg\_info(-SDG)}{get\_idg\_info/1}{tables}
 %
 
-{\bf {\em Warning: this predicate is not yet implemented}}
+%{\bf {\em Warning: this predicate is not yet implemented}}
 
 Returns information about the {\em Incremental Dependency Graph} (IDG)
 as an adjacency list whose form is described in Section~\ref{sec:adjacency-lists}.
@@ -444,13 +445,13 @@ If there is an empty IDG in the current state, an empty list
 is returned.
 
 Recall from the previous section that if the SDG is accessed,
-information is returned about all completed subgoals.  The IDG however
-may be both very large and disconnected.  Accordingly, {\tt
-  get\_idg\_info/2} allows a list of subgoals to be specified, and
-returns information about all of the IDG that is connected to any
-subgoal in the list; note that the resulting dependency graph may also
-be disconnected.  If {\tt get\_idg\_info/1} is called, information is
-returned about the entire dependency graph.
+information is returned about all non-completed subgoals, all of which
+depend on one another.  The IDG however may be both very large and
+disconnected.  Accordingly, {\tt get\_idg\_info/2} allows a list of
+subgoals to be specified, and returns information about all of the IDG
+that is connected to any subgoal in the list; note that the resulting
+dependency graph may also be disconnected.  If {\tt get\_idg\_info/1}
+is called, information is returned about the entire IDG.
 
 {\bf Error Cases}
 \bi

@@ -881,7 +881,8 @@ directly depend on or directly affect one another.  At least one of
 \begin{itemize}
 \item If {\tt Goal$_1$} is bound, then this predicate will return in
   {\tt Goal$_2$} through backtracking the goals for all incrementally
-  maintained tables on which {\tt Goal$_1$} directly depends.
+  maintained tables and dynamic leaf nodes on which {\tt Goal$_1$}
+  directly depends.
 \item If {\tt Goal$_2$} is bound, then it returns in {\tt Goal$_1$}
   through backtracking the goals for all incrementally maintained
   tables that {\tt Goal$_2$} directly affects -- in other words all
