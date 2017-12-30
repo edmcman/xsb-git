@@ -26,33 +26,7 @@
 #include "incr_xsb_defs.h"
 #include "table_inspection_defs.h"
 
-is_incremental_subgoal(Subgoal):- 
-	(var(Subgoal) -> 
-  	   current_predicate(S),
-   	   (S = Mod:Funct/Arity -> 
-	      functor(S1,Funct,Arity),
-	      Subgoal = Mod:S1
-	    ; functor(S,Funct,Arity),
-	      Subgoal = S1)
-         ; true ),
-	 predicate_property(Subgoal,tabled),predicate_property(Subgoal,incremental),
-%	 writeln(incremental_pred(Subgoal)),
-         catch(get_calls(Subgoal,_,_),_E,fail).
 	 
-
-incr_is_invalid(Call):- 
-   incr_is_invalid(Call,_Falsecount,_HasAnswers).
-
-incr_is_invalid(Call,Falsecount,HasAnswers):- 
-	(Call = M:Goal -> term_new_mod(M,Goal,NewGoal) ; Call = NewGoal),
-	incr_eval_builtin(IS_AFFECTED,NewGoal,Falsecount,HasAnswers).
-
-/* Does not use affected_gl which is not always updated by lazy or by abolishes */
-incr_invalid_subgoals(List):- 
-	(setof(Term,(predicate_property(Term,incremental),
-	            predicate_property(Term,tabled),
-	  	    incr_is_invalid(Term)),List) -> true ; List = []).
-
 %--------
 incr_directly_depends(X,Y):-	
 	(nonvar(X),var(Y)
@@ -485,6 +459,53 @@ lazy_reeval_1([Call|Rest]):-
 
 create_lazy_call_list(Call,Flag,List) :-
 	incr_eval_builtin(RETURN_LAZY_CALL_LIST,Call,Flag,List).
+
+/*  ====================================================== *
+ * all of these are obsolescent and will not be maintained *
+ *  ====================================================== */
+
+/* Does not use affected_gl which is not always updated by lazy or by abolishes */
+incr_invalid_subgoals(List):-
+    (setof(Term,(predicate_property(Term,incremental),
+		 predicate_property(Term,tabled),
+		 incr_is_invalid(Term)),List) -> true ; List = []).
+
+is_incremental_subgoal(_Subgoal):-
+    obsolete(incr_invalid_subgoals/1, incremental_subgoal/1).
+
+is_incremental_subgoal(Subgoal):-
+        (var(Subgoal) ->
+           current_predicate(S),
+         (S = Mod:Funct/Arity ->
+              functor(S1,Funct,Arity),
+	      Subgoal = Mod:S1
+	  ; functor(S,Funct,Arity),
+            Subgoal = S1)
+	 ; true ),
+        predicate_property(Subgoal,tabled),predicate_property(Subgoal,incremental),
+	%        writeln(incremental_pred(Subgoal)),
+	catch(get_calls(Subgoal,_,_),_E,fail).
+
+incr_is_invalid(Call):-
+    incr_is_invalid(Call,_Falsecount,_HasAnswers).
+
+incr_is_invalid(Call,Falsecount,HasAnswers):-
+    (Call = M:Goal -> term_new_mod(M,Goal,NewGoal) ; Call = NewGoal),
+    incr_eval_builtin(IS_AFFECTED,NewGoal,Falsecount,HasAnswers).
+
+incremental_subgoal(Call,Falsecount):- 
+        (Call = M:Goal -> term_new_mod(M,Goal,NewGoal) ; Call = NewGoal),
+	incr_eval_builtin(IS_AFFECTED,NewGoal,Falsecount,_HasAnswers).
+
+   /* the following is obsolescent -- use subgoal_property/2, subgoal_property_2 */
+incremental_subgoals(Subgoal,Falsecount):- 
+    (var(Subgoal) -> 
+ 	predicate_property(S,tabled),predicate_property(S,incremental),
+ 	functor(S,F,A),current_predicate(M:F/A),Subgoal = M:S
+       ;    (Subgoal = M:Goal -> term_new_mod(M,Goal,S) ; Subgoal = S)),
+    catch(get_calls(S),_E,fail),
+    writeln(two(S)),
+    incr_eval_builtin(IS_AFFECTED,S,Falsecount,_HasAnswers).
 
 end_of_file.
 ==========================================================================================
