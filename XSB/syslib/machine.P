@@ -370,6 +370,7 @@ mark_heap(X) :- mark_heap(X).
 gc_stuff(_X,_Y) :- '_$builtin'(GC_STUFF).
 gc_heap :- gc_stuff(GC_GC_HEAP,_).
 gc_clauses:- gc_stuff(GC_GC_CLAUSES,_).
+gc_strings:- gc_stuff(GC_GC_STRINGS,_).
 %%gc_all :- T is GC_GC_STRINGS+GC_GC_CLAUSES+GCGC_TABLED_PREDS, gc_stuff(T,_).
 
 '$$findall_init'(_I,_C) :- '$$findall_init'(_I,_C).

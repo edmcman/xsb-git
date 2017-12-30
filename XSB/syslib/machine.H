@@ -163,7 +163,7 @@
 %        '$$clean_up_block'/0,
         thread_request/9,  mt_random_request/3,
         gc_clauses/0,
-	expand_heap/0, mark_heap/1, gc_heap/0,
+   expand_heap/0, mark_heap/1, gc_heap/0, gc_strings/0,
 	gc_stuff/2,
 	'$$findall_init'/2,
 	'$$findall_add'/3,
