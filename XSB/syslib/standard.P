@@ -1155,9 +1155,10 @@ index_convert_to_dyna(PHead,Type,Index) :-
 table(Options) :-
 	check_nonvar(Options,(table)/1,1),
 	(Options = as(Ps,List) ->
-	    check_table_options(List,Ps,HasDyn),
+	    check_table_options(List,Ps,no),  % dont override other values
 	    table_1(Ps),
-	    (nonvar(HasDyn) -> exec_dyn_on_predlist(Ps) ; true),
+            ( (comma_member(dynamic,Options) ; comma_member(dyn,Options)) -> 
+	      exec_dyn_on_predlist(Ps) ; true),
 	    exec_table_options(List,Ps)
          ;  table_1(Options)).
 
@@ -1264,10 +1265,10 @@ exec_table_option(variant,Pred) :- !,
 	use_variant_tabling(Pred).
 exec_table_option(subgoal_abstract(Val),PredSpec) :- !,
 	( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
-	set_tif_property(Term,subgoal_depth,Val).
+	set_tif_property(Term,subgoal_size,Val).
 exec_table_option(answer_abstract(Val),PredSpec) :- !,
 	( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
-	set_tif_property(Term,answer_depth,Val).
+	set_tif_property(Term,answer_size,Val).
 exec_table_option(incremental,Pred) :- !,
  	add_incr_table(Pred,INCREMENTAL).
 exec_table_option(nonincremental,Pred) :- !,
@@ -1287,189 +1288,15 @@ exec_table_option(Option,_Pred) :- !,
 	 'dynamic,dyn,subsumptive,variant,incremental,nonincremental,opaque,private,shared,approximate,intern']).
 
 %--------
-:- import approximate/1 from usermod.
 :- import answer_abstract/1 from usermod.
 :- import subgoal_abstract(_) from usermod.
 :- import set_tif_property/3 from tables.
 
-check_table_options((Option,Options),PredCList,HasDyn) :- !,
-	check_table_option(Option,Options,PredCList,HasDyn),
-	check_table_options(Options,PredCList,HasDyn).
-check_table_options(Option,PredCList,HasDyn) :- 
-	check_table_option(Option,Option,PredCList,HasDyn).
-
-check_table_option(subgoal_abstract(_),Options,PredCList,_HasDyn) :- !,
-        (comma_member(subsumptive,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options subgoal_abstract(_) and subsumptive'))
-	 ;  true).
-check_table_option(dynamic,Options,PredCList,hasdyn) :- !,
-        (comma_member(incremental,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options dynamic and incremental'))
-	 ;  true),
-        (comma_member(opaque,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options dynamic and opaque'))
-	 ;  true).
-check_table_option(dyn,Options,PredCList,_HasDyn) :- !,
-	check_table_option(dynamic,Options,PredCList,_HasDyn).
-% Assuming that we'll have subsumptive and opaque soon.
-check_table_option(subsumptive,Options,PredCList,_HasDyn) :- !,
-        (comma_member(variant,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options subsumptive and variant'))
-	 ;  true),
-        (comma_member(incremental,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options subsumptive and incremental'))
-	 ;  true),
-        (comma_member(shared,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options subsumptive and shared'))
-	 ;  true),
-        (comma_member(approximate(_),Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options subsumptive and approximate'))
-	 ;  true),
-        (comma_member(subgoal_abstract(_),Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options subsumptive and subgoal_abstract'))
-	 ;  true).
-check_table_option(approximate(_),Options,PredCList,_HasDyn) :- !,
-        (comma_member(incremental,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options approximate and incremental'))
-	 ;  true),
-        (comma_member(subsumptive,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options subsumptive and approximate'))
-	 ;  true).
-check_table_option(variant,Options,PredCList,_HasDyn) :- !,
-        (comma_member(subsumptive,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options variant and subsumptive'))
-	 ;  true).
-check_table_option(incremental,Options,PredCList,_HasDyn) :- !,
-        (comma_member(nonincremental,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options incremental and nonincremental'))
-	 ;  true),
-        (comma_member(opaque,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options incremental and opaque'))
-	 ;  true),
-        (comma_member(subsumptive,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options incremental and subsumptive'))
-	 ;  true),
-        (comma_member(shared,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options incremental and shared'))
-	 ;  true),
-        (comma_member(approximate(_),Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options subsumptive and approximate'))
-	 ;  true),
-        (comma_member(dyn,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options opaque and dynamic'))
-	 ;  true),
-        (comma_member(dynamic,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options opaque and dynamic'))
-	 ;  true).
-check_table_option(nonincremental,Options,PredCList,_HasDyn) :- !,
-        (comma_member(incremental,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options nonincremental and incremental'))
-	 ;  true),
-        (comma_member(opaque,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options nonincremental and opaque'))
-	 ;  true).
-% TLS: will be allowing subsumptive/opaque
-check_table_option(opaque,Options,PredCList,_HasDyn) :- !,
-        (comma_member(incremental,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options opaque and incremental'))
-	 ;  true),
-        (comma_member(nonincremental,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options opaque and nonincremental'))
-	 ;  true),
-        (comma_member(dyn,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options opaque and dynamic'))
-	 ;  true),
-        (comma_member(dynamic,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options opaque and dynamic'))
-	 ;  true).
-% TLS: will be allowing private/incremental
-check_table_option(private,Options,PredCList,_HasDyn) :- !,
-        (comma_member(shared,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options private and shared'))
-	 ;  true).
-check_table_option(shared,Options,PredCList,_HasDyn) :- !,
-        (comma_member(private,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options shared and private'))
-	 ;  true),
-        (comma_member(subsumptive,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options shared and subsumptive'))
-	 ;  true),
-        (comma_member(incremental,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options shared and incremental'))
-	 ;  true),
-        (comma_member(opaque,Options) -> 
-	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options shared and opaque'))
-	 ;  true).
-check_table_option(answer_abstract(_),_Options,_PredCList,_HasDyn) :- !. % should work with anything.
-check_table_option(intern,Options,PredCList,_HasDyn) :- !,
-	(comma_member(subgoal_abstract(X),Options)
-	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and ',subgoal_abstract(X)))
-	 ;	true
-	),
-	(comma_member(dynamic,Options)
-	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and dynamic'))
-	 ;	true
-	),
-	(comma_member(subsumptive,Options)
-	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and subsumptive'))
-	 ;	true
-	),
-	(comma_member(approximate(X1),Options)
-	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and ',approximate(X1)))
-	 ;	true
-	),
-	(comma_member(incremental,Options)
-	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and incremental'))
-	 ;	true
-	),
-	(comma_member(opaque,Options)
-	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and opaque'))
-	 ;	true
-	),
-	(comma_member(answer_abstract(X2),Options)
-	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and ',answer_abstract(X2)))
-	 ;	true
-	).
-check_table_option(Option,_Options,_PredCList,_HasDyn) :- !,
-	domain_error(table_option,Option,(table)/1,1,
-	['must be one of ',
-	'answer_abstract,subgoal_abstract,approximate,dyn,dynamic,subsumptive,variant,incremental,nonincremental,opaque,private,shared,intern']).
+check_table_options((Option,Options),PredCList,Override) :- !,
+	check_table_option(Option,Options,PredCList,Override),
+	check_table_options(Options,PredCList,Override).
+check_table_options(Option,PredCList,Override) :- 
+	check_table_option(Option,Option,PredCList,Override).
 
 use_incremental_tabling(PredList):-
 	abort(['use_incremental_dynamic/1 is now obsolete.  Use table ',

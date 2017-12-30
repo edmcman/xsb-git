@@ -141,7 +141,7 @@
 	  check_ground/3,resource_error/2, representation_error/3,
 	  type_error/4, permission_error/4, 
 	  instantiation_error/3, instantiation_error/2, check_nonneg_integer/3, check_pos_integer/3,
-	  misc_error/1,misc_error/2, table_error/1     from error_handler.
+	  misc_error/1,misc_error/2  from error_handler.
 :- import  check_nonvar_list/3 from error_handler.
 
 :- import file_open/3, file_open/4, file_close/2, 
@@ -187,6 +187,7 @@
 :- import (use_variant_tabling)/1, (use_subsumptive_tabling)/1 from tables.
 :- import add_table/1, add_incr_table/2 from tables.
 :- import xsb_thread_self/1 from thread.
+:- import check_table_option/4 from tables.
 
 :- import file_read/2, file_read/3 from xsb_read.
 :- import file_write0/2, file_write/2, file_write_prolog/2, l_write/3,

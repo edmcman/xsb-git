@@ -66,7 +66,7 @@
    sdg_scc_info/2, 
    sk_not/1,
 %      table_state/2,
-   table_state/4,
+   table_state/4,table_status/5,
    tfindall/3,
    three_valued_sccs/1,
    (tnot)/1,
@@ -127,7 +127,7 @@
 
 :- import list_to_assoc/2,get_assoc/3 from assoc_xsb.
 
-:- import reverse/2 from basics.
+:- import reverse/2,comma_member/2 from basics.
 :- import copy_term/2,flatten/2,length/2, member/2, memberchk/2
      from basics.
 
@@ -147,8 +147,12 @@
      from file_op.
 :- import format/2 from format.
 
+:- import gensym/2, conset/2, conget/2, coninc/1 from gensym.
+
 :- import get_incr_sccs_with_deps/2,immed_affects_ptr_set/2 from increval.
    
+:- import trie_interned/2,trie_intern/2,new_trie/1,delete_trie/1 from intern.
+
 :- import abolish_table_info/0, delete_attributes/1, 
    ground_and_acyclic/1,
    psc_set_incr/2, psc_set_tabled/2, psc_tabled/2, psc_type/2,psc_set_alt_semantics/2,
@@ -174,11 +178,18 @@
 :- import call/3 from standard.
 :- import writeq/1 from standard.
 :- import warning/1 from standard.
+:- import table_index_predicates/2 from standard.
 
 :- import variant/2 from subsumes.
+
 :- import invalidate_table_for/2 from usermod.
+:- import approximate/1 from usermod.
+:- import answer_abstract/1 from usermod.
+:- import subgoal_abstract(_) from usermod.
 
-:- import trie_interned/2,trie_intern/2,new_trie/1,delete_trie/1 from intern.
-   :- import gensym/2, conset/2, conget/2, coninc/1 from gensym.
+:- import floundered_undefined/1 from xsbbrat.
+:- import reinitialize_undefineds/0 from xsbbrat.
 
+
+   
 /* ------------------- end of file tables.H --------------------------- */

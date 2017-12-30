@@ -38,6 +38,7 @@
 #include "incr_xsb_defs.h"
 #include "token_defs_xsb.h"
 #include "basicdefs.h"
+#include "table_status_defs.h"
 
 /* ===== current_atom/1 ====================================== */
 
@@ -646,6 +647,18 @@ psc_meta_predicate_property_args([Meta| Metas], N, Arity, [Arg| Args]) :-
 	).
 */
 
+/*
+Put in predicate_property
+subgoal_property_1(Subgoal,max_subgoal_size(S)):-
+    get_tif_property(Subgoal,subgoal_size,N),
+    (N = 0 -> S = unlimited ; S = N).
+subgoal_property_1(Subgoal,max_answer_size(S)):-
+    get_tif_property(Subgoal,answer_size,N),
+    (N = 0 -> S = unlimited ; S = N).
+subgoal_property_1(Subgoal,ground_interning):-
+    get_tif_property(Subgoal,intern,yes),
+% opaque/private/shared
+*/
 /* ===== module_property/2 ============================================ */
 
 %   module_property(?Module, ?Property)
@@ -662,6 +675,45 @@ module_properties(PSC, Property) :-
 	( Type =:=  T_ORDI -> Property = unloaded
 	; Type =:=  T_MODU -> Property = loaded ).
 
+/* ===== subgoal_property/2 ================================== */
+:- import writeln/1 from standard.
+subgoal_property(Subgoal,Property):-
+%   writeln(subgoal_property(Subgoal,Property)),
+   (var(Subgoal) -> 
+	predicate_property(S,tabled),
+%	writeln(predicate_property(S,tabled)),
+	functor(S,F,A),current_predicate(M:F/A),Subgoal = M:S
+      ;    (Subgoal = M:Goal -> term_new_mod(M,Goal,S) ; Subgoal = S)),
+   Property = [Attribute,Value],
+%   writeln(catch(get_calls(S,SF,_),_E,fail)),
+   catch(get_calls(S,SF,_),_E,fail),
+%   writeln('  subgoal_property_1'(S,SF,Property)),
+   subgoal_property_1(S,SF,Attribute,Value).
+
+variant_subgoal_property(Subgoal,Property):- 
+   get_call(Subgoal,SF,_),
+   Property = [Attribute,Value],
+   subgoal_property_1(Subgoal,SF,Attribute,Value).
+
+%:- import incremental/1,invalid/1,calls_to/1,answers/1 from usermod.
+:- index(subgoal_property_1(_,_,_),[3]).
+subgoal_property_1(Subgoal,_SF,incremental,Value):-
+ %   writeln(incremental_subgoal(Subgoal,N)),
+    incremental_subgoal(Subgoal,N),
+    (N == 0 -> Value = valid ; Value = invalid).
+subgoal_property_1(Subgoal,_SF,evaluation_state,Value):-
+	table_status(Subgoal, _PredType, CallType, AnsSetStatus,_Sf),
+	subgoal_property_2(CallType,AnsSetStatus,Value).
+subgoal_property_1(_Subgoal,SF,calls_to,Number):-
+    get_callsto_number(SF,Number).
+subgoal_property_1(_Subgoal,SF,answers,Number):-
+    get_answer_number(SF,Number).
+
+subgoal_property_2(PRODUCER_CALL,_AnsSetStatus,producer).
+subgoal_property_2(SUBSUMED_CALL,_AnsSetStatus,subsumed).
+%subgoal_property_2(INCR_NEEDS_REEVAL,_AnsSetStatus,incremental_needs_reeval).
+subgoal_property_2(_CallType,INCOMPLETE_ANSWER_SET,incomplete).
+subgoal_property_2(_CallType,COMPLETED_ANSWER_SET,completed).
 
 /* ===== current_prolog_flag/2 ================================== */
 :- import tripwire/1 from usermod.

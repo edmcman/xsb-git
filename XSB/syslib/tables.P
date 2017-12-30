@@ -38,81 +38,6 @@
 #include "incr_xsb_defs.h"
 
 /*----------------------------------------------------------------------*/
-
-/* Change Evaluation Method for Tabled Predicate
-   --------------------------------------------- */
-use_variant_tabling(CommaList) :-
-	set_eval_method_for_comma(CommaList,VARIANT_EVAL_METHOD).
-
-use_subsumptive_tabling(CommaList) :-
-	set_eval_method_for_comma(CommaList,SUBSUMPTIVE_EVAL_METHOD).
-
-set_eval_method_for_comma((PS1,PS2),EvalMethod) :-
-	!, set_eval_method_for_comma(PS1,EvalMethod),
-	set_eval_method_for_comma(PS2,EvalMethod).
-set_eval_method_for_comma(PredSpec,EvalMethod) :-
-	set_tabled_eval_for_pred(PredSpec,EvalMethod).
-
-/*
- * Setting of the evaluation method will fail if calls exist in the
- * Call Trie.
- */
-set_tabled_eval_for_pred(PredSpec,Method) :-
-	( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
-	( set_tabled_eval(Term,Method), fail; true ).
-
-set_tabled_eval(Predicate,EvalMethod) :-
-	set_tabled_eval(Predicate,EvalMethod).
-
-/* Here, if a predicate is static, and non-tabled we throw an error,
-   otherwise a no-op */
-add_table(Spec) :-
-	mpa_to_skel(Spec,Call),
-	term_psc(Call,Psc),
-	psc_type(Psc,Type),
-	(Type =:= T_PRED -> /* static and loaded */
-	    ((psc_tabled(Psc, Tabled),Tabled \== 0) ->
-		true
-	      ; permission_error(table,static_code,Spec,(table)/1) )
-	    ;	   (Type =:= T_DYNA, dynamic_pred_has_clauses(Spec,IfCls), IfCls =:= 1
-		    ->	   permission_error(table,'dynamic predicate with clauses',Spec,(table)/1)
-		    ; psc_set_tabled(Psc,1) %% set it as tabled
-		    ->	   true
-		    ;	   permission_error(table,'predicate that cannot be tabled',Spec,(table)/1)
-		   )
-	). 
-
-retract_table(Spec) :-
-	mpa_to_skel(Spec,Call),
-	term_psc(Call,Psc),
-	psc_set_tabled(Psc,0).  %% set it as non-tabled
-
-/* The following predicates are only called from table/1, 
-   and consistency has already been checked, so it is safe to 	
-   assume that we can just set the bits without further checking. 
-*/
-
-%:- import console_writeln/1 from standard.
-/* Mode can be INCREMENTAL, NONINCREMENTAL, or OPAQUE */
-add_incr_table(Spec,Mode) :-
-	mpa_to_skel(Spec,Call),
-	term_psc(Call,Psc),	
-	(predicate_has_tables(Psc) ->
-	   permission_error(add_incremental_tabling,predicate_with_tables,Spec,(table)/1) 
-	 ; psc_set_incr(Psc,Mode)).
-
-add_alt_semantics(Spec,Mode) :-
-	mpa_to_skel(Spec,Call),
-	term_psc(Call,Psc),	
-	(predicate_has_tables(Psc) ->
-	   permission_error(add_alt_semantics,predicate_with_tables,Spec,(table)/1) 
-	 ; alt_semantics(Mode,C_Mode),
-	   psc_set_alt_semantics(Psc,C_Mode)).
-
-alt_semantics(weak_cs,WEAK_CS):- !.
-alt_semantics(wfs_semantics,WFS_SEMANTICS).
-
-/*----------------------------------------------------------------------*/
 :- export is_tabled/1.
 is_tabled(Term):- 
 	term_psc(Term,Psc),
@@ -380,7 +305,6 @@ u_not(Goal) :-
 	 ; check_cyclic(Goal,'u_not/1',1),
 	   floundered(Goal)).
 
-:- import floundered_undefined/1 from xsbbrat.
 :- table floundered/1 as variant, opaque.
 floundered(_Goal):- floundered_undefined(a).
 
@@ -431,11 +355,11 @@ undefined:- tnot(undefined).
 %get_call(CallTerm, SubgoalFrame, ReturnTemplate) :-
 %	get_call(CallTerm, SubgoalFrame, ReturnTemplate).
 
+:- export get_call/4,get_call/3.
 
 get_call(CallTerm, SubgoalFrame, Template) :-
    get_call(CallTerm, SubgoalFrame, Template, _Callnode).
 
-:- export get_call/4.
 get_call(_CallTerm, _SubgoalFrame, _Template,_Callnode) :-
 	'_$builtin'(TRIE_GET_CALL).
 
@@ -509,11 +433,17 @@ get_calls(CallTerm, Handle, Template) :-
 	findall('_$get_calls'(NewGoal,Handle,Template),
 		'_$$get_calls'(NewGoal,Handle,Template),
 		List),
-%writeln(get_calls_1(CallTerm, List)),
+%writeln(get_calls_1(VallTerm, List)),
 	member('_$get_calls'(NewGoal,Handle,Template),List).
 
 
-get_calls(_CallTerm) :- '_$builtin'(TRIE_UNIFY_CALL).
+get_calls(CallTerm) :-
+   (nonvar(CallTerm),CallTerm = M:Goal -> term_new_mod(M,Goal,NewGoal) ; CallTerm = NewGoal),
+%   writeln(get_calls_1(NewGoal)),
+   get_calls_1(NewGoal).
+
+get_calls_1(_CallTerm) :-
+   '_$builtin'(TRIE_UNIFY_CALL).
 
 
 /*
@@ -706,13 +636,11 @@ is_conditional_answer(Leaf,IsCond):-
 /* Predicates to remove information from tables.			*/
 /*----------------------------------------------------------------------*/
 
-:- import reinitialize_undefineds/0 from xsbbrat.
 %:- import current_prolog_flag/2 from curr_sym.
 abolish_all_tables :- 
 	   abolish_table_info,
 	   reinitialize_undefineds.
 
-:- import table_index_predicates/2 from standard.
 % TES: predicate does not seem to work if abolish_table_pred_bi is not last (?) 
 abolish_table_pred(Spec,Options) :-
 	check_nonvar(Spec,abolish_table_pred/2,1),
@@ -972,8 +900,285 @@ check_variant(Term):-
 check_variant(Term,DontCares):- 
 	table_inspection_function(CHECK_VARIANT,Term,DontCares,_,_).
 
-:- export set_tif_property/3, get_tif_property/3.
+%-----------------------
 
+:- export set_predicate_property/3.  % still under development.
+set_predicate_property(PredSpec,Property,Value):-
+    ( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
+    set_predicate_property_1(Term,Property,Value).
+
+set_predicate_property_1(Term,subgoal_abstraction,Size):-
+    !,
+    set_tif_property(Term,subgoal_size,Size).
+
+set_predicate_property_1(Term,answer_abstraction,Size):- 
+    !,
+    set_tif_property(Term,answer_size,Size).
+
+
+/*
+set_predicate_property(PredSpec,ground_interning,Flag):- !,
+set_predicate_property(PredSpec,subgoal_variance,Flag):- !,
+%set_predicate_property(PredSpec,subgoal_subsumption,Flag):- !,
+%set_predicate_property(PredSpec,incremental,Flag):- !,
+%set_predicate_property(PredSpec,nonincremental,Flag):- !,
+%set_predicate_property(PredSpec,opaque,Flag):- !,
+%set_predicate_property(PredSpec,private,Flag):- !,
+%set_predicate_property(PredSpec,shared,Flag):- !,
+*/
+
+:- export check_table_option/4.
+
+check_table_option(subgoal_abstract(_),Options,PredCList,_Override) :- !,
+        (comma_member(subsumptive,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options subgoal_abstract(_) and subsumptive'))
+	 ;  true).
+check_table_option(dynamic,Options,PredCList,_Override) :- !,
+        (comma_member(incremental,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options dynamic and incremental'))
+	 ;  true),
+        (comma_member(opaque,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options dynamic and opaque'))
+	 ;  true).
+check_table_option(dyn,Options,PredCList,_Override) :- !,
+	check_table_option(dynamic,Options,PredCList,_HasDyn).
+% Assuming that we'll have subsumptive and opaque soon.
+check_table_option(subsumptive,Options,PredCList,Override) :- !,
+        ( (comma_member(variant,Options),Override=no) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options subsumptive and variant'))
+	  ;  true),
+        (comma_member(incremental,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options subsumptive and incremental'))
+	 ;  true),
+        (comma_member(shared,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options subsumptive and shared'))
+	 ;  true),
+        (comma_member(approximate(_),Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options subsumptive and approximate'))
+	 ;  true),
+        (comma_member(subgoal_abstract(_),Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options subsumptive and subgoal_abstract'))
+	 ;  true).
+check_table_option(approximate(_),Options,PredCList,_Override) :- !,
+        (comma_member(incremental,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options approximate and incremental'))
+	 ;  true),
+        (comma_member(subsumptive,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options subsumptive and approximate'))
+	 ;  true).
+check_table_option(variant,Options,PredCList,Override) :- !,
+        (comma_member(subsumptive,Options),Override=no -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options variant and subsumptive'))
+	 ;  true).
+check_table_option(incremental,Options,PredCList,_Override) :- !,
+        (comma_member(nonincremental,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options incremental and nonincremental'))
+	 ;  true),
+        (comma_member(opaque,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options incremental and opaque'))
+	 ;  true),
+        (comma_member(subsumptive,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options incremental and subsumptive'))
+	 ;  true),
+        (comma_member(shared,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options incremental and shared'))
+	 ;  true),
+        (comma_member(approximate(_),Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options subsumptive and approximate'))
+	 ;  true),
+        (comma_member(dyn,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options opaque and dynamic'))
+	 ;  true),
+        (comma_member(dynamic,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options opaque and dynamic'))
+	 ;  true).
+check_table_option(nonincremental,Options,PredCList,_Override) :- !,
+        (comma_member(incremental,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options nonincremental and incremental'))
+	 ;  true),
+        (comma_member(opaque,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options nonincremental and opaque'))
+	 ;  true).
+% TLS: will be allowing subsumptive/opaque
+check_table_option(opaque,Options,PredCList,_Override) :- !,
+        (comma_member(incremental,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options opaque and incremental'))
+	 ;  true),
+        (comma_member(nonincremental,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options opaque and nonincremental'))
+	 ;  true),
+        (comma_member(dyn,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options opaque and dynamic'))
+	 ;  true),
+        (comma_member(dynamic,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options opaque and dynamic'))
+	 ;  true). % TLS: will be allowing private/incremental
+check_table_option(private,Options,PredCList,_Override) :- !,
+        (comma_member(shared,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options private and shared'))
+	 ;  true).
+check_table_option(shared,Options,PredCList,_Override) :- !,
+        (comma_member(private,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options shared and private'))
+	 ;  true),
+        (comma_member(subsumptive,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options shared and subsumptive'))
+	 ;  true),
+        (comma_member(incremental,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options shared and incremental'))
+	 ;  true),
+        (comma_member(opaque,Options) -> 
+	    table_error(('Cannot declare ',PredCList,
+	           ' as tabled with options shared and opaque'))
+	 ;  true).
+check_table_option(answer_abstract(_),_Options,_PredCList,_Override) :- !. % should work with anything.
+check_table_option(intern,Options,PredCList,_Override) :- !,
+	(comma_member(subgoal_abstract(X),Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		      ' as tabled with options intern and ',subgoal_abstract(X)))
+	 ;	true
+	),
+	(comma_member(dynamic,Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and dynamic'))
+	 ;	true
+	),
+	(comma_member(subsumptive,Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and subsumptive'))
+	 ;	true
+	),
+	(comma_member(approximate(X1),Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and ',approximate(X1)))
+	 ;	true
+	),
+	(comma_member(incremental,Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and incremental'))
+	 ;	true
+	),
+	(comma_member(opaque,Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and opaque'))
+	 ;	true
+	),
+	(comma_member(answer_abstract(X2),Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and ',answer_abstract(X2)))
+	 ;	true
+	).
+check_table_option(Option,_Options,_PredCList,_Override) :- !,
+	domain_error(table_option,Option,(table)/1,1,
+	['must be one of ',
+	'answer_abstract,subgoal_abstract,approximate,dyn,dynamic,subsumptive,variant,incremental,nonincremental,opaque,private,shared,intern']).
+
+/*----------------------------------------------------------------------*/
+
+/* Change Evaluation Method for Tabled Predicate
+   --------------------------------------------- */
+use_variant_tabling(CommaList) :-
+	set_eval_method_for_comma(CommaList,VARIANT_EVAL_METHOD).
+
+use_subsumptive_tabling(CommaList) :-
+	set_eval_method_for_comma(CommaList,SUBSUMPTIVE_EVAL_METHOD).
+
+set_eval_method_for_comma((PS1,PS2),EvalMethod) :-
+	!, set_eval_method_for_comma(PS1,EvalMethod),
+	set_eval_method_for_comma(PS2,EvalMethod).
+set_eval_method_for_comma(PredSpec,EvalMethod) :-
+	set_tabled_eval_for_pred(PredSpec,EvalMethod).
+
+/*
+ * Setting of the evaluation method will fail if calls exist in the
+ * Call Trie.
+ */
+set_tabled_eval_for_pred(PredSpec,Method) :-
+	( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
+	( set_tabled_eval(Term,Method), fail; true ).
+
+set_tabled_eval(Predicate,EvalMethod) :-
+	set_tabled_eval(Predicate,EvalMethod).
+
+/* Here, if a predicate is static, and non-tabled we throw an error,
+   otherwise a no-op */
+add_table(Spec) :-
+	mpa_to_skel(Spec,Call),
+	term_psc(Call,Psc),
+	psc_type(Psc,Type),
+	(Type =:= T_PRED -> /* static and loaded */
+	    ((psc_tabled(Psc, Tabled),Tabled \== 0) ->
+		true
+	      ; permission_error(table,static_code,Spec,(table)/1) )
+	    ;	   (Type =:= T_DYNA, dynamic_pred_has_clauses(Spec,IfCls), IfCls =:= 1
+		    ->	   permission_error(table,'dynamic predicate with clauses',Spec,(table)/1)
+		    ; psc_set_tabled(Psc,1) %% set it as tabled
+		    ->	   true
+		    ;	   permission_error(table,'predicate that cannot be tabled',Spec,(table)/1)
+		   )
+	). 
+
+retract_table(Spec) :-
+	mpa_to_skel(Spec,Call),
+	term_psc(Call,Psc),
+	psc_set_tabled(Psc,0).  %% set it as non-tabled
+
+/* The following predicates are only called from table/1, 
+   and consistency has already been checked, so it is safe to 	
+   assume that we can just set the bits without further checking. 
+*/
+
+%:- import console_writeln/1 from standard.
+/* Mode can be INCREMENTAL, NONINCREMENTAL, or OPAQUE */
+add_incr_table(Spec,Mode) :-
+	mpa_to_skel(Spec,Call),
+	term_psc(Call,Psc),	
+	(predicate_has_tables(Psc) ->
+	   permission_error(add_incremental_tabling,predicate_with_tables,Spec,(table)/1) 
+	 ; psc_set_incr(Psc,Mode)).
+
+add_alt_semantics(Spec,Mode) :-
+	mpa_to_skel(Spec,Call),
+	term_psc(Call,Psc),	
+	(predicate_has_tables(Psc) ->
+	   permission_error(add_alt_semantics,predicate_with_tables,Spec,(table)/1) 
+	 ; alt_semantics(Mode,C_Mode),
+	   psc_set_alt_semantics(Psc,C_Mode)).
+
+alt_semantics(weak_cs,WEAK_CS):- !.
+alt_semantics(wfs_semantics,WFS_SEMANTICS).
+
+%----------------------------------------------------------------------
+
+:- export set_tif_property/3, get_tif_property/3.
 get_tif_property(Term,Property,Value):- 
 	tif_translate(Property,Prop),
 	table_inspection_function(GET_TIF_PROPERTY,Term,Prop,Value,_).
@@ -982,8 +1187,8 @@ set_tif_property(Term,Property,Value):-
 	tif_translate(Property,Prop),
 	table_inspection_function(SET_TIF_PROPERTY,Term,Prop,Value,_).
 
-tif_translate(subgoal_depth,SUBGOAL_DEPTH).
-tif_translate(answer_depth,ANSWER_DEPTH).
+tif_translate(subgoal_size,SUBGOAL_SIZE).
+tif_translate(answer_size,ANSWER_SIZE).
 tif_translate(intern,INTERNING_GROUND).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1391,7 +1596,7 @@ get_functor(T,F/Arg):-
 get_sdg_info(List):- 
 	get_sdg_info(0,List).
 
-%:- import writeln/1 from standard.
+:- import writeln/1 from standard.
 
 get_sdg_info(CSF,Rest):- 
 	table_inspection_function(INCOMPLETE_SUBGOAL_INFO,CSF,NewCSF,Level,SF,CallsTo,Answers,IsNegCall,GenParent),
@@ -1436,8 +1641,10 @@ get_idg_leaf_info(Graph):-
     idg_get_incr_dyn_preds(Preds),
     get_idg_leaf_info_1(Preds,Calls),
 %    writeln(Calls),
-    idg_dyn_incr_list_to_adj_graph(Calls,Graph).
+    idg_dyn_incr_list_to_adj_graph(Calls,Graph),!.
+get_idg_leaf_info([]).
 
+    
 :- import findall/4 from setof.
 get_idg_leaf_info_1([],[]).
 get_idg_leaf_info_1([Term|Rest],List):- 
@@ -1624,6 +1831,11 @@ print_idg_info(SDG,Leaves):-
 	get_subgoal_avl(SDG,AVL), % writeln(avl(AVL)),
 	idg_print_each_subgoal(SDG,AVL),
 	idg_print_each_leaf(Leaves,AVL).
+
+:- export print_idg_info/0.
+print_idg_info:- 
+    get_idg_info(IDG,Leaves),
+    print_idg_info(IDG,Leaves).
 
 idg_print_each_subgoal([],_AVL).
 idg_print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegSFList)|R],AVL):-
@@ -1976,7 +2188,7 @@ max_scc_subgoals_default_handler:-
 
 max_scc_subgoals_header:- 
   current_prolog_flag(max_scc_subgoals,Max),
-  format("~n          WARNING!! XSB-oriented math-talk to follow.~n~n~n",[]),
+%  format("~n          WARNING!! XSB-oriented math-talk to follow.~n~n~n",[]),
   scc_subg_analysis_info(NumSubgoals,TotEdges,NumAnswers),
   format("A recursive component containing ~d incomplete tabled subgoals is currently under evaluation.~n",
 	 [NumSubgoals]), 
@@ -2020,11 +2232,11 @@ max_table_subgoal_size_default_handler:-
 
 max_table_subgoal_size_header:- 
   current_prolog_flag(max_table_subgoal_size,Max),
-  format("~n          WARNING!! XSB-oriented math-talk to follow.~n~n~n",[]),
+%  format("~n          WARNING!! XSB-oriented math-talk to follow.~n~n~n",[]),
   format("Subgoal called with size of ~d~n",[Max]),
   format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
   format("  * To abort, enter the command 'abort/0'~n",[]),
-  format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]).
+  format("  * To inspect the incomplete tabled subgoals, enter the command 'print_sdg_info' or get_isdg_info/1'~n",[]).
 
 %----
 

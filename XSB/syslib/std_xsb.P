@@ -286,6 +286,7 @@ standard_symbol(variant_get_residual, 2, tables).
 standard_symbol(get_returns, 2, tables).
 standard_symbol(get_returns, 3, tables).
 standard_symbol(get_returns_for_call, 2, tables).
+standard_symbol(get_sdg_info, 1, tables).
 
 standard_symbol(halt, 0, standard).
 standard_symbol(halt, 1, standard).
@@ -456,6 +457,8 @@ standard_symbol(string_substitute, 4, string).
 standard_symbol(structure, 1, standard).
 standard_symbol(substring, 4, string).
 standard_symbol(sub_atom, 5, sub_atom).
+standard_symbol(subgoal_property, 2, curr_sym).
+standard_symbol(variant_subgoal_property, 2, curr_sym).
 standard_symbol(sys_exit, 1, shell).
 
 standard_symbol(tab, 1, standard).
