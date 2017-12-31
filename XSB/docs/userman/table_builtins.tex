@@ -1225,20 +1225,42 @@ no
 \end{minipage} \\
 
 
-\ourstandarditem{get\_calls(\#Subgoal,-TableEntryHandle,-ReturnTemplate)}{get\_calls/3}{Tabling}
+\ourrepeatstandarditem{get\_calls(\#Subgoal,-TableEntryHandle,-ReturnTemplate)}{get\_calls/3}{Tabling}
+
+\ourmoditem{get\_calls(\#Subgoal,-TableEntryHandle,-ReturnTemplate,-CallNodeHandle)}{get\_calls/4}{Tables}
 %
 Identifies through backtracking each tabled subgoal $S$ that unifies
-with \code{Subgoal}.  For each such $S$, the handle to the table entry
-is assigned to the second argument, and its return template is
-constructed in the third.  These latter two arguments must be
-uninstantiated at call time.  The error terms are the same as for {\tt
-  get\_calls/1}.  Example~\ref{ex:get-calls} illustrates its behavior.
+with \code{Subgoal}.  For each such $S$, {\tt get\_calls/3} assigns
+the handle of the table entry is assigned to the second argument, and
+its return template is constructed in the third.  These latter two
+arguments must be uninstantiated at call time.  {\tt get\_calls/4}
+also returns the handle to the call node structure if {\tt Subgoal} is
+incrementally tabled.  {\tt get\_calls/3} is a standard predicate in
+XSB, although {\tt get\_calls/4} is not.
+
+{\bf Error Cases}
+\bi
+\item {\tt Subgoal} is non-variable and does not represent a term that
+  is callible in the present state of the system: 
+\bi
+ \item 	{\tt type\_error}
+\ei
+\item {\tt Subgoal} represents a callable term that does not
+  correspond to a predicate that is tabled, or defined as dynamic and
+  incremental:
+\bi
+\item 	{\tt permission\_error}
+\ei
+\ei
+
+Example~\ref{ex:get-calls} illustrates its behavior.
 
 
 \begin{minipage}{6in}
 \begin{example}{{\bf (get\_calls/3)}} \label{ex:get-calls}\ \\
 \\
 \begin{tabular}{l@{\hspace{4em}}r}
+
 \begin{tabular}{c} \hline \hline
 \rule{0ex}{2.5ex}\textbf{Variant Predicate} \\ \hline \hline
 \vspace*{-1ex} \\
@@ -1331,7 +1353,7 @@ no
 \end{tabular}
 \end{example}
 \end{minipage} \\
-
+ 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \ourstandarditem{get\_returns(+TableEntryHandlex,\#ReturnTemplate)}{get\_returns/2}{Tabling}
