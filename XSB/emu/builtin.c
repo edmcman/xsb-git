@@ -2074,6 +2074,9 @@ int builtin_call(CTXTdeclc byte number)
       sym = insert_psc(ptoc_string(CTXTc 1),(int)ptoc_int(CTXTc 2), global_mod, &value);
       init_psc_ep_info(pair_psc(sym)); // reset to reload
       psc_set_data(pair_psc(sym),(Psc)makestring(string_find(mod_name,1)));
+      //      psc_set_env(tpsc,T_UNLOADED);
+      if (get_type(pair_psc(sym)) == 0)
+      	psc_set_type(pair_psc(sym),T_UDEF);
     } else {
       mod_psc = pair_psc(insert_module(0, mod_name));
       sym = insert_psc(ptoc_string(CTXTc 1), (int)ptoc_int(CTXTc 2), mod_psc, &value);
