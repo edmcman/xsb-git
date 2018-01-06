@@ -38,12 +38,24 @@ FileName and asserts them into database DB0 returning DB.
 load_in_db(+FileName,-DB) reads the clauses from the file named
 FileName and asserts them into an empty database returning DB.
 
-union_db(+DB1,+DB2,-DB3) where DB3 contains the union of the sets of
+The following implement set operations on Prolog Databases.  They are
+efficiently implemented to take advantage of the structure of the trie
+representation of databases to share substructure and to avoid looking
+at components of databases when it is not required.
+
+union_db(+DB1,+DB2,?DB3) where DB3 contains the union of the sets of
 clauses in DB1 and DB2.
 
-intersect_fact_db(+DB1,+DB2,-DB3) where DB3 contains the intersection
-of the sets of facts in DB1 and DB2.  DB1 and DB2 must contain only
-ground facts!
+intersect_db(+DB1,+DB2,?DB3) where DB3 contains the intersection
+of the sets of clauses in DB1 and DB2.
+
+difference_db(+DB1,+DB2,?DB3) where DB3 contains clauses that appear
+in DB1 but not in DB2.
+
+subset_db(+DB1,+DB2) is true if every clause in DB1 is in DB2,
+i.e. DB1 is a subset of DB2.
+
+disjoint_db(+DB1,+DB2) is true if DB1 and DB2 are disjoint sets.
 
 Notes:
 
@@ -65,6 +77,10 @@ table has been resized).  This means that it is efficient to intern
 these DB's, and to table them (as intern).
 
 */
+
+/* The following are commented out, and made explicit in the code, so
+that this code can itself be loaded by load_in_db and processed. */
+
 %:- import append/3 from basics.
 %:- import member/2 from basics.
 %:- import log_ith/3 from basics.
@@ -72,36 +88,63 @@ these DB's, and to table them (as intern).
 %:- import standard_symbol/3 from std_xsb.
 %:- import call_c/1 from standard.
 
-assert_in_db([],DB,DB) :- !.
-assert_in_db([Clause|Clauses],DB0,DB) :- !,
-	assert_in_db(Clause,DB0,DB1),
-	assert_in_db(Clauses,DB1,DB).
-assert_in_db(Clause,DB0,DB) :-
-	valid_db(DB0,'assert_in_db/3'),
-	(Clause = (Head :- Body)
-	 ->	true
-	 ;	Head = Clause,
-		Body = true
-	),
-	add_to_trie(Head,Body,DB0,DB).
+:- comment(assert_in_db/3, "@pred{assert_in_db(+Clause,+DB0,?DB)} adds a
+clause, @var{Clause}, (or a sequence of clauses, if Clauses is a list)
+to @var{DB0} to generate @var{DB}.").
+
+assert_in_db(Clauses,DB0,DB) :-
+    (Clauses == []
+     ->	DB0 = DB
+     ; Clauses = [Clause|MClauses]
+     ->	assert1_in_db(Clause,DB0,DB1),
+	assert_in_db(MClauses,DB1,DB)
+     ;	assert1_in_db(Clauses,DB0,DB)
+    ).
+
+assert1_in_db(Clauses,DB0,DB) :-
+    valid_db(DB0,'assert_in_db/3'),
+    (Clauses = (Head :- Body)
+     ->	true
+     ;	Head = Clauses,
+	Body = true
+    ),
+    add_to_trie(Head,Body,DB0,DB).
+
+:- comment(assert_in_db/2, "@pred{assert_in_db(+Clause,+DB0,?DB)} adds a
+clause, @var{Clause}, (or a sequence of clauses, if Clauses is a list)
+to the empty DB to generate @var{DB}.").
 
 assert_in_db(Clauses,DB) :-
 	empty_db(DB0),
 	assert_in_db(Clauses,DB0,DB).
 
-retractall_in_db([],DB,DB) :- !.
-retractall_in_db([Head|Heads],DB0,DB) :- !,
-	retractall_in_db(Head,DB0,DB1),
-	retractall_in_db(Heads,DB1,DB).
-retractall_in_db(Head,DB0,DB) :-
-	valid_db(DB0,'retractall_in_db/3'),
-	findall((Head:-Body), clause_in_db(Head,Body,DB0), Clauses),
-	retract_list_in_db(Clauses,DB0,DB).
+:- comment(retractall_in_db/3,"@pred{retractall_in_db(+Goal,+DB0,?DB)}
+retracts all clauses whose heads unify with @var{Goal} (or a term in
+@var{Goal} if @var{Goal} is a list) from @var{DB1} generating
+@var{DB2}.  ").
+
+retractall_in_db(Goals,DB0,DB) :-
+    (Goals == []
+     ->	DB = DB0
+     ; Goals = [Head|Heads]
+     ->	retractall1_in_db(Head,DB0,DB1),
+	retractall_in_db(Heads,DB1,DB)
+     ;	retractall_in_db(Heads,DB1,DB)
+    ).
+
+retractall1_in_db(Goal,DB0,DB) :-
+    valid_db(DB0,'retractall_in_db/3'),
+    findall((Goal:-Body), clause_in_db(Goal,Body,DB0), Clauses),
+    retract_list_in_db(Clauses,DB0,DB).
 
 retract_list_in_db([],DB,DB).
 retract_list_in_db([(Head:-Body)|Clauses],DB0,DB) :-
 	remove_from_trie(Head,Body,DB0,DB1),
 	retract_list_in_db(Clauses,DB1,DB).
+
+:- comment(clause_in_db/3,"@pred{clause_in_db(?Head,?Body,+DB)}
+unifies, in turn, @var{Head} and @var{Body} with the head and body of
+rules in @var{DB}.").
 
 clause_in_db(Head,Body,DB) :-
 	valid_db(DB,'clause_in_db/3'),
@@ -109,6 +152,10 @@ clause_in_db(Head,Body,DB) :-
 
 clause_in_db0(Head,Body,DB) :-
 	find_in_trie(Head,Body,DB).
+
+:- comment(call_in_db/2, "@pred{call_in_db(+Goal,+DB)} will call the
+goal @var{Goal} in the database @var{DB}, binding variables in
+@vr{Goal} for all instance fo @var{Goal} that is proved.").
 
 call_in_db(Goal,DB) :-
 	valid_db(DB,'call_in_db/2'),
@@ -131,44 +178,45 @@ call_in_db0(G,DB) :-
 db_table_call(DB,Goal) :-
 	call_in_db0(Goal,DB).
 
-%% union of DBs
-union_db(DB1,DB2,DB) :-
-	valid_db(DB1,'union_db/3'),
-	valid_db(DB2,'union_db/3'),
-	findall((Head:-Body),clause_in_db(Head,Body,DB1),Clauses),
-	assert_in_db(Clauses,DB2,DB).
 
-/**
-intersect_fact_db(DB1,DB2,DB3) :-
-	valid_db(DB1,'intersect_fact_db/3'),
-	valid_db(DB2,'intersect_fact_db/3'),
-	true.
-**/
+:- comment(dump_db/2,"@var{dump_db(+DB,+Filename)} writes the clauses
+in @var{DB} to the file @var{Filename}.  If @var{Filename} is
+'userout', the clauses will be written to userout.").
 
 dump_db(DB,Filename) :-
 	valid_db(DB,'dump_db/2'),
-	open(Filename,write,OStr),
-	(clause_in_db0(Head,Body,DB),
+	(Filename == userout
+	 -> OStr = userout
+	 ;  open(Filename,write,OStr)
+	),
+	(do_all
+	 clause_in_db0(Head,Body,DB),
 	 (Body == true
 	  ->	 write_canonical(OStr,Head)
 	  ;	 write_canonical(OStr,(Head:-Body))
 	 ),
-	 writeln(OStr,'.'),
-	 fail
-	 ;
-	 true
+	 writeln(OStr,'.')
 	),
-	close(OStr).
-
-valid_db(DB,Call) :-
-	(var(DB)
-	 ->	throw(error(Call,'DB cannot be a variable'))
-	 ; DB = ht(_,_,_)
-	 ->	true
-	 ;	throw(error(Call,'Invalid DB structure'))
+	(Filename == userout
+	 -> true
+	 ;  close(OStr)
 	).
 
-% version for use in meta calls: no cuts.
+valid_db(DB,Call) :-
+    (var(DB)
+     ->	throw(error(Call,'DB cannot be a variable'))
+     ;	DB @= ht(_,_,_)
+     ->	true
+     ; DB == []
+     ->	true
+     ;	throw(error(Call,'Invalid DB structure'))
+    ).
+
+:- comment(pure_call_in_db/2,"@pred{pure_call_in_db(+G,+DB)} has the
+same functionality as @pred{call_in_db(G,DB)}, but it is implemented
+without cuts, so it can be used when this file is loaded into a DB by
+@pred{load_in_db/2}.").
+
 pure_call_in_db(G,DB) :-
 	(ctrl_str(G)
 	 ->	pure_ctrl_call_in_db0(G,DB)
@@ -193,17 +241,19 @@ pure_ctrl_call_in_db0((A;B),DB) :-
 	).
 pure_ctrl_call_in_db0(M:G,_DB) :- call(M:G).
 
-empty_db(ht(2,0,[])).
+empty_db([]).
+
+is_db([]).
+is_db(ht(_,_,_)).
 
 :- comment(find_in_trie/3,"find_in_trie(?Term,?Value,+Trie) succeeds
 for terms Term in trie Trie with value Value.").
 find_in_trie(Term,Value,Trie) :-
 	find_in_trie_list([Term],Value0,Trie,Vars),
-%	trace,
 	my_unnumbervars(Value0,Vars,Value).
 
 :- comment(find_in_trie_list/4,
-"find_in_trie(?TermList,?Value,+Trie,?Vars) succeeds for the list of
+"find_in_trie_list(?TermList,?Value,+Trie,?Vars) succeeds for the list of
 terms TermList (which must be a proper list) in trie Trie with value
 Value, where Vars is a loglist of variables.").
 find_in_trie_list([],Value,Values,_Vars) :-
@@ -248,19 +298,20 @@ add_to_trie_ground_list([Term|TermList],Value,Trie0,Trie) :-
 	),
 	add_to_hash(Term,NewSubTrie,OldSubTrie,Trie0,Trie1),
 	add_to_trie_ground_list(NTermList,Value,OldSubTrie,NewSubTrie),
-	Trie1 = ht(HashBits,NumInTab,HashTab),
+	db_comps(Trie1,HashBits,NumInTab,HashTab),
 	(NumInTab < floor(2**HashBits)
 	 ->	Trie = Trie1
 	 ;	NHashBits is HashBits*2,
-		Trie = ht(NHashBits,NumInTab,NHashTab),
-		rebuild_hash(HashTab,HashBits,NHashBits,NHashTab)
+		db_comps(Trie,NHashBits,NumInTab,NHashTab),
+	        rebuild_hash(HashTab,HashBits,NHashBits,NHashTab)
 	).
 
 :- comment(find_in_hash/3, "find_in_hash(?Term,-Val,+HashTable)
 returns in Val the value associated with key, Term, in hashtable
 HashTable.").
-find_in_hash(Term,Val,ht(HashBits,_NumInTab,HashTable)) :-
-	(var(Term)
+find_in_hash(Term,Val,DB) :-
+    db_comps(DB,HashBits,_NumInTab,HashTable),
+    (var(Term)
 	 ->	bind_from_hash(Term,Val,HashBits,HashTable)
 	 ;	Size is floor(2**HashBits),
 		machine:term_hash(Term,Size,HashCode),
@@ -280,8 +331,8 @@ the value associates with key, Key, which has hashcode, HashCode, in
 hashtable, HashTable, whose keys have HashBits bits.").
 find_in_hash(Key,Rec,HashCode,HashBits,HashTable) :-
 	(HashBits =< 0
-	 ->	my_member(p(Key,Rec),HashTable)
-	 ;	HashTable = n(HashTable0,HashTable1,HashTable2,HashTable3),
+	 ->	my_member((Key-Rec),HashTable)
+	 ;	HashTable = h(HashTable0,HashTable1,HashTable2,HashTable3),
 		NHashBits is HashBits - 2,
 		HashBit is HashCode /\ 3,
 		NHashCode is HashCode >> 2,
@@ -302,12 +353,12 @@ the key-value pairs in hashtable, HashTable, whose keys have HashBits
 bits.").
 bind_from_hash(Term,Val,HashBits,HashTable) :-
 	(HashBits =< 0
-	 ->	my_member(p(Key,Val),HashTable),
+	 ->	my_member((Key-Val),HashTable),
 		(Key = Fun/Arity
 		 ->	functor(Term,Fun,Arity)
 		 ;	Term = Key
 		)
-	 ;	HashTable = n(HashTable0,HashTable1,HashTable2,HashTable3),
+	 ;	HashTable = h(HashTable0,HashTable1,HashTable2,HashTable3),
 		NHashBits is HashBits - 2,
 		(bind_from_hash(Term,Val,NHashBits,HashTable0)
 		 ;
@@ -337,55 +388,51 @@ hash table HashTable0 producing the new hash table HashTable.  OldVal
 is bound to previous value for this key in the hash table; and [] if
 none.").
 
-add_to_hash(Term,NewVal,OldVal,HT0,ht(HashBits,NNumInTab,NHashTable)) :-
-	(HT0 == []
-	 ->	HashBits = 2,	% hashtable size starts at 2**2-1
-		NumInTab = 0,
-		HashTable = []
-	 ;	HT0 = ht(HashBits,NumInTab,HashTable)
-	),
-	Size is floor(2**HashBits),
-	machine:term_hash(Term,Size,HashCode),
-	(atomic(Term)
-	 ->	Key = Term
-	 ; Term = '$VAR'(VN),integer(VN)
-	 ->	Key = Term
-	 ;	functor(Term,Fun,Ari),
-		Key = Fun/Ari
-	),
-	add_to_hash(Key,NewVal,OldVal,HashCode,HashBits,Added,HashTable,NHashTable),
-	NNumInTab is NumInTab+Added.
+add_to_hash(Term,NewVal,OldVal,HT0,HT) :-
+    db_comps(HT0,HashBits,NumInTab,HashTable),
+    Size is floor(2**HashBits),
+    machine:term_hash(Term,Size,HashCode),
+    (atomic(Term)
+     ->	Key = Term
+     ;	Term = '$VAR'(VN),integer(VN)
+     ->	Key = Term
+     ;	functor(Term,Fun,Ari),
+	Key = Fun/Ari
+    ),
+    add_to_subhash(Key,NewVal,OldVal,HashCode,HashBits,Added,HashTable,NHashTable),
+    NNumInTab is NumInTab+Added,
+    db_comps(HT,HashBits,NNumInTab,NHashTable).
 
-:- comment(add_to_hash/8,
-"add_to_hash(+Key,+NewVal,-OldVal,+HashCode,+HashBits,-Added,+HashTable,-NHashTable)
+:- comment(add_to_subhash/8,
+"add_to_subhash(+Key,+NewVal,-OldVal,+HashCode,+HashBits,-Added,+HashTable,-NHashTable)
 adds a key-value pair, in Key and NewVal, to the hash table,
 HashTable, generating a new hash table, NHashTable.  OldVal is
 returned and is the value for this key in HashTable ([] if none.) 
 HashCode is the hash code for Key; HashBits is the number of bits in
 the HashCode (and in keys in HashTable), and Added is returned as 1 if
 a new key is added, and 0 if the key already existed.").
-add_to_hash(Key,NewVal,OldVal,HashCode,HashBits,Added,HashTable,NHashTable) :-
+add_to_subhash(Key,NewVal,OldVal,HashCode,HashBits,Added,HashTable,NHashTable) :-
 	(HashBits =< 0
 	 ->	add_to_ordered_list(HashTable,Key,NewVal,OldVal,Added,NHashTable)
 	 ;	(HashTable == []
 		 ->	HashTable0 = [], HashTable1 = [], HashTable2 = [], HashTable3 = []
-		 ;	HashTable = n(HashTable0,HashTable1,HashTable2,HashTable3)
+		 ;	HashTable = h(HashTable0,HashTable1,HashTable2,HashTable3)
 		),
 		NHashBits is HashBits - 2,
 		HashBit is HashCode /\ 3,
 		NHashCode is HashCode >> 2,
 		(HashBit < 2
 		 ->	(HashBit < 1
-			 ->	NHashTable = n(NHashTable0,HashTable1,HashTable2,HashTable3),
-				add_to_hash(Key,NewVal,OldVal,NHashCode,NHashBits,Added,HashTable0,NHashTable0)
-			 ;	NHashTable = n(HashTable0,NHashTable1,HashTable2,HashTable3),
-				add_to_hash(Key,NewVal,OldVal,NHashCode,NHashBits,Added,HashTable1,NHashTable1)
+			 ->	NHashTable = h(NHashTable0,HashTable1,HashTable2,HashTable3),
+				add_to_subhash(Key,NewVal,OldVal,NHashCode,NHashBits,Added,HashTable0,NHashTable0)
+			 ;	NHashTable = h(HashTable0,NHashTable1,HashTable2,HashTable3),
+				add_to_subhash(Key,NewVal,OldVal,NHashCode,NHashBits,Added,HashTable1,NHashTable1)
 			)
 		 ; HashBit < 3
-		 ->	NHashTable = n(HashTable0,HashTable1,NHashTable2,HashTable3),
-			add_to_hash(Key,NewVal,OldVal,NHashCode,NHashBits,Added,HashTable2,NHashTable2)
-		 ;	NHashTable = n(HashTable0,HashTable1,HashTable2,NHashTable3),
-			add_to_hash(Key,NewVal,OldVal,NHashCode,NHashBits,Added,HashTable3,NHashTable3)
+		 ->	NHashTable = h(HashTable0,HashTable1,NHashTable2,HashTable3),
+			add_to_subhash(Key,NewVal,OldVal,NHashCode,NHashBits,Added,HashTable2,NHashTable2)
+		 ;	NHashTable = h(HashTable0,HashTable1,HashTable2,NHashTable3),
+			add_to_subhash(Key,NewVal,OldVal,NHashCode,NHashBits,Added,HashTable3,NHashTable3)
 		)
 	).
 
@@ -393,23 +440,23 @@ add_to_hash(Key,NewVal,OldVal,HashCode,HashBits,Added,HashTable,NHashTable) :-
 "add_to_ordered_list(+OValues,+Key,+NewVal,-OldVal,-Added,-NValues)
 adds (or replaces) a key-value pair in an ordered list of key-value
 pairs.  OValues is the old list of key-value pairs (represented as
-p(Key,Value).) The new key-value pair is p(Key,NewVal). NValues is the
+(Key-Value).) The new key-value pair is (Key-NewVal). NValues is the
 resulting list of key-value pairs.  OldVal is the old value for key
 Key in OValues (or [] if none), and is returned.  Added is 1 if the
 key Key is new, and 0 if it already exists in a pair in OValues.").
 add_to_ordered_list(OValues,Key,NewVal,OldVal,Added,NValues) :-
 	(OValues == []
-	 ->	OldVal = [], Added = 1, NValues = [p(Key,NewVal)]
+	 ->	OldVal = [], Added = 1, NValues = [(Key-NewVal)]
 	 ;	OValues = [OValue|Values],
-		OValue = p(TKey,TVal),
+		OValue = (TKey-TVal),
 		(TKey @< Key
 		 ->	NValues = [OValue|NValues1],
 			add_to_ordered_list(Values,Key,NewVal,OldVal,Added,NValues1)
 		 ; TKey == Key
-		 ->	NValues = [p(Key,NewVal)|Values],
+		 ->	NValues = [(Key-NewVal)|Values],
 			Added = 0,
 			OldVal = TVal
-		 ;	NValues = [p(Key,NewVal)|OValues],
+		 ;	NValues = [(Key-NewVal)|OValues],
 			Added = 1,
 			OldVal = []
 		)
@@ -458,23 +505,25 @@ remove_from_trie_list([Term|TermList],Value,Trie0,Trie) :-
 "remove_from_hash(+Term,?OldVal,+HashTable0,-HashTable) removes the
 entry for the pair Term and OldVal from the hash table, HashTable0,
 yielding the hash table, HashTable.").
-remove_from_hash(Term,OldVal,ht(HashBits,NumInTab,HashTable),ht(NHashBits,NNumInTab,NHashTable)) :-
-	Size is floor(2**HashBits),
-	machine:term_hash(Term,Size,HashCode),
-	(atomic(Term)
-	 ->	Key = Term
-	 ;	functor(Term,Fun,Ari),
-		Key = Fun/Ari
-	),
-	NNumInTab is NumInTab - 1,
-	remove_from_hash(Key,OldVal,HashCode,HashBits,HashTable,NHashTable0),
-	MinSize is floor(2** (HashBits//2)),
-	((NNumInTab >= MinSize ; Size =< 4)
-	 ->	NHashTable = NHashTable0,
-		NHashBits = HashBits
-	 ;	NHashBits is HashBits // 2,
-		rebuild_hash(NHashTable0,HashBits,NHashBits,NHashTable)
-	).
+remove_from_hash(Term,OldVal,HT0,HT) :-
+    db_comps(HT0,HashBits,NumInTab,HashTable),
+    Size is floor(2**HashBits),
+    machine:term_hash(Term,Size,HashCode),
+    (atomic(Term)
+     ->	Key = Term
+     ;	functor(Term,Fun,Ari),
+	Key = Fun/Ari
+    ),
+    NNumInTab is NumInTab - 1,
+    remove_from_hash(Key,OldVal,HashCode,HashBits,HashTable,NHashTable0),
+    MinSize is floor(2** (HashBits//2)),
+    ((NNumInTab >= MinSize ; Size =< 4)
+     ->	NHashTable = NHashTable0,
+	NHashBits = HashBits
+     ;	NHashBits is HashBits // 2,
+	rebuild_hash(NHashTable0,HashBits,NHashBits,NHashTable)
+    ),
+    db_comps(HT,NHashBits,NNumInTab,NHashTable).
 
 :- comment(remove_trom_hash/6,
 "remove_from_hash(+Key,?OldVal,+HashCode,+HashBits,+HashTable,-NHashTable)
@@ -487,25 +536,25 @@ remove_from_hash(Key,OldVal,HashCode,HashBits,HashTable,NHashTable) :-
 	 ->	remove_from_ordered_list(HashTable,Key,OldVal,NHashTable)
 	 ;	(HashTable == []
 		 ->	HashTable0 = [], HashTable1 = [], HashTable2 = [], HashTable3 = []
-		 ;	HashTable = n(HashTable0,HashTable1,HashTable2,HashTable3)
+		 ;	HashTable = h(HashTable0,HashTable1,HashTable2,HashTable3)
 		),
 		NHashBits is HashBits - 2,
 		HashBit is HashCode /\ 3,
 		NHashCode is HashCode >> 2,
 		(HashBit < 2
 		 ->	(HashBit < 1
-			 ->	NNHashTable = n(NHashTable0,HashTable1,HashTable2,HashTable3),
+			 ->	NNHashTable = h(NHashTable0,HashTable1,HashTable2,HashTable3),
 				remove_from_hash(Key,OldVal,NHashCode,NHashBits,HashTable0,NHashTable0)
-			 ;	NNHashTable = n(HashTable0,NHashTable1,HashTable2,HashTable3),
+			 ;	NNHashTable = h(HashTable0,NHashTable1,HashTable2,HashTable3),
 				remove_from_hash(Key,OldVal,NHashCode,NHashBits,HashTable1,NHashTable1)
 			)
 		 ; HashBit < 3
-		 ->	NNHashTable = n(HashTable0,HashTable1,NHashTable2,HashTable3),
+		 ->	NNHashTable = h(HashTable0,HashTable1,NHashTable2,HashTable3),
 			remove_from_hash(Key,OldVal,NHashCode,NHashBits,HashTable2,NHashTable2)
-		 ;	NNHashTable = n(HashTable0,HashTable1,HashTable2,NHashTable3),
+		 ;	NNHashTable = h(HashTable0,HashTable1,HashTable2,NHashTable3),
 			remove_from_hash(Key,OldVal,NHashCode,NHashBits,HashTable3,NHashTable3)
 		),
-		(NNHashTable == n([],[],[],[])  % collapse to keep rep canonical
+		(NNHashTable == h([],[],[],[])  % collapse to keep rep canonical
 		 ->	NHashTable = []
 		 ;	NHashTable = NNHashTable
 		)
@@ -513,10 +562,10 @@ remove_from_hash(Key,OldVal,HashCode,HashBits,HashTable,NHashTable) :-
 
 :- comment(remove_from_ordered_list/4,
 "remove_from_ordered_list(+OValues,+Key,?OldVal,-NValues) removes the
-pair, p(Key,OldVal), from the ordered list of p/2 pairs in OValues,
+pair, (Key-OldVal), from the ordered list of p/2 pairs in OValues,
 returning the resulting ordered list in NValues.").
 remove_from_ordered_list([OValue|OValues],Key,OldVal,NValues) :-
-	(OValue = p(Key,OldVal)
+	(OValue = (Key-OldVal)
 	 ->	NValues = OValues
 	 ;	NValues = [OValue|NValues1],
 		remove_from_ordered_list(OValues,Key,OldVal,NValues1)
@@ -533,20 +582,19 @@ remove_from_ordered_list([OVal|Values],Value,NValues) :-
 		remove_from_ordered_list(Values,Value,NValues1)
 	).
 
-
-/*	(OVal == Value
-	 ->	NValues = Values
-	 ; OVal @< Value
-	 ->	NValues = [OVal|NValues1],
-		remove_from_ordered_list(Values,Value,NValues1)
-	). **/
+:- comment(rebuild_hash/4,
+"@pred{rebuild_hash(+HashTab0,+HashBits,+NewBitSize,-HashTab)}
+rebuilds an hash-tree with a different hash-bit size (or width).  This
+allows either fixing a hash-tree to be of the right 'width', or to
+change the width to agree with another hash-tree one wants to compare
+with,").
 
 rebuild_hash(HashTab0,HashBits,NewBitSize,HashTab) :-
-	findall(p(Term,Val),bind_from_hash(Term,Val,HashBits,HashTab0),TermVals),
-	add_all_terms(TermVals,NewBitSize,[],HashTab).
+	findall((Term-Val),bind_from_hash(Term,Val,HashBits,HashTab0),TermVals),
+	add_all_terms(TermVals,NewBitSize,0,_,[],HashTab).
 
-add_all_terms([],_,HT,HT).
-add_all_terms([p(Term,Val)|Terms],HashBits,HT0,HT) :-
+add_all_terms([],_,N,N,HT,HT).
+add_all_terms([(Term-Val)|Terms],HashBits,N0,N,HT0,HT) :-
 	Size is floor(2**HashBits),
 	machine:term_hash(Term,Size,HashCode),
 	(atomic(Term)
@@ -554,8 +602,9 @@ add_all_terms([p(Term,Val)|Terms],HashBits,HT0,HT) :-
 	 ;	functor(Term,Fun,Arity),
 		Key = Fun/Arity
 	),	 
-	add_to_hash(Key,Val,[],HashCode,HashBits,_,HT0,HT1),
-	add_all_terms(Terms,HashBits,HT1,HT).
+	add_to_subhash(Key,Val,_,HashCode,HashBits,Added,HT0,HT1),
+	N1 is N0+Added,
+	add_all_terms(Terms,HashBits,N1,N,HT1,HT).
 
 
 load_in_db(FileName,Trie) :-
@@ -593,11 +642,636 @@ my_unnumbervars_list([Term|Terms],Vars,[NTerm|NTerms]) :-
 	my_unnumbervars(Term,Vars,NTerm),
 	my_unnumbervars_list(Terms,Vars,NTerms).
 
+/**********************************************************/
+:- export naive_subset_db/2, naive_union_db/3, naive_intersect_db/3.
+:- export naive_difference_db/3.
+:- export naive_disjoint_db/2.
+:- export naive_sym_diff_db/3.
 
-% test:
+naive_union_db(DB1,DB2,DB3) :-
+    findall((H:-B),find_in_trie(H,B,DB1),Clauses),
+    assert_in_db(Clauses,DB2,DB3).
+
+naive_intersect_db(DB1,DB2,DB3) :-
+	valid_db(DB1,'intersect_fact_db/3'),
+	valid_db(DB2,'intersect_fact_db/3'),
+	findall((H:-B),(find_in_trie(H,B,DB1),find_in_trie(H,B,DB2)),Rules),
+	empty_db(DB4),
+	assert_in_db(Rules,DB4,DB3).
+
+naive_difference_db(DB1,DB2,DB3) :-
+	valid_db(DB1,'difference_fact_db/3'),
+	valid_db(DB2,'difference_fact_db/3'),
+	findall((H:-B),(clause_in_db(H,B,DB1),
+			\+clause_in_db(H,B,DB2)
+		       ),
+		       Clauses),
+	empty_db(DB0),
+	assert_in_db(Clauses,DB0,DB3).
+
+naive_sym_diff_db(DB1,DB2,DB3) :-
+	valid_db(DB1,'sym_diff_fact_db/3'),
+	valid_db(DB2,'sym_diff_fact_db/3'),
+	findall((H:-B),
+		(clause_in_db(H,B,DB1),
+		 \+ clause_in_db(H,B,DB2)
+		 ;
+		 clause_in_db(H,B,DB2),
+		 \+ clause_in_db(H,B,DB1)
+		),
+		Clauses),
+	empty_db(DB0),
+	assert_in_db(Clauses,DB0,DB3).
+
+naive_subset_db(DB1,DB2) :-
+    \+ (clause_in_db(H,B,DB1),
+	\+ clause_in_db(H,B,DB2)).
+
+naive_disjoint_db(DB1,DB2) :-
+    \+ (clause_in_db(H,B,DB1),
+	clause_in_db(H,B,DB2)).
+
+/**********************************************************/
+
+union_db(DB1,DB2,DB) :-
+    (DB1 == DB2			% @== ?
+     ->	DB = DB1
+     ;	db_comps(DB1,HBits1,Num1,HT1),
+     	db_comps(DB2,HBits2,Num2,HT2),
+	(HBits1 < HBits2
+	 -> HBits = HBits2,
+	    rebuild_hash(HT1,HBits1,HBits,HT1b),
+	    union_subhashes(HBits,HT1b,HT2,DNum,NHT)
+	 ; HBits2 < HBits1
+	 -> HBits = HBits1,
+	    rebuild_hash(HT2,HBits2,HBits,HT2b),
+	    union_subhashes(HBits,HT1,HT2b,DNum,NHT)
+	 ;  HBits = HBits1,
+	    union_subhashes(HBits,HT1,HT2,DNum,NHT)
+	),
+	NNum is Num1 + Num2 - DNum,
+	fix_ht_size(HBits,NNum,NHT,DB)
+    ).
+
+union_subhashes(HashBits,HT1,HT2,DNum,HT) :-
+    (HashBits =< 0
+     ->	union_kvs(HT1,HT2,0,DNum,HT)
+     ;	h_comps(HT1,HT10,HT11,HT12,HT13),
+	h_comps(HT2,HT20,HT21,HT22,HT23),
+	union_subhash(HashBits,HT10,HT20,DNum0,HT30),
+	union_subhash(HashBits,HT11,HT21,DNum1,HT31),
+	union_subhash(HashBits,HT12,HT22,DNum2,HT32),
+	union_subhash(HashBits,HT13,HT23,DNum3,HT33),
+	DNum is DNum0+DNum1+DNum2+DNum3,
+	h_comps(HT,HT30,HT31,HT32,HT33)
+    ).
+
+%% diff, negative for loss (dupls)
+union_subhash(HashBits,SHT1,SHT2,DNum,SHT) :-
+    (SHT1 == []
+     ->	SHT = SHT2, DNum = 0
+     ; SHT2 == []
+     ->	SHT = SHT1, DNum = 0
+     ; SHT1 == SHT2
+     ->	SHT = SHT1, count_keys(SHT,DNum)
+     ;	NHashBits is HashBits - 2,
+	union_subhashes(NHashBits,SHT1,SHT2,DNum,SHT)
+    ).
+
+union_kvs(HT1,HT2,DNum0,DNum,HT) :- 
+    (HT1 == []
+     ->	DNum = DNum0, HT = HT2
+     ; HT2 == []
+     ->	DNum = DNum0, HT = HT1
+     ;	HT1 = [K1-V1|HT1t],
+	HT2 = [K2-V2|HT2t],
+	(K1 @< K2
+	 -> HT = [K1-V1|HTt],
+	    union_kvs(HT1t,HT2,DNum0,DNum,HTt)
+	 ;  K1 @> K2
+	 -> HT = [K2-V2|HTt],
+	    union_kvs(HT1,HT2t,DNum0,DNum,HTt)
+	 ;  (V1 @= ht(_,_,_)
+	     ->	union_db(V1,V2,V3),
+		add_kv(V3,K1,HT,HTt)
+	     ;	union_values(V1,V2,V3),
+		add_kv(V3,K1,HT,HTt)
+	    ),
+	    DNum1 is DNum0 + 1,
+	    union_kvs(HT1t,HT2t,DNum1,DNum,HTt)	
+	)
+    ).
+    
+%%union_values(_,_,_) :- writeln(userout,called_union_values), fail.
+union_values(V1s,V2s,V3s) :-
+    (V1s == []
+     ->	V3s = V2s
+     ; V2s == []
+     ->	V3s = V1s
+     ;	V1s = [V1|V1st],
+	V2s = [V2|V2st],
+	(V1 @< V2
+	 -> V3s = [V1|V3st],
+	    union_values(V1st,V2s,V3st)
+	 ;  V1 @> V2
+	 -> V3s = [V2|V3st],
+	    union_values(V1s,V2st,V3st)
+	 ;  V3s = [V1|V3st],
+	    union_values(V1st,V2st,V3st)
+	)
+    ).
+	
+/********************************************************/
+
+intersect_db(DB1,DB2,DB) :-
+    (DB1 == DB2
+     ->	DB = DB1
+     ;	db_comps(DB1,HBits1,_Num1,HT1),
+     	db_comps(DB2,HBits2,_Num2,HT2),
+	(HBits1 < HBits2
+	 -> HBits = HBits2,
+	    rebuild_hash(HT1,HBits1,HBits,HT1b),
+	    intersect_subhashes(HBits,HT1b,HT2,INum,NHT)
+	 ; HBits2 < HBits1
+	 -> HBits = HBits1,
+	    rebuild_hash(HT2,HBits2,HBits,HT2b),
+	    intersect_subhashes(HBits,HT1,HT2b,INum,NHT)
+	 ;  HBits = HBits1,
+	    intersect_subhashes(HBits,HT1,HT2,INum,NHT)
+	),
+	fix_ht_size(HBits,INum,NHT,DB)
+    ).
+
+intersect_subhashes(HashBits,HT1,HT2,INum,HT) :-
+    (HashBits =< 0
+    ->	intersect_kvs(HT1,HT2,0,INum,HT)
+     ;	h_comps(HT1,HT10,HT11,HT12,HT13),
+	h_comps(HT2,HT20,HT21,HT22,HT23),
+	intersect_subhash(HashBits,HT10,HT20,INum0,HT30),
+	intersect_subhash(HashBits,HT11,HT21,INum1,HT31),
+	intersect_subhash(HashBits,HT12,HT22,INum2,HT32),
+	intersect_subhash(HashBits,HT13,HT23,INum3,HT33),
+	INum is INum0+INum1+INum2+INum3,
+	h_comps(HT,HT30,HT31,HT32,HT33)
+    ).
+
+intersect_subhash(HashBits,SHT1,SHT2,INum,SHT) :-
+    (SHT1 == []
+     ->	SHT = [], INum = 0
+     ; SHT2 == []
+     ->	SHT = [], INum = 0
+     ; SHT1 == SHT2
+     ->	SHT = SHT1, count_keys(SHT,INum)
+     ;	NHashBits is HashBits - 2,
+	intersect_subhashes(NHashBits,SHT1,SHT2,INum,SHT)
+    ).
+
+intersect_kvs(HT1,HT2,INum0,INum,HT) :-
+    (HT1 == []
+     ->	INum = INum0, HT = []
+     ; HT2 == []
+     ->	INum = INum0, HT = []
+     ;	HT1 = [K1-V1|HT1t],
+	HT2 = [K2-V2|HT2t],
+	(K1 @< K2
+	 -> intersect_kvs(HT1t,HT2,INum0,INum,HT)
+	 ;  K1 @> K2
+	 -> intersect_kvs(HT1,HT2t,INum0,INum,HT)
+	 ;  INum1 is INum0 + 1,
+	    (V1 @= ht(_,_,_)
+	     ->	intersect_db(V1,V2,V3),
+		add_kv(V3,K1,HT,HTt)
+	     ;	intersect_values(V1,V2,V3),
+		add_kv(V3,K1,HT,HTt)
+	    ),
+	    intersect_kvs(HT1t,HT2t,INum1,INum,HTt)
+	)
+    ).
+    
+%%intersect_values(_,_,_) :- writeln(userout,intersect_values),fail.
+intersect_values(V1s,V2s,V3s) :-
+    (V1s == []
+     ->	V3s = []
+     ; V2s == []
+     ->	V3s = []
+     ;	V1s = [V1|V1st],
+	V2s = [V2|V2st],
+	(V1 @< V2
+	 -> intersect_values(V1st,V2s,V3s)
+	 ;  V1 @> V2
+	 -> intersect_values(V1s,V2st,V3s)
+	 ;  V3s = [V1|V3st],
+	    intersect_values(V1st,V2st,V3st)
+	)
+    ).
+
+/********************************************************/
+difference_db(DB1,DB2,DB) :-
+    (DB1 == DB2
+     ->	DB = []
+     ;	db_comps(DB1,HBits1,Num1,HT1),
+     	db_comps(DB2,HBits2,_Num2,HT2),
+	(HBits1 < HBits2
+	 -> HBits = HBits2,
+	    rebuild_hash(HT1,HBits1,HBits,HT1b),
+	    difference_subhashes(HBits,HT1b,HT2,RNum,NHT)
+	 ; HBits2 < HBits1
+	 -> HBits = HBits1,
+	    rebuild_hash(HT2,HBits2,HBits,HT2b),
+	    difference_subhashes(HBits,HT1,HT2b,RNum,NHT)
+	 ;  HBits = HBits1,
+	    difference_subhashes(HBits,HT1,HT2,RNum,NHT)
+	),
+	NNum is Num1-RNum,
+	fix_ht_size(HBits,NNum,NHT,DB)
+    ).
+
+difference_subhashes(HashBits,HT1,HT2,RNum,HT) :-
+    (HashBits =< 0
+    ->	difference_kvs(HT1,HT2,0,RNum,HT)
+     ;	h_comps(HT1,HT10,HT11,HT12,HT13),
+	h_comps(HT2,HT20,HT21,HT22,HT23),
+	difference_subhash(HashBits,HT10,HT20,RNum0,HT30),
+	difference_subhash(HashBits,HT11,HT21,RNum1,HT31),
+	difference_subhash(HashBits,HT12,HT22,RNum2,HT32),
+	difference_subhash(HashBits,HT13,HT23,RNum3,HT33),
+	RNum is RNum0+RNum1+RNum2+RNum3,
+	h_comps(HT,HT30,HT31,HT32,HT33)
+    ).
+
+difference_subhash(HashBits,SHT1,SHT2,RNum,SHT) :-
+    (SHT1 == []
+     ->	SHT = [], RNum = 0
+     ; SHT2 == []
+     ->	SHT = SHT1, RNum = 0
+     ; SHT1 == SHT2
+     ->	SHT = [], count_keys(SHT1,RNum)
+     ;	NHashBits is HashBits - 2,
+	difference_subhashes(NHashBits,SHT1,SHT2,RNum,SHT)
+    ).
+
+difference_kvs(HT1,HT2,RNum0,RNum,HT) :-
+    (HT1 == []
+     ->	RNum = RNum0, HT = []
+     ; HT2 = []
+     ->	RNum = RNum0, HT = HT1
+     ;	HT1 = [K1-V1|HT1t],
+	HT2 = [K2-V2|HT2t],
+	(K1 @< K2
+	 -> HT = [K1-V1|HTt],
+	    difference_kvs(HT1t,HT2,RNum0,RNum,HTt)
+	 ;  K1 @> K2
+	 -> difference_kvs(HT1,HT2t,RNum0,RNum,HT)
+	 ;  (V1 @= ht(_,_,_)
+	     ->	difference_db(V1,V2,V3),
+		add_kv(V3,K1,HT,HTt)
+	     ;	difference_values(V1,V2,V3),
+		add_kv(V3,K1,HT,HTt)
+	    ),
+	    (V3 == []
+	     ->	RNum1 is RNum0 + 1
+	     ;	RNum1 = RNum0
+	    ),
+	    difference_kvs(HT1t,HT2t,RNum1,RNum,HTt)
+	)
+    ).
+    
+%%difference_values(_,_,_) :- writeln(userout,difference_values),fail.
+difference_values(V1s,V2s,V3s) :-
+    (V1s == []
+     ->	V3s = []
+     ; V2s == []
+     ->	V3s = V1s
+     ;	V1s = [V1|V1st],
+	V2s = [V2|V2st],
+	(V1 @< V2
+	 -> V3s = [V1|V3st],
+	    difference_values(V1st,V2s,V3st)
+	 ;  V1 @> V2
+	 -> difference_values(V1s,V2st,V3s)
+	 ;  difference_values(V1st,V2st,V3s)
+	)
+    ).
+
+/********************************************************/
+
+sym_diff_db(DB1,DB2,DB) :-
+    (DB1 == DB2
+     ->	DB = []
+     ;	db_comps(DB1,HBits1,_Num1,HT1),
+     	db_comps(DB2,HBits2,_Num2,HT2),
+	(HBits1 < HBits2
+	 -> HBits = HBits2,
+	    rebuild_hash(HT1,HBits1,HBits,HT1b),
+	    sym_diff_subhashes(HBits,HT1b,HT2,RNum,NHT)
+	 ; HBits2 < HBits1
+	 -> HBits = HBits1,
+	    rebuild_hash(HT2,HBits2,HBits,HT2b),
+	    sym_diff_subhashes(HBits,HT1,HT2b,RNum,NHT)
+	 ;  HBits = HBits1,
+	    sym_diff_subhashes(HBits,HT1,HT2,RNum,NHT)
+	),
+	fix_ht_size(HBits,RNum,NHT,DB)
+    ).
+
+sym_diff_subhashes(HashBits,HT1,HT2,RNum,HT) :-
+    (HashBits =< 0
+    ->	sym_diff_kvs(HT1,HT2,0,RNum,HT)
+     ;	h_comps(HT1,HT10,HT11,HT12,HT13),
+	h_comps(HT2,HT20,HT21,HT22,HT23),
+	sym_diff_subhash(HashBits,HT10,HT20,RNum0,HT30),
+	sym_diff_subhash(HashBits,HT11,HT21,RNum1,HT31),
+	sym_diff_subhash(HashBits,HT12,HT22,RNum2,HT32),
+	sym_diff_subhash(HashBits,HT13,HT23,RNum3,HT33),
+	RNum is RNum0+RNum1+RNum2+RNum3,
+	h_comps(HT,HT30,HT31,HT32,HT33)
+    ).
+
+sym_diff_subhash(HashBits,SHT1,SHT2,RNum,SHT) :-
+    (SHT1 == []
+     ->	SHT = SHT2, count_keys(SHT,RNum)
+     ; SHT2 == []
+     ->	SHT = SHT1, count_keys(SHT,RNum)
+     ; SHT1 == SHT2
+     ->	SHT = [], RNum = 0
+     ;	NHashBits is HashBits - 2,
+	sym_diff_subhashes(NHashBits,SHT1,SHT2,RNum,SHT)
+    ).
+
+sym_diff_kvs(HT1,HT2,RNum0,RNum,HT) :-
+    (HT1 == []
+     ->	RNum = RNum0, HT = HT2
+     ; HT2 = []
+     ->	RNum = RNum0, HT = HT1
+     ;	HT1 = [K1-V1|HT1t],
+	HT2 = [K2-V2|HT2t],
+	(K1 @< K2
+	 -> HT = [K1-V1|HTt],
+	    RNum1 is RNum0 + 1,
+	    sym_diff_kvs(HT1t,HT2,RNum1,RNum,HTt)
+	 ;  K1 @> K2
+	 -> HT = [K2-V2|HTt],
+	    RNum1 is RNum0 + 1,
+	    sym_diff_kvs(HT1,HT2t,RNum1,RNum,HTt)
+	 ;  (V1 @= ht(_,_,_)
+	     ->	sym_diff_db(V1,V2,V3),
+		add_kv(V3,K1,HT,HTt)
+	     ;	sym_diff_values(V1,V2,V3),
+		add_kv(V3,K1,HT,HTt)
+	    ),
+	    (V3 == []
+	     ->	RNum1 = RNum0
+	     ;	RNum1 is RNum0 + 1
+	    ),
+	    sym_diff_kvs(HT1t,HT2t,RNum1,RNum,HTt)
+	)
+    ).
+    
+%%sym_diff_values(_,_,_) :- writeln(userout,sym_diff_values),fail.
+sym_diff_values(V1s,V2s,V3s) :-
+    (V1s == []
+     ->	V3s = V2s
+     ; V2s == []
+     ->	V3s = V1s
+     ;	V1s = [V1|V1st],
+	V2s = [V2|V2st],
+	(V1 @< V2
+	 -> V3s = [V1|V3st],
+	    sym_diff_values(V1st,V2s,V3st)
+	 ;  V1 @> V2
+	 -> V3s = [V2|V3st],
+	    sym_diff_values(V1s,V2st,V3st)
+	 ;  sym_diff_values(V1st,V2st,V3s)
+	)
+    ).
+
+/******************************************************/
+
+subset_db(DB1,DB2) :-
+    (DB1 == DB2
+     ->	true
+     ;	db_comps(DB1,HBits1,_Num1,HT1),
+     	db_comps(DB2,HBits2,_Num2,HT2),
+	(HBits1 < HBits2
+	 -> rebuild_hash(HT1,HBits1,HBits2,HT1b),
+	    subset_subhashes(HBits2,HT1b,HT2)
+	 ; HBits2 < HBits1
+	 -> rebuild_hash(HT2,HBits2,HBits1,HT2b),
+	    subset_subhashes(HBits1,HT1,HT2b)
+	 ;  subset_subhashes(HBits1,HT1,HT2)
+	)
+    ).
+
+subset_subhashes(HashBits,HT1,HT2) :-
+    (HashBits =< 0
+    ->	subset_kvs(HT1,HT2)
+     ;	h_comps(HT1,HT10,HT11,HT12,HT13),
+	h_comps(HT2,HT20,HT21,HT22,HT23),
+	subset_subhash(HashBits,HT10,HT20),
+	subset_subhash(HashBits,HT11,HT21),
+	subset_subhash(HashBits,HT12,HT22),
+	subset_subhash(HashBits,HT13,HT23)
+    ).
+
+subset_subhash(HashBits,SHT1,SHT2) :-
+    (SHT1 == []
+     ->	true
+     ; SHT2 == []
+     ->	fail
+     ; SHT1 == SHT2
+     ->	true
+     ;	NHashBits is HashBits - 2,
+	subset_subhashes(NHashBits,SHT1,SHT2)
+    ).
+
+subset_kvs(HT1,HT2) :-
+    (HT1 == []
+     ->	true
+     ; HT2 == []
+     ->	fail
+     ;	HT1 = [K1-V1|HT1t],
+	HT2 = [K2-V2|HT2t],
+	(K1 @< K2
+	 -> fail
+	 ;  K1 @> K2
+	 -> subset_kvs(HT1,HT2t)
+	 ;  (V1 @= ht(_,_,_)
+	     ->	subset_db(V1,V2)
+	     ;	subset_values(V1,V2)
+	    ),
+	    subset_kvs(HT1t,HT2t)
+	)
+    ).
+
+subset_values(V1s,V2s) :-
+    (V1s == []
+     ->	true
+     ; V2s == []
+     ->	fail
+     ;	V1s = [V1|V1st],
+	V2s = [V2|V2st],
+	(V1 @< V2
+	 -> fail
+	 ;  V1 @> V2
+	 -> subset_values(V1s,V2st)
+	 ;  subset_values(V1st,V2st)
+	)
+    ).
+
+/******************************************************/
+
+disjoint_db(DB1,DB2) :-
+    (DB1 == DB2
+     ->	empty_db(DB1)
+     ;	db_comps(DB1,HBits1,_Num1,HT1),
+     	db_comps(DB2,HBits2,_Num2,HT2),
+	(HBits1 < HBits2
+	 -> rebuild_hash(HT1,HBits1,HBits2,HT1b),
+	    disjoint_subhashes(HBits2,HT1b,HT2)
+	 ; HBits2 < HBits1
+	 -> rebuild_hash(HT2,HBits2,HBits1,HT2b),
+	    disjoint_subhashes(HBits1,HT1,HT2b)
+	 ;  disjoint_subhashes(HBits1,HT1,HT2)
+	)
+    ).
+
+disjoint_subhashes(HashBits,HT1,HT2) :-
+    (HashBits =< 0
+    ->	disjoint_kvs(HT1,HT2)
+     ;	h_comps(HT1,HT10,HT11,HT12,HT13),
+	h_comps(HT2,HT20,HT21,HT22,HT23),
+	disjoint_subhash(HashBits,HT10,HT20),
+	disjoint_subhash(HashBits,HT11,HT21),
+	disjoint_subhash(HashBits,HT12,HT22),
+	disjoint_subhash(HashBits,HT13,HT23)
+    ).
+
+disjoint_subhash(HashBits,SHT1,SHT2) :-
+    (SHT1 == []
+     ->	true
+     ; SHT2 == []
+     ->	true
+     ; SHT1 == SHT2
+     ->	fail
+     ;	NHashBits is HashBits - 2,
+	disjoint_subhashes(NHashBits,SHT1,SHT2)
+    ).
+
+disjoint_kvs(HT1,HT2) :-
+    (HT1 == []
+     ->	true
+     ; HT2 == []
+     ->	true
+     ;	HT1 = [K1-V1|HT1t],
+	HT2 = [K2-V2|HT2t],
+	(K1 @< K2
+	 -> fail
+	 ;  K1 @> K2
+	 -> fail
+	 ;  (V1 @= ht(_,_,_)
+	     ->	disjoint_db(V1,V2)
+	     ;	disjoint_values(V1,V2)
+	    ),
+	    disjoint_kvs(HT1t,HT2t)
+	)
+    ).
+    
+disjoint_values(V1s,V2s) :-
+    (V1s == []
+     ->	true
+     ; V2s == []
+     ->	true
+     ;	V1s = [V1|V1st],
+	V2s = [V2|V2st],
+	(V1 @< V2
+	 -> fail
+	 ;  V1 @> V2
+	 -> fail
+	 ;  disjoint_values(V1st,V2st)
+	)
+    ).
+
+/**********************************************************/
+
+db_comps(DB,B,N,H) :-
+    (DB=[], B=2, N=0, H=[]
+     ->	true
+     ;	DB = ht(B,N,H)
+    ).
+
+h_comps(H,H1,H2,H3,H4) :-
+    (H=[], H1=[], H2=[], H3=[], H4=[]
+     ->	true
+     ;	H = h(H1,H2,H3,H4)
+    ).
+
+add_kv(V,K,HT0,HT) :-
+    (V = []
+     ->	HT0 = HT
+     ;	HT0 = [K-V|HT]
+    ).
+
+count_keys([],0).
+count_keys([_|R],N) :-
+    (R == []
+     ->	N = 1
+     ;	length(R,N1),
+	N is N1+1
+    ).
+count_keys(h(HT1,HT2,HT3,HT4),N) :-
+    count_keys(HT1,N1),
+    count_keys(HT2,N2),
+    count_keys(HT3,N3),
+    count_keys(HT4,N4),
+    N is N1+N2+N3+N4.
+
+fix_ht_size(_HBits,0,_HT,[]) :- !.
+fix_ht_size(HBits,NNum,HT,DB) :-
+    (NNum =< 1
+     ->	GHBits = 2
+     ;	GHBits is 2**ceiling(log(log(NNum+1)/log(2))/log(2))
+    ),
+    (GHBits =:= HBits
+     ->	db_comps(DB,HBits,NNum,HT)
+     ;	rebuild_hash(HT,HBits,GHBits,NHT),
+	db_comps(DB,GHBits,NNum,NHT)
+    ).
+
+/********** recursive
+:- export fix_db_sizes/3.
+fix_db_sizes(DB0,DB,Changed) :-
+    (DB0 == []
+     ->	DB = DB0
+     ;	db_comps(DB0,HBits,Num,HT0),
+	fix_ht_sizes(HT0,NNum,HT,Changed0),
+	(var(Changed0), NNum =:= Num
+	 -> DB = DB0
+	 ;  Changed = Changed0,
+	    fix_ht_size(HBits,NNum,HT,DB)
+	)
+    ).
+
+fix_ht_sizes(HT0,Num,HT,Changed) :-
+    (HT0 == []
+     ->	Num = 0, HT = []
+     ; HT0 @= [_|_]
+     ->	length(HT0,Num), HT = HT0
+     ;	h_comps(HT0,H1,H2,H3,H4),
+	fix_ht_sizes(H1,N1,H1f,Changed),
+	fix_ht_sizes(H2,N2,H2f,Changed),
+	fix_ht_sizes(H3,N3,H3f,Changed),
+	fix_ht_sizes(H4,N4,H4f,Changed),
+	Num is N1+N2+N3+N4,
+	(var(Changed)
+	 -> HT0 = HT
+	 ;  h_comps(HT,H1f,H2f,H3f,H4f)
+	)
+    ).
+**********/
+
+%% test:
 /*
    empty_db(_DB0),
-   assert_in_db(app([],_L,_L),_DB0,_DB1),
    assert_in_db((app([_X|_L1],_L2,[_X|_L3]):-app(_L1,_L2,_L3)),_DB1,_DB2),
    call_in_db(app(XX,YY,[a,b,c]),_DB2).
 **/
