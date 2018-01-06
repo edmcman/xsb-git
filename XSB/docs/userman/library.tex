@@ -2899,14 +2899,16 @@ constants) by the option {\tt all\_symbol\_uses}.
 currently equivalent to {\tt checkImpExps([],FileNameList)}.
 \end{description}
 
-\section{``Pure'' Meta-programming in XSB with prolog\_db.P}
+\section{``Pure'' Meta-programming and Set Processing in XSB with prolog\_db.P}
 \index{Code authors!Warren, David S.}
 
-The {\tt prolog\_db} library provides predicates that support a form of
-``pure'' meta-programming in XSB.  A programmer can create a term data
-structure that represents a Prolog database (i.e., a set of rules, and
-herein called a {\em Prolog DB}), and then ask for a goal to be proved
-in such a Prolog DB.  
+The {\tt prolog\_db} library provides predicates that support a form
+of ``pure'' meta-programming in XSB.  A programmer can create a term
+data structure that represents a Prolog database (i.e., a set of
+rules, and herein called a {\em Prolog DB}), and then ask for a goal
+to be proved in such a Prolog DB.  A Prolog DB can also be used to
+manipulate sets of facts (or rules), as it provides efficient set
+operations of union, intersection, subset, etc.
 
 A Prolog DB is kept as a trie, which is a ground Prolog term.  Each
 level in the trie is implemented by a hash table, and hash tables are
@@ -2924,7 +2926,19 @@ the representation of a Prolog DB.)
 A Prolog DB that is obtained from another Prolog DB by adding or
 deleting a single clause differs from it in only log subterms (unless
 a hash table has been resized).  This means that it is efficient to
-intern these DB's, and to table them (as intern).
+intern these DB's, and to table them (as intern), or to use {\tt
+  intern\_termhash/2} explicitly with them.
+
+Prolog DB's, as sets of terms, can be combined with the binary set
+operations of union, intersection, and set difference, and they can be
+compared for subset and disjointness.  These operations take advantage
+of the trie structure of the DB representation, using common
+substructures of the input DB's where possible, to be quite efficient.
+Thus it can be effictive to maintain distinct databases and then
+combine them with set union, intersection, or difference.  Also this
+is a good represention for sets of terms where an efficient subset
+operation is required, perhaps with aggregation and answer
+subsumption, when compbined with {\tt intern\_termhash/2}.
 
 The predicates provided by the Prolog DB interface are as follows:
 \begin{description}
@@ -2939,16 +2953,19 @@ predicates.~\footnote{Since a Prolog DB is a term and must be passed
 
 \ourmoditem{assert\_in\_db(+Clause,+DB0,-DB)}{assert\_in\_db/3}{prolog\_db}
 {\tt assert\_in\_db/3} adds the clause, {\tt Clause}, to the Prolog
-DB, {\tt DB0}, and returns a new Prolog DB, {\tt DB}.  A Prolog DB is
-a {\em set} of clauses, so asserting a clause that is already in {\tt
-DB0} just returns that same database.  No ordering of clauses is
-preserved, so cuts do not make sense and cannot be used in clauses.
-(The if-then else ('->'/3) should be used instead.)
+DB, {\tt DB0}, and returns a new Prolog DB, {\tt DB}.  {\tt Clause}
+may be a list of clauses, in which case they will all be added.  A
+Prolog DB is a {\em set} of clauses, so asserting a clause that is
+already in {\tt DB0} just returns that same database.  No ordering of
+clauses is preserved, so cuts do not make sense and cannot be used in
+clauses.  (The if-then else ('->'/3) should be used instead.)
 
 \ourmoditem{retractall\_in\_db(+ClauseHead,+DB0,-DB)}{retractall\_in\_db/3}{prolog\_db}
 {\tt retractall\_in\_db/3} removes all clauses whose heads unify with
 {\tt ClauseHead} from {\tt DB0} returning {\tt DB}.  If no clauses in
-{\tt DB0} unify, then {\tt DB0} is returned unchanged.
+{\tt DB0} unify, then {\tt DB0} is returned unchanged. {\tt
+  ClauseHead} may be a list of clause heads, in which case they will
+each be used in turn to remove clauses from {\tt DB0}.
 
 \ourmoditem{clause\_in\_db(?ClauseHead,?ClauseBody,+DB)}{clause\_in\_db/3}{prolog\_db}
 {\tt clause\_in\_db/3} returns all clauses in {\tt DB} whose heads and
@@ -2975,9 +2992,34 @@ FileName} and asserts them into database {\tt DB0} returning {\tt DB}.
 {\tt load\_in\_db/2} reads the clauses from the file named {\tt
 FileName} and asserts them into an empty database returning {\tt DB}.
 
-\ourmoditem{union\_db(+DB1,+DB2,-DB3)}{union\_db/3}{prolog\_db}
+\ourmoditem{union\_db(+DB1,+DB2,?DB3)}{union\_db/3}{prolog\_db}
 {\tt union\_db/3} returns in {\tt DB3} the union of the sets of
-clauses in {\tt DB1} and {\tt DB2}.
+clauses in {\tt DB1} and {\tt DB2}.  This operation takes advantage of
+the structure of the representations of the input {\tt DBs} to share
+representations where possible.  For example, if no clauses for a
+given predicate appear in one of the input {\tt DBs}, then the output
+{\tt DB} will fully share the represention of that predicate from the
+other {\tt DB} (and not even look at its contents.)
+
+\ourmoditem{intersect\_db(+DB1,+DB2,?DB3)}{intersect\_db/3}{prolog\_db}
+{\tt intersect\_db/3} returns in {\tt DB3} the intersection of the
+sets of clauses in {\tt DB1} and {\tt DB2}.  Again, the result shares
+representations where possible.
+
+\ourmoditem{difference\_db(+DB1,+DB2,?DB3)}{difference\_db/3}{prolog\_db}
+{\tt difference\_db/3} returns in {\tt DB3} the set difference of the
+sets of clauses in {\tt DB1} and {\tt DB2}.  I.e., the result set
+contains clauses in {\tt DB1} but not in {\tt DB2}.
+
+\ourmoditem{subset\_db(+DB1,+DB2)}{subset\_db/2}{prolog\_db}
+{\tt subset\_db/2} succeeds if every clause in {\tt DB1} is in {\tt
+  DB2}, i.e., considered as sets of clauses, {\tt DB1} is a subset of
+{\tt DB2}.
+
+\ourmoditem{disjoint\_db(+DB1,+DB2)}{disjoint\_db/2}{prolog\_db}
+{\tt disjoint\_db/2} succeeds if no clause in both {\tt DB1} and {\tt
+  DB2}, i.e., considered as sets of clauses, {\tt DB1} and {\tt DB2}
+are disjoint sets.
 
 \end{description}
 
