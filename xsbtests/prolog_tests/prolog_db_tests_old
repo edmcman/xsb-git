@@ -1,5 +1,32 @@
+
+
+
+
+
+
 dbis_built
 dbs_built
+pr1(a,b,b) :- true.
+pr1(a,b,c) :- true.
+pr2(A,B,B) :- true.
+pr2a(a,A,b) :- true.
+pr3(2,2,2) :- true.
+pr3(2,2,3) :- true.
+pr3(2,3,2) :- true.
+pr3(2,3,3) :- true.
+pr3(3,2,2) :- true.
+pr3(3,2,3) :- true.
+pr3(3,3,2) :- true.
+pr3(3,3,3) :- true.
+pr4(2,2,2) :- true.
+pr4(2,2,3) :- true.
+pr4(2,3,2) :- true.
+pr4(2,3,3) :- true.
+pr4(3,2,2) :- true.
+pr4(3,2,3) :- true.
+pr4(3,3,2) :- true.
+pr4(3,3,3) :- true.
+pr5(1,27) :- true.
 success(difference1)
 success(difference1i)
 success(difference2)
@@ -41,3 +68,9 @@ test5 succeeded
 test5i succeeded
 test6 succeeded
 test6i succeeded
+test_retract_1:
+test_retract_2:
+test_retract_2a:
+test_retract_3:
+test_retract_4:
+test_retract_4:

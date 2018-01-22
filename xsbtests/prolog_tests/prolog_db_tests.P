@@ -1,7 +1,7 @@
 :- import empty_db/1, assert_in_db/2, assert_in_db/3, call_in_db/2 from prolog_db.
 :- import load_in_db/2, pure_call_in_db/2 from prolog_db.
 :- import union_db/3, intersect_db/3, difference_db/3, subset_db/2, disjoint_db/2,
-    clause_in_db/3, retractall_in_db/3, sym_diff_db/3
+    clause_in_db/3, dump_db/2, retractall_in_db/3, sym_diff_db/3
     from prolog_db.
 
 :- import empty_dbi/1, is_dbi/1, assert_in_dbi/3, assert1_in_dbi/3, assert_in_dbi/2,
@@ -15,6 +15,7 @@
 :- import reverse/2 from basics.
 
 test :- testdb,fail.
+test :- testretract,fail.
 test :- testdbops,fail.
 test :- testdbi,fail.
 test :- testdbiops,fail.
@@ -411,7 +412,48 @@ naive_sym_diff_db(DB1,DB2,DB3) :-
 	empty_db(DB0),
 	assert_in_db(Clauses,DB0,DB3).
 
+:- import numbervars/1 from num_vars.
+mydump(DB) :-
+    (do_all
+     clause_in_db(Head,Body,DB),
+     numbervars(Head-Body),
+     writeq(Head), write(' :- '), writeq(Body),
+     writeln('.')
+    ).
 
 
-
-
+testretract :-
+    nl, writeln('test_retract_1:'),
+    assert_in_db([pr1(a,b,b),pr1(a,a,b),pr1(a,b,c)],[],DB0),
+    retractall_in_db(pr1(X,X,_Y),DB0,DB1),
+    mydump(DB1).
+testretract :-
+    nl, writeln('test_retract_2:'),
+    assert_in_db([pr2(A,B,B),pr2(A,A,B),pr2(A,B,_C)],[],DB0),
+    retractall_in_db(pr2(x,x,y),DB0,DB1),
+    mydump(DB1).
+testretract :-
+    nl, writeln('test_retract_2a:'),
+    assert_in_db([pr2a(A,B,B),pr2a(A,A,B),pr2a(A,B,_C),pr2a(a,_X,b)],[],DB0),
+    retractall_in_db(pr2a(A,x,A),DB0,DB1),
+    mydump(DB1).
+testretract :-
+    nl, writeln('test_retract_3:'),
+    findall(pr3(I,J,K),(for(I,1,3,1),for(J,1,3,1),for(K,1,3,1)),Clauses),
+    assert_in_db(Clauses,[],DB1),
+    retractall_in_db([pr3(1,_,_),pr3(_,1,_),pr3(_,_,1)],DB1,DB2),
+    mydump(DB2).
+testretract :-
+    nl, writeln('test_retract_4:'),
+    findall(pr4(I,J,K),(for(I,1,3,1),for(J,1,3,1),for(K,1,3,1)),Clauses),
+    assert_in_db(Clauses,[],DB1),
+    retractall_in_db([pr4(_,_,1),pr4(_,1,_),pr4(1,_,_)],DB1,DB2),
+    mydump(DB2).
+testretract :-
+    nl, writeln('test_retract_4:'),
+    findall(pr5(2,I),for(I,1,1000,1),L),
+    assert_in_db(pr5(1,27),DB0),
+    assert_in_db(L,DB0,DB1),
+    retractall_in_db(pr5(2,_),DB1,DB2),
+    mydump(DB2).
+    
