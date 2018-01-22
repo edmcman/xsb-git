@@ -138,29 +138,30 @@ retracts all clauses whose heads unify with @var{Goal} (or a term in
 @var{Goal} if @var{Goal} is a list) from @var{DB1} generating
 @var{DB2}.  ").
 
-retractall_in_db(Goals,DB0,DB) :-
-    (Goals == []
+retractall_in_db(Clauses0,DB0,DB) :-
+    (Clauses0 == []
      ->	DB = DB0
-     ; Goals = [Head|Heads]
-     ->	retractall1_in_db(Head,DB0,DB1),
-	retractall_in_db(Heads,DB1,DB)
-     ;	retractall_in_db(Heads,DB1,DB)
+     ; Clauses0 = [Clause|Clauses]
+     ->	retractall1_in_db(Clause,DB0,DB1),
+	retractall_in_db(Clauses,DB1,DB)
+     ;	retractall1_in_db(Clauses0,DB0,DB)
     ).
 
-retractall_in_dbi(Goals,H0,H) :-
+retractall_in_dbi(Clauses,H0,H) :-
     intern_termhash(DB0,H0),
-    retractall_in_db(Goals,DB0,DB),
+    retractall_in_db(Clauses,DB0,DB),
     intern_termhash(DB,H).
 
-retractall1_in_db(Goal,DB0,DB) :-
-    valid_db(DB0,'retractall_in_db/3'),
-    findall((Goal:-Body), clause_in_db(Goal,Body,DB0), Clauses),
-    retract_list_in_db(Clauses,DB0,DB).
+%% DSWDSW: check if initial sequence of Head is bound and rest is
+%% free, and if so, go to that point and delete the entire subtrie.
 
-retract_list_in_db([],DB,DB).
-retract_list_in_db([(Head:-Body)|Clauses],DB0,DB) :-
-	remove_from_trie(Head,Body,DB0,DB1),
-	retract_list_in_db(Clauses,DB1,DB).
+retractall1_in_db(Clause,DB0,DB) :-
+    valid_db(DB0,'retractall_in_db/3'),
+    (Clause = (Head:-Body)
+     ->	true
+     ;	Head = Clause
+    ),
+    remove_from_trie(Head,Body,DB0,_Vars,DB).
 
 :- comment(clause_in_db/3,"@pred{clause_in_db(?Head,?Body,+DB)}
 unifies, in turn, @var{Head} and @var{Body} with the head and body of
@@ -170,12 +171,18 @@ clause_in_db(Head,Body,DB) :-
     valid_db(DB,'clause_in_db/3'),
     clause_in_db0(Head,Body,DB).
 
-clause_in_db0(Head,Body,DB) :-
-    find_in_trie(Head,Body,DB).
-
 clause_in_dbi(Head,Body,H) :-
     intern_termhash(DB,H),
     clause_in_db(Head,Body,DB).
+
+clause_in_db0(Head,Body,DB) :-
+    find_in_trie(Head,Body,DB).
+
+fact_in_db(Head,DB) :-
+    clause_in_db(Head,true,DB).
+
+fact_in_dbi(Head,DB) :-
+    clause_in_dbi(Head,true,DB).
 
 :- comment(call_in_db/2, "@pred{call_in_db(+Goal,+DB)} will call the
 goal @var{Goal} in the database @var{DB}, binding variables in
@@ -188,10 +195,12 @@ call_in_db(Goal,DB) :-
 call_in_db0(true,_DB) :- !.
 call_in_db0((A,B),DB) :- !, call_in_db0(A,DB), call_in_db0(B,DB).
 call_in_db0(\+(G),DB) :- !, \+ call_in_db0(G,DB).
+call_in_db0(tnot(G),DB) :- !, tnot db_table_call(DB,G).
 call_in_db0((C->A;B),DB) :- !,
     (call_in_db0(C,DB) -> call_in_db0(A,DB) ; call_in_db0(B,DB)).
 call_in_db0((A;B),DB) :- !, (call_in_db0(A,DB) ; call_in_db0(B,DB)).
 call_in_db0(table(Goal),DB) :- !, db_table_call(DB,Goal).
+call_in_db0(in_db(G),DB) :- !, call(G,DB).
 call_in_db0(G,_DB) :- functor(G,F,A), std_xsb:standard_symbol(F,A,_), !,
     standard:call_c(G).
 call_in_db0(G,DB) :-
@@ -338,7 +347,7 @@ add_to_trie_ground_list([Term|TermList],Value,Trie0,Trie) :-
      ;	Term =.. [_|SubTerms],
 	basics:append(SubTerms,TermList,NTermList)
     ),
-    add_to_hash(Term,NewSubTrie,OldSubTrie,Trie0,Trie1),
+    update_hash(Term,NewSubTrie,OldSubTrie,Trie0,Trie1),
     add_to_trie_ground_list(NTermList,Value,OldSubTrie,NewSubTrie),
     db_comps(Trie1,HashBits,NumInTab,HashTab),
     (NumInTab < floor(2**HashBits)
@@ -423,14 +432,14 @@ my_member(X,[Y|L]) :-
 	)
     ).
 
-:- comment(add_to_hash/5,
-"add_to_hash(+Term,?NewVal,-OldVal,+HashTable0,-HashTable) adds a new
+:- comment(update_hash/5,
+"update_hash(+Term,?NewVal,-OldVal,+HashTable0,-HashTable) adds a new
 key-value pair (or finds an existing pair), Term and NewVal, to the
 hash table HashTable0 producing the new hash table HashTable.  OldVal
 is bound to previous value for this key in the hash table; and [] if
 none.").
 
-add_to_hash(Term,NewVal,OldVal,HT0,HT) :-
+update_hash(Term,NewVal,OldVal,HT0,HT) :-
     db_comps(HT0,HashBits,NumInTab,HashTable),
     Size is floor(2**HashBits),
     machine:term_hash(Term,Size,HashCode),
@@ -518,31 +527,67 @@ add_to_ordered_list([Val0|List],Val,MList) :-
 	add_to_ordered_list(List,Val,MList1)
     ).
 
-:- comment(remove_from_trie/4,
-"remove_from_trie(+Term,+Value,+Trie0,-Trie) removes the term, Term,
+:- comment(remove_from_trie/5,
+"remove_from_trie(+Term,+Value,+Trie0,-Vars,-Trie) removes the term, Term,
 with value, Value, from the trie Trie0 yielding Trie.").
-remove_from_trie(Term,Value,Trie0,Trie) :-
-    remove_from_trie_list([Term],Value,Trie0,Trie).
+remove_from_trie(Term,Value,Trie0,Vars,Trie) :-
+    remove_from_trie_list([Term],Value,Trie0,Vars,Trie).
 
-:- comment(remove_trom_trie_list/4,
-"remove_from_trie_list(+TermList,?Value,+Trie0,-Trie) removes the term
+:- comment(remove_trom_trie_list/5,
+"remove_from_trie_list(+TermList,?Value,+Trie0,-Vars,-Trie) removes the term
 list, TermList, with value, Value, from the trie, Trie0, yielding
 trie, Trie. ").
-remove_from_trie_list([],Value,OValues,NValues) :-
-    remove_from_ordered_list(OValues,Value,NValues).
-remove_from_trie_list([Term|TermList],Value,Trie0,Trie) :-
+remove_from_trie_list([],Value,OValues,_Vars,NValues) :-
+    (nonvar(Value)
+     ->	remove_from_ordered_list(OValues,Value,NValues)
+     ;	NValues = []
+    ).
+remove_from_trie_list([Term|TermList],Value,Trie0,Vars,Trie) :-
+    (is_most_general_term([Value,Term|TermList])
+     ->	Trie = [] %, standard:writeln(stopped([Term|TermList]))    % done!
+     ;	(nonvar(Term), Term = '$VAR'(VN), integer(VN)
+	 -> basics:log_ith(VN,Vars,NTerm)
+	 ;  NTerm = Term
+	),
+	findall([NTerm|TermList],
+		(find_in_hash(NTerm,_,Trie0),
+		 \+ (NTerm = '$VAR'(VN0), integer(VN0))
+		),
+		TermLists),
+	remove_from_trie_lists(TermLists,NTerm,Value,Trie0,Vars,Trie1),
+	findall(['$VAR'(VN1)|TermList],
+		find_in_hash('$VAR'(VN1),_,Trie0),
+		VTermLists),
+	remove_from_trie_lists(VTermLists,NTerm,Value,Trie1,Vars,Trie)
+    ).
+
+remove_from_trie_lists([],_,_,Trie,_Vars,Trie).
+remove_from_trie_lists([TL|TLs],Term,Value,Trie0,Vars,Trie) :-
+    (TL = ['$VAR'(VN)|_]
+     ->	(copy_term(TL-Vars,NTL-NVars),
+	 basics:log_ith(VN,NVars,Term) % new vars
+	 -> remove_from_trie_list_nv(NTL,Value,Trie0,NVars,Trie1)
+	 ;  Trie1 = Trie0
+	)
+     ;	remove_from_trie_list_nv(TL,Value,Trie0,Vars,Trie1)
+    ),
+    remove_from_trie_lists(TLs,Term,Value,Trie1,Vars,Trie).
+
+remove_from_trie_list_nv([Term|TermList],Value,Trie0,Vars,Trie) :-
     (atomic(Term)
+     ->	NTermList = TermList
+     ; Term = '$VAR'(_)
      ->	NTermList = TermList
      ;	Term =.. [_|SubTerms],
 	basics:append(SubTerms,TermList,NTermList)
     ),
-    add_to_hash(Term,NewSubTrie,OldSubTrie,Trie0,Trie1),
-    remove_from_trie_list(NTermList,Value,OldSubTrie,NewSubTrie),
+    update_hash(Term,NewSubTrie,OldSubTrie,Trie0,Trie1),
+    remove_from_trie_list(NTermList,Value,OldSubTrie,Vars,NewSubTrie),
     ((NewSubTrie == [] ; NewSubTrie = ht(_,_,[]))
      ->	remove_from_hash(Term,_OldVal,Trie0,Trie)
      ;	Trie = Trie1
     ).
-
+	
 :- comment(remove_trom_hash/4,
 "remove_from_hash(+Term,?OldVal,+HashTable0,-HashTable) removes the
 entry for the pair Term and OldVal from the hash table, HashTable0,
@@ -552,6 +597,8 @@ remove_from_hash(Term,OldVal,HT0,HT) :-
     Size is floor(2**HashBits),
     machine:term_hash(Term,Size,HashCode),
     (atomic(Term)
+     ->	Key = Term
+     ; Term = '$VAR'(I), integer(I)
      ->	Key = Term
      ;	functor(Term,Fun,Ari),
 	Key = Fun/Ari
@@ -677,7 +724,9 @@ read_terms_to_trie(IStr,DB0,DB) :-
 
 
 my_unnumbervars(Term,Vars,NTerm) :-
-    (var(Term)
+    (var(Vars)			% no vars, so must be ground
+     ->	NTerm = Term
+     ; var(Term)
      ->	NTerm = Term
      ;	atomic(Term)
      ->	NTerm = Term
@@ -1199,6 +1248,56 @@ subset_values(V1s,V2s) :-
     ).
 
 /******************************************************/
+subsumed_dbi(H1,H2) :-
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
+    subsumed_db(DB1,DB2).
+
+subsumed_db(DB1,DB2) :-
+    difference_db(DB1,DB2,DDB),
+    findall((H:-B),clause_in_db(H,B,DDB),Clauses),
+    all_subsumed(Clauses,DB2).
+
+all_subsumed([],_).
+all_subsumed([(Head:-Body)|Clauses],DB) :-
+    (Body = true
+     ->	subsumed_in_db(Head,DB)
+     ;	subsumed_rule_in_db(Head,Body,DB)
+    ),
+    all_subsumed(Clauses,DB).
+
+subsumed_in_db(G,DB) :-
+    term_variables(G,Vars),
+    call_in_db(G,DB),
+    is_most_general_term(Vars).
+
+%% Hack for rules; must exist another single rule with eq-shorter body
+%% with all subgoals subsuming this body
+subsumed_rule_in_db(Head,Body,DB) :-
+    debugger:trace,
+    term_variables(Head,Vars),
+    clause_in_db(Head,GBody,DB),
+    is_most_general_term(Vars),
+    subsumes_goal_lists(GBody,Body).
+
+subsumes_goal_lists(GBody,Body) :-
+    (GBody = (G1,Gs)
+     ->	subsumes_some(G1,Body),
+	subsumes_goal_lists(Gs,Body)
+     ;	subsumes_some(GBody,Body)
+    ).
+
+subsumes_some(G,Body) :-
+    (Body = (B1,Bs)
+     ->	(subsumes_chk(G,B1)
+	 -> true
+	 ;  subsumes_some(G,Bs)
+	)
+     ;	subsumes_chk(G,Body)
+    ).
+
+
+/******************************************************/
 
 disjoint_db(DB1,DB2) :-
     (DB1 == DB2
@@ -1277,6 +1376,16 @@ disjoint_values(V1s,V2s) :-
     ).
 
 /**********************************************************/
+/* Add op to make a copy of a predicate, or maybe a subpart of a trie.
+I.e., give a new name (initial sequence) and add the initial sequence
+and point to same subtrie for the copy.  E.g.,
+trie_copy(p(a,q(_,_),_,_), p(a,r(_,_),_,_), DB0, DB).  Then for every
+p(a,q(A,B),C,D) in trie, it adds p(a,r(A,B),C,D).  If no r term is
+there, it does copy, just adding r/2 node and pointing to other trie.
+If r-terms are already there, then it does a union and replacing that
+r-term subtrie with the unioned one.
+*/
+/**********************************************************/
 
 db_comps(DB,B,N,H) :-
     (DB=[], B=2, N=0, H=[]
@@ -1322,37 +1431,6 @@ fix_ht_size(HBits,NNum,HT,DB) :-
 	db_comps(DB,GHBits,NNum,NHT)
     ).
 
-/********** recursive
-:- export fix_db_sizes/3.
-fix_db_sizes(DB0,DB,Changed) :-
-    (DB0 == []
-     ->	DB = DB0
-     ;	db_comps(DB0,HBits,Num,HT0),
-	fix_ht_sizes(HT0,NNum,HT,Changed0),
-	(var(Changed0), NNum =:= Num
-	 -> DB = DB0
-	 ;  Changed = Changed0,
-	    fix_ht_size(HBits,NNum,HT,DB)
-	)
-    ).
-
-fix_ht_sizes(HT0,Num,HT,Changed) :-
-    (HT0 == []
-     ->	Num = 0, HT = []
-     ; HT0 @= [_|_]
-     ->	length(HT0,Num), HT = HT0
-     ;	h_comps(HT0,H1,H2,H3,H4),
-	fix_ht_sizes(H1,N1,H1f,Changed),
-	fix_ht_sizes(H2,N2,H2f,Changed),
-	fix_ht_sizes(H3,N3,H3f,Changed),
-	fix_ht_sizes(H4,N4,H4f,Changed),
-	Num is N1+N2+N3+N4,
-	(var(Changed)
-	 -> HT0 = HT
-	 ;  h_comps(HT,H1f,H2f,H3f,H4f)
-	)
-    ).
-**********/
 
 %% test:
 /*
