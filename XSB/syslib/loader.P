@@ -400,6 +400,7 @@ wcs_undefined(Term):- not_exists(wcs_undefined(Term)).
 handle_undefined_pred(PSC,Term) :-
         psc_name(PSC,Name),psc_arity(PSC,Arity),
 	psc_env(PSC, Env), 
+	\+ standard:'_$multifile'(Term),
 	(Env =:= T_UNLOADED
 	 ->	% is "imported"
 		psc_mod(PSC, ModPSC),
