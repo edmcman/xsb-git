@@ -3,6 +3,10 @@
 :- import union_db/3, intersect_db/3, difference_db/3, subset_db/2, disjoint_db/2,
     clause_in_db/3, dump_db/2, retractall_in_db/3, sym_diff_db/3
     from prolog_db.
+:- import union_in_db/5, copy_in_db/4, equal_in_db/3, intersect_in_db/5,
+    difference_in_db/5, subset_in_db/3, disjoint_in_db/3, sym_diff_in_db/5,
+    materialize_in_db/4
+    from prolog_db.
 
 :- import empty_dbi/1, is_dbi/1, assert_in_dbi/3, assert1_in_dbi/3, assert_in_dbi/2,
    retractall_in_dbi/3, clause_in_dbi/3, call_in_dbi/2, load_in_dbi/3, load_in_dbi/2,
@@ -19,6 +23,7 @@ test :- testretract,fail.
 test :- testdbops,fail.
 test :- testdbi,fail.
 test :- testdbiops,fail.
+test :- testindbops,fail.
 test.
 
 testdb :-
@@ -157,7 +162,7 @@ testdbops :-
      (disjoint_db(DBRa,DB2) -> A=1 ; A=0),
      naive_difference_db(DB1,DB2,DBRb),
      (naive_disjoint_db(DBRb,DB2) -> B=1 ; B=0),
-     (DBRa == DBRb -> writeln(success(disjoint1)) ; writeln(error(disjoint1)))
+     (DBRa == DBRb, A==B -> writeln(success(disjoint1)) ; writeln(error(disjoint1)))
     ),
     (do_all
      sym_diff_db(DB1,DB2,DBR),
@@ -324,7 +329,8 @@ testdbiops :-
      (disjoint_dbi(HRa,H2) -> A=1 ; A=0),
      naive_difference_db(DB1,DB2,DBRb),
      (naive_disjoint_db(DBRb,DB2) -> B=1 ; B=0),
-     (DBRa == DBRb -> writeln(success(disjoint1i)) ; writeln(error(disjoint1i)))
+     (DBRa == DBRb, B == A
+      -> writeln(success(disjoint1i)) ; writeln(error(disjoint1i)))
     ),
     (do_all
      sym_diff_dbi(H1,H2,HR),
@@ -363,8 +369,10 @@ pdb(Sizes,DB) :-
     assert_in_db(Tups,DB0,DB).
 
 gentup([],[]).
-gentup([[Lo,Hi,Inc]|R],[I|S]) :-
+gentup([[Lo,Hi,Inc]|R],[PI|S]) :-
     for(I,Lo,Hi,Inc),
+    number_codes(I,IC),
+    atom_codes(PI,[0'p|IC]),
     gentup(R,S).
 
 for(Lo,Lo,Hi,_Inc) :-
@@ -456,4 +464,102 @@ testretract :-
     assert_in_db(L,DB0,DB1),
     retractall_in_db(pr5(2,_),DB1,DB2),
     mydump(DB2).
-    
+
+testindbops :-
+    pdb([[48,100,2],[48,120,3],[0,1,1]],(db1(p(_X,_Y,_Z))),DB1),
+    pdb([[0,110,2],[0,140,3],[0,2,2]],(db2(p(_X,_Y,_Z))),DB2),
+    pdb([[48,110,4],[48,140,6],[0,0,1]],(db3(p(_X,_Y,_Z))),DB3),
+%    assert_in_db([db1(p(a,b,c)),db1(p(a,d,e))],DB1),
+%    assert_in_db([db2(p(a,b,c)),db2(p(b,d,e))],DB2),
+%    DB3 = [],
+
+    union_db(DB1,DB2,DB4),
+    union_db(DB3,DB4,DB), % DB is database with 3 preds: db1/1, db2/1, db3/1
+    writeln(dbs_built),
+
+    (do_all
+     union_in_db(db1(_),db2(_),dbr(_),DB,DBA),  %DBA has union_in_db in dbr()
+     copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
+     copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
+     naive_union_db(DB1a,DB2a,DBRa),
+     union_db(DBRa,DBA,DBA1),
+     (equal_in_db(dbr(p(_,_,_)),p(_,_,_),DBA1)
+      -> writeln(success(union_in_db)) ; writeln(error(union_in_db)))
+    ),
+    (do_all
+     intersect_in_db(db1(_),db2(_),dbr(_),DB,DBA),
+     copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
+     copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
+     naive_intersect_db(DB1a,DB2a,DBRa),
+     union_db(DBRa,DBA,DBA1),
+     (equal_in_db(dbr(p(_,_,_)),p(_,_,_),DBA1)
+      -> writeln(success(intersect_in_db)) ; writeln(error(intersect_in_db)))
+    ),
+    (do_all
+     difference_in_db(db1(_),db2(_),dbr(_),DB,DBA),
+     copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
+     copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
+     naive_difference_db(DB1a,DB2a,DBRa),
+     union_db(DBRa,DBA,DBA1),
+     (equal_in_db(dbr(p(_,_,_)),p(_,_,_),DBA1)
+      -> writeln(success(difference_in_db)) ; writeln(error(difference_in_db)))
+    ),
+    (do_all
+     difference_in_db(db2(_),db1(_),dbr(_),DB,DBA),
+     copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
+     copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
+     naive_difference_db(DB2a,DB1a,DBRa),
+     union_db(DBRa,DBA,DBA1),
+     (equal_in_db(dbr(p(_,_,_)),p(_,_,_),DBA1)
+      -> writeln(success(difference2_in_db)) ; writeln(error(difference2_in_db)))
+    ),
+    (do_all
+     (subset_in_db(db3(_),db1(_),DB) -> A=1 ; A=0),
+     copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
+     copy_in_db(db3(p(_,_,_)),p(_,_,_),DB,DB3a),
+     (naive_subset_db(DB3a,DB1a) -> B=1 ; B=0),
+     (A==B -> writeln(success(subset1_in_db)) ; writeln(error(subset1_in_db)))
+    ),
+    (do_all
+     (subset_in_db(db1(_),db3(_),DB) -> A=1 ; A=0),
+     copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
+     copy_in_db(db3(p(_,_,_)),p(_,_,_),DB,DB3a),
+     (naive_subset_db(DB1a,DB3a) -> B=1 ; B=0),
+     (A==B -> writeln(success(subset2_in_db)) ; writeln(error(subset2_in_db)))
+    ),
+    (do_all
+     difference_in_db(db1(_),db2(_),dbr(_),DB,DBA),
+     (disjoint_in_db(dbr(_),db2(_),DBA) -> A=1 ; A=0),
+     copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
+     copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
+     naive_difference_db(DB1a,DB2a,DBRb),
+     (naive_disjoint_db(DBRb,DB2) -> B=1 ; B=0),
+     union_db(DBRb,DBA,DBA1),
+     (equal_in_db(dbr(p(_,_,_)),p(_,_,_),DBA1), A==B
+       -> writeln(success(disjoint1_in_db)) ; writeln(error(disjoint1_in_db)))
+    ),
+    (do_all
+     sym_diff_in_db(db1(_),db2(_),dbr(_),DB,DBA),
+     copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
+     copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
+     naive_sym_diff_db(DB1a,DB2a,DBRa),
+     union_db(DBRa,DBA,DBA1),
+     (equal_in_db(dbr(p(_,_,_)),p(_,_,_),DBA1)
+      -> writeln(success(sym_diff_in_db)) ; writeln(error(sym_diff_in_db)))
+    ),
+    (do_all
+     sym_diff_in_db(db2(_),db1(_),dbr(_),DB,DBA),
+     copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
+     copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
+     naive_sym_diff_db(DB2a,DB1a,DBRa),
+     union_db(DBRa,DBA,DBA1),
+     (equal_in_db(dbr(p(_,_,_)),p(_,_,_),DBA1)
+      -> writeln(success(sym_diff_in_db2)) ; writeln(error(sym_diff_in_db2)))
+    ),
+    (do_all
+     (sym_diff_in_db(db1(_),db1(_),dbr(_),DB,DB)
+      -> writeln(success(sym_diff_in_db3))
+      ;	 writeln(error(sym_diff_in_db3))
+     )
+    ),
+    true.

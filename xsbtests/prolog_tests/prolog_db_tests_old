@@ -6,6 +6,7 @@
 
 dbis_built
 dbs_built
+dbs_built
 pr1(a,b,b) :- true.
 pr1(a,b,c) :- true.
 pr2(A,B,B) :- true.
@@ -30,16 +31,22 @@ pr5(1,27) :- true.
 success(difference1)
 success(difference1i)
 success(difference2)
+success(difference2_in_db)
 success(difference2i)
+success(difference_in_db)
 success(disjoint1)
+success(disjoint1_in_db)
 success(disjoint1i)
 success(intersect1)
 success(intersect1i)
 success(intersect2)
 success(intersect2i)
+success(intersect_in_db)
 success(subset1)
+success(subset1_in_db)
 success(subset1i)
 success(subset2)
+success(subset2_in_db)
 success(subset2i)
 success(sym_diff1)
 success(sym_diff1i)
@@ -47,10 +54,14 @@ success(sym_diff2)
 success(sym_diff2i)
 success(sym_diff_def)
 success(sym_diff_defi)
+success(sym_diff_in_db)
+success(sym_diff_in_db2)
+success(sym_diff_in_db3)
 success(union1)
 success(union1i)
 success(union2)
 success(union2i)
+success(union_in_db)
 test1(app([],[a,b,c],[a,b,c]))
 test1(app([a,b,c],[],[a,b,c]))
 test1(app([a,b],[c],[a,b,c]))
