@@ -1,7 +1,9 @@
 
 :- import numbervars/1 from num_vars.
-:- import incr_assert/1,incr_invalid_subgoals/1,incr_is_invalid/1 from increval.
+:- import incr_assert/1 from increval.
+%:- import incr_assert/1,incr_invalid_subgoals/1,incr_is_invalid/1 from increval.
 %:- import incr_directly_depends/2 from increval.
+:- import subgoal_property/2 from curr_sym.
 
 :- table t_1a/1, t_1b/1, t_2a/1, t_2b/1, t_2c/1, t_3/1 as incremental.
 :- dynamic d_1/1 as incremental.
@@ -39,6 +41,12 @@ test:- incr_is_invalid(t_2a(_)),writenln(incr_is_invalid(t_2a(_))),fail.
 test.
 
 writenln(Term):- numbervars(Term),writeln(Term).
+
+incr_is_invalid(TermSpec):- subgoal_property(TermSpec,[incremental,invalid]).
+
+incr_invalid_subgoals(List):-
+    findall(Term,subgoal_property(Term,[incremental,invalid]),List1),
+    sort(List1,List).
 
 end_of_file.
 
