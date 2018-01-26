@@ -48,7 +48,7 @@
 	set_tmp_file/3,
 	get_redir_url/2, 
 	post_data/2, 
-	post_data/3, 
+	post_data/4, 
 	post_us_pair/3, 
 	get_us_pair/3, 
 	delete_us_pair/3.
@@ -279,23 +279,23 @@ set_tmp_file(DirEnc, FileUnEnc, TmpFile) :-
 /* Post data if output stream */
 %% This one is used when we don't care about the return from the server
 post_data(Atom, write) :- 
-        post_data(Atom, write,Doc),
-        Doc \= ''.
-%% This one is used when we DO care about the return from the server
-post_data(Atom, write,Doc) :- 
-        %% in case of POST we are not getting errors/warnings - needs fixing
-	load_page(url(Atom), [post(true)], _, Doc, Warn), 
-        %% uncomment to see what gets returned
-        %%writeln(debug=Doc),
-        %% load_page_warn/5 takes the temp file into which we wrote post data
-        %% and passes it to the POST action.
-        %% Here Doc will be whatever the server returns in response to POST.
+        post_data(Atom, write,Doc,Warn),
         (Warn \= [] -> writeln(Warn)
         ; true
-        ).
-
+        ),
+        Doc \= ''.
 post_data(_, read).
-post_data(_, read,_).
+
+%% This one is used when we DO care about the return from the server
+%% post_data(+Atom,read/write,-Doc,-Warn)
+post_data(Atom, write,Doc,Warn) :- 
+        %% In case of POST we are not getting errors/warnings - needs fixing
+        %% The load_page_warn/5 predicate (the main workhorse in load_page/5)
+        %% takes the temp file into which we wrote the post data and passes
+        %% it to the POST action.
+        %% Here Doc will be whatever the server returns in response to POST.
+	load_page(url(Atom), [post(true)], _, Doc, Warn).
+post_data(_, read,_,_).
 
 post_us_pair(Atom, Mode, Stream) :- 
 	assert:asserta(us_pair(Atom, Mode, Stream)).
