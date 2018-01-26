@@ -570,19 +570,21 @@ predicate_property(Term, Property) :-	% This takes care of global
 	  psc_properties(PSC, Property)
 	).
 
-psc_properties(PSC, Property) :- 
+
+    psc_properties(PSC, Property) :- 
 	psc_type(PSC, Type),
-	( Type =:= T_ORDI -> Property = unclassified
+%	( Type =:= T_ORDI -> Property = unclassified
+        ( Type =:= T_ORDI -> psc_env(PSC,Env),Env = T_IMPORTED,Property = unloaded
 	; Type =:= T_DYNA -> Property = (dynamic)
-	; Type =:= T_PRED -> Property = loaded
+	; Type =:= T_PRED -> Property = static
 	; Type =:= T_UDEF -> Property = unloaded
 	; Type =:= T_FORN -> Property = foreign
 	; Type =:= 14 -> Property = function ).
-psc_properties(PSC, static) :-
-	\+ (psc_type(PSC, Type), Type =:= T_DYNA).
+%psc_properties(PSC, static) :-
+%	\+ (psc_type(PSC, Type), Type =:= T_DYNA).
 psc_properties(PSC, Property) :-
 	psc_env(PSC, Env),
-	( Env =:= T_EXPORTED -> Property = exported
+ 	( Env =:= T_EXPORTED -> psc_type(PSC,Type),Type \== T_ORDI,Property = exported	
 	; Env =:= T_LOCAL -> Property = (local)
 	; Env =:= T_IMPORTED -> psc_mod(PSC, ModulePSC), 
 		       psc_name(ModulePSC, ModuleName), 
@@ -648,7 +650,33 @@ psc_meta_predicate_property_args([Meta| Metas], N, Arity, [Arg| Args]) :-
 */
 
 /*
-Put in predicate_property
+
+
+	 :- export set_predicate_property/2.
+	 /*
+	 % Could do nonincremental?
+	 set_predicate_property_1(PredSpec,subgoal_abstract(S)):-
+	     get_tabling_options(PredSpec,Options),
+	     check_table_option(subgoal_abstract(_),Options,PredSpec,yes),
+	     get_tif_property(Subgoal,subgoal_size,N),
+	 (N = 0 -> S = unlimited ; S = N).
+	 set_predicate_property_1(Subgoal,answer_abstract(S)):-
+	 %    get_tabling_options(PredSpec,Options),
+	 %    check_table_option(answer_abstract(_),Options,PredSpec,yes), % should work with anything.
+	     get_tif_property(Subgoal,answer_size,N),
+	 (N = 0 -> S = unlimited ; S = N).
+	 set_predicate_property_1(Subgoal,subsumptive):-
+	    get_tabling_options(PredSpec,Options),
+	    check_table_option(subsumptive,Options,PredSpec,Yes),
+	 set_predicate_property_1(Subgoal,variant):-
+	    get_tabling_options(PredSpec,Options),
+	    check_table_option(variant,Options,PredSpec,Yes),
+	 set_predicate_property_1(Subgoal,opaque):-
+	    check_table_option(opaque,Options,PredCList,_Override),
+	    get_tabling_options(PredSpec,Options),
+	    check_table_option(opaque,Options,PredSpec,Yes),
+	 
+	 Put in predicate_property
 subgoal_property_1(Subgoal,max_subgoal_size(S)):-
     get_tif_property(Subgoal,subgoal_size,N),
     (N = 0 -> S = unlimited ; S = N).
