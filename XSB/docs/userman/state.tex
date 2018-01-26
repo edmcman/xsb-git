@@ -1016,28 +1016,29 @@ module {\tt "usermod"} may be enumerated using:
     category.
 
 \begin{itemize}
-\item{\em Execition Type} which is one of
+\item{\em Code Type} which is one of
 \begin{itemize}
-\item{unclassified} The predicate symbol is not yet classified
-  according to this category. This property has various meanings.
-  Usually for exported predicate symbols in system or user defined
-  modules it means that the predicate is yet unloaded (because it has
-  not been used).  In {\tt usermod} it usually means that the
-  predicate is either a function symbol, or an unloaded predicate
-  symbol (including constants).
+%\item{\tt unclassified} The predicate symbol is not yet classified
+%  according to this category. This property has various meanings.
+%  Usually for exported predicate symbols in system or user defined
+%  modules it means that the predicate is yet unloaded (because it has
+%  not been used).  In {\tt usermod} it usually means that the
+%  predicate is either a function symbol, or an unloaded predicate
+%  symbol (including constants).
 %
-\item{dynamic} The predicate is dynamic.
+\item{\tt unloaded} The predicate indicator has been referenced, for
+  instance by a {\tt use\_module/2} or {\tt import/1} statement but
+  has not yet been loaded into XSB.~\footnote{In certain cases, the
+    reference may actually be to a non-predicate functor or atomic
+    symbol.  Such cases cannot be resolved until their module is
+    loaded.}
 %
-\item{\tt loaded} The predicate (including internal predicates) is a
-  Prolog predicate loaded into the module in question; this is always
-  the case for predicates in {\tt usermod}.
+\item{\tt dynamic} The predicate has been loaded and is dynamic.
 %
-\item{\tt unloaded} The predicate is yet unloaded into the module in
-  question.
-\item{\tt foreign} The predicate is a foreign predicate. This implies
-  that the predicate is already loaded in the system, because
-  currently there is no way for XSB to know that a predicate is a
-  foreign predicate until it is loaded in the system.
+\item{\tt static} The predicate has been loaded and is static.
+
+\item{\tt foreign} The predicate has been loaded and is a foreign
+  predicate.
 %
 \end{itemize}
 %
@@ -1186,7 +1187,7 @@ its value.  Currently supported combinations are:
 %
 The behavior and error cases for this predicate are the same as for
 {\tt subgoal\_property/2}, except that properties are only returned
-for the tabled subgoal that is a variant of {\tt Subgoal}.
+for the tabled subgoal that is a variant of {\tt Subgoal}.DF
 
 \standarditem{listing}{listing/0}
     Lists in the current output stream the clauses for all dynamic
