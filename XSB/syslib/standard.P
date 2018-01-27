@@ -2061,6 +2061,7 @@ call_expose(Goal) :-
 	).
 
 :- dynamic '_$multifile'/1.	% true of multifile skeletons
+:- dynamic '_$multifile_comp'/1. % true of multifile skeleton components
 
 multifile([P/A, _T1, T2]) :-	% T1 is not used
 	functor(TT1, P, A),	% TT1 is in usermod
@@ -2082,7 +2083,7 @@ multifile([P/A, _T1, T2]) :-	% T1 is not used
 	('_$multifile'(TT1)
 	 ->	true
 	 ;	assert0('_$multifile'(TT1),1,1,(multifile)),
-		assert0('_$multifile'(T2),1,1,(multifile)),
+		assert0('_$multifile_comp'(T2),1,1,(multifile)),
 	    	('_$index'(P/A,Inds,HSize),Inds =\= 0
 		 ->	add_index(T2,Inds,HSize),
 			add_index(TT1,0,0)

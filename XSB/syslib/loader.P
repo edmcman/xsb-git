@@ -397,10 +397,11 @@ load_pred1(PSC) :-
 wcs_undefined(Term):- not_exists(wcs_undefined(Term)).
 
 :- import arg/3 from standard.
+:- import '_$multifile_comp'/1 from standard.
 handle_undefined_pred(PSC,Term) :-
         psc_name(PSC,Name),psc_arity(PSC,Arity),
 	psc_env(PSC, Env), 
-	\+ standard:'_$multifile'(Term),
+	\+ '_$multifile_comp'(Term),
 	(Env =:= T_UNLOADED
 	 ->	% is "imported"
 		psc_mod(PSC, ModPSC),

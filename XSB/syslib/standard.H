@@ -112,7 +112,7 @@
    warningln/1,  % obsolete
    abort/1,	abort/0, abort_all/1, abort_level/1,
 	set_timer/1,
-   (import)/1,	(multifile)/1, '_$multifile'/1.
+   (import)/1,	(multifile)/1, '_$multifile'/1, '_$multifile_comp'/1.
 :- export cleanup_handler/2.
 :- export statistics/2.
 :- export use_module/3.
