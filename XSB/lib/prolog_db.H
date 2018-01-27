@@ -8,8 +8,21 @@
    load_in_dbi/2, subset_dbi/2, subsumed_dbi/2, union_dbi/3, intersect_dbi/3, difference_dbi/3,
    sym_diff_dbi/3, disjoint_dbi/2, dump_dbi/2, pure_call_in_dbi/2.
 
+:- export apply_op_in_db/6, apply_op_in_dbi/6.
+:- export apply_rel_op_in_db/4, apply_rel_op_in_dbi/4.
+:- export union_in_db/5, union_in_dbi/5.
+:- export intersect_in_db/5, intersect_in_dbi/5.
+:- export difference_in_db/5, difference_in_dbi/5.
+:- export sym_diff_in_db/5, sym_diff_in_dbi/5.
+:- export subset_in_db/3, subset_in_dbi/3.
+:- export subsumed_in_db/3, subsumed_in_dbi/3.
+:- export disjoint_in_db/3, disjoint_in_dbi/3.
+:- export equal_in_db/3, equal_in_dbi/3.
+:- export copy_in_db/4, copy_in_dbi/4.
+:- export materialize_in_db/4, materialize_in_dbi/4.
+
 :- import close/1, writeln/2, write_canonical/2, '=..'/2,
-   functor/3, open/3, throw/1, call/1, read/2, call/2
+   functor/3, open/3, throw/1, call/1, read/2
    from standard.
 :- import ','/2, ';'/2, (:)/2, is_most_general_term/1 from standard.
 
@@ -20,3 +33,6 @@
 
 :- import subsumes_chk/2 from subsumes.
 :- import intern_termhash/2 from machine.
+:- import phrase/3 from dcg.
+   
+:- import misc_error/1 from error_handler.
