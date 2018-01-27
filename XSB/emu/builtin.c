@@ -2086,7 +2086,8 @@ int builtin_call(CTXTdeclc byte number)
 	link_sym(CTXTc pair_psc(sym), (Psc)flags[CURRENT_MODULE]);
       else link_sym(CTXTc pair_psc(sym), global_mod);
     }
-    env_type_set(CTXTc pair_psc(sym), T_IMPORTED, T_ORDI, (xsbBool)value);
+    //    env_type_set(CTXTc pair_psc(sym), T_IMPORTED, T_ORDI, (xsbBool)value);
+    env_type_set(CTXTc pair_psc(sym), T_IMPORTED, T_UDEF, (xsbBool)value);
     break;
   }
 
