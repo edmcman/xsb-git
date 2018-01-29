@@ -4,31 +4,38 @@
 
 Various aspects of the state of an instance of XSB --- information
 about what predicates, modules, or dynamic clauses have been loaded,
-their object files, along with other information can be inspected in
-ways similar to many Prolog systems.  However, because the atom-based
-module system of XSB may associate structures with particular modules,
-predicates are provided to inspect these elements as well.  The
-following descriptions of {\em state} predicates use the terms {\em
-predicate indicator}, {\em term indicator} and {\em current module} to
-mean the following:
-\index{predicate indicator}
-\index{term indicator}
+their object files, along with information about the tabling
+properties, if any, that are associated with a given predicate.
+However, because the atom-based module system of XSB may associate
+structures with particular modules, predicates are provided to inspect
+these elements as well.  The following descriptions of {\em state}
+predicates use the terms {\em predicate indicator}, {\em term
+  indicator} and {\em current module} to mean the following:
+\index{predicate indicator} \index{term indicator}
 \begin{itemize}
-\item By {\em predicate indicator} \index{predicate indicator} we mean a
-      {\em compound term} of the form {\tt M:F/A} or simply {\tt F/A}.
-      When the predicate indicator is fully instantiated, {\tt M} and {\tt F}
-      are atoms representing the {\em module name} and the {\em functor} 
-      of the predicate respectively and {\tt A} is a non negative integer 
-      representing its {\em arity}.
+\item By {\em term indicator} \index{term indicator} we mean term {\tt
+  T} optionally combined with a module {\tt M}.  Here, the standard
+  definition is used: a term is a predicate or function symbol of
+  arity {\tt N} followed by a sequence of {\tt N} variables (enclosed
+  in parentheses if {\tt N} is greater than zero).
+
+  Since every term is associated with a module in XSB, the module of
+  $T$ may or may not be that of the module calling a state predicate.
+  To resolve any ambiguities, A term indicator may optionally be
+  prefixed by the module name, as {\tt M:Term}.
+
+  Example: {\tt usermod:append(\_,\_,\_)}
+\item By {\em predicate indicator} \index{predicate indicator} we mean
+  a term indicator {\em or} a compound term of the form {\tt M:F/A} or
+  simply {\tt F/A}, where {\tt M} is an atom representing a module,
+  {\tt F} is an atom representing the {\em functor} of the predicate
+  and {\tt A} is a non negative integer representing its {\em arity}.
+  If {\tt M} is specificed, the predicate indicator denotes a
+  predicate in that module.  Otherwise, the predicate is taken to be
+  in {\tt usermod}.\footnote{If the predicate indicator is a term
+    indicator, any bindings to its arguments are ignored.}
 
       Example: {\tt usermod:append/3}
-\item By {\em term indicator} \index{term indicator} we mean a predicate or
-      function symbol of arity N followed by a sequence of N variables
-      (enclosed in parentheses if N is greater than zero).  A term indicator
-      may optionally be prefixed by the module name, thus it can be of the
-      form {\tt M:Term}.
-
-      Example: {\tt usermod:append(\_,\_,\_)}
 \item A module {\tt M} becomes a {\em current (i.e. ``known'') module} as
       soon as it is loaded in the system or when another module that is
       loaded in the system imports some predicates from module {\tt M}.
@@ -963,41 +970,43 @@ Functor/Arity} and visible from the calling context of  {\tt current\_index/2}.
 \index{tabling!incremental}
 %??? need to define visible.
 \label{PredProp}
-\standarditem{predicate\_property(?Term\_Indicator, ?Property)}
-{predicate\_property/2}
-    The standard predicate {\tt predicate\_property/2} can be used to find 
-    the properties of any predicate that is visible to a particular module.
-    Succeeds iff {\tt Term\_Indicator} is a term indicator for a current 
-    predicate whose principal functor is a predicate having {\tt Property} 
-    as one of its properties. Or procedurally, {\tt Property} is unified 
-    with the currently known properties of the predicate having 
-    {\tt Term\_Indicator} as its skeletal specification.
-    
-    A brief description of {\tt predicate\_property/2} is as follows:
+\isoitem{predicate\_property(?Term\_Indicator, ?Property)}
+        {predicate\_property/2} 
+%
+{\tt predicate\_property/2} can be used to find the properties of any
+predicate known at a particular state of a session.  A brief
+description of {\tt predicate\_property/2} is as follows:
+% Succeeds iff {\tt Pred\_Indicator} is a term indicator for a
+%current predicate whose principal functor is a predicate having {\tt
+%Property} as one of its properties. Or procedurally, {\tt Property}
+%is unified with the currently known properties of the predicate
+%having {\tt Term\_Indicator} as its skeletal specification.
+%    
     \begin{itemize} 
-\item If {\tt Term\_Indicator} is not a variable, and is a structure
-	or atom, then {\tt Property} is successively unified with the
-	various properties associated with {\tt Term\_Indicator}.  If
-	{\tt Term\_Indicator} is not a known to the system, the call
-	succeeds with {\tt Property} successively unified to {\tt
-	exported} and {\tt unclassified}.  These properties can be
-	considered as a default for any structure or atom.
+\item If {\tt Term\_Indicator} is not a variable, but is a structure
+  or atom representing a known predicate at a particular state of a
+  session, then {\tt Property} is successively unified with the
+  various properties associated with that predicate.
+% If {\tt
+%    Term\_Indicator} is not known to the system, the call succeeds
+%  with {\tt Property} successively unified to {\tt exported} and {\tt
+%    unclassified}.  These properties can be considered as a default
+%  for any structure or atom.
 \item If {\tt Property} is bound to a valid predicate property, then {\tt
 	predicate\_property/2} successively unifies {\tt
 	Term\_Indicator} with the skeletal specifications of all
 	predicates known to the system having the specified {\tt
 	Property}.  
-\item If {\tt Term\_Indicator} is a variable, then
-	it is unified (successively through backtracking) with the
-	most general term for a predicate whose known properties are
-	unified with {\tt Property}.  
+\item If {\tt Term\_Indicator} is a variable, then it is unified
+  (successively through backtracking) with the most general term for a
+  predicate whose known properties unify with {\tt Property}.
 \item If {\tt Term\_Indicator}
 	is not a term indicator, or if {\tt Property} is not a valid
 	predicate property, the call fails.  
 \end{itemize} 
 \noindent
 For example, all the loaded predicate skeletal specifications in
-module {\tt "usermod"} may be enumerated using:
+module {\tt usermod} may be enumerated using:
 
     \stuff{
     \>   \>	| ?- predicate\_property(Pred, loaded).
@@ -1010,13 +1019,12 @@ module {\tt "usermod"} may be enumerated using:
     \>   \>	| ?- predicate\_property(blah:Pred, exported).
     }
 
-    Currently, the following properties are associated with predicates 
-    either implicitly or by declaration.  Double lines show property
-    categories, and a predicate can have at most one property of each
-    category.
+    Currently, the following categories and properties are associated
+    with predicates; a given predicate can have at most one property
+    of each category.
 
 \begin{itemize}
-\item{\em Code Type} which is one of
+\item The category {\em Code Type} which is one of
 \begin{itemize}
 %\item{\tt unclassified} The predicate symbol is not yet classified
 %  according to this category. This property has various meanings.
@@ -1042,7 +1050,7 @@ module {\tt "usermod"} may be enumerated using:
 %
 \end{itemize}
 %
-\item{\em Visibility Type} which can be one of
+\item The category {\em Visibility Type} which can be one of
 \begin{itemize}
 \item{\tt exported} The predicate symbol is exported by the module in
   question; in other words the predicate symbol is visible to any
@@ -1055,41 +1063,83 @@ module {\tt "usermod"} may be enumerated using:
   the module in question from module {\tt Mod}.
 %
 \end{itemize}
+\item{\em Tabling Properties}.  {\tt Property} unifies with properties
+  from the the following set of categories only if the denoted
+  predicate is tabled.
 %
-\item{\em Tabling Call Behavior} which can be one of 
 \begin{itemize}
-\item{\tt tabled(variant)} The predicate has been declared tabled and
-  to use call variance.
+\item The {\em Table Reuse Criterion} category, which is one of 
+\begin{itemize}
+\item{\tt [table\_reuse,variance]} The predicate has been declared
+  tabled and to use call variance.
 %
-\item{\tt tabled(subsumptive)} The predicate has been declared tabled and
-  to use call subsumption
+\item{\tt [table\_reuse,subsumption]} The predicate has been declared
+  tabled and to use call subsumption
 %
-\item{\tt tabled(default)} The predicate has been declared tabled and
-  to use the default tabling strategy of the session, which can be
-  either call variance or call subsumption.
+%\item{\tt tabled(default)} The predicate has been declared tabled and
+%  to use the default tabling strategy of the session, which can be
+%  either call variance or call subsumption.
 %
 \end{itemize}
-\item{\em Incremental Tabling Behavior} which can be one of 
-\begin{itemize}
-\item{\tt incremental} The predicate was declared as either
-  incremental dynamic or as incremental tabled; or
 %
-\item{\tt opaque} The predicate was declared as opaque to incremental
-  updates.
+\item The {\em Table Updating Behavior} category which can be one of 
+\begin{itemize}
+\item{\tt [table\_updating,incremental} The predicate was declared as
+  either incremental dynamic or as incremental tabled; or
+%
+\item{\tt [table\_updating,opaque]} The predicate was declared as
+  tabled and opaque to incremental updates.
+%
+\item{\tt [table\_updating,none]} The predicate is tabled, but is
+  outside of the incremental updating system.
+\end{itemize}
+%
+\item The {\em Ground Term Representation} category which can be one
+  of
+\begin{itemize}
+\item{\tt [ground\_term,intern} Ground calls and answers used in
+  tables for this predicate are interned.
+\item{\tt [ground\_term,trie} Ground calls and answers used in tables
+  for this predicate are represented via tries (this is the default
+  behavior for XSB).
+\end{itemize}
+\item The {\em Subgoal Abstraction} category
+\begin{itemize}
+\item{\tt [subgoal\_size,N]}.  If {\tt N}$>1$, indicates the size at
+  which tabled subgoals for the predicate are abstracted; if {\tt
+    N}$=0$, indicates that subgoal abdstraction is not used for this
+  predicate.
+\end{itemize}
+\item The {\em Answer Abstraction} category
+\begin{itemize}
+\item{\tt [answer\_size,N]}.  If {\tt N}$>1$, indicates the size at
+  which tabled answers for the predicate are abstracted; if {\tt
+    N}$=0$, indicates that answer abdstraction is not used for this
+  predicate.
+\end{itemize}
+\item The {\em Thread Sharing} category is active  only if XSB is
+  configured with multi-threading.
+\begin{itemize}
+\item{\tt [thread\_sharing,shared]}, which indicates that tables for
+  this predicate are shared among threads.
+\item{\tt [thread\_sharing,private]}, which indicates that tables for
+  this predicate are {\tt not} shared among threads.
+\end{itemize}
+
 \end{itemize}
 %
 \item{\tt spied} The predicate symbol has been declared spied (either
   conditionally or unconditionally).
 %
-\item{\tt shared} The predicate has been declared shared in the
-  multi-threaded engine.  This means that any dynamic code or tables
-  for this predicate will be shared among threads, but it does not
-  affect static, non-tabled code.  
+%\item{\tt shared} The predicate has been declared shared in the
+%  multi-threaded engine.  This means that any dynamic code or tables
+%  for this predicate will be shared among threads, but it does not
+%  affect static, non-tabled code.  
 %
 \item{\tt built\_in} The predicate symbol has the same
   Functor and Arity as one of XSB's standard predicates, and is
   available tothe user without needing to load a file or import
-  th epredicate from a module. 
+ th epredicate from a module. 
 %
 %\item{\tt built\_in} Same meaning as the property {\tt
 %  xsb\_standard\_pred}.  This property provides compatibility with
