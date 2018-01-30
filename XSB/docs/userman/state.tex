@@ -1125,7 +1125,10 @@ module {\tt usermod} may be enumerated using:
 \item{\tt [thread\_sharing,private]}, which indicates that tables for
   this predicate are {\tt not} shared among threads.
 \end{itemize}
-
+\item The {\em Answer Subsumption} property is active only if XSB is
+  configured with multi-threading.  {\tt [answer\_subsumption,on]}
+  indicates that answer subsumption is used for this predicate.  If
+  answer subsumption is not used, no return is made.
 \end{itemize}
 %
 \item{\tt spied} The predicate symbol has been declared spied (either
