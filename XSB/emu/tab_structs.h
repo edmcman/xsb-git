@@ -301,7 +301,8 @@ typedef struct Table_Info_Frame {
   unsigned int skip_forest_log:1;
   unsigned int incr_dyn_leaf:1;
   unsigned int intern_strs:1;
-  unsigned int unused:12;
+  unsigned int answer_subsumption:1;
+  unsigned int unused:11;
   //  byte intern_strs;		/* (bit) to indicate if variant table interns ground terms */
   DelTFptr del_tf_ptr;          /* pointer to first deletion frame for pred */
   BTNptr call_trie;		/* pointer to the root of the call trie */
@@ -326,6 +327,7 @@ typedef struct Table_Info_Frame {
 #define TIF_IncrDynLeaf(pTIF)      ( (pTIF)->incr_dyn_leaf )
 
 #define TIF_Interning(pTIF)         ( (pTIF)->intern_strs )
+#define TIF_AnswerSubsumption(pTIF)         ( (pTIF)->answer_subsumption )
 #define TIF_CallTrie(pTIF)	   ( (pTIF)->call_trie )
 #define TIF_Subgoals(pTIF)	   ( (pTIF)->subgoals )
 #define TIF_NextTIF(pTIF)	   ( (pTIF)->next_tif )

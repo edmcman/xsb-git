@@ -75,6 +75,7 @@
 #define SUBGOAL_SIZE  0
 #define ANSWER_SIZE   1
 #define INTERNING_GROUND 2
+#define TIF_ANSWER_SUBSUMPTION 3
 
 #define IS_SUBGOAL_FRAME 0
 #define IS_ASI           1

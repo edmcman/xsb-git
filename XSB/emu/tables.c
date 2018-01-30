@@ -957,6 +957,7 @@ inline TIFptr New_TIF(CTXTdeclc Psc pPSC) {
    TIF_Mark(pTIF) = 0;                                                  
    TIF_Visited(pTIF) = 0; 
    TIF_Interning(pTIF) = 0;  /* for now; figure out how to set... DSWDSW */
+   TIF_AnswerSubsumption(pTIF) = 0;  
    TIF_SkipForestLog(pTIF) = 0;
    TIF_DelTF(pTIF) = NULL;						
    TIF_Subgoals(pTIF) = NULL;						
