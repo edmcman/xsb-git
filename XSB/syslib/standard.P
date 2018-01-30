@@ -1275,6 +1275,9 @@ exec_table_option(nonincremental,Pred) :- !,
  	add_incr_table(Pred,NONINCREMENTAL).
 exec_table_option(opaque,Pred) :- !,
  	add_incr_table(Pred,OPAQUE).
+exec_table_option(ans_subsumption,PredSpec) :- !,
+	( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
+	set_tif_property(Term,answer_subsumption,1).
 exec_table_option(private,Pred) :- !,
 	thread_private(Pred).
 exec_table_option(shared,Pred) :- !,

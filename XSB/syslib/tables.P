@@ -38,7 +38,8 @@
 #include "incr_xsb_defs.h"
 
 /*----------------------------------------------------------------------*/
-:- export is_tabled/1.
+% truth_value/2
+
 is_tabled(Term):- 
 	term_psc(Term,Psc),
 	psc_tabled(Psc,T),
@@ -88,7 +89,8 @@ tv_answer_set_status_code(UNDEFINED_ANSWER_SET,  non_tabled_subgoal).
 tv_answer_set_status_code(COMPLETED_ANSWER_SET,  complete).
 tv_answer_set_status_code(INCOMPLETE_ANSWER_SET, incomplete_subgoal).
 
-    
+/*----------------------------------------------------------------------*/
+% table_state   
 /*
  * To obtain info about both subsumptive and variant predicates.
  * See the file ../emu/builtin.c for a description of the valid
@@ -424,8 +426,7 @@ A=1, C=1, and RET=ret(1,B).
 Not that if RET is most-general, then no variables in the current call
 were instantiated and so it subsumes the call in the table.
 
- */
-
+*/
 
 get_calls(CallTerm, Handle, Template) :-
 %   writeln(get_calls(CallTerm, Handle, Template)),
@@ -466,7 +467,6 @@ get_calls_for_table(PredSpec,Call) :-
 
 
 %get_call_from_sf(+SF,-Call):- 
-:- export get_call_from_sf/2.
 get_call_from_sf(SF,Call):- 
 	table_inspection_function(GET_CALL_FROM_SF,SF,Call,_,_).
 			      
@@ -604,6 +604,7 @@ get_returns_and_dls(CallStr, RetSkel, DLs) :-
 get_delay_lists(Leaf, DLs) :- get_delay_lists(Leaf, DLs).
 
 %------------
+% TES: Not sure if this is needed.
 
 get_returns_and_tvs(TableEntry, ReturnTemplate,TV) :-
 	findall('_$$get_returns_and_tvs'(TableEntry,ReturnTemplate,TV),
@@ -945,7 +946,7 @@ check_table_option(dynamic,Options,PredCList,_Override) :- !,
 	 ;  true).
 check_table_option(dyn,Options,PredCList,_Override) :- !,
 	check_table_option(dynamic,Options,PredCList,_HasDyn).
-% Assuming that we'll have subsumptive and opaque soon.
+% Assuming that we''ll have subsumptive and opaque soon.
 check_table_option(subsumptive,Options,PredCList,Override) :- !,
         ( (comma_member(variant,Options),Override=no) -> 
 	    table_error(('Cannot declare ',PredCList,
@@ -1019,7 +1020,7 @@ check_table_option(nonincremental,Options,PredCList,_Override) :- !,
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options nonincremental and opaque'))
 	 ;  true).
-% TLS: will be allowing subsumptive/opaque
+% TES: will be allowing subsumptive/opaque
 check_table_option(opaque,Options,PredCList,_Override) :- !,
         (comma_member(incremental,Options) -> 
 	    table_error(('Cannot declare ',PredCList,
@@ -1036,7 +1037,7 @@ check_table_option(opaque,Options,PredCList,_Override) :- !,
         (comma_member(dynamic,Options) -> 
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options opaque and dynamic'))
-	 ;  true). % TLS: will be allowing private/incremental
+	 ;  true). % TES: will be allowing private/incremental
 check_table_option(private,Options,PredCList,_Override) :- !,
         (comma_member(shared,Options) -> 
 	    table_error(('Cannot declare ',PredCList,
@@ -1061,6 +1062,42 @@ check_table_option(shared,Options,PredCList,_Override) :- !,
 	 ;  true).
 check_table_option(answer_abstract(_),_Options,_PredCList,_Override) :- !. % should work with anything.
 check_table_option(intern,Options,PredCList,_Override) :- !,
+	(comma_member(subgoal_abstract(X),Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		      ' as tabled with options intern and ',subgoal_abstract(X)))
+	 ;	true
+	),
+	(comma_member(dynamic,Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and dynamic'))
+	 ;	true
+	),
+	(comma_member(subsumptive,Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and subsumptive'))
+	 ;	true
+	),
+	(comma_member(approximate(X1),Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and ',approximate(X1)))
+	 ;	true
+	),
+	(comma_member(incremental,Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and incremental'))
+	 ;	true
+	),
+	(comma_member(opaque,Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and opaque'))
+	 ;	true
+	),
+	(comma_member(answer_abstract(X2),Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		     ' as tabled with options intern and ',answer_abstract(X2)))
+	 ;	true
+	).
+check_table_option(ans_subsumption,Options,PredCList,_Override) :- !,
 	(comma_member(subgoal_abstract(X),Options)
 	 ->	table_error(('Cannot declare ',PredCList,
 		      ' as tabled with options intern and ',subgoal_abstract(X)))
@@ -1190,6 +1227,7 @@ set_tif_property(Term,Property,Value):-
 tif_translate(subgoal_size,SUBGOAL_SIZE).
 tif_translate(answer_size,ANSWER_SIZE).
 tif_translate(intern,INTERNING_GROUND).
+tif_translate(answer_subsumption,TIF_ANSWER_SUBSUMPTION).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Forest Logging
@@ -2317,6 +2355,49 @@ max_memory_header:-
   format("To support debugging and diagnosis, the limit has been increased by 20\%.~n",[]),
   format("~n  * To continue set the flag to allow more memory, and then type Ctrl-d~n",[]),
   format("  * To abort, enter the command 'abort/0'~n",[]).
+
+/*---------------------------------------------------------------------*/
+% get_tabling options
+
+% assumes predspec is nonvar
+process_predspec(PredSpec,Term):-
+    PredSpec = :(Module, T),!,
+    (T = F/A -> functor(T1,F,A) ; T1 = T),
+    term_new_mod(Module, T1, Term).
+process_predspec(PredSpec,Term):-
+    (PredSpec = F/A -> functor(Term,F,A) ; Term = PredSpec).
+    
+:- export get_tabling_options/2.
+:- import psc_get_incr/2,psc_shared/2 from machine.
+:- import xsb_configuration/2 from xsb_configuration.
+
+get_tabling_options(PredSpec,List):-
+    setof(Option,PredSpec^get_tabling_option(PredSpec,Option),List).
+
+get_tabling_option(PredSpec,Option):- 
+    (var(PredSpec) -> instantiation_error(get_tabling_options/2,1) ; true),
+    process_predspec(PredSpec,Term),
+    (  term_psc(Term,PSC),
+       psc_tabled(PSC, Tabled),Tabled > 0,
+       get_tabling_option_psc(PSC,Option)
+     ; get_tif_property(Term,Property,Value),
+       (Property = intern ->
+	    (Value = 0 -> Option = [ground_term,trie] ; Option = [ground_term,intern])
+        ;   Option = [Property,Value] ) ).
+
+get_tabling_option_psc(PSC,Option):- 
+	psc_tabled(PSC, Tabled),
+	 ( Tabled == T_VARIANT -> Option = [table_reuse,variance]
+          ; Tabled == T_SUBSUMPTIVE -> Option = [table_reuse,subsumption] ) .
+get_tabling_option_psc(PSC,Option):- 
+	psc_get_incr(PSC, Incr),
+	( Incr == INCREMENTAL -> Option = [updating,incremental] 
+	 ; Incr == OPAQUE -> Option = [updating,opaque]
+	 ; Option = [updating,none]).
+get_tabling_option_psc(PSC,Option):-
+        \+ xsb_configuration(engine_mode,'slg-wam'),
+	psc_shared(PSC, Shared),
+	( Shared =\= 0 -> Option = shared ; Option = private ).
 
 /*======================================================================*/
 % ANSWER COMPLETION CODE
