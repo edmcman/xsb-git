@@ -950,20 +950,23 @@ by a sequence of distinct variables.  Such a term uniquely determines
 a position in a term trie (i.e., prolog DB). ").
 
 is_prefix_term(HeadTail,TailLen) :-
-    tail_from_prefix_term(HeadTail,Tail),
+    prefix_term(HeadTail,_Pre,Tail),
     basics:length(Tail,TailLen).
 
-tail_from_prefix_term(HeadTail,TailVars) :-
-    HeadTail = [Head|Tail],
-    (ground(Head)
-     ->	tail_from_prefix_term(Tail,TailVars)
-     ;	(var(Head)
-	 -> is_most_general_term(HeadTail),
-	    TailVars = HeadTail
-	 ;  Head =.. [_|Args],
-	    basics:append(Args,Tail,ArgsTail),
-	    tail_from_prefix_term(ArgsTail,TailVars)
-	)
+prefix_term(PT,Prefix,TailVars) :-
+    PT = [Head|Tail],
+    (var(Head)
+     ->	is_most_general_term(PT),
+	TailVars = PT,
+	Prefix = []
+     ; atomic(Head)
+     ->	Prefix = [Head|PrefixT],
+	prefix_term(Tail,PrefixT,TailVars)
+     ;	Head =.. [Functor|Args],
+	functor(Head,Functor,Arity),
+	basics:append(Args,Tail,ArgsTail),
+	Prefix = [Functor/Arity|PrefixT],
+	prefix_term(ArgsTail,PrefixT,TailVars)
     ).
 
 
@@ -1868,18 +1871,29 @@ would be available for use in a call to @pred{join_in_db/6}.  ").
 reindex_in_db(PrefI,PrefO,DB0,DB) :-
     cvt_pa(PrefI,PrefIa),
     cvt_pa(PrefO,PrefOa),
-    find_hashtable_for_prefix([PrefIa],DB0,TLen,IHT),
-    tail_from_prefix_term([PrefIa],IVars),
+    prefix_term([PrefIa],IPr,IVars),
     is_most_general_term(IVars),
-    tail_from_prefix_term([PrefOa],OVars),
+    prefix_term([PrefOa],OPr,OVars),
+    (OPr == IPr
+     ->	misc_error(('[prolog_in_db:reindex_in_db] Output must be different from input: ',OPr))     ;	true
+    ),
     is_most_general_term(OVars),
     num_common_tail_vars(IVars,OVars,NCom),
-    NArgs is TLen - NCom,
-    basics:length(IArgs,NArgs),
-    basics:append(IArgs,_,IVars),
-    copy_term(PrefO,OPrefO),
-    check_prefix_term([PrefOa],TLen,'reindex_in_db/4'),
-    reindex_ht(IHT,IArgs,NArgs,OPrefO,PrefOa,DB0,DB).
+    (NCom =:= 0
+     ->	findall(PrefO,clause_in_db(PrefI,true,DB0),Clauses),
+	retractall_in_db(PrefO,DB0,DB1),
+	assert_in_db(Clauses,DB1,DB)
+     ;	find_hashtable_for_prefix([PrefIa],DB0,TLen,IHT),
+	(NCom =:= TLen
+	 -> copy_in_db(PrefIa,PrefOa,DB0,DB)
+	 ;  NArgs is TLen - NCom,
+	    basics:length(IArgs,NArgs),
+	    basics:append(IArgs,_,IVars),
+	    copy_term(PrefO,OPrefO),
+	    check_prefix_term([PrefOa],TLen,'reindex_in_db/4'),
+	    reindex_ht(IHT,IArgs,NArgs,OPrefO,PrefOa,DB0,DB)
+	)
+    ).
 
 :- comment(reindex_in_dbi/4, "@pred{reindex_in_dbi(+P1,+P2,+H0,?H)}
 performs the same operation as @pred{reindex_in_db/4} except it
@@ -2105,8 +2119,8 @@ will be in the goal @var{PrefI}.  ").
 materialize_in_db(PrefI,PrefO,DB0,DB) :-
     cvt_pa(PrefI,PrefIa),
     cvt_pa(PrefO,PrefOa),
-    tail_from_prefix_term([PrefIa],Tail),
-    tail_from_prefix_term([PrefOa],Tail),
+    prefix_term([PrefIa],_,Tail),
+    prefix_term([PrefOa],_,Tail),
     findall(PrefOa,call_in_db(PrefIa,DB0),Facts),
     retractall_in_db(PrefOa,DB0,DB1),
     assert_in_db(Facts,DB1,DB).
