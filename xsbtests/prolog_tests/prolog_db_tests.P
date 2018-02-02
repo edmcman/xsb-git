@@ -3,26 +3,37 @@
 :- import union_db/3, intersect_db/3, difference_db/3, subset_db/2, disjoint_db/2,
     clause_in_db/3, dump_db/2, retractall_in_db/3, sym_diff_db/3
     from prolog_db.
-:- import union_in_db/5, copy_in_db/4, equal_in_db/3, intersect_in_db/5,
-    difference_in_db/5, subset_in_db/3, disjoint_in_db/3, sym_diff_in_db/5,
-    materialize_in_db/4
-    from prolog_db.
-
 :- import empty_dbi/1, is_dbi/1, assert_in_dbi/3, assert1_in_dbi/3, assert_in_dbi/2,
    retractall_in_dbi/3, clause_in_dbi/3, call_in_dbi/2, load_in_dbi/3, load_in_dbi/2,
    subset_dbi/2, union_dbi/3, intersect_dbi/3, difference_dbi/3, sym_diff_dbi/3,
    disjoint_dbi/2, dump_dbi/2, pure_call_in_dbi/2 from prolog_db.
+
+
+:- import union_in_db/5, copy_in_db/4, equal_in_db/3, intersect_in_db/5,
+    difference_in_db/5, subset_in_db/3, disjoint_in_db/3, sym_diff_in_db/5,
+    materialize_in_db/4
+    from prolog_db.
+:- import union_in_dbi/5, copy_in_dbi/4, equal_in_dbi/3, intersect_in_dbi/5,
+    difference_in_dbi/5, subset_in_dbi/3, disjoint_in_dbi/3, sym_diff_in_dbi/5,
+    materialize_in_dbi/4
+    from prolog_db.
+
+:- import xprod_in_db/5, xprod_in_dbi/5 from prolog_db.
+:- import join_in_db/6, join_in_dbi/6 from prolog_db.
+:- import reindex_in_db/4, reindex_in_dbi/4 from prolog_db.
+:- import project_in_db/5, project_in_dbi/5 from prolog_db.
 
 :- import intern_termhash/2 from machine.
 
 :- import concat_atom/2 from string.
 :- import reverse/2 from basics.
 
-test :- testdb,fail.
+/*test :- testdb,fail.
 test :- testretract,fail.
 test :- testdbops,fail.
 test :- testdbi,fail.
 test :- testdbiops,fail.
+*/
 test :- testindbops,fail.
 test.
 
@@ -387,26 +398,47 @@ naive_union_db(DB1,DB2,DB3) :-
     findall((H:-B),clause_in_db(H,B,DB1),Clauses),
     assert_in_db(Clauses,DB2,DB3).
 
+naive_union_dbi(DB1,DB2,DB3) :-
+    findall((H:-B),clause_in_dbi(H,B,DB1),Clauses),
+    assert_in_dbi(Clauses,DB2,DB3).
+
 naive_intersect_db(DB1,DB2,DB3) :-
 	findall((H:-B),(clause_in_db(H,B,DB1),clause_in_db(H,B,DB2)),Rules),
-	empty_db(DB4),
-	assert_in_db(Rules,DB4,DB3).
+	assert_in_db(Rules,DB3).
+
+naive_intersect_dbi(DB1,DB2,DB3) :-
+	findall((H:-B),(clause_in_dbi(H,B,DB1),clause_in_dbi(H,B,DB2)),Rules),
+	assert_in_dbi(Rules,DB3).
 
 naive_difference_db(DB1,DB2,DB3) :-
 	findall((H:-B),(clause_in_db(H,B,DB1),
 			\+clause_in_db(H,B,DB2)
 		       ),
 		       Clauses),
-	empty_db(DB0),
-	assert_in_db(Clauses,DB0,DB3).
+	assert_in_db(Clauses,DB3).
+
+naive_difference_dbi(DB1,DB2,DB3) :-
+	findall((H:-B),(clause_in_dbi(H,B,DB1),
+			\+clause_in_dbi(H,B,DB2)
+		       ),
+		       Clauses),
+	assert_in_dbi(Clauses,DB3).
 
 naive_subset_db(DB1,DB2) :-
     \+ (clause_in_db(H,B,DB1),
 	\+ clause_in_db(H,B,DB2)).
 
+naive_subset_dbi(DB1,DB2) :-
+    \+ (clause_in_dbi(H,B,DB1),
+	\+ clause_in_dbi(H,B,DB2)).
+
 naive_disjoint_db(DB1,DB2) :-
     \+ (clause_in_db(H,B,DB1),
 	clause_in_db(H,B,DB2)).
+
+naive_disjoint_dbi(DB1,DB2) :-
+    \+ (clause_in_dbi(H,B,DB1),
+	clause_in_dbi(H,B,DB2)).
 
 naive_sym_diff_db(DB1,DB2,DB3) :-
 	findall((H:-B),
@@ -417,8 +449,18 @@ naive_sym_diff_db(DB1,DB2,DB3) :-
 		 \+ clause_in_db(H,B,DB1)
 		),
 		Clauses),
-	empty_db(DB0),
-	assert_in_db(Clauses,DB0,DB3).
+	assert_in_db(Clauses,DB3).
+
+naive_sym_diff_dbi(DB1,DB2,DB3) :-
+	findall((H:-B),
+		(clause_in_dbi(H,B,DB1),
+		 \+ clause_in_dbi(H,B,DB2)
+		 ;
+		 clause_in_dbi(H,B,DB2),
+		 \+ clause_in_dbi(H,B,DB1)
+		),
+		Clauses),
+	assert_in_dbi(Clauses,DB3).
 
 :- import numbervars/1 from num_vars.
 mydump(DB) :-
@@ -469,12 +511,11 @@ testindbops :-
     pdb([[48,100,2],[48,120,3],[0,1,1]],(db1(p(_X,_Y,_Z))),DB1),
     pdb([[0,110,2],[0,140,3],[0,2,2]],(db2(p(_X,_Y,_Z))),DB2),
     pdb([[48,110,4],[48,140,6],[0,0,1]],(db3(p(_X,_Y,_Z))),DB3),
-%    assert_in_db([db1(p(a,b,c)),db1(p(a,d,e))],DB1),
-%    assert_in_db([db2(p(a,b,c)),db2(p(b,d,e))],DB2),
-%    DB3 = [],
 
     union_db(DB1,DB2,DB4),
     union_db(DB3,DB4,DB), % DB is database with 3 preds: db1/1, db2/1, db3/1
+    intern_termhash(DB,HDB),
+    intern_termhash(DB2,HDB2),
     writeln(dbs_built),
 
     (do_all
@@ -487,6 +528,16 @@ testindbops :-
       -> writeln(success(union_in_db)) ; writeln(error(union_in_db)))
     ),
     (do_all
+     union_in_dbi(db1(_),db2(_),dbr(_),HDB,HDBA),  %HDBA has union_in_db in dbr()
+     copy_in_dbi(db1(p(_,_,_)),p(_,_,_),HDB,HDB1a),
+     copy_in_dbi(db2(p(_,_,_)),p(_,_,_),HDB,HDB2a),
+     naive_union_dbi(HDB1a,HDB2a,HDBRa),
+     union_dbi(HDBRa,HDBA,HDBA1),
+     (equal_in_dbi(dbr(p(_,_,_)),p(_,_,_),HDBA1)
+      -> writeln(success(union_in_dbi)) ; writeln(error(union_in_dbi)))
+    ),
+
+    (do_all
      intersect_in_db(db1(_),db2(_),dbr(_),DB,DBA),
      copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
      copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
@@ -495,6 +546,16 @@ testindbops :-
      (equal_in_db(dbr(p(_,_,_)),p(_,_,_),DBA1)
       -> writeln(success(intersect_in_db)) ; writeln(error(intersect_in_db)))
     ),
+    (do_all
+     intersect_in_dbi(db1(_),db2(_),dbr(_),HDB,HDBA),
+     copy_in_dbi(db1(p(_,_,_)),p(_,_,_),HDB,HDB1a),
+     copy_in_dbi(db2(p(_,_,_)),p(_,_,_),HDB,HDB2a),
+     naive_intersect_dbi(HDB1a,HDB2a,HDBRa),
+     union_dbi(HDBRa,HDBA,HDBA1),
+     (equal_in_dbi(dbr(p(_,_,_)),p(_,_,_),HDBA1)
+      -> writeln(success(intersect_in_dbi)) ; writeln(error(intersect_in_dbi)))
+    ),
+
     (do_all
      difference_in_db(db1(_),db2(_),dbr(_),DB,DBA),
      copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
@@ -505,6 +566,16 @@ testindbops :-
       -> writeln(success(difference_in_db)) ; writeln(error(difference_in_db)))
     ),
     (do_all
+     difference_in_dbi(db1(_),db2(_),dbr(_),HDB,HDBA),
+     copy_in_dbi(db1(p(_,_,_)),p(_,_,_),HDB,HDB1a),
+     copy_in_dbi(db2(p(_,_,_)),p(_,_,_),HDB,HDB2a),
+     naive_difference_dbi(HDB1a,HDB2a,HDBRa),
+     union_dbi(HDBRa,HDBA,HDBA1),
+     (equal_in_dbi(dbr(p(_,_,_)),p(_,_,_),HDBA1)
+      -> writeln(success(difference_in_dbi)) ; writeln(error(difference_in_dbi)))
+    ),
+
+    (do_all
      difference_in_db(db2(_),db1(_),dbr(_),DB,DBA),
      copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
      copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
@@ -514,6 +585,16 @@ testindbops :-
       -> writeln(success(difference2_in_db)) ; writeln(error(difference2_in_db)))
     ),
     (do_all
+     difference_in_dbi(db2(_),db1(_),dbr(_),HDB,HDBA),
+     copy_in_dbi(db1(p(_,_,_)),p(_,_,_),HDB,HDB1a),
+     copy_in_dbi(db2(p(_,_,_)),p(_,_,_),HDB,HDB2a),
+     naive_difference_dbi(HDB2a,HDB1a,HDBRa),
+     union_dbi(HDBRa,HDBA,HDBA1),
+     (equal_in_dbi(dbr(p(_,_,_)),p(_,_,_),HDBA1)
+      -> writeln(success(difference2_in_dbi)) ; writeln(error(difference2_in_dbi)))
+    ),
+
+    (do_all
      (subset_in_db(db3(_),db1(_),DB) -> A=1 ; A=0),
      copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
      copy_in_db(db3(p(_,_,_)),p(_,_,_),DB,DB3a),
@@ -521,12 +602,28 @@ testindbops :-
      (A==B -> writeln(success(subset1_in_db)) ; writeln(error(subset1_in_db)))
     ),
     (do_all
+     (subset_in_dbi(db3(_),db1(_),HDB) -> A=1 ; A=0),
+     copy_in_dbi(db1(p(_,_,_)),p(_,_,_),HDB,HDB1a),
+     copy_in_dbi(db3(p(_,_,_)),p(_,_,_),HDB,HDB3a),
+     (naive_subset_dbi(HDB3a,HDB1a) -> B=1 ; B=0),
+     (A==B -> writeln(success(subset1_in_dbi)) ; writeln(error(subset1_in_dbi)))
+    ),
+
+    (do_all
      (subset_in_db(db1(_),db3(_),DB) -> A=1 ; A=0),
      copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
      copy_in_db(db3(p(_,_,_)),p(_,_,_),DB,DB3a),
      (naive_subset_db(DB1a,DB3a) -> B=1 ; B=0),
      (A==B -> writeln(success(subset2_in_db)) ; writeln(error(subset2_in_db)))
     ),
+    (do_all
+     (subset_in_dbi(db1(_),db3(_),HDB) -> A=1 ; A=0),
+     copy_in_dbi(db1(p(_,_,_)),p(_,_,_),HDB,HDB1a),
+     copy_in_dbi(db3(p(_,_,_)),p(_,_,_),HDB,HDB3a),
+     (naive_subset_dbi(HDB1a,HDB3a) -> B=1 ; B=0),
+     (A==B -> writeln(success(subset2_in_dbi)) ; writeln(error(subset2_in_dbi)))
+    ),
+
     (do_all
      difference_in_db(db1(_),db2(_),dbr(_),DB,DBA),
      (disjoint_in_db(dbr(_),db2(_),DBA) -> A=1 ; A=0),
@@ -539,6 +636,18 @@ testindbops :-
        -> writeln(success(disjoint1_in_db)) ; writeln(error(disjoint1_in_db)))
     ),
     (do_all
+     difference_in_dbi(db1(_),db2(_),dbr(_),HDB,HDBA),
+     (disjoint_in_dbi(dbr(_),db2(_),HDBA) -> A=1 ; A=0),
+     copy_in_dbi(db1(p(_,_,_)),p(_,_,_),HDB,HDB1a),
+     copy_in_dbi(db2(p(_,_,_)),p(_,_,_),HDB,HDB2a),
+     naive_difference_dbi(HDB1a,HDB2a,HDBRb),
+     (naive_disjoint_dbi(HDBRb,HDB2) -> B=1 ; B=0),
+     union_dbi(HDBRb,HDBA,HDBA1),
+     (equal_in_dbi(dbr(p(_,_,_)),p(_,_,_),HDBA1), A==B
+       -> writeln(success(disjoint1_in_dbi)) ; writeln(error(disjoint1_in_dbi)))
+    ),
+
+    (do_all
      sym_diff_in_db(db1(_),db2(_),dbr(_),DB,DBA),
      copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
      copy_in_db(db2(p(_,_,_)),p(_,_,_),DB,DB2a),
@@ -547,6 +656,16 @@ testindbops :-
      (equal_in_db(dbr(p(_,_,_)),p(_,_,_),DBA1)
       -> writeln(success(sym_diff_in_db)) ; writeln(error(sym_diff_in_db)))
     ),
+    (do_all
+     sym_diff_in_dbi(db1(_),db2(_),dbr(_),HDB,HDBA),
+     copy_in_dbi(db1(p(_,_,_)),p(_,_,_),HDB,HDB1a),
+     copy_in_dbi(db2(p(_,_,_)),p(_,_,_),HDB,HDB2a),
+     naive_sym_diff_dbi(HDB1a,HDB2a,HDBRa),
+     union_dbi(HDBRa,HDBA,HDBA1),
+     (equal_in_dbi(dbr(p(_,_,_)),p(_,_,_),HDBA1)
+      -> writeln(success(sym_diff_in_dbi)) ; writeln(error(sym_diff_in_dbi)))
+    ),
+
     (do_all
      sym_diff_in_db(db2(_),db1(_),dbr(_),DB,DBA),
      copy_in_db(db1(p(_,_,_)),p(_,_,_),DB,DB1a),
@@ -557,9 +676,160 @@ testindbops :-
       -> writeln(success(sym_diff_in_db2)) ; writeln(error(sym_diff_in_db2)))
     ),
     (do_all
+     sym_diff_in_dbi(db2(_),db1(_),dbr(_),HDB,HDBA),
+     copy_in_dbi(db1(p(_,_,_)),p(_,_,_),HDB,HDB1a),
+     copy_in_dbi(db2(p(_,_,_)),p(_,_,_),HDB,HDB2a),
+     naive_sym_diff_dbi(HDB2a,HDB1a,HDBRa),
+     union_dbi(HDBRa,HDBA,HDBA1),
+     (equal_in_dbi(dbr(p(_,_,_)),p(_,_,_),HDBA1)
+      -> writeln(success(sym_diff_in_dbi2)) ; writeln(error(sym_diff_in_dbi2)))
+    ),
+
+    (do_all
      (sym_diff_in_db(db1(_),db1(_),dbr(_),DB,DB)
       -> writeln(success(sym_diff_in_db3))
       ;	 writeln(error(sym_diff_in_db3))
      )
     ),
+    (do_all
+     (sym_diff_in_dbi(db1(_),db1(_),dbr(_),HDB,HDB)
+      -> writeln(success(sym_diff_in_dbi3))
+      ;	 writeln(error(sym_diff_in_dbi3))
+     )
+    ),
+
+    assert_in_db([db1(p(a,b,c)),db1(p(a,b,d)),db1(p(a,c,e)),db1(p(a,c,f)),db1(p(b,c,d)),
+		  db1(p(b,d,e)),db1(p(b,d,f)),db1(p(b,c,f)),db1(p(b,d,a)),db1(p(b,d,b)),
+		  db1(p(c,b,c)),db1(p(c,b,d)),db1(p(c,c,e)),db1(p(m,c,f)),db1(p(n,c,d)),
+		  db2(p(a,2,3)),db2(p(a,2,4)),db2(p(a,3,5)),db2(p(a,3,6)),db2(p(b,3,4)),
+		  db2(p(b,2,3)),db2(p(b,2,4)),db2(p(b,3,5)),db2(p(b,3,6)),db2(p(b,3,4)),
+		  db2(p(c,2,3)),db2(p(c,2,4)),db2(p(c,3,5)),db2(p(d,3,6)),db2(p(f,3,4))
+		  ],
+		 LDB),
+    intern_termhash(LDB,LHDB),
+
+    (do_all
+     xprod_in_db(db1(p(_,_,_)),db2(p(_,_,_)),dbr(q(_,_,_,_,_,_)),LDB,DBA), %DBA has xprod_in_db in dbr()
+     (do_all
+      clause_in_db(db1(p(A,B,C)),true,DBA),
+      clause_in_db(db2(p(D,E,F)),true,DBA),
+      \+ clause_in_db(dbr(q(A,B,C,D,E,F)),true,DBA),
+      writeln(error(missing,xprod_in_db))
+     ),
+     (do_all
+      clause_in_db(dbr(q(A,B,C,D,E,F)),true,DBA),
+      \+ (clause_in_db(db1(p(A,B,C)),true,DBA),
+	  clause_in_db(db2(p(D,E,F)),true,DBA)),
+      writeln(error(extra,xprod_in_db))
+     ),
+     writeln(completed(xprod_in_db))
+    ),
+    (do_all
+     xprod_in_dbi(db1(p(_,_,_)),db2(p(_,_,_)),dbr(q(_,_,_,_,_,_)),LHDB,HDBA), %HDBA has xprod_in_dbi in dbr()
+     (do_all
+      clause_in_dbi(db1(p(A,B,C)),true,HDBA),
+      clause_in_dbi(db2(p(D,E,F)),true,HDBA),
+      \+ clause_in_dbi(dbr(q(A,B,C,D,E,F)),true,HDBA),
+      writeln(error(missing,xprod_in_dbi))
+     ),
+     (do_all
+      clause_in_dbi(dbr(q(A,B,C,D,E,F)),true,HDBA),
+      \+ (clause_in_dbi(db1(p(A,B,C)),true,HDBA),
+	  clause_in_dbi(db2(p(D,E,F)),true,HDBA)),
+      writeln(error(extra,xprod_in_dbi))
+     ),
+     writeln(completed(xprod_in_dbi))
+    ),
+
+    (do_all
+     join_in_db(db1(p(_,_,_)),db2(p(_,_,_)),1,dbr(q(_,_,_,_,_)),LDB,DBA),
+     (do_all
+      clause_in_db(db1(p(A,B,C)),true,DBA),
+      clause_in_db(db2(p(A,D,E)),true,DBA),
+      \+ clause_in_db(dbr(q(A,B,C,D,E)),true,DBA),
+      writeln(error(missing,join_in_db))
+     ),
+     (do_all
+      clause_in_db(dbr(q(A,B,C,D,E)),true,DBA),
+      \+ (clause_in_db(db1(p(A,B,C)),true,DBA),
+	  clause_in_db(db2(p(A,D,E)),true,DBA)),
+      writeln(error(extra,join_in_db))
+     ),
+     writeln(completed(join_in_db))
+    ),
+    (do_all
+     join_in_dbi(db1(p(_,_,_)),db2(p(_,_,_)),1,dbr(q(_,_,_,_,_)),LHDB,HDBA),
+     (do_all
+      clause_in_dbi(db1(p(A,B,C)),true,HDBA),
+      clause_in_dbi(db2(p(A,D,E)),true,HDBA),
+      \+ clause_in_dbi(dbr(q(A,B,C,D,E)),true,HDBA),
+      writeln(error(missing,join_in_dbi))
+     ),
+     (do_all
+      clause_in_dbi(dbr(q(A,B,C,D,E)),true,HDBA),
+      \+ (clause_in_dbi(db1(p(A,B,C)),true,HDBA),
+	  clause_in_dbi(db2(p(A,D,E)),true,HDBA)),
+      writeln(error(extra,join_in_dbi))
+     ),
+     writeln(completed(join_in_dbi))
+    ),
+      
+    (do_all
+     reindex_in_db(db1(p(A,B,C)),dbr(p(B,A,C)),DB,DBA),
+     (do_all
+      clause_in_db(db1(p(A,B,C)),true,DBA),
+      \+ clause_in_db(dbr(p(B,A,C)),true,DBA),
+      writeln(error(missing,reindex_in_db))
+     ),
+     (do_all
+      clause_in_db(dbr(p(B,A,C)),true,DBA),
+      \+ clause_in_db(db1(p(A,B,C)),true,DBA),
+      writeln(error(extra,reindex_in_db))
+     ),
+     writeln(completed(reindex_in_db))
+    ),
+    (do_all
+     reindex_in_dbi(db1(p(A,B,C)),dbr(p(B,A,C)),HDB,HDBA),
+     (do_all
+      clause_in_dbi(db1(p(A,B,C)),true,HDBA),
+      \+ clause_in_dbi(dbr(p(B,A,C)),true,HDBA),
+      writeln(error(missing,reindex_in_dbi))
+     ),
+     (do_all
+      clause_in_dbi(dbr(p(B,A,C)),true,HDBA),
+      \+ clause_in_dbi(db1(p(A,B,C)),true,HDBA),
+      writeln(error(extra,reindex_in_dbi))
+     ),
+     writeln(completed(reindex_in_dbi))
+    ),
+
+    (do_all
+     project_in_db(db1(p(A,B,C)),2,dbr(p(C)),DB,DBA),
+     (do_all
+      clause_in_db(db1(p(A,B,C)),true,DBA),
+      \+ clause_in_db(dbr(p(C)),true,DBA),
+      writeln(error(missing,project_in_db))
+     ),
+     (do_all
+      clause_in_db(dbr(p(C)),true,DBA),
+      \+ clause_in_db(db1(p(_,_,C)),true,DBA),
+      writeln(error(extra,project_in_db))
+     ),
+     writeln(completed(project_in_db))
+    ),
+    (do_all
+     project_in_dbi(db1(p(A,B,C)),2,dbr(p(C)),HDB,HDBA),
+     (do_all
+      clause_in_dbi(db1(p(A,B,C)),true,HDBA),
+      \+ clause_in_dbi(dbr(p(C)),true,HDBA),
+      writeln(error(missing,project_in_dbi))
+     ),
+     (do_all
+      clause_in_dbi(dbr(p(C)),true,HDBA),
+      \+ clause_in_dbi(db1(p(_,_,C)),true,HDBA),
+      writeln(error(extra,project_in_dbi))
+     ),
+     writeln(completed(project_in_dbi))
+    ),
+
     true.
