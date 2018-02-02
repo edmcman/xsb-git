@@ -20,6 +20,10 @@
 :- export equal_in_db/3, equal_in_dbi/3.
 :- export copy_in_db/4, copy_in_dbi/4.
 :- export materialize_in_db/4, materialize_in_dbi/4.
+:- export xprod_in_db/5, xprod_in_dbi/5.
+:- export join_in_db/6, join_in_dbi/6.
+:- export reindex_in_db/4, reindex_in_dbi/4.
+:- export project_in_db/5, project_in_dbi/5.
 
 :- import close/1, writeln/2, write_canonical/2, '=..'/2,
    functor/3, open/3, throw/1, call/1, read/2

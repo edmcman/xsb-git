@@ -902,9 +902,9 @@ the first variable subterm of @var{HeadTail} with the ht-trie
 The new ht-trie with the replaced subterm is returned in @var{HT}.
 @var{HeadTail} must consist (when sequentialized) of a sequence of
 bound terms followed by a sequence of distinct variables.  If this
-condition does not hold, the predicate fails.  Also @var{NSHT} must
-not be the empty DB. ").
+condition does not hold, the predicate fails.  ").
 
+%% DSW: can we combine this with assert_ref_with_trie, and have both efficient?
 update_hashtree_for_prefix(HeadTail,NSHT,OSHT,TailLen,HT0,HT) :-
     (NSHT == []
      ->	check_prefix_term(HeadTail,TailLen,'*_in_db/5'),
@@ -938,13 +938,16 @@ check_taillen(T1,T2,HeadTail,MsgPred) :-
 
 check_prefix_term(HeadTail,TailLen,MsgPred) :-
     (is_prefix_term(HeadTail,TailLen0)
-     ->	(TailLen = TailLen0
-	 -> true
-	 ;  misc_error(('[',MsgPred,'] Predicate selection pattern: ',HeadTail,
-			' is inconsistent with other patterns.'))
-	)
+     ->	check_taillen(TailLen,TailLen0,HeadTail,MsgPred)
      ;	misc_error(('[',MsgPred,'] Predicate selection pattern: ',HeadTail,' is illegal.'))
     ).
+
+:- comment(is_prefix_term/2,"
+@pred{is_prefix_term(+HeadTail,?TailLen)} checks that @var{HeadTail}
+is a @tt{prefix-term}.  A @tt{prefix term} is a prolog term that, when
+viewed in prefix order, consists of a sequence of constants followed
+by a sequence of distinct variables.  Such a term uniquely determines
+a position in a term trie (i.e., prolog DB). ").
 
 is_prefix_term(HeadTail,TailLen) :-
     tail_from_prefix_term(HeadTail,Tail),
@@ -977,7 +980,24 @@ the result into r/3, one could do:
 	   dump_db(DB2,userout).
 @end{verbatim}
 
-	   ").
+Here we have put tuples for @tt{p/3} and @tt{q/3} into @var{DB1}.
+Then we union those two predicates, putting the result into a
+predicate @tt{r/3} in the new database @var{DB2}.  And then we print
+out the resulting database.
+
+@var{Pref1}, @var{Pref2}, and @var{Pref3} must be prefix terms.  (For
+convenience, the form @tt{Pred/Arity} is converted to a prefix term
+using @pred{functor/3}.  Clearly, this is the most commonly used form
+of prefix terms.)  The operation of @var{OpLambda} is of the form
+@tt{lambda(Var1,...,Varn,Goal)}, which is called by binding the
+arguments to @var{Var2} through @var{Varn} and then @tt{call}-ing
+@var{Goal}.  The operation must take 2 input trie (databases) and
+produce an output trie (database.)  The operation will be applied to
+the two tries determined in the input database, @var{DB0}, by the two
+prefix terms, and the resulting trie will replace the trie determined
+by the target prefix term, creating a new database @var{DB}.  (The
+target prefix term will be added if it is not in the input database,
+@var{DB0}.)  ").
 
 apply_op_in_db(lambda(HT1,HT2,HT3,Op),Pref1,Pref2,Pref3,DB0,DB) :-
     cvt_pa(Pref1,Pref1a),
@@ -1000,6 +1020,12 @@ apply_op_in_db(lambda(HT1,HT2,HT3,Op),Pref1,Pref2,Pref3,DB0,DB) :-
 		    ' is inconsistent with other patterns.'))
     ).
 
+:- comment(apply_op_in_dbi/6, "
+@pred{apply_op_in_dbi(+Op,+P1,+P2,+P3,+H0,-H)} has the exact
+functionality of @pred{apply_op_in_db(Op,P1,P2,P3,DB0,DB)}, but takes
+an interned DB trie in @var{H0} (an integer encoding the interned DB
+trie) and produces an updated interned DB trie in @var{H}.  ").
+
 apply_op_in_dbi(Op,P1,P2,P3,H0,H) :-
     intern_termhash(DB0,H0),
     apply_op_in_db(Op,P1,P2,P3,DB0,DB),
@@ -1010,6 +1036,15 @@ cvt_pa(PA,PSkel) :-
     -> functor(PSkel,P,A)
     ;  PSkel = PA
     ).
+
+:- comment(apply_rel_op_in_db/4, "
+@pred{apply_rel_op_in_db(+RelOpLambdaTerm,+Pref1,+Pref2,+DB)} applies
+the relational operator specified in @var{RelOpLambdaTerm} to the
+subtries determined by @var{Pref1} and @var{Pref2} in @var{DB} and
+succeeds or fails accordingly.  @var{RelOpLambdaTerm} is of the form
+@tt{lambda(HT1,HT2,Goal)}, where @var{HT1} and @var{HT2} are variables
+and @var{Goal} is a binary goal whose arguments are those varaibles.
+The goal must define the desired relational operator on subtries.  ").
 
 apply_rel_op_in_db(lambda(HT1,HT2,Op),Pref1,Pref2,DB) :-
     cvt_pa(Pref1,Pref1a),
@@ -1026,11 +1061,18 @@ apply_rel_op_in_db(lambda(HT1,HT2,Op),Pref1,Pref2,DB) :-
     ),
     call(Op).
 
+:- comment(apply_rel_op_in_dbi/4, "
+@pred{apply_rel_op_in_dbi(+Op,+P1,+P2,+H)} has the exact functionality
+of @pred{apply_rel_op_in_db(Op,P1,P2,DB)}, but takes an interned DB
+trie in @var{H} (an integer encoding the interned DB trie). ").
+
 apply_rel_op_in_dbi(lambda(HT1,HT2,Op),Pref1,Pref2,H) :-
     intern_termhash(DB,H),
     apply_rel_op_in_db(lambda(HT1,HT2,Op),Pref1,Pref2,DB).
 
 /**********************************************************/
+
+/* These operations are just to support testing. */
 
 :- export naive_subset_db/2, naive_union_db/3, naive_intersect_db/3.
 :- export naive_difference_db/3.
@@ -1080,7 +1122,21 @@ naive_disjoint_db(DB1,DB2) :-
     \+ (clause_in_db(H,B,DB1),
 	clause_in_db(H,B,DB2)).
 
+/*** end of testing operations ***/
 /**********************************************************/
+
+:- comment(union_db/3, " @pred{union_db(+DB1,+DB2,-DB)} takes two
+prolog databases (tries), in @var{DB1} and @var{DB2} and produces a
+prolog DB, in @var{DB}, that is the union of the two input databases.
+This is done by traversing the two input tries in concert and in the
+process generating the output trie.  This allows the output trie to
+share subtries with the input tries, and to perhaps avoid traversing
+large portions of the input tries.  For example, if the two input
+databases contain facts for disjoint predicates, the union just
+creates a new trie that points to entire definitions of the predicates
+in the input tries, so such a union is done in time proportional to
+the number of predicates, and completely independent of the size
+(i.e., the number of tuples) of the predicates.  ").
 
 union_db(DB1,DB2,DB) :-
     (DB1 == DB2
@@ -1102,17 +1158,32 @@ union_db(DB1,DB2,DB) :-
 	fix_ht_size(HBits,NNum,NHT,DB)
     ).
 
+:- comment(union_dbi/3, " @pred{union_dbi(+H1,+H2,-H)} has the same
+functionality as @pred{union_db(DB1,DB2,DB)}, but takes and produces
+interned terms for the trie arguments. ").
+
 union_dbi(H1,H2,H) :-
     intern_termhash(DB1,H1),
     intern_termhash(DB2,H2),
     union_db(DB1,DB2,DB),
     intern_termhash(DB,H).
 
-union_in_db(P1,P2,P3,DB0,DB) :-
-    apply_op_in_db(lambda(A,B,C,union_db(A,B,C)),P1,P2,P3,DB0,DB).
+:- comment(union_in_db/5, "@pred{union_in_db(+P1,+P2,+P3,+DB0,?DB)}
+unions two subtries in @var{DB0} producing a new (or replaced) subtrie
+in @var{DB}.  The input tries are determined by the prefix terms of
+@var{P1} and @var{P2}, and the place of the resulting trie is
+determined by prefix term @var{P3}.  (See @pred{is_prefix_term/2} and
+@pred{apply_op_in_db/6} for discussions of prefix terms.)  ").
 
-union_in_dbi(P1,P2,P3,DB0,DB) :-
-    apply_op_in_dbi(lambda(A,B,C,union_db(A,B,C)),P1,P2,P3,DB0,DB).
+union_in_db(P1,P2,P3,H0,H) :-
+    apply_op_in_db(lambda(A,B,C,union_db(A,B,C)),P1,P2,P3,H0,H).
+
+:- comment(union_in_dbi/5, "@pred{union_in_dbi(+P1,+P2,+P3,+H0,?H)}
+performs the same operation as @pred{union_in_db/5} except it expects
+(in @var{H0}) and returns (in @var{H}) interned databases.  ").
+
+union_in_dbi(P1,P2,P3,H0,H) :-
+    apply_op_in_dbi(lambda(A,B,C,union_db(A,B,C)),P1,P2,P3,H0,H).
 
 
 union_subtrees(HashBits,HT1,HT2,DNum,HT) :-
@@ -1128,7 +1199,7 @@ union_subtrees(HashBits,HT1,HT2,DNum,HT) :-
 	h_comps(HT,HT30,HT31,HT32,HT33)
     ).
 
-%% diff, negative for loss (dupls)
+%% DNum is diff, negative for loss (dupls)
 union_subtree(HashBits,SHT1,SHT2,DNum,SHT) :-
     (SHT1 == []
      ->	SHT = SHT2, DNum = 0
@@ -1140,7 +1211,7 @@ union_subtree(HashBits,SHT1,SHT2,DNum,SHT) :-
 	union_subtrees(NHashBits,SHT1,SHT2,DNum,SHT)
     ).
 
-%% DNum is number in both (so will be subtracted from sum to get count.)
+%% DNum is number in both sets (so will be subtracted from sum to get count.)
 union_kvs(HT1,HT2,DNum0,DNum,HT) :- 
     (HT1 == []
      ->	DNum = DNum0,
@@ -1158,16 +1229,15 @@ union_kvs(HT1,HT2,DNum0,DNum,HT) :-
 	    union_kvs(HT1,HT2t,DNum0,DNum,HTt)
 	 ;  (V1 @= ht(_,_,_)
 	     ->	union_db(V1,V2,V3),
-		add_kv(V3,K1,HT,HTt)
+		add_kv(V3,K1,Added,HT,HTt)
 	     ;	union_values(V1,V2,V3),
-		add_kv(V3,K1,HT,HTt)
+		add_kv(V3,K1,Added,HT,HTt)
 	    ),
-	    DNum1 is DNum0 + 1,
+	    DNum1 is DNum0 + Added,
 	    union_kvs(HT1t,HT2t,DNum1,DNum,HTt)	
 	)
     ).
     
-%%union_values(_,_,_) :- writeln(userout,called_union_values), fail.
 union_values(V1s,V2s,V3s) :-
     (V1s == []
      ->	V3s = V2s
@@ -1188,6 +1258,19 @@ union_values(V1s,V2s,V3s) :-
 	
 /********************************************************/
 
+:- comment(intersect_db/3, " @pred{intersect_db(+DB1,+DB2,?DB)} takes
+two prolog databases (tries), in @var{DB1} and @var{DB2} and produces
+a prolog DB, in @var{DB}, that is the intersection of the two input
+databases.  This is done by traversing the two input tries in concert
+and in the process generating the output trie.  This allows the output
+trie to share subtries with the input tries, and to perhaps avoid
+traversing large portions of the input tries.  For example, if the two
+input databases contain facts for disjoint predicates, the intersect
+just creates a new trie that contains none of the predicates, so such
+an Intersection is done in time proportional to the number of
+predicates, and completely independent of the size (i.e., the number
+of tuples) of the predicates.  ").
+
 intersect_db(DB1,DB2,DB) :-
     (DB1 == DB2
      ->	DB = DB1
@@ -1207,14 +1290,31 @@ intersect_db(DB1,DB2,DB) :-
 	fix_ht_size(HBits,INum,NHT,DB)
     ).
 
+:- comment(intersect_dbi/3, " @pred{intersect_dbi(+H1,+H2,-H)} has the same
+functionality as @pred{intersect_db(DB1,DB2,DB)}, but takes and produces
+interned terms for the trie arguments. ").
+
 intersect_dbi(H1,H2,H) :-
     intern_termhash(DB1,H1),
     intern_termhash(DB2,H2),
     intersect_db(DB1,DB2,DB),
     intern_termhash(DB,H).
 
+:- comment(intersect_in_db/5,
+"@pred{intersect_in_db(+P1,+P2,+P3,+DB0,?DB)} intersects two subtries
+in @var{DB0} producing a new (or replaced) subtrie in @var{DB}.  The
+input tries are determined by the prefix terms of @var{P1} and
+@var{P2}, and the place of the resulting trie is determined by prefix
+term @var{P3}.  (See @pred{is_prefix_term/2} and
+@pred{apply_op_in_db/6} for discussions of prefix terms.)  ").
+
 intersect_in_db(P1,P2,P3,DB0,DB) :-
     apply_op_in_db(lambda(A,B,C,intersect_db(A,B,C)),P1,P2,P3,DB0,DB).
+
+:- comment(intersect_in_dbi/5,
+"@pred{intersect_in_dbi(+P1,+P2,+P3,+H0,?H)} performs the same
+operation as @pred{intersect_in_db/5} except it expects (in @var{H0})
+and returns (in @var{H}) interned databases.  ").
 
 intersect_in_dbi(P1,P2,P3,DB0,DB) :-
     apply_op_in_dbi(lambda(A,B,C,intersect_db(A,B,C)),P1,P2,P3,DB0,DB).
@@ -1254,18 +1354,17 @@ intersect_kvs(HT1,HT2,INum0,INum,HT) :-
 	 -> intersect_kvs(HT1t,HT2,INum0,INum,HT)
 	 ;  K1 @> K2
 	 -> intersect_kvs(HT1,HT2t,INum0,INum,HT)
-	 ;  INum1 is INum0 + 1,
-	    (V1 @= ht(_,_,_)
+	 ;  (V1 @= ht(_,_,_)
 	     ->	intersect_db(V1,V2,V3),
-		add_kv(V3,K1,HT,HTt)
+		add_kv(V3,K1,Added,HT,HTt)
 	     ;	intersect_values(V1,V2,V3),
-		add_kv(V3,K1,HT,HTt)
+		add_kv(V3,K1,Added,HT,HTt)
 	    ),
+	    INum1 is INum0 + Added,
 	    intersect_kvs(HT1t,HT2t,INum1,INum,HTt)
 	)
     ).
     
-%%intersect_values(_,_,_) :- writeln(userout,intersect_values),fail.
 intersect_values(V1s,V2s,V3s) :-
     (V1s == []
      ->	V3s = []
@@ -1283,6 +1382,18 @@ intersect_values(V1s,V2s,V3s) :-
     ).
 
 /********************************************************/
+
+:- comment(difference_db/3, " @var{difference_db(+DB1,+DB2,?DB)} takes
+two prolog databases (tries), in @var{DB1} and @var{DB2} and produces
+a prolog DB, in @var{DB}, that is set difference of the two input
+databases, i.e., all tuples in @var{DB1} that are not in @var{DB2}.
+This is done by traversing the two input tries in concert and in the
+process generating the output trie.  This allows the output trie to
+share subtries with the input tries, and to perhaps avoid traversing
+large portions of the input tries.  For example, if the two input
+databases contain the same sets of tuples, the difference immediately
+detects that and returns the empty database.  ").
+
 difference_db(DB1,DB2,DB) :-
     (DB1 == DB2
      ->	DB = []
@@ -1303,17 +1414,33 @@ difference_db(DB1,DB2,DB) :-
 	fix_ht_size(HBits,NNum,NHT,DB)
     ).
 
+:- comment(difference_dbi/3, " @pred{difference_dbi(+H1,+H2,-H)} has the same
+functionality as @pred{difference_db(DB1,DB2,DB)}, but takes and produces
+interned terms for the trie arguments. ").
+
 difference_dbi(H1,H2,H) :-
     intern_termhash(DB1,H1),
     intern_termhash(DB2,H2),
     difference_db(DB1,DB2,DB),
     intern_termhash(DB,H).
 
+:- comment(difference_in_db/5,
+"@pred{difference_in_db(+P1,+P2,+P3,+DB0,?DB)} computes the set
+difference of two subtries in @var{DB0} producing a new (or replaced)
+subtrie in @var{DB}.  The input tries are determined by the prefix
+terms of @var{P1} and @var{P2}, and the place of the resulting trie is
+determined by prefix term @var{P3}.  (See @pred{is_prefix_term/2} and
+@pred{apply_op_in_db/6} for discussions of prefix terms.)  ").
+
 difference_in_db(P1,P2,P3,DB0,DB) :-
     apply_op_in_db(lambda(A,B,C,difference_db(A,B,C)),P1,P2,P3,DB0,DB).
 
-difference_in_dbi(P1,P2,P3,DB0,DB) :-
-    apply_op_in_dbi(lambda(A,B,C,difference_db(A,B,C)),P1,P2,P3,DB0,DB).
+:- comment(difference_in_dbi/5, "@pred{difference_in_dbi(+P1,+P2,+P3,+H0,?H)}
+performs the same operation as @pred{difference_in_db/5} except it expects
+(in @var{H0}) and returns (in @var{H}) interned databases.  ").
+
+difference_in_dbi(P1,P2,P3,H0,H) :-
+    apply_op_in_dbi(lambda(A,B,C,difference_db(A,B,C)),P1,P2,P3,H0,H).
 
 difference_subtrees(HashBits,HT1,HT2,RNum,HT) :-
     (HashBits =< 0
@@ -1355,14 +1482,11 @@ difference_kvs(HT1,HT2,RNum0,RNum,HT) :-
 	 -> difference_kvs(HT1,HT2t,RNum0,RNum,HT)
 	 ;  (V1 @= ht(_,_,_)
 	     ->	difference_db(V1,V2,V3),
-		add_kv(V3,K1,HT,HTt)
+		add_kv(V3,K1,Added,HT,HTt)
 	     ;	difference_values(V1,V2,V3),
-		add_kv(V3,K1,HT,HTt)
+		add_kv(V3,K1,Added,HT,HTt)
 	    ),
-	    (V3 == []
-	     ->	RNum1 is RNum0 + 1
-	     ;	RNum1 = RNum0
-	    ),
+	    RNum1 is RNum0 + 1 - Added,
 	    difference_kvs(HT1t,HT2t,RNum1,RNum,HTt)
 	)
     ).
@@ -1386,6 +1510,15 @@ difference_values(V1s,V2s,V3s) :-
 
 /********************************************************/
 
+:- comment(sym_diff_db/3, " @var{sym_diff_db(+DB1,+DB2,?DB)} takes two
+prolog databases (tries), in @var{DB1} and @var{DB2} and produces a
+prolog DB, in @var{DB}, that is symmetric difference of the two input
+databases, i.e., all tuples in one but not both of @var{DB1} and
+@var{DB2}.  This is done by traversing the two input tries in concert
+and in the process generating the output trie.  This allows the output
+trie to share subtries with the input tries, and to perhaps avoid
+traversing large portions of the input tries.  ").
+
 sym_diff_db(DB1,DB2,DB) :-
     (DB1 == DB2
      ->	DB = []
@@ -1405,18 +1538,36 @@ sym_diff_db(DB1,DB2,DB) :-
 	fix_ht_size(HBits,RNum,NHT,DB)
     ).
 
+:- comment(sym_diff_dbi/3, " @pred{sym_diff_dbi(+H1,+H2,-H)} has the
+same functionality as @pred{sym_diff_db(DB1,DB2,DB)}, but takes and
+produces interned terms for the trie arguments. ").
+
 sym_diff_dbi(H1,H2,H) :-
     intern_termhash(DB1,H1),
     intern_termhash(DB2,H2),
     sym_diff_db(DB1,DB2,DB),
     intern_termhash(DB,H).
 
+:- comment(sym_diff_in_db/5,
+"@pred{sym_diff_in_db(+P1,+P2,+P3,+DB0,?DB)} computes the symmetric
+difference of two subtries in @var{DB0} producing a new (or replaced)
+subtrie in @var{DB}.  The input tries are determined by the prefix
+terms of @var{P1} and @var{P2}, and the place of the resulting trie is
+determined by prefix term @var{P3}.  (See @pred{is_prefix_term/2} and
+@pred{apply_op_in_db/6} for discussions of prefix terms.)  ").
+
 sym_diff_in_db(P1,P2,P3,DB0,DB) :-
     apply_op_in_db(lambda(A,B,C,sym_diff_db(A,B,C)),P1,P2,P3,DB0,DB).
+
+:- comment(sym_diff_in_dbi/5,
+"@pred{sym_diff_in_dbi(+P1,+P2,+P3,+H0,?H)} performs the same
+operation as @pred{sym_diff_in_db/5} except it expects (in @var{H0})
+and returns (in @var{H}) interned databases.  ").
 
 sym_diff_in_dbi(P1,P2,P3,DB0,DB) :-
     apply_op_in_dbi(lambda(A,B,C,sym_diff_db(A,B,C)),P1,P2,P3,DB0,DB).
 
+% RNum is number in result.
 sym_diff_subtrees(HashBits,HT1,HT2,RNum,HT) :-
     (HashBits =< 0
     ->	sym_diff_kvs(HT1,HT2,0,RNum,HT)
@@ -1462,19 +1613,15 @@ sym_diff_kvs(HT1,HT2,RNum0,RNum,HT) :-
 	    sym_diff_kvs(HT1,HT2t,RNum1,RNum,HTt)
 	 ;  (V1 @= ht(_,_,_)
 	     ->	sym_diff_db(V1,V2,V3),
-		add_kv(V3,K1,HT,HTt)
+		add_kv(V3,K1,Added,HT,HTt)
 	     ;	sym_diff_values(V1,V2,V3),
-		add_kv(V3,K1,HT,HTt)
+		add_kv(V3,K1,Added,HT,HTt)
 	    ),
-	    (V3 == []
-	     ->	RNum1 = RNum0
-	     ;	RNum1 is RNum0 + 1
-	    ),
+	    RNum1 is RNum0 + Added,
 	    sym_diff_kvs(HT1t,HT2t,RNum1,RNum,HTt)
 	)
     ).
     
-%%sym_diff_values(_,_,_) :- writeln(userout,sym_diff_values),fail.
 sym_diff_values(V1s,V2s,V3s) :-
     (V1s == []
      ->	V3s = V2s
@@ -1494,41 +1641,491 @@ sym_diff_values(V1s,V2s,V3s) :-
 
 /********************************************************/
 
-copy_in_db(Pref1,Pref2,DB0,DB) :-
+:- comment(xprod_in_db/5,"
+@pred{xprod_in_db(+Pref1,+Pref2,+Pref3,+DB0,?DB)} computes the cross
+product of the tries determined by @var{Pref1} and @var{Pref2} and
+puts the result at the position determined by @var{Pref3}.  The number
+of variables in @var{Pref3} must be the sum of the numbers of
+variables in @var{Pref1} and @var{Pref2}.  For example, assuming the
+call to build_db constructs a prolog database, @var{DB0}, the query:
+@begin{verbatim}	   
+| ?- build_db(DB),xprod_in_db(p(_,_),q(_,_,_),r(_,_,_,_,_),DB0,DB).
+@end{verbatim}	   
+would compute the cross product of relations p/2 and q/3 in @var{DB0}
+putting the result in r/5 (with r tuples having the p values preceding
+the q values). The predicate r/5 is added or replaced and the new DB
+@var{DB} is generated. (Note that, since the form p/2 is converted to
+prefix term p(_,_), p/2, q/3 and r/5 could be used in place of the
+explicit prefix terms in this query.)
+
+The tuples of r/5 would be as though it were defined by the following
+Prolog rule:
+@begin{verbatim}
+r(P1,P2,Q1,Q2,Q3) :- r(P1,P2), q(Q1,Q2,Q3).
+@end{verbatim}
+
+The @var{Pref1} values must be facts (i.e., clauses without (non-true)
+bodies.)  The complexity of this operation is the size of the
+@var{Pref1} trie, since every leaf of the @var{Pref1} trie is
+essentially extended with a pointer to the @var{Pref2} trie.  ").
+
+xprod_in_db(Pref1,Pref2,Pref3,DB0,DB) :-
     cvt_pa(Pref1,Pref1a),
     cvt_pa(Pref2,Pref2a),
-    (find_hashtable_for_prefix([Pref1a],DB0,TL,HT1)
+    cvt_pa(Pref3,Pref3a),
+    (find_hashtable_for_prefix([Pref2a],DB0,TLen2,HT2),
+     find_hashtable_for_prefix([Pref1a],DB0,TLen1,HT1)
+     ->	check_prefix_term([Pref3a],TLen3,'xprod_in_db/5'),
+	(TLen3 =\= TLen1+TLen2
+	 -> misc_error(('[prolog_db:xprod_in_db] ',Pref1,', ',Pref2,', and ',
+			Pref3,' are inconsistent for cross product.'))
+	 ;  update_hashtree_for_prefix([Pref3a],NSHT,_OSHT,TLen3,DB0,DB),
+	    xprod_ht(HT1,HT2,NSHT)
+	)
+     ;  retractall_in_db(Pref3a,DB0,DB) % one or other component is empty
+    ).
+     
+:- comment(xprod_in_dbi/5, "@pred{xprod_in_dbi(+P1,+P2,+P3,+H0,?H)}
+performs the same operation as @pred{xprod_in_db/5} except it expects
+(in @var{H0}) and returns (in @var{H}) interned databases.  ").
+
+xprod_in_dbi(Pref1,Pref2,Pref3,H0,H) :-
+    intern_termhash(DB0,H0),
+    xprod_in_db(Pref1,Pref2,Pref3,DB0,DB),
+    intern_termhash(DB,H).
+
+xprod_ht(HT1,HT2,NSHT) :-
+    db_comps(HT1,HashBits,Num,HTree),
+    db_comps(NSHT,HashBits,Num,NHTree),
+    xprod_htrees(HashBits,HTree,HT2,NHTree).
+
+xprod_htrees(HashBits,HTree,HT2,NHTree) :-
+    (HashBits =< 0
+     ->	xprod_kvs(HTree,HT2,NHTree)
+     ;	h_comps(HTree,H1,H2,H3,H4),
+	xprod_htree(HashBits,H1,HT2,NH1),
+	xprod_htree(HashBits,H2,HT2,NH2),
+	xprod_htree(HashBits,H3,HT2,NH3),
+	xprod_htree(HashBits,H4,HT2,NH4),
+	h_comps(NHTree,NH1,NH2,NH3,NH4)
+    ).
+
+xprod_htree(HashBits,H,HT2,NH) :-
+    (H == []
+     ->	NH = []
+     ;	NHashBits is HashBits - 2,
+	xprod_htrees(NHashBits,H,HT2,NH)
+    ).
+
+xprod_kvs([],_HT2,[]).
+xprod_kvs([K-V|KVs],HT2,[K-NV|NKVs]) :-
+    (V @= ht(_,_,_)
+     ->	xprod_ht(V,HT2,NV)
+     ;	(V == [true]
+	 -> NV = HT2
+	 ;  misc_error(('[prolog_db:xprod_in_db]: left argument not facts'))
+	)
+    ),
+    xprod_kvs(KVs,HT2,NKVs).
+
+/********************************************************/
+
+:- comment(join_in_db/6, 
+"@pred{join_in_db(+Pref1,+Pref2,+NJoin,+Pref3,+DB0,?DB)} performs an
+equi-join of tuples of terms specified by @var{Pref1} and @var{Pref2}
+producing a new set of terms as specified in @var{Pref3}.  @var{NJoin}
+is the number of join variables.  The join arguments are the first
+@var{NJoin} fields of the tuples specified by @var{Pref1} and
+@var{Pref2}.  The number of variables in @var{Pref3} must be the sum
+of the numbers of variables in @var{Pref1} and @var{Pref2} minus
+@var{NJoin}.  Assuming the the call to @pred{build_db/1} builds a
+prolog DB in @var{DB0}, an example query might be:
+@begin{verbatim}
+| ?- build_db(DB0),join_in_db(p/3,q/4,1,r/6,DB0,DB).
+@end{verbatim}
+
+This query would materialize the predicate r/6 in to @var{DB}, where r/6
+definition in Prolog would be:
+@begin{verbatim}
+r(J,P2,P3,Q2,Q3,Q4) :- p(J,P2,P3), q(J,Q2,Q3,Q4).
+@end{verbatim}
+
+The p/3 clauses must be facts. (q/4 could have rules with non-empty
+bodies, but I don't see any application for this.)  ").
+
+join_in_db(Pref1,Pref2,NJoin,Pref3,DB0,DB) :-
+    cvt_pa(Pref1,Pref1a),
+    cvt_pa(Pref2,Pref2a),
+    cvt_pa(Pref3,Pref3a),
+    find_hashtable_for_prefix([Pref1a],DB0,TLen1,HT1),
+    find_hashtable_for_prefix([Pref2a],DB0,TLen2,HT2),
+    OutLen is TLen1+TLen2-NJoin,
+    check_prefix_term([Pref3a],OutLen,'join_in_db/6'),
+    join_ht(HT1,HT2,NJoin,HT3),
+    (HT3 == []
+     ->	retractall_in_db(Pref3a,DB0,DB)
+     ;	update_hashtree_for_prefix([Pref3a],HT3,_,_,DB0,DB)
+    ).
+
+:- comment(join_in_dbi/6, "@pred{join_in_dbi(+P1,+P2,+N,+P3,+H0,?H)}
+performs the same operation as @pred{join_in_db/6} except it expects
+(in @var{H0}) and returns (in @var{H}) interned databases.  ").
+
+join_in_dbi(Pref1,Pref2,NJoin,Pref3,H0,H) :-
+    intern_termhash(DB0,H0),
+    join_in_db(Pref1,Pref2,NJoin,Pref3,DB0,DB),
+    intern_termhash(DB,H).
+
+join_ht([],_DB2,_N,[]) :- !.
+join_ht(_DB1,[],_N,[]) :- !.
+join_ht(DB1,DB2,NJoin,DB) :-
+    db_comps(DB1,HBits1,_Num1,HT1),
+    db_comps(DB2,HBits2,_Num2,HT2),
+    (HBits1 < HBits2
+     ->	HBits = HBits2,
+	rebuild_hashtree(HT1,HBits1,HBits,HT1b),
+	join_subtrees(HBits,HT1b,HT2,NJoin,INum,NHT)
+     ;	HBits2 < HBits1
+     ->	HBits = HBits1,
+	rebuild_hashtree(HT2,HBits2,HBits,HT2b),
+	join_subtrees(HBits,HT1,HT2b,NJoin,INum,NHT)
+     ;	HBits = HBits1,
+	join_subtrees(HBits,HT1,HT2,NJoin,INum,NHT)
+    ),
+    fix_ht_size(HBits,INum,NHT,DB).
+
+join_subtrees(HashBits,HT1,HT2,NJoin,INum,HT) :-
+    (HashBits =< 0
+     ->	join_kvs(HT1,HT2,NJoin,0,INum,HT)
+     ;	h_comps(HT1,HT10,HT11,HT12,HT13),
+	h_comps(HT2,HT20,HT21,HT22,HT23),
+	join_subtree(HashBits,HT10,HT20,NJoin,INum0,HT30),
+	join_subtree(HashBits,HT11,HT21,NJoin,INum1,HT31),
+	join_subtree(HashBits,HT12,HT22,NJoin,INum2,HT32),
+	join_subtree(HashBits,HT13,HT23,NJoin,INum3,HT33),
+	INum is INum0+INum1+INum2+INum3,
+	h_comps(HT,HT30,HT31,HT32,HT33)
+    ).
+
+join_subtree(HashBits,HT1,HT2,NJoin,INum,HT) :-
+    (HT1 == []
+     ->	HT = [], INum = 0
+     ; HT2 == []
+     ->	HT = [], INum = 0
+     ;	NHashBits is HashBits - 2,
+	join_subtrees(NHashBits,HT1,HT2,NJoin,INum,HT)
+    ).
+
+join_kvs(KVs1,KVs2,NJoin,INum0,INum,KVs) :-
+    (KVs1 == []
+     ->	INum = INum0,
+	KVs = []
+     ; KVs2 == []
+     ->	INum = INum0,
+	KVs = []
+     ;	KVs1 = [K1-V1|KVs1r],
+     	KVs2 = [K2-V2|KVs2r],
+	(K1 @< K2
+	 -> join_kvs(KVs1r,KVs2,NJoin,INum0,INum,KVs)
+	 ;  K1 @> K2
+	 -> join_kvs(KVs1,KVs2r,NJoin,INum0,INum,KVs)
+	 ;  (K1 = _P/Arity
+	     ->	NJoin1 is NJoin - 1 + Arity
+	     ;	NJoin1 is NJoin - 1
+	    ),
+	    (NJoin1 =:= 0
+	     ->	xprod_ht(V1,V2,NV)
+	     ;	join_ht(V1,V2,NJoin1,NV)
+	    ),
+	    add_kv(NV,K1,Added,KVs,KVsR),
+	    INum1 is INum0 + Added,
+	    join_kvs(KVs1r,KVs2r,NJoin,INum1,INum,KVsR)
+	)
+    ).
+
+/********************************************************/
+
+:- comment(reindex_in_db/4,
+"@pred{reindex_in_db(+PrefI,+PrefO,+DB0,DB)} generates a new version
+of the set of tuples determined by the @var{PrefI} prefix term by
+re-ordering its arguments and puts it in the predicate determined by
+@var{PrefO}.  Note one can understand this a changing the index on
+@var{Pref1} since tuples are indexed in left-to-right order.  The
+variables in @var{PrefO} must be a permutation of the variables in
+@var{PrefI}, which defines the reordering of the arguments.  Note that
+the tries corresponding to an unchanged final sequence of variables in
+the two prefix terms will not be traversed in the reindexing.
+
+An following example interchanges the first two arguments of @tt{p/4}
+in @var{DB0} to create @tt{q/4} in @var{DB}:
+@begin{verbatim}	   
+| ?- build_db(DB0),reindex_in_db(p(A,B,C,D),q(B,A,C,D),DB0,DB).
+@end{verbatim}	   
+
+Note that reindexing can bring a later argument to the beginning so it
+would be available for use in a call to @pred{join_in_db/6}.  ").
+
+reindex_in_db(PrefI,PrefO,DB0,DB) :-
+    cvt_pa(PrefI,PrefIa),
+    cvt_pa(PrefO,PrefOa),
+    find_hashtable_for_prefix([PrefIa],DB0,TLen,IHT),
+    tail_from_prefix_term([PrefIa],IVars),
+    is_most_general_term(IVars),
+    tail_from_prefix_term([PrefOa],OVars),
+    is_most_general_term(OVars),
+    num_common_tail_vars(IVars,OVars,NCom),
+    NArgs is TLen - NCom,
+    basics:length(IArgs,NArgs),
+    basics:append(IArgs,_,IVars),
+    copy_term(PrefO,OPrefO),
+    check_prefix_term([PrefOa],TLen,'reindex_in_db/4'),
+    reindex_ht(IHT,IArgs,NArgs,OPrefO,PrefOa,DB0,DB).
+
+:- comment(reindex_in_dbi/4, "@pred{reindex_in_dbi(+P1,+P2,+H0,?H)}
+performs the same operation as @pred{reindex_in_db/4} except it
+expects (in @var{H0}) and returns (in @var{H}) interned databases.
+").
+
+reindex_in_dbi(PrefI,PrefO,H0,H) :-
+    intern_termhash(DB0,H0),
+    reindex_in_db(PrefI,PrefO,DB0,DB),
+    intern_termhash(DB,H).
+
+num_common_tail_vars(IV,OV,NCom) :-
+    (IV == OV
+     ->	basics:length(IV,NCom)
+     ;	IV = [_|IVt],
+	OV = [_|OVt],
+	num_common_tail_vars(IVt,OVt,NCom)
+    ).
+
+reindex_ht([],_CArgs,_NArgs,_OPrefO,_PrefO,DB,DB) :- !.
+reindex_ht(IHT,CArgs,NArgs,OPrefO,PrefO,DB0,DB) :-
+    db_comps(IHT,HBits,_Num,HTree),
+    reindex_subtrees(HBits,HTree,CArgs,NArgs,OPrefO,PrefO,DB0,DB).
+
+reindex_subtrees(HashBits,HTree,CArgs,NArgs,OPrefO,PrefO,DB0,DB) :-
+    (HashBits =< 0
+     ->	reindex_kvs(HTree,CArgs,NArgs,OPrefO,PrefO,DB0,DB)
+     ;	h_comps(HTree,HTree1,HTree2,HTree3,HTree4),
+	reindex_subtree(HashBits,HTree1,CArgs,NArgs,OPrefO,PrefO,DB0,DB1),
+	reindex_subtree(HashBits,HTree2,CArgs,NArgs,OPrefO,PrefO,DB1,DB2),
+	reindex_subtree(HashBits,HTree3,CArgs,NArgs,OPrefO,PrefO,DB2,DB3),
+	reindex_subtree(HashBits,HTree4,CArgs,NArgs,OPrefO,PrefO,DB3,DB)
+    ).
+
+reindex_subtree(HashBits,HTree,CArgs,NArgs,OPrefO,PrefO,DB0,DB) :-
+    (HTree == []
+     ->	DB = DB0
+     ;	NHashBits is HashBits - 2,
+	reindex_subtrees(NHashBits,HTree,CArgs,NArgs,OPrefO,PrefO,DB0,DB)
+    ).
+
+reindex_kvs([],_CArgs,_NArgs,_OPrefO,_PrefO,DB,DB).
+reindex_kvs(KVs,CArgs,NArgs,OPrefO,PrefO,DB0,DB) :-
+    KVs = [K-V|KVsr],
+    copy_term(CArgs-PrefO,CArgsT-PrefOT),
+    CArgsT = [CArgT|RemArgs],
+    (K = Pred/Arity
+     ->	functor(CArgT,Pred,Arity),
+	CArgT =.. [Pred|Args],
+	basics:append(Args,RemArgs,NCArgs)
+     ;	CArgT = K,
+	NCArgs = RemArgs
+    ),
+    (NCArgs == []
+     ->	assert_pref_with_trie([PrefOT],[OPrefO],NArgs,V,DB0,DB1)
+     ;	reindex_ht(V,NCArgs,NArgs,OPrefO,PrefOT,DB0,DB1)
+    ),
+    reindex_kvs(KVsr,CArgs,NArgs,OPrefO,PrefO,DB1,DB).
+
+assert_pref_with_trie([HeadTerm|HeadTail],OPref,NArgs,HT,DB0,DB) :-
+    (atomic(HeadTerm)
+     ->	NHeadTail = HeadTail,
+	(is_most_general_term(OPref)
+	 -> NArgs1 is NArgs - 1,
+	    OPrefTail = constant % is simpler most general term
+	 ;  OPref = [HeadTerm|OPrefTail],
+	    NArgs1 = NArgs
+	)
+     ; HeadTerm = '$VAR'(VN),integer(VN)
+     ->	NHeadTail = HeadTail,
+	(is_most_general_term(OPref)
+	 -> NArgs1 is NArgs - 1,
+	    OPrefTail = constant
+	 ;  OPref = [_|OPrefTail],
+	    NArgs1 = NArgs
+	)
+     ;  HeadTerm =.. [_|SubTerms],
+	basics:length(SubTerms,K),
+	basics:append(SubTerms,HeadTail,NHeadTail),
+	(is_most_general_term(OPref)
+	 -> NArgs1 is NArgs - 1 + K,
+	    OPrefT = constant
+	 ;  OPref = [OPrefH|OPrefT],
+	    OPrefH =.. [_|PrefSubTerms],
+	    basics:append(PrefSubTerms,OPrefT,OPrefTail),
+	    NArgs1 = NArgs
+	)
+    ),
+    (NArgs1 =:= 0
+     ->	update_hashtree(HeadTerm,HT,_,DB0,DB1) % add SubTrie HT
+     ;	update_hashtree(HeadTerm,NewSubTrie,OldSubTrie,DB0,DB1),
+	assert_pref_with_trie(NHeadTail,OPrefTail,NArgs1,HT,OldSubTrie,NewSubTrie)
+    ),
+    db_comps(DB1,HashBits,NumInTab,HashTree),
+    (NumInTab < floor(2**HashBits)
+     ->	DB = DB1
+     ;	NHashBits is HashBits*2,
+	db_comps(DB,NHashBits,NumInTab,NHashTree),
+	rebuild_hashtree(HashTree,HashBits,NHashBits,NHashTree)
+    ).
+
+
+/********************************************************/
+
+:- comment(project_in_db/5,
+"@pred{project_in_db(+PrefI,+NArgs,+PrefO,+DB0,?DB)} creates a new
+relation that projects away the first @var{NArgs} of the tuples of
+@var{PrefI} in @var{DB0}, adding the result according to @var{PrefO}
+in @var{DB}.  The number of variables in @var{PrefI} minus @var{NArgs}
+must equal the number of variables in @var{PrefO}.  An example of its
+use is:
+	   
+@begin{verbatim}	   
+| ?- build_db(DB0),project_in_db(p(_,_,_,_),2,q(_,_),DB0,DB).
+@end{verbatim}
+
+which projects away the first two arguments of the @tt{p/4} relation
+in @var{DB0} to generate the @tt{q/2} relation in @var{DB}.
+").
+
+project_in_db(PrefI,NArgs,PrefO,DB0,DB) :-
+    cvt_pa(PrefI,PrefIa),
+    cvt_pa(PrefO,PrefOa),
+    find_hashtable_for_prefix([PrefIa],DB0,TLen,IHT),
+    TLenO is TLen - NArgs,
+    check_prefix_term([PrefOa],TLenO,'project_in_db/5'),
+    project_ht(IHT,NArgs,OHT),
+    (OHT == []
+     ->	remove_from_trie(PrefOa,_,DB0,_,DB)
+     ;	update_hashtree_for_prefix([PrefOa],OHT,_,_,DB0,DB)
+    ).
+
+:- comment(project_in_dbi/5,
+"@pred{project_in_dbi(+P1,NArgs,+P2,+H0,?H)} performs the same
+operation as @pred{project_in_db/5} except it expects (in @var{H0})
+and returns (in @var{H}) interned databases.  ").
+
+project_in_dbi(PrefI,NArgs,PrefO,H0,H) :-
+    intern_termhash(DB0,H0),
+    project_in_db(PrefI,NArgs,PrefO,DB0,DB),
+    intern_termhash(DB,H).
+
+project_ht([],_,[]).
+project_ht(IHT,NArgs,OHT) :-
+    db_comps(IHT,HBits,_Num,HTree),
+    project_subtrees(HBits,HTree,NArgs,[],OHT).
+
+project_subtrees(HashBits,HTree,NArgs,DB0,DB) :-
+    (HashBits =< 0
+     ->	project_kvs(HTree,NArgs,DB0,DB)
+     ;	h_comps(HTree,HTree1,HTree2,HTree3,HTree4),
+	project_subtree(HashBits,HTree1,NArgs,DB0,DB1),
+	project_subtree(HashBits,HTree2,NArgs,DB1,DB2),
+	project_subtree(HashBits,HTree3,NArgs,DB2,DB3),
+	project_subtree(HashBits,HTree4,NArgs,DB3,DB)
+    ).
+
+project_subtree(HashBits,HTree,NArgs,DB0,DB) :-
+    (HTree == []
+     ->	DB = DB0
+     ;	NHashBits is HashBits - 2,
+	project_subtrees(NHashBits,HTree,NArgs,DB0,DB)
+    ).
+
+project_kvs([],_NArgs,DB,DB).
+project_kvs(KVs,NArgs,DB0,DB) :-
+    KVs = [K-V|KVsr],
+    (K = Pred/Arity
+     ->	functor(CArgT,Pred,Arity),
+	CArgT =.. [Pred|Args],
+	basics:append(Args,RemArgs,NCArgs),
+	basics:length(Args,NNew),
+	NArgs1 is NArgs - 1 + NNew
+     ;	CArgT = K,
+	NCArgs = RemArgs,
+	NArgs1 is NArgs - 1
+    ),
+    (NArgs1 =:= 0
+     ->	union_db(V,DB0,DB1)
+     ;	project_ht(V,NArgs1,DB2),
+	union_db(DB2,DB0,DB1)
+    ),
+    project_kvs(KVsr,NArgs,DB1,DB).
+
+
+/********************************************************/
+
+:- comment(copy_in_db/4, "@pred{copy_in_db(+PrefI,+PrefO,+DB0,?DB)}
+makes a copy of @var{PrefI} into @var{Pref0} generating @var{DB} from
+@var{DB0}.  @var{PrefI} and @var{PrefO} must have the same number of
+variables.  This is a very fast operation since it simple copies the
+pointer to the appropriate subtrie. ").
+
+copy_in_db(PrefI,PrefO,DB0,DB) :-
+    cvt_pa(PrefI,PrefIa),
+    cvt_pa(PrefO,PrefOa),
+    (find_hashtable_for_prefix([PrefIa],DB0,TL,HT1)
      ->	true
      ;	HT1 = [],
-	check_prefix_term([Pref1a],TL,'copy_in_db/4')
+	check_prefix_term([PrefIa],TL,'copy_in_db/4')
     ),
-    (update_hashtree_for_prefix([Pref2a],HT1,_,TL,DB0,DB)
+    (update_hashtree_for_prefix([PrefOa],HT1,_,TL,DB0,DB)
      ->	true
-     ;	misc_error(('[copy_in_db/4] Predicate selection pattern: ',Pref2a,
+     ;	misc_error(('[prolog_in_db:copy_in_db/4] Predicate selection pattern: ',PrefOa,
 		    ' is illegal or inconsistent with other patterns.'))
     ).
 
-copy_in_dbi(Pref1,Pref2,H0,H) :-
+:- comment(copy_in_dbi/4, "@pred{copy_in_dbi(+P1,+P2,+H0,?H)} performs
+the same operation as @pred{copy_in_db/4} except it expects (in
+@var{H0}) and returns (in @var{H}) interned databases.  ").
+
+copy_in_dbi(PrefI,PrefO,H0,H) :-
     intern_termhash(DB0,H0),
-    copy_in_db(Pref1,Pref2,DB0,DB),
+    copy_in_db(PrefI,PrefO,DB0,DB),
     intern_termhash(DB,H).
 
+:- comment(materialize_in_db/4,
+"@pred{materialize_in_db(+PrefI,+PrefO,+DB0,?DB)} calls the query
+@var{PrefI} in @var{DB0} and asserts the term @var{Pref0} into
+@var{DB} for every answer.  Normally every variable in @var{Pref0}
+will be in the goal @var{PrefI}.  ").
 
-materialize_in_db(Pref1,Pref2,DB0,DB) :-
-    cvt_pa(Pref1,Pref1a),
-    cvt_pa(Pref2,Pref2a),
-    tail_from_prefix_term([Pref1a],Tail),
-    tail_from_prefix_term([Pref2a],Tail),
-    findall(Pref2a,call_in_db(Pref1a,DB0),Facts),
-    retractall_in_db(Pref2a,DB0,DB1),
+materialize_in_db(PrefI,PrefO,DB0,DB) :-
+    cvt_pa(PrefI,PrefIa),
+    cvt_pa(PrefO,PrefOa),
+    tail_from_prefix_term([PrefIa],Tail),
+    tail_from_prefix_term([PrefOa],Tail),
+    findall(PrefOa,call_in_db(PrefIa,DB0),Facts),
+    retractall_in_db(PrefOa,DB0,DB1),
     assert_in_db(Facts,DB1,DB).
 
-materialize_in_dbi(Pref1,Pref2,H0,H) :-
+:- comment(materialize_in_dbi/4,
+"@pred{materialize_in_dbi(+P1,+P2,+H0,?H)} performs the same operation
+as @pred{materialize_in_db/4} except it expects (in @var{H0}) and
+returns (in @var{H}) interned databases.  ").
+
+materialize_in_dbi(PrefI,PrefO,H0,H) :-
     intern_termhash(DB0,H0),
-    materialize_in_db(Pref1,Pref2,DB0,DB),
+    materialize_in_db(PrefI,PrefO,DB0,DB),
     intern_termhash(DB,H).
 
 /******************************************************/
+
+:- comment(subset_db/2, "@pred{subset_db(+DB1,+DB2)} succeeds if the
+terms in prolog DB @var{DB1} are a subset of the terms in prolog DB
+@pred{DB2}, and fails otherwise. ").
 
 subset_db(DB1,DB2) :-
     (DB1 == DB2
@@ -1545,13 +2142,26 @@ subset_db(DB1,DB2) :-
 	)
     ).
 
+:- comment(subset_dbi/2, " @pred{subset_dbi(+H1,+H2)} has the same
+functionality as @pred{subset_db(DB1,DB2)}, but takes interned terms
+for the trie arguments. ").
+
 subset_dbi(H1,H2) :-
     intern_termhash(DB1,H1),
     intern_termhash(DB2,H2),
     subset_db(DB1,DB2).
 
+:- comment(subset_in_db/3, "@pred{subset_in_db(+Pref1,+Pref2,+DB)}
+succeeds if the tuples specified by prefix term @var{Pref1} are a
+subset of those specified by @var{Pref2} in @var{DB}.  The number of
+variables in @var{Pref1} and @var{Pref2} must be the same. ").
+
 subset_in_db(P1,P2,DB) :-
     apply_rel_op_in_db(lambda(A,B,subset_db(A,B)),P1,P2,DB).
+
+:- comment(subset_in_dbi/3, "@pred{subset_in_dbi(+P1,+P2,+H)} performs
+the same function as @pred{subset_in_db/3}, but expects the database
+argument to be an interned trie. ").
 
 subset_in_dbi(P1,P2,DB) :-
     apply_rel_op_in_dbi(lambda(A,B,subset_db(A,B)),P1,P2,DB).
@@ -1784,10 +2394,12 @@ h_comps(H,H1,H2,H3,H4) :-
      ;	H = h(H1,H2,H3,H4)
     ).
 
-add_kv(V,K,HT0,HT) :-
+add_kv(V,K,A,HT0,HT) :-
     (V = []
-     ->	HT0 = HT
-     ;	HT0 = [K-V|HT]
+     ->	HT0 = HT,
+	A = 0
+     ;	HT0 = [K-V|HT],
+	A = 1
     ).
 
 count_keys([],0).
@@ -1804,7 +2416,11 @@ count_keys(h(HT1,HT2,HT3,HT4),N) :-
     count_keys(HT4,N4),
     N is N1+N2+N3+N4.
 
-fix_ht_size(_HBits,0,_HT,[]) :- !.
+fix_ht_size(_HBits,0,HT,[]) :- !,
+    (HT == []
+     ->	true
+     ;	standard:writeln(userout,'ERROR in ht num, internal bug!! ')
+    ).
 fix_ht_size(HBits,NNum,HT,DB) :-
     (NNum =< 1
      ->	GHBits = 2
