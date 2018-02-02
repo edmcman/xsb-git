@@ -1,3 +1,9 @@
+
+
+
+
+
+
 completed(join_in_db)
 completed(join_in_dbi)
 completed(project_in_db)
@@ -6,24 +12,94 @@ completed(reindex_in_db)
 completed(reindex_in_dbi)
 completed(xprod_in_db)
 completed(xprod_in_dbi)
+dbis_built
 dbs_built
+dbs_built
+pr1(a,b,b) :- true.
+pr1(a,b,c) :- true.
+pr2(A,B,B) :- true.
+pr2a(a,A,b) :- true.
+pr3(2,2,2) :- true.
+pr3(2,2,3) :- true.
+pr3(2,3,2) :- true.
+pr3(2,3,3) :- true.
+pr3(3,2,2) :- true.
+pr3(3,2,3) :- true.
+pr3(3,3,2) :- true.
+pr3(3,3,3) :- true.
+pr4(2,2,2) :- true.
+pr4(2,2,3) :- true.
+pr4(2,3,2) :- true.
+pr4(2,3,3) :- true.
+pr4(3,2,2) :- true.
+pr4(3,2,3) :- true.
+pr4(3,3,2) :- true.
+pr4(3,3,3) :- true.
+pr5(1,27) :- true.
+success(difference1)
+success(difference1i)
+success(difference2)
 success(difference2_in_db)
 success(difference2_in_dbi)
+success(difference2i)
 success(difference_in_db)
 success(difference_in_dbi)
+success(disjoint1)
 success(disjoint1_in_db)
 success(disjoint1_in_dbi)
+success(disjoint1i)
+success(intersect1)
+success(intersect1i)
+success(intersect2)
+success(intersect2i)
 success(intersect_in_db)
 success(intersect_in_dbi)
+success(subset1)
 success(subset1_in_db)
 success(subset1_in_dbi)
+success(subset1i)
+success(subset2)
 success(subset2_in_db)
 success(subset2_in_dbi)
+success(subset2i)
+success(sym_diff1)
+success(sym_diff1i)
+success(sym_diff2)
+success(sym_diff2i)
+success(sym_diff_def)
+success(sym_diff_defi)
 success(sym_diff_in_db)
 success(sym_diff_in_db2)
 success(sym_diff_in_db3)
 success(sym_diff_in_dbi)
 success(sym_diff_in_dbi2)
 success(sym_diff_in_dbi3)
+success(union1)
+success(union1i)
+success(union2)
+success(union2i)
 success(union_in_db)
 success(union_in_dbi)
+test1(app([],[a,b,c],[a,b,c]))
+test1(app([a,b,c],[],[a,b,c]))
+test1(app([a,b],[c],[a,b,c]))
+test1(app([a],[b,c],[a,b,c]))
+test1i(app([],[a,b,c],[a,b,c]))
+test1i(app([a,b,c],[],[a,b,c]))
+test1i(app([a,b],[c],[a,b,c]))
+test1i(app([a],[b,c],[a,b,c]))
+test2([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
+test2i([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
+test3([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
+test3i([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
+test4([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
+test5 succeeded
+test5i succeeded
+test6 succeeded
+test6i succeeded
+test_retract_1:
+test_retract_2:
+test_retract_2a:
+test_retract_3:
+test_retract_4:
+test_retract_4:

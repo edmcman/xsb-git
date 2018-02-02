@@ -28,12 +28,11 @@
 :- import concat_atom/2 from string.
 :- import reverse/2 from basics.
 
-/*test :- testdb,fail.
+test :- testdb,fail.
 test :- testretract,fail.
 test :- testdbops,fail.
 test :- testdbi,fail.
 test :- testdbiops,fail.
-*/
 test :- testindbops,fail.
 test.
 
