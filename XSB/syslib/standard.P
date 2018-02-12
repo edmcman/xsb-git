@@ -1157,7 +1157,7 @@ table(Options) :-
 	(Options = as(Ps,List) ->
 	    check_table_options(List,Ps,no),  % dont override other values
 	    table_1(Ps),
-            ( (comma_member(dynamic,Options) ; comma_member(dyn,Options)) -> 
+            ( (comma_member(dynamic,List) ; comma_member(dyn,List)) -> 
 	      exec_dyn_on_predlist(Ps) ; true),
 	    exec_table_options(List,Ps)
          ;  table_1(Options)).
