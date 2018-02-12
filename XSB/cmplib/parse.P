@@ -865,6 +865,9 @@ parse_directive(table(as(PredCList,Options)),QrList,SymTab,_ModName,_ModStruct) 
 	parse_comma_list_table(PredCList,SymTab,Options),
 	check_ground(Options,(table)/1,1),
 	check_table_options(Options,PredCList,_),
+	( (comma_member(dyn,Options) ; comma_member(dynamic,Options)) ->
+             parse_comma_list_dyn(PredCList,SymTab)
+	 ;   true ),
 	parse_query(table(as(PredCList,Options)), QrList, SymTab).
 parse_directive(table(PredCList),_QrList,SymTab,_ModName,_ModStruct) :- !,
 	parse_comma_list_table(PredCList,SymTab,no_options).
