@@ -1064,16 +1064,18 @@ module {\tt usermod} may be enumerated using:
 %
 \end{itemize}
 \item{\em Tabling Properties}.  {\tt Property} unifies with properties
-  from the the following set of categories only if the denoted
-  predicate is tabled.
+  from theq following set of categories only if the denoted predicate
+  is tabled.~\footnote{For backward compatability, {\tt
+      predicate\_property/2} can be called with {\tt Property} bound
+    to {\tt tabled}, {\tt incremental} or {\tt opaque}.}
 %
 \begin{itemize}
 \item The {\em Table Reuse Criterion} category, which is one of 
 \begin{itemize}
-\item{\tt [table\_reuse,variance]} The predicate has been declared
+\item{\tt table\_reuse=variance} The predicate has been declared
   tabled and to use call variance.
 %
-\item{\tt [table\_reuse,subsumption]} The predicate has been declared
+\item{\tt table\_reuse=subsumption} The predicate has been declared
   tabled and to use call subsumption
 %
 %\item{\tt tabled(default)} The predicate has been declared tabled and
@@ -1084,45 +1086,60 @@ module {\tt usermod} may be enumerated using:
 %
 \item The {\em Table Updating Behavior} category which can be one of 
 \begin{itemize}
-\item{\tt [table\_updating,incremental} The predicate was declared as
+\item{\tt table\_updating=incremental} The predicate was declared as
   either incremental dynamic or as incremental tabled; or
 %
-\item{\tt [table\_updating,opaque]} The predicate was declared as
+\item{\tt table\_updating=opaque} The predicate was declared as
   tabled and opaque to incremental updates.
 %
-\item{\tt [table\_updating,none]} The predicate is tabled, but is
-  outside of the incremental updating system.
+\item The default is that a predicate is outside of the incremental
+  updating system; in such a case the {\tt predicate\_property/2}
+  relation does not include any information about updating behavior.
+%\item{\tt table\_updating=none} The predicate is tabled, but is
+%  outside of the incremental updating system.
 \end{itemize}
 %
 \item The {\em Ground Term Representation} category which can be one
   of
 \begin{itemize}
-\item{\tt [ground\_term,intern} Ground calls and answers used in
+\item{\tt ground\_term=intern} Ground calls and answers used in
   tables for this predicate are interned.
-\item{\tt [ground\_term,trie} Ground calls and answers used in tables
-  for this predicate are represented via tries (this is the default
-  behavior for XSB).
+%\item{\tt ground\_term=trie} Ground calls and answers used in tables
+%  for this predicate are represented via tries (this is the default
+%  behavior for XSB).
+\item The default is that a predicate uses tries to represent ground
+  terms; in such a case the {\tt predicate\_property/2} relation does
+  not include any information about ground term representation.
 \end{itemize}
 \item The {\em Subgoal Abstraction} category
 \begin{itemize}
-\item{\tt [subgoal\_size,N]}.  If {\tt N}$>1$, indicates the size at
-  which tabled subgoals for the predicate are abstracted; if {\tt
-    N}$=0$, indicates that subgoal abdstraction is not used for this
-  predicate.
+\item{\tt subgoal\_size=N}  If {\tt N}$>1$, indicates the size at
+  which tabled subgoals for the predicate are abstracted.
+%; if {\tt N}$=0$, indicates that subgoal abdstraction is not used for
+%; this  predicate.
+%
+\item The default is that a predicate does not use subgoal
+  abstraction; in such a case the {\tt predicate\_property/2} relation
+  does not include any information about this tabling property.
+
 \end{itemize}
 \item The {\em Answer Abstraction} category
 \begin{itemize}
-\item{\tt [answer\_size,N]}.  If {\tt N}$>1$, indicates the size at
-  which tabled answers for the predicate are abstracted; if {\tt
-    N}$=0$, indicates that answer abdstraction is not used for this
-  predicate.
+\item{\tt answer\_size=N}.  If {\tt N}$>1$, indicates the size at
+  which tabled answers for the predicate are abstracted
+% ; if {\tt N}$=0$, indicates that answer abdstraction is not used for
+% this   predicate.
+%
+\item The default is that a predicate does not use answer
+  abstraction; in such a case the {\tt predicate\_property/2} relation
+  does not include any information about this tabling property.
 \end{itemize}
 \item The {\em Thread Sharing} category is active  only if XSB is
   configured with multi-threading.
 \begin{itemize}
-\item{\tt [thread\_sharing,shared]}, which indicates that tables for
+\item{\tt thread\_sharing=shared}, which indicates that tables for
   this predicate are shared among threads.
-\item{\tt [thread\_sharing,private]}, which indicates that tables for
+\item{\tt thread\_sharing-private}, which indicates that tables for
   this predicate are {\tt not} shared among threads.
 \end{itemize}
 \item The {\em Answer Subsumption} property is active only if XSB is
@@ -1153,6 +1170,8 @@ module {\tt usermod} may be enumerated using:
   predicate is a meta-predicate. This property provides
   compatibility with other Prolog compilers and with forthcoming
   ISO Prolog standards. 
+%
+\item{\tt multifile} The predicate has been declared to be multifile.
 \end{itemize}
 
     Finally, since {\tt dynamic} is usually declared as an operator with 
