@@ -139,11 +139,11 @@ used.  The parameter {\tt Operations} can take one of three forms:
 \item {\tt Options} is either a table option or a list of table
   options.  In \version, the following table options are supported
 \bi
-\item {\tt dynamic} or {\tt dyn} which causes the predicate(s) to be
-  treated as dynamic in addition to being tabled, and is equivalent to
-  {\tt ?- dynamic PredSpec}~\footnote{Because dynamic is an operator,
-    the declaration requires parentheses, e.g.: {\tt table p/n as
-      (dynamic).}}
+\item {\tt dyn} which causes the predicate(s) to be treated as dynamic
+  in addition to being tabled, and is equivalent to {\tt ?- dynamic
+    PredSpec}~\footnote{The option {\tt dynamic} can be used, but
+    because the atom dynamic is an operator in XSB, the declaration
+    requires parentheses, e.g.: {\tt table p/n as (dynamic).}}
 %
 \item {\tt subsumptive} which causes the table evaluation method of
   the predicate(s) to use call subsumption.
