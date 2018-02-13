@@ -39,7 +39,7 @@
 
 /*----------------------------------------------------------------------*/
 % truth_value/2
-
+:- export is_tabled/1.
 is_tabled(Term):- 
 	term_psc(Term,Psc),
 	psc_tabled(Psc,T),
@@ -903,37 +903,10 @@ check_variant(Term,DontCares):-
 
 %-----------------------
 
-:- export set_predicate_property/3.  % still under development.
-set_predicate_property(PredSpec,Property,Value):-
-    ( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
-    set_predicate_property_1(Term,Property,Value).
-
-set_predicate_property_1(Term,subgoal_abstraction,Size):-
-    !,
-    set_tif_property(Term,subgoal_size,Size).
-
-set_predicate_property_1(Term,answer_abstraction,Size):- 
-    !,
-    set_tif_property(Term,answer_size,Size).
-
-
-/*
-set_predicate_property(PredSpec,ground_interning,Flag):- !,
-set_predicate_property(PredSpec,subgoal_variance,Flag):- !,
-%set_predicate_property(PredSpec,subgoal_subsumption,Flag):- !,
-%set_predicate_property(PredSpec,incremental,Flag):- !,
-%set_predicate_property(PredSpec,nonincremental,Flag):- !,
-%set_predicate_property(PredSpec,opaque,Flag):- !,
-%set_predicate_property(PredSpec,private,Flag):- !,
-%set_predicate_property(PredSpec,shared,Flag):- !,
-*/
-
-:- export check_table_option/4.
-
 check_table_option(subgoal_abstract(_),Options,PredCList,_Override) :- !,
         (comma_member(subsumptive,Options) -> 
 	    table_error(('Cannot declare ',PredCList,
-	           ' as tabled with options subgoal_abstract(_) and subsumptive'))
+	           ' as tabled with options subgoal_abstract and subsumptive'))
 	 ;  true).
 check_table_option(dynamic,Options,PredCList,_Override) :- !,
         (comma_member(incremental,Options) -> 
@@ -982,12 +955,12 @@ check_table_option(variant,Options,PredCList,Override) :- !,
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options variant and subsumptive'))
 	 ;  true).
-check_table_option(incremental,Options,PredCList,_Override) :- !,
-        (comma_member(nonincremental,Options) -> 
+check_table_option(incremental,Options,PredCList,Override) :- !,
+        (comma_member(nonincremental,Options),Override=no -> 
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options incremental and nonincremental'))
 	 ;  true),
-        (comma_member(opaque,Options) -> 
+        (comma_member(opaque,Options),Override=no -> 
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options incremental and opaque'))
 	 ;  true),
@@ -1011,22 +984,22 @@ check_table_option(incremental,Options,PredCList,_Override) :- !,
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options opaque and dynamic'))
 	 ;  true).
-check_table_option(nonincremental,Options,PredCList,_Override) :- !,
-        (comma_member(incremental,Options) -> 
+check_table_option(nonincremental,Options,PredCList,Override) :- !,
+        (comma_member(incremental,Options),Override=no -> 
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options nonincremental and incremental'))
 	 ;  true),
-        (comma_member(opaque,Options) -> 
+        (comma_member(opaque,Options),Override=no -> 
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options nonincremental and opaque'))
 	 ;  true).
 % TES: will be allowing subsumptive/opaque
-check_table_option(opaque,Options,PredCList,_Override) :- !,
-        (comma_member(incremental,Options) -> 
+check_table_option(opaque,Options,PredCList,Override) :- !,
+        (comma_member(incremental,Options),Override=no -> 
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options opaque and incremental'))
 	 ;  true),
-        (comma_member(nonincremental,Options) -> 
+        (comma_member(nonincremental,Options),Override=no -> 
 	    table_error(('Cannot declare ',PredCList,
 	           ' as tabled with options opaque and nonincremental'))
 	 ;  true),
@@ -1062,9 +1035,9 @@ check_table_option(shared,Options,PredCList,_Override) :- !,
 	 ;  true).
 check_table_option(answer_abstract(_),_Options,_PredCList,_Override) :- !. % should work with anything.
 check_table_option(intern,Options,PredCList,_Override) :- !,
-	(comma_member(subgoal_abstract(X),Options)
+	(comma_member(subgoal_abstract(_),Options)
 	 ->	table_error(('Cannot declare ',PredCList,
-		      ' as tabled with options intern and ',subgoal_abstract(X)))
+		      ' as tabled with options intern and ',subgoal_abstract))
 	 ;	true
 	),
 	(comma_member(dynamic,Options)
@@ -1092,45 +1065,45 @@ check_table_option(intern,Options,PredCList,_Override) :- !,
 		     ' as tabled with options intern and opaque'))
 	 ;	true
 	),
-	(comma_member(answer_abstract(X2),Options)
+	(comma_member(answer_abstract(_),Options)
 	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and ',answer_abstract(X2)))
+		     ' as tabled with options intern and ',(answer_abstract(_))))
 	 ;	true
 	).
 check_table_option(ans_subsumption,Options,PredCList,_Override) :- !,
-	(comma_member(subgoal_abstract(X),Options)
+	(comma_member(subgoal_abstract(_),Options)
 	 ->	table_error(('Cannot declare ',PredCList,
-		      ' as tabled with options intern and ',subgoal_abstract(X)))
+		      ' as tabled with options ans_subsumption and ',(subgoal_abstract(_))))
 	 ;	true
 	),
 	(comma_member(dynamic,Options)
 	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and dynamic'))
+		     ' as tabled with options ans_subsumption  and dynamic'))
 	 ;	true
 	),
 	(comma_member(subsumptive,Options)
 	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and subsumptive'))
+		     ' as tabled with options ans_subsumption  and subsumptive'))
 	 ;	true
 	),
 	(comma_member(approximate(X1),Options)
 	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and ',approximate(X1)))
+		     ' as tabled with options ans_subsumption  and ',approximate(X1)))
 	 ;	true
 	),
 	(comma_member(incremental,Options)
 	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and incremental'))
+		     ' as tabled with options ans_subsumption  and incremental'))
 	 ;	true
 	),
 	(comma_member(opaque,Options)
 	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and opaque'))
+		     ' as tabled with options ans_subsumption  and opaque'))
 	 ;	true
 	),
-	(comma_member(answer_abstract(X2),Options)
+	(comma_member(answer_abstract(_),Options)
 	 ->	table_error(('Cannot declare ',PredCList,
-		     ' as tabled with options intern and ',answer_abstract(X2)))
+		     ' as tabled with options ans_subsumption  and ',(answer_abstract(_))))
 	 ;	true
 	).
 check_table_option(Option,_Options,_PredCList,_Override) :- !,
@@ -1162,8 +1135,8 @@ set_tabled_eval_for_pred(PredSpec,Method) :-
 	( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
 	( set_tabled_eval(Term,Method), fail; true ).
 
-set_tabled_eval(Predicate,EvalMethod) :-
-	set_tabled_eval(Predicate,EvalMethod).
+set_tabled_eval(Term,EvalMethod) :-
+	set_tabled_eval(Term,EvalMethod).
 
 /* Here, if a predicate is static, and non-tabled we throw an error,
    otherwise a no-op */
@@ -1213,9 +1186,29 @@ add_alt_semantics(Spec,Mode) :-
 alt_semantics(weak_cs,WEAK_CS):- !.
 alt_semantics(wfs_semantics,WFS_SEMANTICS).
 
+:- export set_psc_table_property/2.
+:- export set_tif_property/3, get_tif_property/3.
+
+set_psc_table_property(Term,variant):- set_tabled_eval(Term,VARIANT_EVAL_METHOD).
+set_psc_table_property(Term,subsumptive):- set_tabled_eval(Term,SUBSUMPTIVE_EVAL_METHOD).
+set_psc_table_property(Term,incremental):-
+    term_psc(Term,Psc),
+    (predicate_has_tables(Psc) ->
+       permission_error(set_incremental_tabling,predicate_with_tables,Term,(table)/1) 
+     ; add_incr_table(Term,INCREMENTAL)).
+set_psc_table_property(Term,nonincremental):-
+    term_psc(Term,Psc),
+    (predicate_has_tables(Psc) ->
+       permission_error(set_incremental_tabling,predicate_with_tables,Term,(table)/1) 
+     ; add_incr_table(Term,NONINCREMENTAL) ).
+set_psc_table_property(Term,opaque):-
+    term_psc(Term,Psc),
+    (predicate_has_tables(Psc) ->
+       permission_error(set_incremental_tabling,predicate_with_tables,Term,(table)/1) 
+     ; add_incr_table(Term,OPAQUE) ).
+
 %----------------------------------------------------------------------
 
-:- export set_tif_property/3, get_tif_property/3.
 get_tif_property(Term,Property,Value):- 
 	tif_translate(Property,Prop),
 	table_inspection_function(GET_TIF_PROPERTY,Term,Prop,Value,_).
@@ -2358,7 +2351,7 @@ max_memory_header:-
 
 /*---------------------------------------------------------------------*/
 % get_tabling options
-
+/*
 % assumes predspec is nonvar
 process_predspec(PredSpec,Term):-
     PredSpec = :(Module, T),!,
@@ -2366,7 +2359,8 @@ process_predspec(PredSpec,Term):-
     term_new_mod(Module, T1, Term).
 process_predspec(PredSpec,Term):-
     ((PredSpec = F/A) -> functor(Term,F,A) ; Term = PredSpec).
-    
+*/
+
 get_tabling_options(PredSpec,List):-
 %   writeln(get_tabling_options(PredSpec,List)),
     setof(Option,PredSpec^get_tabling_option(PredSpec,Option),List).
@@ -2416,15 +2410,16 @@ process_tif_property(intern,Value,Option):- !,
 process_tif_property(answer_subsumption,Value,Option):- !,
 	(Value = 1 -> Option=(answer_subsumption=true) ; fail).
 process_tif_property(answer_size,Value,Option):- !,
-   (Value = 0 -> fail ; Option = (answer_size=Value)).
+   (Value = 0 -> fail ; Option = (answer_abstract=Value)).
 process_tif_property(subgoal_size,Value,Option):- !,
-   (Value = 0 -> fail ; Option = (subgoal_size=Value)).
+   (Value = 0 -> fail ; Option = (subgoal_abstract=Value)).
 process_tif_property(Property,Value,Property=Value).
 
+% These tabling bits should be broken into bitfields in the PSC record. 
 get_tabling_option_psc(PSC,Option):- 
 	psc_tabled(PSC, Tabled),
-	 ( (Tabled /\ T_VARIANT) > 0 -> Option = (table_reuse=variance)
-          ; (Tabled /\ T_SUBSUMPTIVE) > 0 -> Option = (table_reuse=subsumption)
+	 ( (Tabled /\ T_VARIANT) > 0 -> Option = (table_reuse=variant)
+          ; (Tabled /\ T_SUBSUMPTIVE) > 0 -> Option = (table_reuse=subsumptive)
           ; Option= (table_reuse=default) ).
 get_tabling_option_psc(PSC,Option):- 
 	psc_get_incr(PSC, Incr),

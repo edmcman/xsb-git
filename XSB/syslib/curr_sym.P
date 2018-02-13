@@ -678,41 +678,63 @@ psc_meta_predicate_property_args([Meta| Metas], N, Arity, [Arg| Args]) :-
 
 	 %%%
 %------------------------------------
-	 /*
 :- export set_predicate_property/2.
-	 % Could do nonincremental?
-	 set_predicate_property_1(PredSpec,subgoal_abstract(S)):-
-	     get_tabling_options(PredSpec,Options),
-	     check_table_option(subgoal_abstract(_),Options,PredSpec,yes),
-	     get_tif_property(Subgoal,subgoal_size,N),
-	 (N = 0 -> S = unlimited ; S = N).
-	 set_predicate_property_1(Subgoal,answer_abstract(S)):-
-	 %    get_tabling_options(PredSpec,Options),
-	 %    check_table_option(answer_abstract(_),Options,PredSpec,yes), % should work with anything.
-	     get_tif_property(Subgoal,answer_size,N),
-	 (N = 0 -> S = unlimited ; S = N).
-	 set_predicate_property_1(Subgoal,subsumptive):-
-	    get_tabling_options(PredSpec,Options),
-	    check_table_option(subsumptive,Options,PredSpec,Yes),
-	 set_predicate_property_1(Subgoal,variant):-
-	    get_tabling_options(PredSpec,Options),
-	    check_table_option(variant,Options,PredSpec,Yes),
-	 set_predicate_property_1(Subgoal,opaque):-
-	    check_table_option(opaque,Options,PredCList,_Override),
-	    get_tabling_options(PredSpec,Options),
-	    check_table_option(opaque,Options,PredSpec,Yes),
-	 
-	 Put in predicate_property
-subgoal_property_1(Subgoal,max_subgoal_size(S)):-
-    get_tif_property(Subgoal,subgoal_size,N),
-    (N = 0 -> S = unlimited ; S = N).
-subgoal_property_1(Subgoal,max_answer_size(S)):-
-    get_tif_property(Subgoal,answer_size,N),
-    (N = 0 -> S = unlimited ; S = N).
-subgoal_property_1(Subgoal,ground_interning):-
-    get_tif_property(Subgoal,intern,yes),
-% opaque/private/shared
-*/
+:- import is_tabled/1,set_psc_table_property/2,check_table_option/4,set_tif_property/3 from tables.
+
+set_predicate_property(TermSpec,Property):-
+    (TermSpec = :(Module, T1) -> term_new_mod(Module, T1, Term) ; TermSpec = Term),
+    is_tabled(Term),
+    (Property = (P=V) -> Prop = P,Value = V ; Prop = Property),
+    set_predicate_property_1(Term,Prop,Value).
+
+translate_tabling_options([H],H1):-
+    !,
+    translate_tabling_option(H,H1).
+translate_tabling_options([H|T],(H1,T1)):-
+    translate_tabling_option(H,H1),
+    translate_tabling_options(T,T1).
+
+translate_tabling_option((table_reuse=M),M):- !.
+translate_tabling_option((updating=M),M):- !.
+translate_tabling_option((subgoal_abstract=M),subgoal_abstract(M)):- !.
+translate_tabling_option((answer_abstract=M),answer_abstract(M)):- !.
+translate_tabling_option((ground_term=M),M):- !.
+translate_tabling_option((thread_sharing=M),M):- !.
+translate_tabling_option((answer_subsumption=_),ans_subsumption):- !.
+
+
+
+
+:- index(set_predicate_property_1/3,2).
+set_predicate_property_1(Term,subgoal_abstract,N):-
+    get_tabling_options(Term,OptionsL),translate_tabling_options(OptionsL,Options),
+    check_table_option(subgoal_abstract(N),Options,Term,yes),
+    set_tif_property(Term,subgoal_size,N).
+set_predicate_property_1(Term,answer_abstract,N):-  
+    %    get_tabling_options(Term,Options),  not needed, works with everythingn
+    %    check_table_option(answer_abstract(_),Options,Term,yes), % should work with anything.
+    set_tif_property(Term,answer_size,N).
+set_predicate_property_1(Term,subsumptive,_):-
+    get_tabling_options(Term,OptionsL),translate_tabling_options(OptionsL,Options),
+    check_table_option(subsumptive,Options,Term,yes),
+    set_psc_table_property(Term,subsumptive).
+set_predicate_property_1(Term,variant,_):-
+    get_tabling_options(Term,OptionsL),translate_tabling_options(OptionsL,Options),
+    check_table_option(variant,Options,Term,yes),
+    set_psc_table_property(Term,variant).
+set_predicate_property_1(Term,incremental,_):-
+    get_tabling_options(Term,OptionsL),translate_tabling_options(OptionsL,Options),
+    check_table_option(incremental,Options,Term,yes),
+    set_psc_table_property(Term,incremental).
+set_predicate_property_1(Term,nonincremental,_):-
+    get_tabling_options(Term,OptionsL),translate_tabling_options(OptionsL,Options),
+    check_table_option(nonincremental,Options,Term,yes),
+    set_psc_table_property(Term,nonincremental).
+set_predicate_property_1(Term,opaque,_):-
+    get_tabling_options(Term,OptionsL),translate_tabling_options(OptionsL,Options),
+    check_table_option(opaque,Options,Term,yes),
+    set_psc_table_property(Term,opaque).
+
 /* ===== module_property/2 ============================================ */
 
 %   module_property(?Module, ?Property)

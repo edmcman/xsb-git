@@ -92,6 +92,8 @@
 
 :- export add_alt_semantics/2.
 :- export truth_value/2.
+:- export check_table_option/4.
+
 
 % Obsolete
 :- export    abolish_table_call/1,       abolish_table_call/2.
