@@ -2362,38 +2362,75 @@ max_memory_header:-
 % assumes predspec is nonvar
 process_predspec(PredSpec,Term):-
     PredSpec = :(Module, T),!,
-    (T = F/A -> functor(T1,F,A) ; T1 = T),
+    ((T = F/A) -> functor(T1,F,A) ; T1 = T),
     term_new_mod(Module, T1, Term).
 process_predspec(PredSpec,Term):-
-    (PredSpec = F/A -> functor(Term,F,A) ; Term = PredSpec).
+    ((PredSpec = F/A) -> functor(Term,F,A) ; Term = PredSpec).
     
-:- export get_tabling_options/2.
-:- import psc_get_incr/2,psc_shared/2 from machine.
-:- import xsb_configuration/2 from xsb_configuration.
-
 get_tabling_options(PredSpec,List):-
+%   writeln(get_tabling_options(PredSpec,List)),
     setof(Option,PredSpec^get_tabling_option(PredSpec,Option),List).
 
-get_tabling_option(PredSpec,Option):- 
-    (var(PredSpec) -> instantiation_error(get_tabling_options/2,1) ; true),
-    process_predspec(PredSpec,Term),
-    (  term_psc(Term,PSC),
-       psc_tabled(PSC, Tabled),Tabled > 0,
-       get_tabling_option_psc(PSC,Option)
-     ; get_tif_property(Term,Property,Value),
-       (Property = intern ->
-	    (Value = 0 -> Option = [ground_term,trie] ; Option = [ground_term,intern])
-        ;   Option = [Property,Value] ) ).
+get_tabling_option(Term,Option):-
+%   writeln(get_tabling_option(Term,Option)),
+    (var(Term) -> instantiation_error(get_tabling_options/2,1) ; true),
+%    process_predspec(PredSpec,Term),
+    term_psc(Term,PSC),
+    psc_tabled(PSC, Tabled),  
+    psc_type(PSC, Type),
+%   writeln(get_tabling_option_1(Type,Term,Tabled,PSC,Option)),
+    get_tabling_option_1(Type,Term,Tabled,PSC,Option).
+
+/* Tabling bit is set for dynamic IDG leaves -- this seems a bad
+ * design but I didn't change it.  So if a term is dynamic and tabled
+ * you need to check whether its incremental -- if so its an IDG leaf
+ * and if not its a real tabled predicate */
+      
+get_tabling_option_1(Type,_Term,Tabled,PSC,Option):- 
+    psc_get_incr(PSC, Incr),
+    Tabled /\ 12 > 0,
+    ( (Type = T_DYNA,Incr > 0) -> 
+       get_tabling_option_IDG_leaf(Incr,Option)
+     ; get_tabling_option_2(_Term,Tabled,Incr,PSC,Option) ).
+
+get_tabling_option_IDG_leaf(Incr,Option):- 
+    ( Incr == INCREMENTAL -> Option = (updating=incremental) 
+     ; Incr == OPAQUE -> Option = (updating=opaque) ).
+%    ; Option = (updating=none) ) .
+
+get_tabling_option_2(Term,_Tabled,_Incr,PSC,Option):- 
+%   writeln(get_tabling_option_1_2(Term,Tabled,Incr,PSC,Option)),
+    (   get_tabling_option_psc(PSC,Option)
+      ; get_tif_property(Term,Property,Value),
+%	writeln(get_tif_property(Term,Property,Value)),
+        process_tif_property(Property,Value,Option) ).
+
+/* Not unifying "default" values -- e.g., that a predicate does not
+   use ground term interning.  Not currently considering the fact that
+   some options, like answer size can be set globally.  I'll fix this
+   if it becomes at all important. */
+
+process_tif_property(intern,Value,Option):- !,
+     %	     (Value = 0 -> Option = (ground_term=trie) ; Option = (ground_term=intern))
+     (Value \== 0 -> Option = (ground_term=intern) ; fail).
+process_tif_property(answer_subsumption,Value,Option):- !,
+	(Value = 1 -> Option=(answer_subsumption=true) ; fail).
+process_tif_property(answer_size,Value,Option):- !,
+   (Value = 0 -> fail ; Option = (answer_size=Value)).
+process_tif_property(subgoal_size,Value,Option):- !,
+   (Value = 0 -> fail ; Option = (subgoal_size=Value)).
+process_tif_property(Property,Value,Property=Value).
 
 get_tabling_option_psc(PSC,Option):- 
 	psc_tabled(PSC, Tabled),
-	 ( Tabled == T_VARIANT -> Option = [table_reuse,variance]
-          ; Tabled == T_SUBSUMPTIVE -> Option = [table_reuse,subsumption] ) .
+	 ( (Tabled /\ T_VARIANT) > 0 -> Option = (table_reuse=variance)
+          ; (Tabled /\ T_SUBSUMPTIVE) > 0 -> Option = (table_reuse=subsumption)
+          ; Option= (table_reuse=default) ).
 get_tabling_option_psc(PSC,Option):- 
 	psc_get_incr(PSC, Incr),
-	( Incr == INCREMENTAL -> Option = [updating,incremental] 
-	 ; Incr == OPAQUE -> Option = [updating,opaque]
-	 ; Option = [updating,none]).
+	( Incr == INCREMENTAL -> Option = (updating=incremental) 
+	 ; Incr == OPAQUE -> Option = (updating=opaque)).
+%	 ; Option = (updating=none)).
 get_tabling_option_psc(PSC,Option):-
         \+ xsb_configuration(engine_mode,'slg-wam'),
 	psc_shared(PSC, Shared),
@@ -2692,3 +2729,25 @@ table_state(Call, State) :-
 	 ; PredType == undefined -> State = undef
         )
 
+/*
+* get_tabling_option_1(T_DYNA,_Term,_Tabled,PSC,Option):- 
+*     !,  % Dynamic but not tabled.
+*     psc_get_incr(PSC, Incr),
+*     ( Incr == INCREMENTAL -> Option = (updating=incremental) 
+*      ; Incr == OPAQUE -> Option = (updating=opaque)
+*     ; Option = (updating=none) ) .
+* get_tabling_option_1(Type,Term,Tabled,PSC,Option):- 
+*    psc_get_incremental(PSC,Incr),
+*    writeln(get_tabling_option_1_2(Term,Type,Tabled,Incr,PSC,Option)),
+*     (Tabled /\ 12 > 0),
+*     \+ (Type = T_DYNA,Incr > 0),
+*     (   get_tabling_option_psc(PSC,Option)
+*       ; get_tif_property(Term,Property,Value),
+* %	writeln(get_tif_property(Term,Property,Value)),
+* 	(Property = intern ->
+* 	     (Value = 0 -> Option = (ground_term=trie) ; Option = (ground_term=intern))
+*          ; (Property = answer_subsumption ->
+* 		(Value = 1 -> Option=(answer_subsumption=true) ; fail)
+* 	    ;   Option = (Property=Value) ) ) ).
+* */
+   

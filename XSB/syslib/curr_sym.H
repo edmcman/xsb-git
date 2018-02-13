@@ -32,6 +32,7 @@
 :- export current_input_port/1, current_output_port/1.
 
 :- import retractall/1, (dynamic)/1, asserta/1 from assert.
+:- import member/2 from basics.
 :- import check_nonvar/3, check_ground/3,
           domain_error/5, type_error/4, permission_error/4,misc_error/1,
           instantiation_error/3, domain_error/4 from error_handler.
@@ -42,16 +43,18 @@
 :- import libpath/1 from loader.
 :- import psc_name/2, psc_arity/2, psc_prop/2, psc_mod/2, psc_type/2, term_psc/2,
 	  term_type/2, stat_flag/2, stat_set_flag/2, machine_file_exists/1, 
-	  psc_env/2, psc_spy/2, psc_tabled/2, dereference_the_bucket/2,
+	  psc_env/2, psc_spy/2,dereference_the_bucket/2,
 	  pair_psc/2, pair_next/2, next_bucket/2, conpsc/2,
-	  str_cat/3, intern_string/2, slash/1, psc_shared/2, psc_ep/2, psc_insertmod/3,
-	  psc_get_incr/2,term_new_mod/3 from machine.
+	  str_cat/3, intern_string/2, slash/1, psc_ep/2, psc_insertmod/3,
+%	  psc_get_incr/2, psc_shared/2, psc_tabled/2, 
+	  term_new_mod/3 from machine.
 :- import atom_codes/2, number_codes/2,catch/3,(index)/2 from standard.
 :- import functor/3, warning/1, abort/1, integer/1, atom/1, structure/1 from standard.
 :- import standard_symbol/3, standard_metapredicate_template/3 from std_xsb.
 :- import sys_main_memory/1 from shell.
 :- import atom_to_term/2 from string.
-:- import get_callsto_number/2, get_answer_number/2,table_status/5,get_calls/3,get_call/3 from tables.	
+:- import get_callsto_number/2, get_answer_number/2,table_status/5,
+          get_calls/3,get_call/3,get_tabling_options/2 from tables.	
 :- import xsb_configuration/2 from xsb_configuration.
 :- import reinitialize_undefineds/0 from xsbbrat.
 

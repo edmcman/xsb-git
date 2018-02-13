@@ -487,7 +487,9 @@ is_incremental_subgoal(Subgoal):-
 	catch(get_calls(Subgoal,_,_),_E,fail).
 
 incr_is_invalid(Call):-
-    incr_is_invalid(Call,_Falsecount,_HasAnswers).
+    incr_is_invalid(Call,Falsecount,_HasAnswers),
+    Falsecount > 0.
+%    writeln(incr_is_invalid(Call,Falsecount,_HasAnswers)).
 
 incr_is_invalid(Call,Falsecount,HasAnswers):-
     (Call = M:Goal -> term_new_mod(M,Goal,NewGoal) ; Call = NewGoal),

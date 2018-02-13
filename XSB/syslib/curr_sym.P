@@ -25,9 +25,8 @@
 
 :- compiler_options([xpp_on,sysmod,optimize]).
 
-/* TLS: because of a 64-bit number used below, compilation may give the error:
-   Overflow in radix notation, returning float
-*/
+/* TES: because of a 64-bit number used below, compilation may give
+   the error: Overflow in radix notation, returning float */
 
 #include "standard.h"
 #include "flag_defs_xsb.h"
@@ -39,6 +38,7 @@
 #include "token_defs_xsb.h"
 #include "basicdefs.h"
 #include "table_status_defs.h"
+#include "psc_defs.h"
 
 /* ===== current_atom/1 ====================================== */
 
@@ -221,7 +221,7 @@ decode_star_index(Ind,IndIn,IndOut):-
 	decode_star_index(IndRest,IndMid,IndOut).
 
 /* ===== current_input/1 ======================================= */
-% TLS: changed on 8/04 for new streams.
+% TES: changed on 8/04 for new streams.
 
 current_input(Stream) :- 
 	(	var(Stream) ->
@@ -242,7 +242,7 @@ current_input_port(FileDes) :- stat_flag(CURRENT_INPUT, FileDes).
 %   current_op(?Operator_Precedence, ?Operator_Specifier, ?Operator_Name)
 %   Succeeds iff Operator_Name is an operator with type defined by
 %   Operator_Specifier and precedence Operator_Precedence.
-%   TLS: added errors acc. to Prolog standard. 8/04
+%   TES: added errors acc. to Prolog standard. 8/04
 
 current_op(Prec, Type, Name) :- 
 	check_precedence(Prec),
@@ -285,7 +285,7 @@ check_operator_name(Name):-
 
 
 /* ===== current_output/1 ===================================== */
-% TLS: changed on 8/04 for new streams.
+% TES: changed on 8/04 for new streams.
 
 current_output(Stream) :- 
 	(	var(Stream) ->
@@ -312,8 +312,8 @@ current_output_port(FileDes) :- stat_flag(CURRENT_OUTPUT, FileDes).
 %	(ii) Functor/Arity (for global modules)
 %   A variable in place of Predicate_Indicator succeeds only for global
 %   modules.
-%  TLS: added ISO-style error handling 8/04.
-% TLS: redid so that we have a unified semantics for different forms
+%  TES: added ISO-style error handling 8/04.
+% TES: redid so that we have a unified semantics for different forms
 % of predicate indicators.  09/04
 
 current_predicate(Specifier) :-		% This takes care of global modules.
@@ -537,49 +537,77 @@ predicate_property(Term_Indicator, Property) :-
 	Term_Indicator = :(Module, Term),
 	nonvar(Term),		% send ':'(_,_) predicate to next clause
 	!,
+	pred_prop_compat(Property,Search_prop),
+%	writeln(pred_prop_compat(_,Property,Search_prop)),
 	get_first_psc_pair(PSC_Pair),
 	module_scan(PSC_Pair, ModuleName, ModulePSC),
 	ModuleName = Module,
 	psc_prop(ModulePSC, First_PSC_Pair),	% get the first psc_pair 
 						% of this module
 	( First_PSC_Pair =:= 1 ->	% We are dealing with a global module!
-		predicate_property(Term, Property)
+		predicate_property(Term, Search_prop)
         ; psc_scan_in_module(First_PSC_Pair, PSC),
 	  psc_name(PSC, Name),
 	  psc_arity(PSC, Arity),
 	  functor(Term, Name, Arity),
-	  psc_properties(PSC, Property)
+	  predicate_property_1(PSC,Term, Search_prop)
 	).
 predicate_property(Term, Property) :-	% This takes care of global 
 					% modules,"usermod" and "global".
 	term_type(Term, Type),
-	( Type =:= 1 ->	% Hacked to make it fast when Term is given.
+	pred_prop_compat(Property,Search_prop),
+	( Type =:= T_DYNA ->	% Hacked to make it fast when Term is given.
 			% If Term is given and it is represented as a structure 
 			% (has a PSC record) then using term_psc/2 we get to 
 			% this PSC record directly without having to scan the 
 			% whole PSC-Pair list.
 		term_psc(Term, PSC),
-		psc_properties(PSC, Property)
-	; Type =:= 5 ->
+		predicate_property_1(PSC,Term, Search_prop)
+	 ; Type =:= 5 ->  % TES -- old T_FILE I don't think this is needed anymore.
+	        warning(('predicate_property/2 called on term of type T_FILE: ',Term)),
 		conpsc(Term, PSC),
-		psc_properties(PSC, Property)
+		predicate_property_1(PSC,Term, Search_prop)
 	; psc_scan_in_hash_table(0, PSC),
 	  psc_name(PSC, Name),
 	  psc_arity(PSC, Arity), 
 	  functor(Term, Name, Arity),
-	  psc_properties(PSC, Property)
+	  predicate_property_1(PSC,Term, Search_prop)
 	).
 
+/* This is to ensure backward compatability with goals like
+   predicate_property(X,tabled) */
+pred_prop_compat(Propin,Prop):-
+    nonvar(Propin),
+    !,
+    (Propin = tabled -> Prop = (table_reuse = _)
+     ; Propin = incremental -> Prop = (updating = incremental)
+     ; Propin = opaque -> Prop = (updating = opaque)
+     ; Propin = Prop).
+pred_prop_compat(Propin,Propin).
 
-    psc_properties(PSC, Property) :- 
+predicate_property_1(PSC,_Term, Property):- 
+%   writeln(predicate_property_1_1(PSC,_Term, Property)),
+    psc_properties(PSC, Property).
+predicate_property_1(_PSC,Term, multifile):- 
+%   writeln(predicate_property_1_2(PSC,_Term, Property)),
+    standard:'_$multifile'(Term).
+predicate_property_1(_PSC,Term, Property) :-
+%   writeln(predicate_property_1_3(PSC,Term, Property)),
+   functor(Term,F,A),functor(Skel,F,A),
+   get_tabling_options(Skel,List),
+   member(Property,List).
+
+%-----------------
+
+psc_properties(PSC, Property) :- 
 	psc_type(PSC, Type),
-%	( Type =:= T_ORDI -> Property = unclassified
+%	( Type =:= T_ORDI -> Property = unclassified  
         ( Type =:= T_ORDI -> psc_env(PSC,Env),Env = T_IMPORTED,Property = unloaded
 	; Type =:= T_DYNA -> Property = (dynamic)
 	; Type =:= T_PRED -> Property = static
 	; Type =:= T_UDEF -> Property = unloaded
-	; Type =:= T_FORN -> Property = foreign
-	; Type =:= 14 -> Property = function ).
+	; Type =:= T_FORN -> Property = foreign).
+%	; Type =:= 14 -> Property = function ).
 %psc_properties(PSC, static) :-
 %	\+ (psc_type(PSC, Type), Type =:= T_DYNA).
 psc_properties(PSC, Property) :-
@@ -593,24 +621,25 @@ psc_properties(PSC, Property) :-
 psc_properties(PSC, Property) :- 
 	psc_spy(PSC, Spy),
 	( Spy =\= 0 -> Property = spied ).
-psc_properties(PSC, Property) :- 
-	psc_tabled(PSC, Tabled),
-	(psc_type(PSC, Type),Type =:= T_DYNA -> 
-	    psc_get_incr(PSC,Incr),Incr == NONINCREMENTAL
-	  ; true),  
-	( (Tabled /\ 12 > 0),Property = tabled 
-        ; 
-	 ( Tabled == T_VARIANT -> Property = variant
-         ; Tabled == T_SUBSUMPTIVE -> Property = subsumptive ) ).
-%         ; Tabled == T_TABLED_UNDETERMINED -> Property = tabled(default)).
-psc_properties(PSC, Property) :- 
-	psc_get_incr(PSC, Incr),
-	( Incr == INCREMENTAL -> 
-	    Property = incremental 
-	  ; Incr == OPAQUE -> Property = opaque).
-psc_properties(PSC, Property) :- 
-	psc_shared(PSC, Shared),
-	( Shared =\= 0 -> Property = shared ).
+
+%psc_properties(PSC, Property) :- 
+%	psc_tabled(PSC, Tabled),
+%	(psc_type(PSC, Type),Type =:= T_DYNA -> 
+%	    psc_get_incr(PSC,Incr),Incr == NONINCREMENTAL
+%	  ; true),  
+%	( (Tabled /\ 12 > 0),Property = tabled 
+%        ; 
+%	 ( Tabled == T_VARIANT -> Property = variant
+%         ; Tabled == T_SUBSUMPTIVE -> Property = subsumptive ) ).
+%%         ; Tabled == T_TABLED_UNDETERMINED -> Property = tabled(default)).
+%psc_properties(PSC, Property) :- 
+%	psc_get_incr(PSC, Incr),
+%	( Incr == INCREMENTAL -> 
+%	    Property = incremental 
+%	  ; Incr == OPAQUE -> Property = opaque).
+%psc_properties(PSC, Property) :- 
+%	psc_shared(PSC, Shared),
+%	( Shared =\= 0 -> Property = shared ).
 psc_properties(PSC, Property) :-
 	psc_name(PSC, Functor),		% Finding the Functor and the Arity
 	psc_arity(PSC, Arity),		% twice is silly, isn''t it?
@@ -623,10 +652,8 @@ psc_properties(PSC, Property) :-
 		( %	Property = xsb_standard_predicate ; 
 			Property = built_in
 		)
-	).
+	 ).
 	% Unfortunately this doesn''t take the Module into account.
-
-%:- import writeln/1 from standard.
 
 /* PM: this code was used in the old implementation of the
        meta_predicate/1 predicate property:
@@ -649,11 +676,10 @@ psc_meta_predicate_property_args([Meta| Metas], N, Arity, [Arg| Args]) :-
 	).
 */
 
-/*
-
-
-	 :- export set_predicate_property/2.
+	 %%%
+%------------------------------------
 	 /*
+:- export set_predicate_property/2.
 	 % Could do nonincremental?
 	 set_predicate_property_1(PredSpec,subgoal_abstract(S)):-
 	     get_tabling_options(PredSpec,Options),
@@ -706,7 +732,7 @@ module_properties(PSC, Property) :-
 /* ===== subgoal_property/2 ================================== */
 :- import writeln/1 from standard.
 subgoal_property(Subgoal,Property):-
-%   writeln(subgoal_property(Subgoal,Property)),
+%   writeln(xbsubgoal_property(Subgoal,Property)),
    (var(Subgoal) -> 
 	predicate_property(S,tabled),
 %	writeln(predicate_property(S,tabled)),
@@ -820,7 +846,7 @@ iso_flag(char_conversion).
 %% fix for 64-bit compilation?
 iso_flag(bounded,true).
 
-% TLS: dont understand why we dont just say 7fffffff.
+% TES: dont understand why we dont just say 7fffffff.
 %iso_flag(old_max_integer,Maxint) :- Maxint is 14 * 16'08000000 + 16'0fffffff.
 % Also, in 64-bits, we dont seem to get full wordsize.  We have 7 followed by 13 fs rather than by 15?
 iso_flag(max_integer,Maxint):- 
@@ -839,11 +865,11 @@ iso_flag(unknown, State) :- settable_prolog_flag(unknown, State).
 iso_flag(double_quotes, Meaning) :- settable_prolog_flag(double_quotes, Meaning).
 iso_flag(char_conversion, off).
 
-% TLS: need to understand ISO char conversion
+% TES: need to understand ISO char conversion
 %iso_flag(char_conversion,{on,off})
-% TLS: we only do codes...
+% TES: we only do codes...
 %iso_flag(double_quotes,{chars,codes,atom}).
-% TLS: shd. add
+% TES: shd. add
 %iso_flag(unknown,{error,warning,fail})
 
 /* ===== prolog_commons_flag/2 ========================================== */
@@ -1161,7 +1187,7 @@ set_xsb_flag_1(tracing, Trace) :-  !,
 	stat_set_flag(TRACE, Value).
 set_xsb_flag_1(verboseness,Level) :-  !, 
 	stat_set_flag(VERBOSENESS_LEVEL,Level).
-% TLS: dont think setting makes sense here.
+% TES: dont think setting makes sense here.
 %% Goal passed on cmd line
 %set_xsb_flag_1(goal, Goal) :-
 %	stat_flag(CMD_LINE_GOAL, GoalUninterned),

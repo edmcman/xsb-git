@@ -88,6 +88,7 @@
 :- export get_sdg_subgoal_info/1.
 :- export get_residual_sccs/3.
 :- export get_residual_sccs/5.
+:- export get_tabling_options/2.
 
 :- export add_alt_semantics/2.
 :- export truth_value/2.
@@ -156,12 +157,14 @@
 :- import abolish_table_info/0, delete_attributes/1, 
    ground_and_acyclic/1,
    psc_set_incr/2, psc_set_tabled/2, psc_tabled/2, psc_type/2,psc_set_alt_semantics/2,
-   table_inspection_function/5, table_inspection_function/7,table_inspection_function/8,table_inspection_function/9,
-   term_psc/2, term_new/2, stat_flag/2
+   psc_get_incr/2,psc_shared/2,
+   table_inspection_function/5, table_inspection_function/7,table_inspection_function/8,
+   table_inspection_function/9,
+   term_psc/2, term_arg/3, term_new/2, term_new_mod/3,
+   stat_flag/2, stat_set_flag/2 
    from machine.
-:- import term_new_mod/3 from machine.
-:- import term_arg/3, parsort/4 from machine.
-:- import stat_set_flag/2 from machine.
+:- import parsort/4 from machine.
+
 
 :- import numbervars/4, unnumbervars/2 from num_vars.
 
@@ -187,6 +190,7 @@
 :- import answer_abstract/1 from usermod.
 :- import subgoal_abstract(_) from usermod.
 
+:- import xsb_configuration/2 from xsb_configuration.
 :- import floundered_undefined/1 from xsbbrat.
 :- import reinitialize_undefineds/0 from xsbbrat.
 
