@@ -1065,17 +1065,18 @@ module {\tt usermod} may be enumerated using:
 \end{itemize}
 \item{\em Tabling Properties}.  {\tt Property} unifies with properties
   from theq following set of categories only if the denoted predicate
-  is tabled.~\footnote{For backward compatability, {\tt
-      predicate\_property/2} can be called with {\tt Property} bound
-    to {\tt tabled}, {\tt incremental} or {\tt opaque}.}
+  is tabled or (in certain cases) dynamic.~\footnote{For backward
+    compatability, {\tt predicate\_property/2} can be called with {\tt
+      Property} bound to {\tt tabled}, {\tt incremental} or {\tt
+      opaque}.}
 %
 \begin{itemize}
 \item The {\em Table Reuse Criterion} category, which is one of 
 \begin{itemize}
-\item{\tt table\_reuse=variance} The predicate has been declared
+\item{\tt table\_reuse=variant} The predicate has been declared
   tabled and to use call variance.
 %
-\item{\tt table\_reuse=subsumption} The predicate has been declared
+\item{\tt table\_reuse=subsumptive} The predicate has been declared
   tabled and to use call subsumption
 %
 %\item{\tt tabled(default)} The predicate has been declared tabled and
@@ -1084,12 +1085,12 @@ module {\tt usermod} may be enumerated using:
 %
 \end{itemize}
 %
-\item The {\em Table Updating Behavior} category which can be one of 
+\item The {\em Updating Behavior} category which can be one of 
 \begin{itemize}
-\item{\tt table\_updating=incremental} The predicate was declared as
+\item{\tt updating=incremental} The predicate was declared as
   either incremental dynamic or as incremental tabled; or
 %
-\item{\tt table\_updating=opaque} The predicate was declared as
+\item{\tt updating=opaque} The predicate was declared as
   tabled and opaque to incremental updates.
 %
 \item The default is that a predicate is outside of the incremental
@@ -1113,7 +1114,7 @@ module {\tt usermod} may be enumerated using:
 \end{itemize}
 \item The {\em Subgoal Abstraction} category
 \begin{itemize}
-\item{\tt subgoal\_size=N}  If {\tt N}$>1$, indicates the size at
+\item{\tt subgoal\_abstraction=N}  If {\tt N}$>1$, indicates the size at
   which tabled subgoals for the predicate are abstracted.
 %; if {\tt N}$=0$, indicates that subgoal abdstraction is not used for
 %; this  predicate.
@@ -1125,7 +1126,7 @@ module {\tt usermod} may be enumerated using:
 \end{itemize}
 \item The {\em Answer Abstraction} category
 \begin{itemize}
-\item{\tt answer\_size=N}.  If {\tt N}$>1$, indicates the size at
+\item{\tt answer\_abstraction=N}.  If {\tt N}$>1$, indicates the size at
   which tabled answers for the predicate are abstracted
 % ; if {\tt N}$=0$, indicates that answer abdstraction is not used for
 % this   predicate.
@@ -1143,7 +1144,7 @@ module {\tt usermod} may be enumerated using:
   this predicate are {\tt not} shared among threads.
 \end{itemize}
 \item The {\em Answer Subsumption} property is active only if XSB is
-  configured with multi-threading.  {\tt [answer\_subsumption,on]}
+  configured with multi-threading.  {\tt answer\_subsumption=true}
   indicates that answer subsumption is used for this predicate.  If
   answer subsumption is not used, no return is made.
 \end{itemize}
@@ -1188,6 +1189,60 @@ module {\tt usermod} may be enumerated using:
     \>   \>	| ?- predicate\_property(X, (dynamic)).
     }
 
+
+\standarditem{set\_predicate\_property(+TermSpec,+Property)}{set\_predicate\_property/2}
+%
+Certain properties of a predicate $P$, represented by {\tt TermSpec}
+can be changed during a session without reloading $P$ by {\tt
+  set\_predicate\_property/2}.  The allowable values for {\tt
+  Property} are grouped into the following classes.
+\begin{itemize}
+\item {\em Table reuse}.  When {\tt Property} is set to {\tt
+  table\_reuse=variant} or {\tt table\_reuse=} {\tt subsumptive} the
+  table reuse strategy of $P$ can be changed, if such a change is not
+  inconsistent with other tabling properties for $P$ Changing the
+  table reuse strategy will only affect new tabled subgoals; completed
+  tables or those being executed will not be affected.\footnote{{\tt
+      set\_predicate\_property/2} also accepts the properties {\tt
+      variant} and {\tt subsumptive}.}
+%
+\item {\em Subgoal Abstraction}.  When {\tt Property} is set to {\tt
+  subgoal\_abstract=N} for some non-negative integer $N$, the subgoal
+  abstraction strategy for $P$ can be changed, if such a change is not
+  inconsistent with other tabling properties $P$.  Changing the
+  subgoal abstraction strategy will only affect new and currently
+  executing tabled subgoals; completed tables will not be affected.
+%
+\item {\em Answer Abstraction}.  When {\tt Property} is set to {\tt
+  answer\_abstract=N} for some non-negative integer $N$, the answer
+  abstraction strategy for $P$ can be changed.  Changing the answer
+  abstraction strategy will only affect new and currently executing
+  tabled subgoals; completed tables will not be affected.
+% 
+\item {\em Updating Behavior}.  When {\tt Property} is set to {\tt
+  updating=incremental}, {\tt updating=opaque}, or {\tt
+  updating=nonincremental} the updating strategy of $P$ can be
+  changed, if such a change is not inconsistent with other tabling
+  properties $P$, and if $P$ does {\em not} have any
+  tables associated with it, whether they are completed or
+  not.\footnote{{\tt set\_predicate\_property/2} also accepts the
+    properties {\tt incremental}, {\tt nonincremental} and {\tt
+      opaque}.}
+\end{itemize}
+
+{\bf Error Cases}
+\bi
+\item {\tt Property} is not supported in the context of the other
+  properties set for $P$
+ \bi
+\item 	{\tt table\_error}
+\ei
+\item {\tt Property} cannot be set since there are tables for $P$
+\bi
+\item 	{\tt permission\_error}
+\ei
+\ei
+%
 
 \standarditem{module\_property(?Module, ?Property)}{module\_property/2}
     The standard predicate {\tt module\_property/2} can be used to find the

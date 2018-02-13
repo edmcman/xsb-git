@@ -863,9 +863,9 @@ As explained below, IDG nodes can be accessed via the predicate {\tt
 {\tt incr\_directly\_depends/2}.  The predicates {\tt
   get\_incr\_scc/[1,2]} and {\tt get\_incr\_scc\_with\_deps/[3,4]} can
 be used to efficiently materialize the dependency graph in Prolog,
-including SCC information.  Similarly, the predicates {\tt
-  incr\_invalid\_subgoals/1} and {\tt incr\_is\_invalid/1} can be
-used to determine which subgoals are invalid.
+including SCC information.  Similarly, the predicate {\tt
+  subgoal\_property/2} can be used to determine which subgoals are
+invalid.
 
 \begin{description}
 
@@ -987,15 +987,15 @@ number of edges in the dependency graph.  As a result, {\tt
 \ei
 \ei
 
-\ourmoditem{incr\_invalid\_subgoals(-List)}{incr\_invalid\_subgoals/1}{increval}
+%\ourmoditem{incr\_invalid\_subgoals(-List)}{incr\_invalid\_subgoals/1}{increval}
 %
-This predicate unifies {\tt List} with a sorted list of the
-incremental subgoals that are currently invalid.
+%This predicate unifies {\tt List} with a sorted list of the
+%incremental subgoals that are currently invalid.
 
-\ourmoditem{incr\_is\_invalid(+Subgoal)}{incr\_is\_invalid/1}{increval}
+%\ourmoditem{incr\_is\_invalid(+Subgoal)}{incr\_is\_invalid/1}{increval}
 %
-Succeeds if {\tt Subgoal} is an incrementally tabled subgoal that is
-invalid, and fails otherwise.
+%Succeeds if {\tt Subgoal} is an incrementally tabled subgoal that is
+%invalid, and fails otherwise.
 
 \end{description}
 
