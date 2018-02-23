@@ -4,38 +4,184 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Testing naive transitive closure on a cycle:
+Testing naive transitive closure on a tree:
+Testing rule-based transitive closure on a cycle:
+Testing rule-based transitive closure on a tree:
+Testing seminaive transitive closure on a cycle:
+Testing seminaive transitive closure on a tree:
 completed(join_in_db)
 completed(join_in_dbi)
 completed(project_in_db)
 completed(project_in_dbi)
-completed(reindex_in_db)
-completed(reindex_in_dbi)
+completed(reorder_in_db)
+completed(reorder_in_dbi)
 completed(xprod_in_db)
 completed(xprod_in_dbi)
 dbis_built
 dbs_built
-dbs_built
-pr1(a,b,b) :- true.
-pr1(a,b,c) :- true.
-pr2(A,B,B) :- true.
-pr2a(a,A,b) :- true.
-pr3(2,2,2) :- true.
-pr3(2,2,3) :- true.
-pr3(2,3,2) :- true.
-pr3(2,3,3) :- true.
-pr3(3,2,2) :- true.
-pr3(3,2,3) :- true.
-pr3(3,3,2) :- true.
-pr3(3,3,3) :- true.
-pr4(2,2,2) :- true.
-pr4(2,2,3) :- true.
-pr4(2,3,2) :- true.
-pr4(2,3,3) :- true.
-pr4(3,2,2) :- true.
-pr4(3,2,3) :- true.
-pr4(3,3,2) :- true.
-pr4(3,3,3) :- true.
-pr5(1,27) :- true.
+idbs_built
+naive_tc_count(100,10201)
+naive_tc_count(1000,17974)
+pr1(a,b,b).
+pr1(a,b,c).
+pr2(A,B,B).
+pr2a(a,A,b).
+pr3(2,2,2).
+pr3(2,2,3).
+pr3(2,3,2).
+pr3(2,3,3).
+pr3(3,2,2).
+pr3(3,2,3).
+pr3(3,3,2).
+pr3(3,3,3).
+pr4(2,2,2).
+pr4(2,2,3).
+pr4(2,3,2).
+pr4(2,3,3).
+pr4(3,2,2).
+pr4(3,2,3).
+pr4(3,3,2).
+pr4(3,3,3).
+pr5(1,27).
+rule_based_tc_count(100,10201)
+rule_based_tc_count(1000,17974)
+seminaive_tc_count(100,10201)
+seminaive_tc_count(1000,17974)
+start_difference1
+start_difference1i
+start_difference2
+start_difference2_in_db
+start_difference2_in_dbi
+start_difference2i
+start_difference_in_db
+start_difference_in_dbi
+start_disjoint1
+start_disjoint1_in_db
+start_disjoint1_in_dbi
+start_disjoint1i
+start_intersect1
+start_intersect1i
+start_intersect2
+start_intersect2i
+start_intersect_in_db
+start_intersect_in_dbi
+start_join_in_db
+start_join_in_dbi
+start_project_in_db
+start_project_in_dbi
+start_reorder_in_db
+start_reorder_in_dbi
+start_subset1
+start_subset1_in_db
+start_subset1_in_dbi
+start_subset1i
+start_subset2
+start_subset2_in_db
+start_subset2_in_dbi
+start_subset2i
+start_sym_diff1
+start_sym_diff1i
+start_sym_diff2
+start_sym_diff2i
+start_sym_diff_def
+start_sym_diff_defi
+start_sym_diff_in_db
+start_sym_diff_in_db2
+start_sym_diff_in_db3
+start_sym_diff_in_dbi
+start_sym_diff_in_dbi2
+start_sym_diff_in_dbi3
+start_test1
+start_test1i
+start_test2
+start_test2i
+start_test3
+start_test3i
+start_test4
+start_test4i
+start_test5
+start_test5i
+start_test6
+start_test6i
+start_union1
+start_union1i
+start_union2
+start_union2i
+start_union_in_db
+start_union_in_dbi
+start_xprod_in_db
+start_xprod_in_dbi
 success(difference1)
 success(difference1i)
 success(difference2)
@@ -93,6 +239,7 @@ test2i([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
 test3([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
 test3i([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
 test4([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
+test4i([z,y,x,w,v,u,t,s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a])
 test5 succeeded
 test5i succeeded
 test6 succeeded
@@ -102,4 +249,5 @@ test_retract_2:
 test_retract_2a:
 test_retract_3:
 test_retract_4:
-test_retract_4:
+test_retract_5:
+testdbops_dbs_built
