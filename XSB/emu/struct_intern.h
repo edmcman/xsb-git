@@ -23,51 +23,63 @@
 ** 
 */
 
+#define intern_mark_bit 1
 
-/* Initial data structures for hash consing: linear, add hash tables
-later.
+/* Fields in hc_block[257] point to hc_block_rec's which contain a) a
+pointer to a chain of intterm_block's containing functor records, b) a
+pointer to a hash-table to get to them faster, c) the size of the
+hash-table, d) the head of a chain of free intterm_rec's, and e) the
+displacement in the current intterm_block of the first available
+intterm_rec.  An intterm_rec for a functor of arity i is a record of
+length i+2: a pointer to the next intterm_rec, the address of the psc
+record and i argument fields, containing constants or pointers to
+other intterm_rec's.  Note that fields 2 through i+2 correspond
+exactly to a structure record on the heap, and function as such.
 
-hc_block[256] pointers to chains of blocks containing the records for
-terms of arity i.  (0 is used for the list constructor ./2) The first
-word of a block chains multiple blocks for records of the given arity
-i.  That is followed by hc_num_in_block records to contain the
-structure records; the first word in the record is a link to the next
-structure record, the 2nd through arity+2 words contain the structure
-record, i.e., the psc ptr followed by the fields (arity of them) of
-the structure record.
-
+The low-order bit of the next pointer in a intterm_rec is used by
+garbage collection for marking records in use.
 */
 
 struct intterm_rec {
   struct intterm_rec *next;
-  Cell intterm_psc;
+  Psc intterm_psc; /* followed by arity fields. */
 };
 
 struct intterm_block {
   struct intterm_block *nextblock;
-  struct intterm_rec recs;
+  struct intterm_rec recs; /* multiple of these */
 };
   
+
+/* record for the hash table for interned terms. */
 
 struct hc_block_rec {
   struct intterm_block *base; /* base of chain of blocks for arity i records */
   struct intterm_rec **hashtab;  /* address of hash table for thse blocks */
   Integer hashtab_size;
   struct intterm_rec *freechain; /* base of chain of free arity i structure records (filled by gc) */
-  struct intterm_rec *freedisp; /* address of first free record in (first) block */
+  struct intterm_rec *freedisp; /* address of first free record in (first on chain) block */
 };
 
-// make bigger?
-#define hc_num_in_block 1000
+// num recs in blocks for recs of arity 0-255
+#define hc_num_in_block 100
 
+
+/* record for stack to traverse term to intern it. */
 struct term_subterm {
-  Cell term;
-  Cell newterm;
-  int subterm_index;
-  int ground;
+  Cell term;       /* term to be interned */
+  Cell newterm;    /* generated term with interned ground subterms */
+  int subterm_index; /* index of subterm to process next */
+  int ground;   /* if term ground; assumes ground 1, set to 0 if subterm nonground */
 };
 
 
 int isinternstr_really(prolog_term term);
 prolog_term intern_rec(CTXTdeclc prolog_term term);
 prolog_term intern_term(CTXTdeclc prolog_term term);
+void reclaim_internstr_recs();
+prolog_term term_to_stringhash(prolog_term term);
+prolog_term stringhash_to_term(char *hashstring);
+
+extern int gc_strings;
+void mark_interned_term(CTXTdeclc Cell interned_term);

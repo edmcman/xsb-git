@@ -721,7 +721,7 @@ static void sprint_registers(CTXTdeclc forestLogBuffer fl_buf,Psc psc,long depth
   arity = (int)get_arity(psc);
 
   size = sprint_quotedname(buffer, 0, get_name(psc));
-  if (arity != 0) sprintf(buffer+size, "(");size++;
+  if (arity != 0) {sprintf(buffer+size, "(");size++;}
   for (i=1; i <= arity; i++) {
     size = sprint_term(fl_buf, size, cell(reg+i), CAR, depth-1);
     if (i < arity) {sprintf(buffer+size, ",");size++;}
@@ -742,7 +742,7 @@ static void sprint_cyclic_registers(CTXTdeclc forestLogBuffer fl_buf,Psc psc,lon
   arity = (int)get_arity(psc);
 
   size = sprint_quotedname(buffer, 0, get_name(psc));
-  if (arity != 0) sprintf(buffer+size, "(");size++;
+  if (arity != 0) {sprintf(buffer+size, "(");size++;}
   for (i=1; i <= arity; i++) {
     size = sprint_cyclic_term_nonvoid(CTXTc fl_buf, size,  cell(reg+i), depth-1);
     if (i < arity) {sprintf(buffer+size, ",");size++;}
@@ -2043,7 +2043,8 @@ void quick_print_trail(CTXTdecl)	/* trail grows up */
 
   for (i = (top_of_trail); (i > (CPtr *)tcpstack.low + 1); i = i-3)     {
     printf("-------------------------------------------------------------------\n");
-    if ( i == trreg ) printf("trreg");if ( i == trfreg ) printf("trfreg ");
+    if ( i == trreg ) printf("trreg");
+    if ( i == trfreg ) printf("trfreg ");
     if ((CPtr *)cell(CPtr)(i) != i-3) printf("*");
     print_cell("          Trail parent ", (CPtr)(i), cell((CPtr)(i)), NULL);
     print_cell("          Trail value  ", (CPtr)(i-1), cell((CPtr)(i-1)), NULL);

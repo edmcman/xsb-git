@@ -94,13 +94,22 @@ do { \
 #define cp_mark(i)         cp_marks[i] |= MARKED
 #define cp_clear_mark(i)   cp_marks[i] &= ~MARKED
 
+#define set_internstr_mark(intterm_rec) \
+  *(clref_val(intterm_rec)-1) = *(clref_val(intterm_rec)-1) | intern_mark_bit
+
+#define internstr_marked(intterm_rec) \
+  *(clref_val(intterm_rec)-1) & intern_mark_bit
+
 void mark_interned_term(CTXTdeclc Cell interned_term) {
   int celltag, i, arity;
   Cell subterm;
 
   if (!isinternstr(interned_term)) {printf("ERROR: calling mark_interned_term\n"); return;}
+  if (!gc_strings) {xsb_abort("ERROR: Marking interned terms when not gc-ing strings!\n");}
 
  begin_mark_interned_term:
+  if (internstr_marked(interned_term)) return;
+  set_internstr_mark(interned_term);
   celltag = cell_tag(interned_term);
   if (celltag == XSB_LIST) {
     subterm = get_list_head(interned_term);

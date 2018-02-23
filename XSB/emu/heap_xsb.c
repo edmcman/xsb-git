@@ -362,7 +362,7 @@ static size_t slide_buf_size = 0;
 
 #define MARKED    1
 #define TRAIL_PRE 2
-#define CHAIN_BIT 4                            
+#define CHAIN_BIT 4
 
 /* in the absence of serious bugs, the test is an invariant of the WAM */
 #ifdef DEBUG_ASSERTIONS
@@ -720,6 +720,10 @@ int gc_heap(CTXTdeclc int arity, int ifStringGC)
     
     end_marktime = cpu_time();
     
+    if (gc_strings && (flags[STRING_GARBAGE_COLLECT] == 1)) {
+      reclaim_internstr_recs();
+    }
+    
     if (fragmentation_only) {
       /* fragmentation is expressed as ratio not-marked/total heap in use
 	 this is internal fragmentation only.  we print marked and total,
@@ -837,7 +841,7 @@ int gc_heap(CTXTdeclc int arity, int ifStringGC)
       }
     
     if (print_on_gc) print_all_stacks(CTXTc arity);
-    
+
     /* get rid of the marking areas - if they exist */
     if (heap_marks)  { 
       check_zero(heap_marks,(heap_top - heap_bot),"heap") ;

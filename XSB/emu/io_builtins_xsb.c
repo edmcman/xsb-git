@@ -64,6 +64,7 @@
 #include "findall.h"
 #include "heap_defs_xsb.h"
 #include "cell_xsb_i.h"
+#include "struct_intern.h"
 
 //extern FILE *logfile;
 

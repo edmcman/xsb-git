@@ -155,7 +155,7 @@ PrRef dynpredep_to_prref(CTXTdeclc void *pred_ep) {
    empty switch statements like the ones below, if DEBUG is not set
    (in which case xsb_dbgmsg is empty)                    --lfcastro */
 
-static inline void dbgen_printinst3(Opcode, Arg1, Arg2, Arg3)
+static inline void dbgen_printinst3(byte Opcode,Integer Arg1, Integer Arg2, Integer Arg3)
 {
   switch (Opcode) {
   case getlist_tvar_tvar:
@@ -178,7 +178,7 @@ static inline void dbgen_printinst3(Opcode, Arg1, Arg2, Arg3)
   }
 }
 
-static inline void dbgen_printinst(Opcode, Arg1, Arg2)
+static inline void dbgen_printinst(byte Opcode, Integer Arg1, Integer Arg2)
 {
   switch (Opcode) {
   case getpvar:	/* PRV */
@@ -1071,11 +1071,12 @@ static xsbBool source_is_not_target(struct instruction_q *inst_queue, int Reg)
 
 static void db_genmvs(CTXTdeclc struct instruction_q *inst_queue, RegStat Reg)
 {
-  Cell Opcode, Arg, T0, R0;
+  Cell Arg, T0, R0;
+  byte Opcode;
   
   /* pay attention to the ordering, must be a QUEUE !!!!! */
   while (!inst_queue_empty(inst_queue)) {
-    inst_queue_rem(inst_queue, &Opcode, &Arg, &T0);	/* T0: target reg */
+    inst_queue_rem(inst_queue, (Cell *)&Opcode, &Arg, &T0);	/* T0: target reg */
     switch (Opcode) {
     case puttvar:  
       if (target_is_not_source(inst_queue,(int)T0))

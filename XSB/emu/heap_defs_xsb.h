@@ -42,18 +42,28 @@
 /*--- The following are used for string-space collection ---------------*/
 
 #define mark_string_safe(tstr,msg)		\
-     do {char *str = (tstr);			\
-         Integer *pptr = ((Integer *)(str))-1;  \
-     if (!( *(pptr) & 7)) *(pptr) |= 1;		\
-     } while(0)    
+  do {char *str = (tstr);			\
+    Integer *pptr = ((Integer *)(str))-1;	\
+    Cell t;								\
+    if (!( *(pptr) & 7)) {						\
+      *(pptr) |= 1;							\
+      if (gc_strings && str[0]=='}' && (flags[STRING_GARBAGE_COLLECT] == 1) \
+	  && (t = stringhash_to_term(str))) mark_interned_term(t);	\
+    }									\
+  } while(0)    
 
 #define mark_string(tstr,msg) 				\
   do {char *str = (tstr);				\
-      if (str && string_find_safe(str) == str) {	\
-         Integer *pptr = ((Integer *)(str))-1;		\
-         if (!( *(pptr) & 7)) *(pptr) |= 1;		\
-     } else if (str) 					\
-	printf("Not interned (wrongly GC-ed?): %s: '%p',%s\n",msg,str,str); \
+    Cell t;						\
+    if (str && string_find_safe(str) == str) {		\
+      Integer *pptr = ((Integer *)(str))-1;		\
+      if (!( *(pptr) & 7)) {				\
+	*(pptr) |= 1;					\
+	if (gc_strings && str[0]=='}' && (flags[STRING_GARBAGE_COLLECT] == 1) \
+	    && (t = stringhash_to_term(str))) mark_interned_term(t);	\
+      }									\
+    } else if (str)							\
+      printf("Not interned (wrongly GC-ed?): %s: '%p',%s\n",msg,str,str); \
   } while(0)
 
 #define mark_if_string(tcell,msg) 		\

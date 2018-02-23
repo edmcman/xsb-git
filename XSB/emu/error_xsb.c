@@ -1427,7 +1427,7 @@ DllExport void call_conv xsb_log(char *description, ...)
   va_list args;
   char filenamestr[50];
 
-  if (flags[LOG_ALL_FILES_USED]) {
+  //  if (flags[LOG_ALL_FILES_USED]) {
     if (!logfile_opened) {
       if (flags[LOG_ALL_FILES_USED] > 1) {
 	sprintf(filenamestr,"XSB_LOGFILE_%d.txt",(int)(flags[LOG_ALL_FILES_USED]));
@@ -1439,7 +1439,7 @@ DllExport void call_conv xsb_log(char *description, ...)
     vfprintf(logfile, description, args);
     va_end(args);
     fflush(logfile);
-  }
+    //  }
 }
 
 DllExport void call_conv xsb_warn(CTXTdeclc char *description, ...)

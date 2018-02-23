@@ -219,11 +219,11 @@ extern unsigned long enc[], dec[];
 #define isconstr(dcell) (cell_tag(dcell)==XSB_STRUCT)	/* dcell -> xsbBool */
 #define islist(dcell) (cell_tag(dcell)==XSB_LIST)	/* dcell -> xsbBool */
 #define isstr(dcell) (isconstr(dcell) || islist(dcell))
-/**#define isinternstr0(dcell)						\
-   (isstr(dcell) && (clref_val(dcell)<(CPtr)glstack.low || clref_val(dcell)>(CPtr)glstack.high)) **/
-/* perhaps this added test of hash bucket link as addr causes faster failure, and most calls fail */
 #define isinternstr0(dcell)						\
-  (isstr(dcell) && !(*(clref_val(dcell)-1)&3) && (clref_val(dcell)<(CPtr)glstack.low || clref_val(dcell)>(CPtr)glstack.high))
+   (isstr(dcell) && (clref_val(dcell)<(CPtr)glstack.low || clref_val(dcell)>(CPtr)glstack.high))
+/* perhaps this added test of hash bucket link as addr causes faster failure, and most calls fail */
+/*#define isinternstr0(dcell)						\
+  (isstr(dcell) && !(*(clref_val(dcell)-1)&3) && (clref_val(dcell)<(CPtr)glstack.low || clref_val(dcell)>(CPtr)glstack.high))*/
 /* multi-threaded engine has pointers from one heap to another at times; so more care needed */
 #ifndef MULTI_THREAD
 //#define isinternstr(dcell) isinternstr0(dcell)

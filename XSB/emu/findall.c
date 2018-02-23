@@ -295,7 +295,7 @@ copy_again : /* for tail recursion optimisation */
       CPtr pfirstel;
       Cell q ;
 
-      if (isinternstr_really(from)) {
+      if (isinternstr(from)) {
 	*to = from;
 	return;
       }
@@ -369,7 +369,7 @@ copy_again : /* for tail recursion optimisation */
             return;
 	  }
 
-	if (isinternstr(from) && isinternstr_really(from)) {
+	if (isinternstr(from)) {
 	  *to = from;
 	  return;
 	}
@@ -539,12 +539,12 @@ static int findall_copy_template_to_chunk(CTXTdeclc Cell from, CPtr to, CPtr *h)
 	  /* first test whether from - which is an L - is actually the left over
 	     of a previously copied first list element
 	  */
-	  if (isinternstr_really(from)) {
+	  if (isinternstr(from)) {
 	    *to = from;
 	    return(size);
 	  }
 	  pfirstel = clref_val(from) ;
-	  if (! on_glstack(pfirstel) && !isinternstr_really(*pfirstel))  // copied already
+	  if (! on_glstack(pfirstel) && !isinternstr(*pfirstel))  // copied already
 	    {
 	      /* pick up the old value and copy it */
 	      *to = *pfirstel;
@@ -552,7 +552,7 @@ static int findall_copy_template_to_chunk(CTXTdeclc Cell from, CPtr to, CPtr *h)
 	    }
 	  
 	  q = *pfirstel;
-	  if (islist(q) && !isinternstr_really(q))
+	  if (islist(q) && !isinternstr(q))
 	    {
 	      CPtr p;
 	      
@@ -605,7 +605,7 @@ static int findall_copy_template_to_chunk(CTXTdeclc Cell from, CPtr to, CPtr *h)
 	  Cell newpsc;
 	  int ar ;
     
-	  if (isinternstr(from) && isinternstr_really(from)) {
+	  if (isinternstr(from)) {
 	    *to = from;
 	    return(size);
 	  }
@@ -1503,11 +1503,15 @@ void mark_findall_strings(CTXTdecl) {
       while (chunk != (findall_solutions+i)->current_chunk) {
 	for (cell=chunk+1; cell<(chunk+FINDALL_CHUNCK_SIZE); cell++) {
 	  mark_if_string(*cell,"findall");
+	  if (isconstr(*cell) && isinternstr(*cell))
+	    mark_interned_term(*cell);
 	}
 	chunk = *(CPtr *)chunk;
       }
       for (cell=chunk+1; cell<(findall_solutions+i)->top_of_chunk; cell++) {
 	mark_if_string(*cell,"findall");
+	if (isconstr(*cell) && isinternstr(*cell))
+	  mark_interned_term(*cell);
       }
     }
   }

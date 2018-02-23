@@ -1060,7 +1060,7 @@ inline static xsbBool file_function(CTXTdecl)
 
   case FILE_SET_CHARACTER_SET: {
     char *charset_str;
-    int charset;
+    int charset = UTF_8;
     charset_str = ptoc_string(CTXTc 3);
     if (!strcmp(charset_str,"LATIN_1")) charset = LATIN_1;
     else if (!strcmp(charset_str,"latin_1")) charset = LATIN_1;

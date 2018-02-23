@@ -3160,52 +3160,47 @@ case WRITE_OUT_PROFILE:
     prolog_term iterm = ptoc_tag(CTXTc 2);
     prolog_term iiterm;
     Integer ifHashIntern = ptoc_int(CTXTc 3);
-    Integer iterm_int;
 
     XSB_Deref(term);
     XSB_Deref(iterm);
-    if (isconstr(term) || islist(term)) {
-      if (ifHashIntern && !ground(term))
+
+    if (isconstr(term) || islist(term)) { // forward
+      if (ifHashIntern && !ground(term)) {
 	//xsb_instantiation_error(CTXTc "intern_term/hash/2",1);
 	return FALSE;
+      }
       if (!isinternstr_really(term)) {
-	  termsize = intern_term_size(CTXTc term);
-	  check_glstack_overflow(2,pcreg,termsize*sizeof(Cell));
-	  term = intern_term(CTXTc term);
-	}
-	if (term) {
-	  if (!ifHashIntern) {
-	    //printf("o %p\n",term);
-	    return unify(CTXTc term, iterm);
-	  } else {
-	    if (islist(term)) {
-	      return unify(CTXTc makeint(dec_addr(term)+1),iterm);
-	    } else {
-	      return unify(CTXTc makeint(cs_val(term)),iterm);
-	    }
+	termsize = intern_term_size(CTXTc term);
+	check_glstack_overflow(2,pcreg,termsize*sizeof(Cell));
+	term = ptoc_tag(CTXTc 1); /* in case gc moved it...*/
+	XSB_Deref(term);
+	iterm = ptoc_tag(CTXTc 2);
+	XSB_Deref(iterm);
+	//	printf("interning term of size: %lld\n",termsize);
+	term = intern_term(CTXTc term);
+      }
+      if (term) {  // term is interned
+	if (!ifHashIntern) {
+	  //printf("o %p\n",term);
+	  return unify(CTXTc term, iterm);
+	} else {  // build structured term for hash
+	  iiterm = term_to_stringhash(term);
+	  return unify(CTXTc iterm, iiterm);
 	  }
-	} else {
-	  //printf("of\n");
-	  return FALSE;
-	}
-    } else if (is_int(iterm)) {
-      iterm_int = int_val(iterm);
-      if (iterm_int & 1) {
-	iiterm = makelist(iterm_int-1);
       } else {
-	iiterm = makecs(iterm_int);
+	//printf("of\n");
+	return FALSE;
       }
-      /* 10000 is hack to try to catch some errors */
-      if (iterm_int > 100000 && isinternstr(iiterm) && isinternstr_really(iiterm)) {
-	return unify(CTXTc term,iiterm);
-      } else {
-	xsb_type_error(CTXTc "Not hash of interned term",iterm,"intern_term/2/3",2);
-      }
+    } else if (isstring(iterm)) {
+      iiterm = stringhash_to_term(string_val(iterm));
+      if (iiterm) return unify(CTXTc term,iiterm);
+      else return unify(CTXTc term,iterm);
     } else if (isref(term) && isref(iterm)) {
       xsb_instantiation_error(CTXTc "intern_term/hash/2", 1);
     } else xsb_type_error(CTXTc "Term to intern",term,"intern_termhash/2",1);
   }
-    
+
+
   case SEGFAULT_HANDLER: { /* Set the desired segfault handler:
 			      +Arg1:  none  - don't catch segfaults;
 				      warn  - warn and exit;

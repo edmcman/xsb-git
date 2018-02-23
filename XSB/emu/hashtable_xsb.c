@@ -44,6 +44,7 @@
 #include "flags_xsb.h"
 #include "memory_xsb.h"
 #include "heap_xsb.h"
+#include "struct_intern.h"
 
 /*
   A simple hashtable.
