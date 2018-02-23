@@ -1,32 +1,33 @@
-:- export empty_db/1, is_db/1, assert_in_db/3, assert1_in_db/3, assert_in_db/2,
-   retractall_in_db/3, clause_in_db/3, fact_in_db/2, call_in_db/2, load_in_db/3,
-   load_in_db/2, subset_db/2, subsumed_db/2, union_db/3, intersect_db/3, difference_db/3,
-   sym_diff_db/3, disjoint_db/2, dump_db/2, pure_call_in_db/2.
+:- export new_db/1, is_db/1, assert_in_db/3, assert1_in_db/3,
+   assert_in_db/2, retractall_in_db/3, clause_in_db/3, fact_in_db/2,
+   call_in_db/2, load_in_db/3, load_in_db/2, subset_db/2, subsumed_db/2,
+   union_db/3, intersect_db/3, difference_db/3, sym_diff_db/3, disjoint_db/2,
+   dump_db/2, pure_call_in_db/2.
 
-:- export empty_dbi/1, is_dbi/1, assert_in_dbi/3, assert1_in_dbi/3, assert_in_dbi/2,
-   retractall_in_dbi/3, clause_in_dbi/3, fact_in_dbi/2, call_in_dbi/2, load_in_dbi/3,
-   load_in_dbi/2, subset_dbi/2, subsumed_dbi/2, union_dbi/3, intersect_dbi/3, difference_dbi/3,
-   sym_diff_dbi/3, disjoint_dbi/2, dump_dbi/2, pure_call_in_dbi/2.
+:- export cvt_db_to_i/2, cvt_db_from_i/2.
 
-:- export apply_op_in_db/6, apply_op_in_dbi/6.
-:- export apply_rel_op_in_db/4, apply_rel_op_in_dbi/4.
-:- export union_in_db/5, union_in_dbi/5.
-:- export intersect_in_db/5, intersect_in_dbi/5.
-:- export difference_in_db/5, difference_in_dbi/5.
-:- export sym_diff_in_db/5, sym_diff_in_dbi/5.
-:- export subset_in_db/3, subset_in_dbi/3.
-:- export subsumed_in_db/3, subsumed_in_dbi/3.
-:- export disjoint_in_db/3, disjoint_in_dbi/3.
-:- export equal_in_db/3, equal_in_dbi/3.
-:- export copy_in_db/4, copy_in_dbi/4.
-:- export materialize_in_db/4, materialize_in_dbi/4.
-:- export xprod_in_db/5, xprod_in_dbi/5.
-:- export join_in_db/6, join_in_dbi/6.
-:- export reindex_in_db/4, reindex_in_dbi/4.
-:- export project_in_db/5, project_in_dbi/5.
+:- export new_dbi/1, load_in_dbi/2, assert_in_dbi/2, new_db_like/2.
 
+:- export apply_op_in_db/6, apply_rel_op_in_db/4, union_in_db/5,
+   intersect_in_db/5, difference_in_db/5, sym_diff_in_db/5,
+   subset_in_db/3, subsumed_in_db/3, disjoint_in_db/3, equal_in_db/3,
+   copy_in_db/4, materialize_in_db/4, xprod_in_db/5, join_in_db/6,
+   reorder_in_db/4, project_in_db/5, is_empty_in_db/2, move_in_db/4.
+:- export count_in_db/3.
+
+/* The following naive-* predicates are for testing only and should in
+      general not be used, as they are less efficient than the other
+      predicates. */
+:- comment(hide,[naive_subset_db/2,naive_union_db/3,naive_intersect_db/3, naive_difference_db/3, naive_disjoint_db/2, naive_sym_diff_db/3]).
+
+:- export naive_subset_db/2, naive_union_db/3, naive_intersect_db/3.
+:- export naive_difference_db/3.
+:- export naive_disjoint_db/2.
+:- export naive_sym_diff_db/3.
+
+:- import gensym/2, conset/2, coninc/1, conget/2 from gensym.
 :- import close/1, writeln/2, write_canonical/2, '=..'/2,
-   functor/3, open/3, throw/1, call/1, read/2
+   functor/3, open/3, call/1, read/2
    from standard.
 :- import ','/2, ';'/2, (:)/2, is_most_general_term/1 from standard.
 
@@ -36,7 +37,6 @@
 :- import copy_term/2, length/2 from basics.
 
 :- import subsumes_chk/2 from subsumes.
-:- import intern_termhash/2 from machine.
 :- import phrase/3 from dcg.
    
 :- import misc_error/1 from error_handler.
