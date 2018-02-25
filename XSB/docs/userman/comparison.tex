@@ -119,6 +119,10 @@ subterm of {\tt One}.
     \noindent
     succeeds because the first goal unifies the two variables.
 
+    Note that two structured terms may have the same functor name and
+    arity but they will {\em not} be {\tt ==} if the structure symbols
+    are in two distinct modules.
+
 \ournewitem{X $\backslash$\,= Y}{ISO}\index{$\backslash$\texttt{=/2}}
 \index[pred]{$\backslash$\texttt{=/2}}
     Succeeds if~{\tt X} and~{\tt Y} are not unifiable,
