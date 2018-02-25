@@ -723,6 +723,8 @@ int compare(CTXTdeclc const void * v1, const void * v2)
       if (islist(val2)) comp = strcmp(get_name(ptr1), ".");
       else comp = strcmp(get_name(ptr1), get_name(ptr2));
       if (comp || (arity1 == 0)) return comp;
+      if (ptr1 != ptr2)
+	return strcmp(get_name(get_mod_for_psc(ptr1)),get_name(get_mod_for_psc(ptr2)));
       cptr1 = clref_val(val1);
       cptr2 = clref_val(val2);
       for (arity2 = 1; arity2 <= arity1; arity2++) {

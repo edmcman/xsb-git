@@ -657,6 +657,17 @@ inline static void ctop_constr(CTXTdeclc int regnum, Pair psc_pair)
   else xsb_abort("[CTOP_CONSTR] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
 }
 
+inline static void ctop_list(CTXTdeclc int regnum, Pair psc_pair)
+{				/* from psc_pair ptr form an constr node */
+  register Cell addr = cell(reg+regnum);
+
+  XSB_Deref(addr);
+  if (isref(addr)) {
+    bind_list(vptr(addr), psc_pair);
+  }
+  else xsb_abort("[CTOP_CONSTR] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+}
+
 
 /*
  *  For encoding object pointer, like PSC, PSC-PAIR and Subgoal frames.
@@ -1610,14 +1621,18 @@ int builtin_call(CTXTdeclc byte number)
   case TERM_NEW: {		/* R1: +PSC, R2: -term */
     int disp;
     Psc psc = (Psc)ptoc_addr(1);
-    sreg = hreg;
-    hreg += get_arity(psc) + 1;
-    ctop_constr(CTXTc 2, (Pair)sreg);
-    new_heap_functor(sreg, psc);
-    for (disp=0; disp < (int)get_arity(psc); sreg++,disp++) {
-      bld_free(sreg);
-    }
-    break;
+      sreg = hreg;
+      hreg += get_arity(psc) + 1;
+      if (psc == list_psc) {
+	ctop_list(CTXTc 2, (Pair)sreg);
+      } else {
+	ctop_constr(CTXTc 2, (Pair)sreg);
+	new_heap_functor(sreg, psc);
+      }
+      for (disp=0; disp < (int)get_arity(psc); sreg++,disp++) {
+	bld_free(sreg);
+      }
+      break;
   }
   case TERM_ARG: {	/* R1: +term; R2: index (+int); R3: arg (-term) */
     size_t  disp = ptoc_int(CTXTc 2);
@@ -3156,10 +3171,10 @@ case WRITE_OUT_PROFILE:
   case INTERN_TERM:
   {
     Integer termsize;
-    prolog_term term = ptoc_tag(CTXTc 1);
-    prolog_term iterm = ptoc_tag(CTXTc 2);
+    prolog_term term = ptoc_tag(CTXTc 1); // term
+    prolog_term iterm = ptoc_tag(CTXTc 2); // interned term, or termhash
     prolog_term iiterm;
-    Integer ifHashIntern = ptoc_int(CTXTc 3);
+    Integer ifHashIntern = ptoc_int(CTXTc 3); // 0->intern, 1->termhash, 2->test termhash
 
     XSB_Deref(term);
     XSB_Deref(iterm);
@@ -3194,6 +3209,7 @@ case WRITE_OUT_PROFILE:
     } else if (isstring(iterm)) {
       iiterm = stringhash_to_term(string_val(iterm));
       if (iiterm) return unify(CTXTc term,iiterm);
+      else if (ifHashIntern == 2) return FALSE;
       else return unify(CTXTc term,iterm);
     } else if (isref(term) && isref(iterm)) {
       xsb_instantiation_error(CTXTc "intern_term/hash/2", 1);
