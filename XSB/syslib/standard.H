@@ -28,7 +28,6 @@
 /*  exported built-in predicates  */
 /* ------------------------------ */
 
-
 :- export 
 	arg/3,		arg0/3,		atom/1,		
 	atom_concat/3,   atomic/1,	atom_length/2,
@@ -46,7 +45,7 @@
 	console_write/1, console_writeln/1,
    error_write/1, error_writeln/1,exec_table_option/2,
 	expand_term/2,	file_exists/1,	fail/0,	false/0,	fail_if/1,
-	fileerrors/0,	float/1,	forall/2,	functor/3,
+   fileerrors/0,	float/1,	forall/2,	functor/3,  functor/4,
 	gc_dynamic/1,   gc_tables/1,    gc_atoms/0,
 	get/1,		get0/1,		
 	get_char/1,	get_char/2,     get_code/1,	get_code/2,
@@ -130,9 +129,8 @@
 :- import clause/2, retractall/1 from assert.
 
 :- import member/2,append/3,comma_member/2,memberchk/2 from basics.
-:- import consult/1, reconsult/1 from consult.
+:- import consult/1, reconsult/1, if_file_loaded/1 from consult.
 :- import (thread_shared)/1, (thread_private)/1 from consult.
-:- import load_page/5 from curl.
 :- import predicate_property/2, current_op/3 from curr_sym.
 :- import dcg/2 from dcg.
 %%:- import eval/2 from eval.
@@ -159,12 +157,12 @@
 
 :- import call0/1, conname/2,          dynamic_code_function/5,
           expand_filename/2, gc_stuff/2,      machine_file_exists/1, 
-	  psc_arity/2, psc_import/3, psc_insert/4,
+	  psc_arity/2, psc_import/3, psc_insert/4, psc_mod/2,
 	  psc_name/2, psc_type/2, psc_set_shared/2,
 	  stat_set_flag/2, stat_flag/2, term_compare/3,
 	  stat_sta/1, stat_cputime/1, stat_walltime/1,
           %%str_len/2,
-          term_psc/2, term_new/2, term_new_mod/3, term_type/2,          cancel_sleeper_thread/0,
+	  term_psc/2, term_new/2, term_new_mod/3, term_type/2, cancel_sleeper_thread/0,
           verify_attribute_handler/4, conget/2
 	  from machine.
 :- import start_sleeper_thread/1 from machine.
@@ -195,6 +193,10 @@
      from xsb_writ.
 :- import (:-)/2 from usermod.
 :- import term_expansion/2 from usermod.
+:- import start_sleeper_thread/1 from machine.
+:- import assert/1 from assert.
 
+
+:- import open_url/4, get_curl_pair/3, delete_curl_pair/3 from open_url.
 
 /* --------------------- end of file standard.H ----------------------- */

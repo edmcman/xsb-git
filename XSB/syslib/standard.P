@@ -83,7 +83,10 @@ seeing(Str) :-
 seen :- stat_flag(CURRENT_INPUT, Str),
 	(Str > 6 -> close(Str) ; true),
 	stat_set_flag(CURRENT_INPUT, STDIN), 
-	delete_curl_pair(_,_,Str).
+	(if_file_loaded(curl)	% required to avoid trying to load (when compiling configuration.P
+	 ->	delete_curl_pair(_,_,Str)
+	 ;	true
+	).
 
 set_output(Stream):- 
 	check_open_stream_or_alias(Stream,set_output/1,1,output,Stream1),
@@ -109,7 +112,8 @@ telling(Str) :- stat_flag(CURRENT_OUTPUT, Str).
 
 told :- 
 	stat_flag(CURRENT_OUTPUT, Str),
-	( get_curl_pair(Atom,_,Str)
+	( if_file_loaded(curl),	% required to avoid trying to load (when compiling configuration.P
+	  get_curl_pair(Atom,_,Str)
 	-> close(url(Atom))
 	;
 	    (Str > 6 -> close(Str) ; true)
@@ -191,29 +195,6 @@ file_translate(Mode,_) :-
 	;	type_error(atom,Mode,open/3,2)
 	).
 
-open_url(url(Atom),read,Stream,Options) :- 
-	!, 
-	load_page(url(Atom), Options, [DirEnc,FileBase,Suffix,_,_], Doc, _), 
-	(Doc == '' -> 
-		permission_error(open,file,url(Atom),open/4); 
-		true
-	), 
-	curl:www_cache_filename(Options,FileBase,Suffix,FileUnEnc), 
-	curl:set_tmp_file(DirEnc, FileUnEnc, TmpFile), 
-	open(TmpFile, write, W),
-	write(W, Doc),
-	close(W),
-	open(TmpFile, read, Stream), 
-	curl:post_us_pair(Atom, read, Stream).
-
-open_url(url(Atom),write,Stream,_) :- 
-	!, 
-	load_page(url(Atom),[redirect(false)],[DirEnc,FileBase,Suffix,_,_],_Doc,_),
-	curl:www_cache_filename([redirect(false)],FileBase,Suffix,FileUnEnc), 
-	curl:set_tmp_file(DirEnc, FileUnEnc, TmpFile), 
-	open(TmpFile, write, Stream), 
-	curl:post_us_pair(Atom, write, Stream).
-
 open(url(Atom),Mode,Stream,Options) :-
 	!, 
 	open_url(url(Atom),Mode,Stream,Options).
@@ -282,7 +263,10 @@ close(S_or_A) :-
 	%% otherwise, it will cause compilation of curl,
 	%% which will come back here and will keep trying to compile curl
 	%% infinitely
-	delete_curl_pair(_,_,S_or_A).
+	(if_file_loaded(curl)	% required to avoid trying to load (when compiling configuration.P
+	 ->	delete_curl_pair(_,_,S_or_A)
+	 ;	true
+	).
 
 %----
 
@@ -317,7 +301,9 @@ close(S_or_A,Options) :-
 	%% otherwise, it will cause compilation of curl,
 	%% which will come back here and will keep trying to compile curl
 	%% infinitely
-	delete_curl_pair(_,_,S_or_A).
+	(if_file_loaded(curl)	% required to avoid trying to load (when compiling configuration.P	 ->	delete_curl_pair(_,_,S_or_A)
+	 ;	true
+	).
 
 examine_close_options(List,Action):-
 	(	examine_close_options_1(List,Action) -> 
@@ -674,6 +660,28 @@ proper_hilog(X) :-
 	).
 
 functor(T, F, N) :- functor(T, F, N).
+
+functor(Term,Mod,Fun,Arity) :-
+    (var(Term)
+     ->	(Mod == usermod
+	 -> functor(Term,Fun,Arity)
+	 ;  functor(Term0,Fun,Arity),
+	    (var(Mod)
+	     ->	instantiation_error(functor/4,2,bound)
+	     ;	term_new_mod(Mod,Term0,Term)
+	    )
+	)
+     ;	functor(Term,Fun,Arity),
+	(Term @= [_|_]
+	 -> Mod = usermod
+	 ;  term_psc(Term,Psc),
+	    psc_mod(Psc,MPsc),
+	    (MPsc =:= 0
+	     ->	Mod = usermod
+	     ;	psc_name(MPsc,Mod)
+	    )
+	)
+    ).
 
 arg(I, T, A) :- arg(I, T, A).
 
@@ -1427,8 +1435,9 @@ goal_cut_transform1((A,B),(Na,Nb),Cutpoint) :-
 goal_cut_transform1((A;B),(Na;Nb),Cutpoint) :-
 	goal_cut_transform(A,Na,Cutpoint),
 	goal_cut_transform(B,Nb,Cutpoint).
-goal_cut_transform1((A->B),(Na->Nb),Cutpoint) :-
-	'_$savecp'(Condcutpoint),
+goal_cut_transform1((A->B),(('_$savecp'(Condcutpoint),Na->Nb)),Cutpoint) :-
+%goal_cut_transform1((A->B),(Na->Nb),Cutpoint) :-
+%	'_$savecp'(Condcutpoint),
 	goal_cut_transform(A,Na,Condcutpoint),
 	goal_cut_transform(B,Nb,Cutpoint).
 
@@ -2064,7 +2073,7 @@ call_expose(Goal) :-
 	).
 
 :- dynamic '_$multifile'/1.	% true of multifile skeletons
-:- dynamic '_$multifile_comp'/1. % true of multifile skeleton components
+:- dynamic '_$multifile_comp'/1. % true of multifile component skeletons
 
 multifile([P/A, _T1, T2]) :-	% T1 is not used
 	functor(TT1, P, A),	% TT1 is in usermod
@@ -2086,8 +2095,8 @@ multifile([P/A, _T1, T2]) :-	% T1 is not used
 	('_$multifile'(TT1)
 	 ->	true
 	 ;	assert0('_$multifile'(TT1),1,1,(multifile)),
-		assert0('_$multifile_comp'(T2),1,1,(multifile)),
-	    	('_$index'(P/A,Inds,HSize),Inds =\= 0
+	        assert0('_$multifile_comp'(T2),1,1,(multifile)),
+	        ('_$index'(P/A,Inds,HSize),Inds =\= 0
 		 ->	add_index(T2,Inds,HSize),
 			add_index(TT1,0,0)
 		 ;	true
@@ -2306,13 +2315,6 @@ call_attribute_handlers([Mod,Attr|Rest],Value) :-
   	    call(Handler)),
 	call_attribute_handlers(Rest,Value).	
 */
-
-delete_curl_pair(X,Y,Z) :-
-	consult:if_file_loaded(curl) -> curl:delete_us_pair(X,Y,Z)
-	; true.
-get_curl_pair(X,Y,Z) :-
-	consult:if_file_loaded(curl), 
-	curl:get_us_pair(X,Y,Z). 
 
 
 :- import existence_error/4 from error_handler.
