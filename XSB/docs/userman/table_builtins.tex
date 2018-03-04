@@ -105,10 +105,14 @@ be given either using the notation \code{p/n} or as a skeleton,
 \index{tabling!call variance}
 \index{tabling!answer subsumption}
 \index{tabling!incremental}
+\index{tabling!opaque}
 \index{tabling!dynamic predicates}
 \index{tabling!private}
 \index{tabling!shared}
-\index{tabling!opaque}
+\index{tabling!sound completion}
+\index{tabling!subgoal abstraction}
+\index{tabling!answer abstraction}
+\index{tabling!interned ground terms}
 
 \label{table-declaration}
 \ourstandarditem{table(+Operations)}{table/1}{Tabling}
@@ -157,9 +161,10 @@ answers entered into the table for the predicate(s) to be interned.
 \item {\tt incremental} which causes the table evaluation method of
   the predicate(s) to be incremental.
 %
-\item {\tt opaque} which indicates that the tables predicate is used
-  in the definition of an incremental table, but are not to be
-  incrementally maintained themselves.  
+\item {\tt opaque} which indicates that each preidcate $p/n$ in {\tt
+  PredSpec} is such that incremental tables can depend on tables for
+  $p/n$, but that tables for $p/n$ are not themselves incrementally
+  maintained.
 %
 \item {\tt private} which causes the predicate(s) to be treated as
   thread private in addition to being tabled.
@@ -171,6 +176,10 @@ answers entered into the table for the predicate(s) to be interned.
 %
 \item {\tt answer\_abstract(n)} which enables depth-n answer
   abstraction for the predicate(s).
+%
+\item {\tt max\_answers(n)} which for any $P$ in {\tt PredSpec}, the
+  maximum number of answers for any tabled subgoal of $P$ is limited
+  to {\tt n}, using sound completion.
 %
 \ei
 \ei

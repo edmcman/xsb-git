@@ -1038,8 +1038,8 @@ suspended derivation.\footnote{
 {\em Correctable} tripwires are a subset of
 inspectable tripwires for which an automatic action may be taken to
 remedy the situation, such as rewriting a subgoal or an answer whose
-size is greater than a given limit, by using subgoal abstraction or
-answer restraint.
+size is greater than a given limit, by using subgoal abstraction, 
+answer restraint or sound completion of a subgoal.
 
 Tripwires may be set in various ways: most can be set and viewed at a
 session level using Prolog flags, others can also be set at the
@@ -1092,9 +1092,9 @@ tripwire can be set via the Prolog flag {\tt tripwire(max\_memory)},
 so that the tripwire will be hit whenever XSB uses more than a given
 total amount of memory.  This amount can be set either as an integer,
 representing an absolute number of kilobytes or as a floating point
-number indicating a percentate of the RAM of the platform upon which
-XSB is executing.  Currently, a memory-based tripwire can only throw
-an error.
+number indicating a percentage of the RAM of the platform upon which
+XSB is executing.  
+%Currently, a memory-based tripwire can only throw an error.
 
 \paragraph{Guidelines for Analysis of Resource-based Tripwires}  \ \\
 
@@ -1107,9 +1107,9 @@ an error.
 If a resource tripwire is hit, the best course of analysis usually
 starts with viewing the output of {\tt statistics/[0,1]}.  
 \bi
-\item {\em Check that there are a large number of incomplete tables}
-  This can be determined, for instance, using the output of {\tt
-    statistics/0}, by a line near the end of the memory
+\item {\em Check whether there are a large number of incomplete
+  tables} This can be determined, for instance, using the output of
+  {\tt statistics/0}, by a line near the end of the memory
   table.~\footnote{This line is not printed out if there are no
     incomplete tables.}  E.g.:
 %
@@ -1122,21 +1122,20 @@ starts with viewing the output of {\tt statistics/[0,1]}.
  space is likely to be high also, since an incomplete table $T$ needs
  to maintain many details of its derivation state to ensure all
  answers for $T$ are returned to all calls to $T$.  In this case, the
- predicates for analyzing the Subgoal Dependency Graph of the
- suspended derivation can be used (Section~\ref{sec:sdg-preds}).  {\em
- Note that, here and below, when there are a large number of
- incomplete tables, information returned by {\tt get\_sdg\_info/1}, as
- well as by {\tt get\_idg\_info/1} and {\tt get\_rdg\_info/1} may need
- to be filtered or manipulated using the predicates in
- Section~\ref{sec:dependency-graph-manipulation}.}
-\ei
+ predicates can be used that analyze the Subgoal Dependency Graph of
+ the suspended derivation (Section~\ref{sec:sdg-preds}).  {\em Note
+ that, here and below, when there are a large number of incomplete
+ tables, information returned by {\tt get\_sdg\_info/1}, as well as by
+ {\tt get\_idg\_info/1} and {\tt get\_rdg\_info/1} may need to be
+ filtered or manipulated using the predicates in
+ Section~\ref{sec:dependency-graph-manipulation}.}  \ei
 
-\item {\em Otherwise, Check whether there are a large number of
- completed subgoals.} If there are not many incomplete
- tables but the table space seems large, {\tt statistics/[0,1,2]}
- indicates both the total number of tabled subgoals and the total
- number of answers.  In this case.  For instance, the beginning of the
- summary of tabling operations might contain information such as:
+\item {\em Otherwise, check whether there are a large number of
+ completed subgoals.} If there are not many incomplete tables but the
+ table space seems large, {\tt statistics/[0,1,2]} indicates both the
+ total number of tabled subgoals and the total number of answers,
+ either of which may be the culprit.  For instance, the beginning of
+ the summary of tabling operations might contain information such as:
 
 %
 {\small 
@@ -1436,9 +1435,11 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum size of a given argument in a subgoal
  (cf. Section~\ref{sec:size-metric}).  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em  Possible actions:} {\tt abstract}, {\tt suspend} or {\tt error}.
+\item{\em Possible actions:} {\tt abstract}, {\tt suspend}, {\tt error}
+ or {\tt custom}
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
-\item {\em User handler for suspend}: {\tt max\_table\_subgoal\_size\_handler}.
+\item {\em User handler for custom}: {\tt
+ max\_table\_subgoal\_size\_handler}.  
 \ei
 
 \index{tripwires!max\_incomplete\_subgoals} 
@@ -1447,9 +1448,9 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum number of subgoals that are
  incomplete at any given time.  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em  Possible actions:} {\tt suspend}, {\tt error} or {\tt warning}.
+\item{\em  Possible actions:} {\tt suspend}, {\tt error}, or {\tt custom}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
-\item {\em User handler for suspend}: {\tt max\_incomplete\_subgoals\_user\_handler}.
+\item {\em User handler for custom}: {\tt max\_incomplete\_subgoals\_user\_handler}.
 \ei
 
 \index{tripwires!max\_scc\_subgoals} 
@@ -1458,9 +1459,9 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum number of subgoals that are incomplete,
  and are in the same SCC at any given time.  A limit of {\tt 0} means
  that this tripwire is disabled.
-\item{\em  Possible actions:} {\tt suspend}, {\tt error} or {\tt warning}.
+\item{\em  Possible actions:} {\tt suspend}, {\tt error} or {\tt custom}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
-\item {\em User handler for suspend}: {\tt max\_scc\_subgoals\_user\_handler}.
+\item {\em User handler for custom}: {\tt max\_scc\_subgoals\_user\_handler}.
 \ei
 
 \index{tripwires!max\_table\_answer\_size} 
@@ -1469,9 +1470,10 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum size of a given argument of an answer
  (cf. Section~\ref{sec:size-metric}).  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em  Possible actions:} {\tt abstract}, {\tt suspend}, or {\tt error}.
+\item{\em Possible actions:} {\tt abstract}, {\tt suspend}, {\tt
+ error} or {\tt custom}
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
-\item {\em User handler for suspend}: {\tt max\_table\_answer\_size\_user\_handler}.
+\item {\em User handler for custom}: {\tt max\_table\_answer\_size\_user\_handler}.
 \ei
 
 \index{tripwires!max\_answers\_for\_subgoal} 
@@ -1480,10 +1482,10 @@ indicates the current values of this tripwire.  (Also see the
 \item {\em Limit:} The maximum number of answers for any single tabled
  subgoal.  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em Possible actions:} {\tt suspend}, {\tt error}, {\tt warning}
- or {\tt complete\_soundly}.
+\item{\em Possible actions:} {\tt complete\_soundly}, {\tt suspend},
+ {\tt error} or {\tt custom}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
-\item {\em User handler for suspend}: {\tt max\_answers\_for\_subgoal\_user\_handler}.
+\item {\em User handler for custom}: {\tt max\_answers\_for\_subgoal\_user\_handler}.
 \ei
 
 \item {\tt max\_memory}
@@ -1493,7 +1495,7 @@ indicates the current values of this tripwire.  (Also see the
  floating-point number, the limit is the proportion of RAM for the
  machine on which XSB is running.  A limit of {\tt 0} means that
  this tripwire is disabled.
-\item{\em Possible actions:} {\tt suspend} or {\tt error}. 
+\item{\em Possible actions:} {\tt suspend}, {\tt error} or {\tt custom}.
 \item {\em Default.} Limit: {\tt 0}; Action: {\tt error}.
 \item {\em User handler for suspend}: {\tt max\_memory\_user\_handler}.
 \ei

@@ -488,8 +488,9 @@ default tabling strategy.
 \index{declarations!\texttt{table\ as}}
 %----------------------------------------------------------------------
 
-\subsection{Tabling with Interned Terms} \label{section:interntabling}
-\index{tabling!interned terms} \label{section:interned-terms}
+\subsection{Tabling with Interned Ground Terms} 
+\label{section:interntabling}
+\index{tabling!interned ground terms} \label{section:interned-terms}
 
 XSB supports, on request, a special representation of {\em ground}
 terms, known as interned terms (see {\tt intern\_term/2}.)  This
@@ -974,21 +975,21 @@ this program~\footnote{\LRD stratification may be reminiscent of the
 \index{tabling!complete evaluation}
 
 Knowing when a subgoal is completely evaluated can be useful when
-programming with tabling.  Simply put, a subgoal $S$ is {\em completely
-evaluated} if an evaluation can produce no more answers for $S$\@.  The
-computational strategy of XSB makes great use of complete evaluation
-so that understanding this concept and its implications can be of
-great help to a programmer.
+programming with tabling.  Simply put, a subgoal $S$ is {\em
+  completely evaluated} if an evaluation can produce no more answers
+for $S$\@.  The computational strategy of XSB makes heavy use of
+complete evaluation so that understanding this concept and its
+implications can be of great help to a programmer.
 
 Consider a simple approach to incorporating negation into tabling.
 Each time a negative goal is called, a separate table is opened for
 the negative call.  This evaluation of the call is carried on to
-termination.  If the evaluation terminates, its answers if any, are
+termination.  If the evaluation terminates, its answers, if any, are
 used to determine the success of failure of the calling goal.  This
 general mechanism underlies early formulations for tabling stratified
 programs \cite{KeTo88,Seki89}.  Of course this method may not be
 efficient.  Every time a new negative goal is called, a new table must
-be started, and run to termination.  We would like to use information
+be started, and run to termination.  We would like to reuse information
 already derived from the computation to answer a new query, if at all
 possible --- just as with definite programs.
 
@@ -1007,16 +1008,18 @@ termed {\em not\_yet\_called}.  XSB contains predicates that allow a
 user to examine the state of a given table (Section
 \ref{sec:TablingPredicates}).
 
-\index{tabling!early completion of subgoals} 
-There are in fact two ways that a tabled subgoal $S$ can be determined
-to be completely evaluated.  If $S$ is part of an SCC $\cS$, (a
-mutually recorsive component), then $S$ can be completed once it is
-ensure that all resolution steps have been done to all subgoals in
-$\cS$.  Otherwise, if there is a derivation of an answer that is
-identical to $S$, $S$ can be completed before the rest of the subgoals
-in $\cS$ since further evaluation of $S$ itself will not produce
-useful information.  In this case, we sometimes say that $S$ is {\em
-  early completed}.
+\index{tabling!early completion of subgoals} There are in fact two
+ways that a tabled subgoal $S$ can be determined to be completely
+evaluated.  If $S$ is part of an SCC $\cS$, (a mutually recorsive
+component), then $S$ can be completed once it is ensure that all
+resolution steps have been done to all subgoals in $\cS$.  Otherwise,
+if there is a derivation of an answer that is identical to $S$, $S$
+can be completed before the rest of the subgoals in $\cS$ since
+further evaluation of $S$ itself will not produce useful information.
+In this case, we sometimes say that $S$ is {\em early
+  completed}.\footnote{The use of sound early completion based on a
+  maximal number of answers per tabled subgoal can also be declared by
+  the user: see Section~\ref{sec:tabling-termination}.}
 
 Using these concepts, we can overview how tabled negation is evaluated
 for stratified programs.  If a literal {\tt tnot(S)} is called, where
@@ -1029,6 +1032,7 @@ subgoal {\tt tnot(S)} is completed with no answers, the engine resumes
 the evaluation at the point where it had been suspended.  We note that
 because of this behavior, tracing programs that heavily use negation
 may produce behavior unexpected by the user.
+
 
 
 \paragraph*{{\tt tnot/1} vs. \not }
