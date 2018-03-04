@@ -118,6 +118,8 @@ default_sys_error_handler(error(Error,Context)) :-
 default_sys_error_handler(Ball) :- 
 	default_sys_error_handler_message(Ball).
 
+    :- import writeln/1 from standard.
+    
 default_sys_error_handler_message(error(thread_cancel,_)) :- !.
 default_sys_error_handler_message(error(misc_error(Level),Msg)) :- 
 %        writeln(default_sys_error_handler_message(error(misc_error(Level),Msg)) ),
@@ -293,15 +295,21 @@ get_backtrace_list([Psc|Pscs],[Mod:Name/Arity|Preds]) :-
 	),
 	get_backtrace_list(Pscs,Preds).
 
+/* TES: In certain cases, (e.g., when ?- aaa is executed in a compiled
+ * file, and aaa is undefined) the data can be non-zero and the
+ * filename 0.  Accordingly, I added the check for FileName0 = 0 */
+
 psc_modname_filename(Psc,ModName,FileName) :-
 	psc_data(Psc,ModPscOrFile),
 	(integer(ModPscOrFile)
 	 ->	(ModPscOrFile =:= 0
 		 ->	ModName = usermod, % 0 also means usermod
-			FileName = unknown
+			FileName = '(unknown file name)'
 		 ;	psc_name(ModPscOrFile,ModName),
 			psc_ep(ModPscOrFile,FileName0),
-			xsb_filename(FileName0,FileName)
+			(FileName0 = 0 ->
+			     FileName = '(unknown file name)'
+			   ; xsb_filename(FileName0,FileName))
 			%,standard:writeln(userout,mf(ModPscOrFile,FileName))
 		)
 	 ;	ModName = usermod,

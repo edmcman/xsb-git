@@ -1239,6 +1239,8 @@ exec_table_options_1(subgoal_abstract(Val),PredList):- !,
 	exec_table_option_on_predlist(PredList,subgoal_abstract(Val)).
 exec_table_options_1(answer_abstract(Val),PredList):- !,
 	exec_table_option_on_predlist(PredList,answer_abstract(Val)).
+exec_table_options_1(max_answers(Val),PredList):- !,
+	exec_table_option_on_predlist(PredList,max_answers(Val)).
 exec_table_options_1(Culprit,_PredList) :- 
 	domain_error(comma_list_or_table_options,Culprit,(table)/1,1).
 
@@ -1277,6 +1279,9 @@ exec_table_option(subgoal_abstract(Val),PredSpec) :- !,
 exec_table_option(answer_abstract(Val),PredSpec) :- !,
 	( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
 	set_tif_property(Term,answer_size,Val).
+exec_table_option(max_answers(Val),PredSpec) :- !,
+	( PredSpec = P/N -> functor(Term,P,N); Term = PredSpec ),
+	set_tif_property(Term,max_answers,Val).
 exec_table_option(incremental,Pred) :- !,
  	add_incr_table(Pred,INCREMENTAL).
 exec_table_option(nonincremental,Pred) :- !,
@@ -1301,6 +1306,7 @@ exec_table_option(Option,_Pred) :- !,
 %--------
 :- import answer_abstract/1 from usermod.
 :- import subgoal_abstract(_) from usermod.
+:- import max_answers(_) from usermod.
 :- import set_tif_property/3 from tables.
 
 check_table_options((Option,Options),PredCList,Override) :- !,

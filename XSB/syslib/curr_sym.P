@@ -1080,8 +1080,8 @@ xsb_flag(max_table_subgoal_size_action, Action) :-
 	stat_flag(MAX_TABLE_SUBGOAL_ACTION, A),
 	(A == XSB_ERROR -> Action = error 
          ; A == XSB_ABSTRACT -> Action = abstract 
-         ; A == XSB_SUSPEND -> Action = suspend).
-%         ; A == XSB_FAILURE, Action = failure ).
+         ; A == XSB_SUSPEND -> Action = suspend
+         ; A == XSB_CUSTOM -> Action = custom).
 xsb_flag(max_table_answer_size,Max):- 
 	stat_flag(MAX_TABLE_ANSWER_METRIC,M),
 	iso_flag(max_integer,Maxint),
@@ -1089,10 +1089,9 @@ xsb_flag(max_table_answer_size,Max):-
 xsb_flag(max_table_answer_size_action, Action) :-
 	stat_flag(MAX_TABLE_ANSWER_ACTION, A),
 	(A == XSB_ERROR -> Action = error 
-         ; (A == XSB_BRAT -> Action = abstract 
-         ; (A == XSB_SUSPEND -> Action = suspend) ) ).
-%	   ; (A == XSB_FAILURE -> Action = failure 
-%              ; A == XSB_WARNING, Action = warning) ).
+         ; A == XSB_BRAT -> Action = abstract 
+         ; A == XSB_SUSPEND -> Action = suspend
+	 ; A == XSB_CUSTOM -> Action = custom).
 %xsb_flag(max_table_answer_list_depth,Depth):- 
 %	stat_flag(MAX_TABLE_ANSWER_LIST_DEPTH,Depth).
 %xsb_flag(max_table_answer_list_action, Action) :-
@@ -1107,8 +1106,9 @@ xsb_flag(max_incomplete_subgoals, Max) :-
 xsb_flag(max_incomplete_subgoals_action, Action) :-
 	stat_flag(MAX_INCOMPLETE_SUBGOALS_ACTION,A),
 	(A == XSB_ERROR -> Action = error 
-	; (A == XSB_SUSPEND -> Action = suspend 
-            ; A == XSB_WARNING, Action = warning)).
+	 ; A == XSB_SUSPEND -> Action = suspend 
+	 ; A == XSB_CUSTOM -> Action = custom
+         ; A == XSB_WARNING, Action = warning).
 xsb_flag(max_scc_subgoals, Max) :-
 	stat_flag(MAX_SCC_SUBGOALS,M),
 	iso_flag(max_integer,Maxint),
@@ -1116,8 +1116,9 @@ xsb_flag(max_scc_subgoals, Max) :-
 xsb_flag(max_scc_subgoals_action, Action) :-
 	stat_flag(MAX_SCC_SUBGOALS_ACTION,A),
 	(A == XSB_ERROR -> Action = error 
-	; (A == XSB_SUSPEND -> Action = suspend 
-            ; A == XSB_WARNING, Action = warning)).
+	 ; A == XSB_SUSPEND -> Action = suspend 
+	 ; A == XSB_CUSTOM -> Action = custom					    
+         ; A == XSB_WARNING, Action = warning ).
 xsb_flag(max_answers_for_subgoal, Max) :-
 	stat_flag(MAX_ANSWERS_FOR_SUBGOAL,M),
 	iso_flag(max_integer,Maxint),
@@ -1125,8 +1126,9 @@ xsb_flag(max_answers_for_subgoal, Max) :-
 xsb_flag(max_answers_for_subgoal_action, Action) :-
 	stat_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION,A),
 	(A == XSB_ABSTRACT -> Action = complete_soundly
-	; (A == XSB_ERROR -> Action = error 
-		; (A == XSB_SUSPEND -> Action = suspend) ) ).
+	; A == XSB_ERROR -> Action = error 
+	; A == XSB_SUSPEND -> Action = suspend
+	; A == XSB_CUSTOM -> Action = custom ).
 xsb_flag(unify_with_occurs_check, Mode) :-
 	stat_flag(UNIFY_WITH_OCCURS_CHECK_FLAG, Flag),
 	( Flag =:= 0 -> Mode = off ; Mode = on ).
@@ -1336,74 +1338,61 @@ set_xsb_flag_1(max_table_subgoal_size, Size) :-!,
 	  stat_set_flag(MAX_TABLE_SUBGOAL_SIZE, MaxInt)
 	; stat_set_flag(MAX_TABLE_SUBGOAL_SIZE, Size)).
 set_xsb_flag_1(max_table_subgoal_size_action, Action) :-!,
-	(Action == error -> 
-	    stat_set_flag(MAX_TABLE_SUBGOAL_ACTION, XSB_ERROR)
-          ; (Action == suspend ->  
-	    stat_set_flag(MAX_TABLE_SUBGOAL_ACTION, XSB_SUSPEND)
-          ; (Action == abstract ->  
-	    stat_set_flag(MAX_TABLE_SUBGOAL_ACTION, XSB_ABSTRACT)
-            ; domain_error([error,', ',suspend,', ',abstract],
-                        Action,set_xsb_flag/2,2,'max_table_subgoal_action clause') ) ) ).
+	(Action == error -> stat_set_flag(MAX_TABLE_SUBGOAL_ACTION, XSB_ERROR)
+         ; Action == suspend ->  stat_set_flag(MAX_TABLE_SUBGOAL_ACTION, XSB_SUSPEND)
+         ; Action == abstract ->  stat_set_flag(MAX_TABLE_SUBGOAL_ACTION, XSB_ABSTRACT)
+         ; domain_error([error,', ',suspend,', ',abstract],
+			Action,set_xsb_flag/2,2,'max_table_subgoal_action clause') ).
 set_xsb_flag_1(max_table_answer_size, Size) :-!,
 	(Size =:= 0 -> 
 	  iso_flag(max_integer,MaxInt),
 	  stat_set_flag(MAX_TABLE_ANSWER_METRIC, MaxInt)
 	; stat_set_flag(MAX_TABLE_ANSWER_METRIC, Size) ).
 set_xsb_flag_1(max_table_answer_size_action, Action) :-!,
-	(Action == error -> 
-	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_ERROR)
-%          ; (Action == warning ->  
-%	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_WARNING)
-          ; ((Action == bounded_rationality ; Action == abstract) ->  
-	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_BRAT),
-	    reinitialize_undefineds
-          ; (Action == suspend ->  
-	    stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_SUSPEND)
-%            ; domain_error([error,', ',warning,', ',suspend,', ',abstract],
-            ; domain_error([error,', ',suspend,', ',abstract],
-                        Action,set_xsb_flag/2,2,'max_table_answer_action clause') ) ) ).
+	(Action == error -> stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_ERROR)
+         ; (Action == bounded_rationality ; Action == abstract) ->  
+	       stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_BRAT),
+	       reinitialize_undefineds
+         ; Action == suspend -> stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_SUSPEND)
+         ; Action == custom -> stat_set_flag(MAX_TABLE_ANSWER_ACTION, XSB_CUSTOM)
+         ; domain_error([error,', ',suspend,', ',abstract],
+                        Action,set_xsb_flag/2,2,'max_table_answer_action clause') ).
 set_xsb_flag_1(max_incomplete_subgoals, Max) :-!,
 	(Max =:= 0 -> 
 	  iso_flag(max_integer,MaxInt),
 	  stat_set_flag(MAX_INCOMPLETE_SUBGOALS, MaxInt)
 	; stat_set_flag(MAX_INCOMPLETE_SUBGOALS, Max) ).
 set_xsb_flag_1(max_incomplete_subgoals_action, Action) :-!,
-	(Action == error -> 
-	    stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_ERROR)
-          ; (Action == warning ->  
-	    stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_WARNING)
-          ; (Action == suspend ->  
-	    stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_SUSPEND)
-            ; domain_error([error,', ',warning,', ',suspend],
-                        Action,set_prolog_flag/2,2,'max_incomplete_subgoals_action clause') ) ) ).
+	(Action == error -> stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_ERROR)
+         ; Action == warning -> stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_WARNING)
+         ; Action == suspend -> stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_SUSPEND)
+         ; Action == custom -> stat_set_flag(MAX_INCOMPLETE_SUBGOALS_ACTION, XSB_CUSTOM)
+         ; domain_error([error,', ',warning,', ',suspend,', ',custom],
+                        Action,set_prolog_flag/2,2,'max_incomplete_subgoals_action clause') ).
 set_xsb_flag_1(max_scc_subgoals, Max) :-!,
 	(Max =:= 0 -> 
 	  iso_flag(max_integer,MaxInt),
 	  stat_set_flag(MAX_SCC_SUBGOALS, MaxInt)
 	; stat_set_flag(MAX_SCC_SUBGOALS, Max) ).
 set_xsb_flag_1(max_scc_subgoals_action, Action) :-!,
-	(Action == error -> 
-	    stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_ERROR)
-          ; (Action == warning ->  
-	    stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_WARNING)
-          ; (Action == suspend ->  
-	    stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_SUSPEND)
-            ; domain_error([error,', ',warning,', ',suspend],
-                        Action,set_prolog_flag/2,2,'max_scc_subgoals_action clause') ) ) ).
+	(Action == error -> stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_ERROR)
+         ; Action == warning -> stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_WARNING)
+         ; Action == suspend -> stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_SUSPEND)
+         ; Action == custom -> stat_set_flag(MAX_SCC_SUBGOALS_ACTION, XSB_CUSTOM)
+         ; domain_error([error,', ',warning,', ',suspend,', ',custom],
+                        Action,set_prolog_flag/2,2,'max_scc_subgoals_action clause') ).
 set_xsb_flag_1(max_answers_for_subgoal, Max) :-!,
 	(Max =:= 0 -> 
 	  iso_flag(max_integer,MaxInt),
 	  stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL, MaxInt)
 	; stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL, Max) ).
 set_xsb_flag_1(max_answers_for_subgoal_action, Action) :-!,
-	(Action == complete_soundly -> 
-	    stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION, XSB_ABSTRACT)
-	; (Action == error -> 				  
-	       stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION, XSB_ERROR)
-             ; (Action == suspend ->  
-	          stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION, XSB_SUSPEND)
-                ; domain_error([error,', ',suspend,', ',complete_soundly],
-                               Action,set_prolog_flag/2,2,'max_answers_for_subgoal_action clause') ) ) ).
+	(Action == complete_soundly -> stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION, XSB_ABSTRACT)
+	 ; Action == error ->     stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION, XSB_ERROR)
+         ; Action == suspend ->   stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION, XSB_SUSPEND)
+         ; Action == custom ->    stat_set_flag(MAX_ANSWERS_FOR_SUBGOAL_ACTION, XSB_CUSTOM)
+         ; domain_error([error,', ',suspend,', ',custom,', ',custom,', ',complete_soundly],
+                        Action,set_prolog_flag/2,2,'max_answers_for_subgoal_action clause') ).
 set_xsb_flag_1(max_memory,Max):-!,
 	(integer(Max),Max >= 0 -> 
 	     stat_set_flag(MAX_MEMORY,Max)
