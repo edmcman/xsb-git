@@ -250,26 +250,28 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
       
       sf=CallTrieLeaf_GetSF(Paren);
       c=sf->callnode;
-      //      if (IsNonNULL(c))  {
-      //	printf("        checking the incremental goal flscnt %d ",c->falsecount);print_subgoal(stddbg,sf);printf("\n");
-      //      }
+      if (IsNonNULL(c))  {
+	//	printf("        checking the incremental goal flscnt %d ",c->falsecount);
+	//      print_subgoal(stddbg,sf);printf("\n");
+      }
       /* TES: if falsecount == 0 && call_found_flag, we know that call
          is complete.  Otherwise, dfs_outedges would have aborted */
 
       if(IsNonNULL(c) && (c->falsecount!=0)){
-	//	printf("           recomputing (rcomputable = %d) ",c->recomputable);
-	//	print_subgoal(stddbg,sf);printf(" (sf %p)\n",sf);
+	//	printf("           recomputing (recomputable = %s)\n",
+	//     c->recomputable==COMPUTE_DEPENDENCIES_FIRST?"compute_deps":"direct recompute");
+	//        printf("           ");print_subgoal(stddbg,sf);printf(" (sf %p)\n",sf);
 	if (c->recomputable == COMPUTE_DEPENDENCIES_FIRST) {
-	  //	  printf("computing dependencies = 0\n");
+	  //	  printf("           computing dependencies\n");
 	  lazy_affected = empty_calllist(CTXT);
 	  if ( !dfs_dependency_edges(CTXTc c,  &lazy_affected, CALL_LIST_EVAL) ) {
 	    CallLUR_Subsumer(*results) = CallTrieLeaf_GetSF(Paren);
-	    //	    printf("        using recompleted table\n");
+	    //  printf("        using recompleted table\n");
 	    return XSB_SPECIAL_RETURN;
 	  } /* otherwise if dfs_dependency_edges, treat as falsecount = 0, use completed table */
 	}
 	else {    /* COMPUTE_DIRECTLY */
-	  //	  printf("recomputing = 0\n");
+	  //	  printf("           directly recomputing\n");
 #if  !defined(MULTI_THREAD) || defined(NON_OPT_COMPILE)
 	  incr_table_recomputations_gl++;
 #endif
@@ -964,6 +966,7 @@ inline TIFptr New_TIF(CTXTdeclc Psc pPSC) {
    TIF_NextTIF(pTIF) = NULL;						
    TIF_SubgoalDepth(pTIF) = 0;						
    TIF_AnswerDepth(pTIF) = 0;						
+   TIF_MaxAnswers(pTIF) = 0;
 #ifdef MULTI_THREAD
    /* The call trie lock is also initialized for private TIFs,
       just in case they ever change to shared */
