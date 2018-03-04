@@ -193,6 +193,8 @@ rm -f aggregs_test_2.xwam
 ../gentest.sh "$XEMU -l $options" test_subgoal_property "test."
 #-------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_get_idg_info "test."
+#-------------------------------------------------
+../gentest.sh "$XEMU -l $options" test_maxans_decl "test."
 
 #VALGRIND
 if test "$valgrind" = "true"; then
