@@ -552,6 +552,8 @@ predicate_property(Term_Indicator, Property) :-
 	  functor(Term, Name, Arity),
 	  predicate_property_1(PSC,Term, Search_prop)
 	).
+% TES -- I have no idea why T_FILE is used in the clause below: it
+% seems to happen on 0-ary preds(?)
 predicate_property(Term, Property) :-	% This takes care of global 
 					% modules,"usermod" and "global".
 	term_type(Term, Type),
@@ -563,8 +565,8 @@ predicate_property(Term, Property) :-	% This takes care of global
 			% whole PSC-Pair list.
 		term_psc(Term, PSC),
 		predicate_property_1(PSC,Term, Search_prop)
-	 ; Type =:= 5 ->  % TES -- old T_FILE I don't think this is needed anymore.
-	        warning(('predicate_property/2 called on term of type T_FILE: ',Term)),
+	 ; Type =:= 5 ->  
+%	        warning(('predicate_property/2 called on term of type T_FILE: ',Term)),
 		conpsc(Term, PSC),
 		predicate_property_1(PSC,Term, Search_prop)
 	; psc_scan_in_hash_table(0, PSC),
