@@ -206,6 +206,7 @@ interrupt flag
 #define XSB_ABSTRACT         4
 #define XSB_BRAT             5
 #define XSB_SUSPEND          6
+#define XSB_CUSTOM           7
 
 /* for ALTERNATE_SEMANTICS */
 #define WFS_SEMANTICS        0

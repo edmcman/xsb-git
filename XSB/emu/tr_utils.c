@@ -6145,6 +6145,8 @@ case CALL_SUBS_SLG_NOT: {
 	TIF_Interning(tip) = val;
       else if (property == TIF_ANSWER_SUBSUMPTION)
 	TIF_AnswerSubsumption(tip) = val;
+      else if (property == TIF_MAX_ANSWERS)
+	TIF_MaxAnswers(tip) = val;
     }
     else  /* cant find tip */
       xsb_permission_error(CTXTc "set property","tif",term,
@@ -6178,6 +6180,8 @@ case CALL_SUBS_SLG_NOT: {
 	ctop_int(CTXTc 4,TIF_Interning(tip));
       else if (property == TIF_ANSWER_SUBSUMPTION)
 	ctop_int(CTXTc 4,TIF_AnswerSubsumption(tip));
+      else if (property == TIF_MAX_ANSWERS)
+	ctop_int(CTXTc 4,TIF_MaxAnswers(tip));
     }
     else  /* cant find tip */
       return FALSE;

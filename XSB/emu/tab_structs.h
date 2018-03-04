@@ -307,9 +307,16 @@ typedef struct Table_Info_Frame {
   DelTFptr del_tf_ptr;          /* pointer to first deletion frame for pred */
   BTNptr call_trie;		/* pointer to the root of the call trie */
   VariantSF subgoals;		/* chain of predicate's subgoals */
-  TIFptr next_tif;		/* pointer to next table info frame */ 
-  unsigned int  subgoal_depth:16;
-  unsigned int  answer_depth:16;
+  TIFptr next_tif;		/* pointer to next table info frame */
+#ifdef BITS64
+  unsigned int  subgoal_size:16;
+  unsigned int  answer_size:16;
+  unsigned int  max_answers:16;
+#else
+  unsigned int  subgoal_size:10;
+  unsigned int  answer_size:10;
+  unsigned int  max_answers:12;
+#endif
 #ifdef MULTI_THREAD
   pthread_mutex_t call_trie_lock;
 #endif
@@ -337,9 +344,9 @@ typedef struct Table_Info_Frame {
 #ifdef SHARED_COMPL_TABLES
 #define TIF_ComplCond(pTIF)   	   ( (pTIF)->compl_cond )
 #endif
-#define	TIF_SubgoalDepth(pTIF)      ( (pTIF)->subgoal_depth )
-#define TIF_AnswerDepth(pTIF)       ( (pTIF)->answer_depth )
-
+#define	TIF_SubgoalDepth(pTIF)      ( (pTIF)->subgoal_size )
+#define TIF_AnswerDepth(pTIF)       ( (pTIF)->answer_size )
+#define TIF_MaxAnswers(pTIF)       ( (pTIF)->max_answers )
 
 #define	gc_mark_tif(pTIF)   TIF_Mark(pTIF) = 0x1
 #define	gc_unmark_tif(pTIF)   TIF_Mark(pTIF) = 0x0
@@ -788,15 +795,20 @@ typedef struct subgoal_frame {
 #define SUBG_INCREMENT_CALLSTO_SUBGOAL(subgoal)  (subgoal -> callsto_number)++
 #define INIT_SUBGOAL_CALLSTO_NUMBER(subgoal) subg_callsto_number(subgoal)  = 1
 
-#define SUBG_INCREMENT_ANSWER_CTR(subgoal,template_size) {				\
-    /*    printf("number of calls is %d\n",subg_ans_ctr(subgoal));*/	\
-    if (subg_ans_ctr(subgoal)++ == (unsigned) flags[MAX_ANSWERS_FOR_SUBGOAL]) { \
-      if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ABSTRACT) {	\
-	add_empty_conditional_answer(CTXTc template_size,subgoal);		\
+#define SUBG_INCREMENT_ANSWER_CTR(subgoal,template_size) {		\
+    unsigned int answer_num = ++subg_ans_ctr(subgoal);			\
+    /*    printf("number of answers is %d new %d max_answers for pred %d flags %d\n", \
+	   subg_ans_ctr(subgoal),answer_num,TIF_MaxAnswers(subg_tif_ptr(subgoal)), \
+	   (unsigned) flags[MAX_ANSWERS_FOR_SUBGOAL]);		*/	\
+    if (answer_num == (unsigned) flags[MAX_ANSWERS_FOR_SUBGOAL]		\
+	|| answer_num == TIF_MaxAnswers(subg_tif_ptr(subgoal))) {	\
+      if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ABSTRACT		\
+	  || TIF_MaxAnswers(subg_tif_ptr(subgoal))) { 			\
+	add_empty_conditional_answer(CTXTc template_size,subgoal);	\
       }									\
       else if (flags[MAX_ANSWERS_FOR_SUBGOAL_ACTION] == XSB_ERROR) {	\
 	sprint_subgoal(CTXTc forest_log_buffer_1,0, subgoal);		\
-xsb_abort("Tripwire max_answers_for_subgoal hit. The user-set limit on the number of %d answers for a single subgoaol has been exceeded for %s\n",flags[MAX_ANSWERS_FOR_SUBGOAL],forest_log_buffer_1->fl_buffer); \
+	xsb_abort("Tripwire max_answers_for_subgoal hit. The user-set limit on the number of %d answers for a single subgoaol has been exceeded for %s\n",flags[MAX_ANSWERS_FOR_SUBGOAL],forest_log_buffer_1->fl_buffer); \
       }									\
       else { /* flags[MAX_SCC_SUBGOALS_ACTION] == XSB_SUSPEND */	\
 	tripwire_interrupt(CTXTc "max_answers_for_subgoal_handler");	\

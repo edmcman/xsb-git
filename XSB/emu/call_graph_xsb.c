@@ -506,6 +506,7 @@ void propagate_no_change(callnodeptr c){
 	  cn->falsecount--;
 	  if(cn->falsecount==0){
 	    cn->deleted = 0;
+	    cn -> recomputable = COMPUTE_DEPENDENCIES_FIRST;
 	    propagate_no_change(cn);
 	  }
 	}
