@@ -94,9 +94,9 @@ xsbBool is_absolute_filename(char *filename) {
 }
   
 
-/* if file is a directory and is missing a trailing slash, add it 
-   passes file name and the slash to be added. can be backslash on NT
-   Also, strips off excessive trailing slashes. 
+/* If file is a directory and has a missing a trailing slash, add it.
+   Backslash instead of a slash on Windows.
+   Also, strips off excessive trailing slashes/backslashes. 
 */
 char *dirname_canonic(char *filename) {
   char canonicized[MAXPATHLEN];
@@ -694,16 +694,20 @@ char *file_readlink(char *filename)
 
 /*
   Used to standardize path names by converting symbolic links
-  into non-symlink path names.
-  On Windows -- for now -- just copies to output 
+  to non-symlink path names.
   If a file is not a symlink, returns NULL, but in file_io.P we then
   make it into identity for non-symlink.
+
+  On Windows -- for now -- just copies to output and removes trailing slash
+  if present.
 */
 char *file_realpath(char *filename)
 {
   char *buf =  mem_alloc(MAXPATHLEN,OTHER_SPACE);
 #ifdef WIN_NT
+  int len = (int)strlen(filename);
   strncpy(buf,filename,MAXPATHLEN);
+  if (buf[len-1] == SLASH && len > 1) buf[len-1] = '\0';
   return buf;
 #else
   char *result = realpath(filename,buf);
