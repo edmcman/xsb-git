@@ -591,9 +591,9 @@ retract(Rule) :-	% changed for multifile predicates (9/2008)
 	 ;	Head0 = Rule, Body = true
 	),
 	(nonvar(Head0),Head0 = Mod:Head1
-	 ->	term_new_mod(Mod,Head1,Head),
-		Head1 =.. [_|Args],
-		Head =.. [_|Args]
+	 ->	term_new_mod(Mod,Head1,Head) %,
+		%Head1 =.. [_|Args],
+		%Head =.. [_|Args]
 	 ;	Head = Head0
 	),
 	call_xsb_hook(xsb_retract_hook(_),[Head,Body],all),
@@ -640,9 +640,9 @@ retract0(Rule) :-	% original retract/1, is used in standard.P
 
 retractall(Fact0) :-
 	(nonvar(Fact0),Fact0 = Mod:Fact1
-	 ->	term_new_mod(Mod,Fact1,Fact),
-		Fact1 =.. [_|Args],
-		Fact =.. [_|Args]
+	 ->	term_new_mod(Mod,Fact1,Fact)%,
+		%Fact1 =.. [_|Args],
+		%Fact =.. [_|Args]
 	 ;	Fact = Fact0
 	),
 	call_xsb_hook(xsb_retract_hook(_),[Fact,true],all),
@@ -846,15 +846,18 @@ immutable_predicate(Term,Immutable):-
 /*	In the case of unit-clauses, Body is unified with 'true'.	*/
 /*======================================================================*/
 
-clause(Head, Body) :-
-	check_clause(Head),
-	clause0(Head, Body0),
-	goal_cut_untrans(Body0, Body).
-
+clause(Head0, Body) :-
+    (nonvar(Head0), Head0 = Mod:Head1
+     ->	term_new_mod(Mod,Head1,Head)
+     ;	Head = Head0
+    ),
+    check_clause(Head),
+    clause0(Head, Body0),
+    goal_cut_untrans(Body0, Body).
 
 clause0(Head, Body) :-
-	get_dynamic_pred_ep(Head,access,'clause0/2',PredEP,_PSC),
-	db_clause(Head,Body,PredEP,_Clref).
+    get_dynamic_pred_ep(Head,access,'clause0/2',PredEP,_PSC),
+    db_clause(Head,Body,PredEP,_Clref).
 
 
 /*======================================================================*/
