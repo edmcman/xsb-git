@@ -28,12 +28,13 @@
 	file_nl/1.
 :- export write_int/1, write_float/1, write_int/2, write_float/2.
 :- export write_double/1, write_double/2.
-:- export write_canonical_lettervar/1.
+:- export write_canonical_lettervar/1, write_canonical_lettervar/2.
 %%:- export set_file_write_depth/1, get_file_write_depth/1.
 :- export l_write/3.
 	
 :- import '_$op'/3 from file_op.
 :- import file_put/2 from file_io.
+:- import check_open_stream_or_alias/5 from file_io.
 :- import file_function/3 from machine.
 :- import integer/1 from standard.
 :- import attribute_portray_hook/3,

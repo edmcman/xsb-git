@@ -848,6 +848,10 @@ write_canonical_lettervar(T) :-
 	stat_flag(CURRENT_OUTPUT,File), 
 	file_write_canonical_lettervar(File,T).
 
+write_canonical_lettervar(S_or_A,Term) :-
+    check_open_stream_or_alias(S_or_A,write_canonical_lettervar/2,1,output,Ostr),
+    file_write_canonical_lettervar(Ostr,Term).
+
 file_write_canonical_lettervar(File,Term) :-
 	xsb_stream_lock(File),
 %        xsb_sys_mutex_lock(MUTEX_IO),
