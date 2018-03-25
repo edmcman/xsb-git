@@ -2,7 +2,7 @@
 ** Author(s): David S. Warren
 ** Contact:   xsb-contact@cs.sunysb.edu
 ** 
-** Copyright (C) The Research Foundation of SUNY, , 1993-1998
+** Copyright (C) The Research Foundation of SUNY, , 1993-2018
 ** 
 ** XSB is free software; you can redistribute it and/or modify it under the
 ** terms of the GNU Library General Public License as published by the Free
@@ -915,19 +915,19 @@ remove_cvt_type_hook(Type) :- retractall(cvt_type_hook(Type,_)).
 
 :- comment(add_cvt_type_hook/2, " @pred{add_cvt_type_hook(+Type,+Hook)}
 adds type conversion hook for (user-defined) field type @var{Type}.
-@var{Hook} must be a binary predicate with unbound, distinct arguments; e.g.,
+@var{Hook} must be a predicate with two or more arguments with
+arguments 1 and 2 being unbound and distinct. For instance,
 a hook could be a predicate of the form @pred{convert_date(+InField,-OutField)}.
 If a field declared as being of type @var{Type} is encountered, @var{Hook}
 will be called to convert the field according to the supplied hook-predicate.
 If a hook associated with @var{Type} already exists, an error is issued.").
 add_cvt_type_hook(Type,Hook) :-
-        (\+ atom(Type)
-        ->
-            misc_error(('[proc_files] ', Type, ': field type must be an atom.'))
-        ; cvt_type_hook(Type,_)
-        ->
+        (cvt_type_hook(Type,_) ->
             misc_error(('[proc_files] conversion hook for type ', Type, ' already exists. Remove it prior to changing.'))
-        ; compound(Hook), Hook =.. [_F,A1,A2], var(A1), var(A2), A1 \== A2
+        %% Can use hooks for non-atomic types
+        %%; \+ atom(Type) ->
+        %%  misc_error(('[proc_files] ', Type, ': field type must be an atom.'))
+        ; compound(Hook), Hook =.. [_F,A1,A2|_], var(A1), var(A2), A1 \== A2
         -> fail
         ;   misc_error(('[proc_files] type = ', Type, ', hook = ', Hook, ': field type conversion hook must have two unbound distinct arguments.'))
         ).
