@@ -754,7 +754,6 @@ module_properties(PSC, Property) :-
 	; Type =:=  T_MODU -> Property = loaded ).
 
 /* ===== subgoal_property/2 ================================== */
-:- import writeln/1 from standard.
 subgoal_property(Subgoal,Property):-
 %   writeln(xbsubgoal_property(Subgoal,Property)),
    (var(Subgoal) -> 
@@ -1499,4 +1498,102 @@ hilog_symbol(HS) :-
 get_first_psc_pair(PSC_Pair) :-
 	stat_flag(MOD_LIST, PSC_Pair).
 
+/* ===== predicate_property_20180213.P ======================================== */
+:- export predicate_property_20180213/2.
+:- import psc_shared/2,psc_get_incr/2,psc_tabled/2 from machine.
+
+predicate_property_20180213(Term_Indicator, Property) :-
+	nonvar(Term_Indicator),
+	Term_Indicator = :(Module, Term),
+	nonvar(Term),		% send ':'(_,_) predicate to next clause
+	!,
+	get_first_psc_pair(PSC_Pair),
+	module_scan(PSC_Pair, ModuleName, ModulePSC),
+	ModuleName = Module,
+	psc_prop(ModulePSC, First_PSC_Pair),	% get the first psc_pair 
+						% of this module
+	( First_PSC_Pair =:= 1 ->	% We are dealing with a global module!
+		predicate_property_20180213(Term, Property)
+        ; psc_scan_in_module(First_PSC_Pair, PSC),
+	  psc_name(PSC, Name),
+	  psc_arity(PSC, Arity),
+	  functor(Term, Name, Arity),
+	  psc_properties_20180213(PSC, Property)
+	).
+predicate_property_20180213(Term, Property) :-	% This takes care of global 
+					% modules,"usermod" and "global".
+	term_type(Term, Type),
+	( Type =:= 1 ->	% Hacked to make it fast when Term is given.
+			% If Term is given and it is represented as a structure 
+			% (has a PSC record) then using term_psc/2 we get to 
+			% this PSC record directly without having to scan the 
+			% whole PSC-Pair list.
+		term_psc(Term, PSC),
+		psc_properties_20180213(PSC, Property)
+	; Type =:= 5 ->
+		conpsc(Term, PSC),
+		psc_properties_20180213(PSC, Property)
+	; psc_scan_in_hash_table(0, PSC),
+	  psc_name(PSC, Name),
+	  psc_arity(PSC, Arity), 
+	  functor(Term, Name, Arity),
+	  psc_properties_20180213(PSC, Property)
+	).
+
+psc_properties_20180213(PSC, Property) :- 
+	psc_type(PSC, Type),
+%	( Type =:= T_ORDI -> Property = unclassified
+        ( Type =:= T_ORDI -> psc_env(PSC,Env),Env = T_IMPORTED,Property = unloaded
+	; Type =:= T_DYNA -> Property = (dynamic)
+	; Type =:= T_PRED -> Property = static
+	; Type =:= T_UDEF -> Property = unloaded
+	; Type =:= T_FORN -> Property = foreign
+	; Type =:= 14 -> Property = function ).
+%psc_properties_20180213(PSC, static) :-
+%	\+ (psc_type(PSC, Type), Type =:= T_DYNA).
+psc_properties_20180213(PSC, Property) :-
+	psc_env(PSC, Env),
+ 	( Env =:= T_EXPORTED -> psc_type(PSC,Type),Type \== T_ORDI,Property = exported	
+	; Env =:= T_LOCAL -> Property = (local)
+	; Env =:= T_IMPORTED -> psc_mod(PSC, ModulePSC), 
+		       psc_name(ModulePSC, ModuleName), 
+		       Property = imported_from(ModuleName)
+	; Property = global ).
+psc_properties_20180213(PSC, Property) :- 
+	psc_spy(PSC, Spy),
+	( Spy =\= 0 -> Property = spied ).
+psc_properties_20180213(PSC, Property) :- 
+	psc_tabled(PSC, Tabled),
+	(psc_type(PSC, Type),Type =:= T_DYNA -> 
+	    psc_get_incr(PSC,Incr),Incr == NONINCREMENTAL
+	  ; true),  
+	( (Tabled /\ 12 > 0),Property = tabled 
+        ; 
+	 ( Tabled == T_VARIANT -> Property = variant
+         ; Tabled == T_SUBSUMPTIVE -> Property = subsumptive ) ).
+%         ; Tabled == T_TABLED_UNDETERMINED -> Property = tabled(default)).
+psc_properties_20180213(PSC, Property) :- 
+	psc_get_incr(PSC, Incr),
+	( Incr == INCREMENTAL -> 
+	    Property = incremental 
+	  ; Incr == OPAQUE -> Property = opaque).
+psc_properties_20180213(PSC, Property) :- 
+	psc_shared(PSC, Shared),
+	( Shared =\= 0 -> Property = shared ).
+psc_properties_20180213(PSC, Property) :-
+	psc_name(PSC, Functor),		% Finding the Functor and the Arity
+	psc_arity(PSC, Arity),		% twice is silly, isn''t it?
+	(	standard_metapredicate_template(Functor,Arity,Template),
+%		setof(Meta, standard_metapredicate(Functor, Arity, Meta), Metas),
+%		psc_meta_predicate_property_args(Metas, 1, Arity, Args),
+%		Template =.. [Functor| Args],
+		Property = meta_predicate(Template)
+	;	standard_symbol(Functor, Arity, _) ->
+		( %	Property = xsb_standard_predicate ; 
+			Property = built_in
+		)
+	).
+	% Unfortunately this doesn''t take the Module into account.
+
 /* ----------------- end of file current_symbols.P -------------------- */
+
