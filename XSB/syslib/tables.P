@@ -1034,13 +1034,20 @@ check_table_option(shared,Options,PredCList,_Override) :- !,
 	           ' as tabled with options shared and opaque'))
 	 ;  true).
 check_table_option(answer_abstract(_),_Options,_PredCList,_Override) :- !. % should work with anything.
+check_table_option(max_answers(_),Options,PredCList,_Override) :- !,
+	(comma_member(subsumptive,Options)
+	 ->	table_error(('Cannot declare ',PredCList,
+		      ' as tabled with options intern and ',subgoal_abstract))
+	 ;	true
+	).
+
 check_table_option(intern,Options,PredCList,_Override) :- !,
 	(comma_member(subgoal_abstract(_),Options)
 	 ->	table_error(('Cannot declare ',PredCList,
 		      ' as tabled with options intern and ',subgoal_abstract))
 	 ;	true
 	),
-	(comma_member(dynamic,Options)
+(comma_member(dynamic,Options)
 	 ->	table_error(('Cannot declare ',PredCList,
 		     ' as tabled with options intern and dynamic'))
 	 ;	true
@@ -1214,6 +1221,7 @@ get_tif_property(Term,Property,Value):-
 	table_inspection_function(GET_TIF_PROPERTY,Term,Prop,Value,_).
 
 set_tif_property(Term,Property,Value):- 
+%   writeln(set_tif_property(Term,Property,Value)),
 	tif_translate(Property,Prop),
 	table_inspection_function(SET_TIF_PROPERTY,Term,Prop,Value,_).
 
@@ -1221,6 +1229,7 @@ tif_translate(subgoal_size,SUBGOAL_SIZE).
 tif_translate(answer_size,ANSWER_SIZE).
 tif_translate(intern,INTERNING_GROUND).
 tif_translate(answer_subsumption,TIF_ANSWER_SUBSUMPTION).
+tif_translate(max_answers,TIF_MAX_ANSWERS).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Forest Logging
@@ -2382,18 +2391,20 @@ get_tabling_option(Term,Option):-
       
 get_tabling_option_1(Type,_Term,Tabled,PSC,Option):- 
     psc_get_incr(PSC, Incr),
+%writeln(    psc_get_incr(PSC, Incr)),
     Tabled /\ 12 > 0,
     ( (Type = T_DYNA,Incr > 0) -> 
        get_tabling_option_IDG_leaf(Incr,Option)
      ; get_tabling_option_2(_Term,Tabled,Incr,PSC,Option) ).
 
 get_tabling_option_IDG_leaf(Incr,Option):- 
+%   writeln(get_tabling_option_IDG_leaf(Incr,Option)),
     ( Incr == INCREMENTAL -> Option = (updating=incremental) 
      ; Incr == OPAQUE -> Option = (updating=opaque) ).
 %    ; Option = (updating=none) ) .
 
 get_tabling_option_2(Term,_Tabled,_Incr,PSC,Option):- 
-%   writeln(get_tabling_option_1_2(Term,Tabled,Incr,PSC,Option)),
+%   writeln(get_tabling_option_1_2(Term,_Tabled,_Incr,PSC,Option)),
     (   get_tabling_option_psc(PSC,Option)
       ; get_tif_property(Term,Property,Value),
 %	writeln(get_tif_property(Term,Property,Value)),
@@ -2411,6 +2422,10 @@ process_tif_property(answer_subsumption,Value,Option):- !,
 	(Value = 1 -> Option=(answer_subsumption=true) ; fail).
 process_tif_property(answer_size,Value,Option):- !,
    (Value = 0 -> fail ; Option = (answer_abstract=Value)).
+process_tif_property(subgoal_size,Value,Option):- !,
+   (Value = 0 -> fail ; Option = (subgoal_abstract=Value)).
+process_tif_property(max_answers,Value,Option):- !,
+   (Value = 0 -> fail ; Option = (max_answers=Value)).
 process_tif_property(subgoal_size,Value,Option):- !,
    (Value = 0 -> fail ; Option = (subgoal_abstract=Value)).
 process_tif_property(Property,Value,Property=Value).

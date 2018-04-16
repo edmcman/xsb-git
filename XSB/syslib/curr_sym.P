@@ -533,10 +533,14 @@ module_file(Module, File) :-
 %   in a global module with Predicate_Indicator ground.
 
 predicate_property(Term_Indicator, Property) :-
+%   writeln(predicate_propertyc1(Term_Indicator, Property)),
 	nonvar(Term_Indicator),
 	Term_Indicator = :(Module, Term),
 	nonvar(Term),		% send ':'(_,_) predicate to next clause
 	!,
+        functor(Term,F,A),functor(Skel,F,A),
+        term_new_mod(Module,Skel,NewTerm),
+%        writeln(term_new_mod(Module,Term,NewTerm)),
 	pred_prop_compat(Property,Search_prop),
 %	writeln(pred_prop_compat(_,Property,Search_prop)),
 	get_first_psc_pair(PSC_Pair),
@@ -545,17 +549,18 @@ predicate_property(Term_Indicator, Property) :-
 	psc_prop(ModulePSC, First_PSC_Pair),	% get the first psc_pair 
 						% of this module
 	( First_PSC_Pair =:= 1 ->	% We are dealing with a global module!
-		predicate_property(Term, Search_prop)
+		predicate_property(Skel, Search_prop)
         ; psc_scan_in_module(First_PSC_Pair, PSC),
 	  psc_name(PSC, Name),
 	  psc_arity(PSC, Arity),
-	  functor(Term, Name, Arity),
-	  predicate_property_1(PSC,Term, Search_prop)
+	  functor(NewTerm, Name, Arity),
+	  predicate_property_1(PSC,NewTerm, Search_prop)
 	).
 % TES -- I have no idea why T_FILE is used in the clause below: it
 % seems to happen on 0-ary preds(?)
 predicate_property(Term, Property) :-	% This takes care of global 
 					% modules,"usermod" and "global".
+%   writeln(predicate_propertyc2(Term, Property)),
 	term_type(Term, Type),
 	pred_prop_compat(Property,Search_prop),
 	( Type =:= T_DYNA ->	% Hacked to make it fast when Term is given.
@@ -563,11 +568,14 @@ predicate_property(Term, Property) :-	% This takes care of global
 			% (has a PSC record) then using term_psc/2 we get to 
 			% this PSC record directly without having to scan the 
 			% whole PSC-Pair list.
-		term_psc(Term, PSC),
-		predicate_property_1(PSC,Term, Search_prop)
+%	 writeln(dyna),
+	        functor(Term,F,A),functor(Skel,F,A),
+		term_psc(Skel, PSC),
+		predicate_property_1(PSC,Skel, Search_prop)
 	 ; Type =:= 5 ->  
 %	        warning(('predicate_property/2 called on term of type T_FILE: ',Term)),
 		conpsc(Term, PSC),
+%	        functor(Term,F,A),functor(Skel,F,A),
 		predicate_property_1(PSC,Term, Search_prop)
 	; psc_scan_in_hash_table(0, PSC),
 	  psc_name(PSC, Name),
@@ -595,10 +603,11 @@ predicate_property_1(_PSC,Term, multifile):-
     standard:'_$multifile'(Term).
 predicate_property_1(_PSC,Term, Property) :-
 %   writeln(predicate_property_1_3(PSC,Term, Property)),
-   functor(Term,F,A),functor(Skel,F,A),
-   get_tabling_options(Skel,List),
+%   functor(Term,F,A),functor(Skel,F,A),
+   get_tabling_options(Term,List),
    member(Property,List).
 
+   :- import writeln/1 from standard.
 %-----------------
 
 psc_properties(PSC, Property) :- 
@@ -1564,6 +1573,7 @@ psc_properties_20180213(PSC, Property) :-
 	( Spy =\= 0 -> Property = spied ).
 psc_properties_20180213(PSC, Property) :- 
 	psc_tabled(PSC, Tabled),
+	writeln(psc_tabled(PSC, Tabled)),
 	(psc_type(PSC, Type),Type =:= T_DYNA -> 
 	    psc_get_incr(PSC,Incr),Incr == NONINCREMENTAL
 	  ; true),  
