@@ -118,6 +118,9 @@ Integer intern_term_size(CTXTdeclc Cell term)
 
 /* block headers, 1 for each arity; 256 for lists */
 #define LIST_INDEX 256
+#define BIG_ARITY_INDEX_BASE 257
+#define MAX_INTERN_BIG_ARITIES 140
+
 struct hc_block_rec *hc_block[400] = {0};
 int big_arities[140] = {0};
 
@@ -128,26 +131,27 @@ UInteger it_hash(Integer ht_size, int reclen, CPtr termrec) {
   for (i = 0; i<reclen; i++) {
     hsh = (hsh << 2*(i % 16)) + cell(termrec+i); 
   }
-  //  return (hsh>=0 ? hsh : -hsh) % ht_size;
-  hsh = hsh % ht_size;
-  return hsh;
+  return hsh % ht_size;
 }
 
 int get_big_arity_index(int big_arity) {
   int i;
 
-  if (big_arity < 256) xsb_abort("Internal error: Should be big arity!");
-  for (i=0; i<140; i++) {
+  if (big_arity < BIG_ARITY_INDEX_BASE)
+    xsb_abort("Internal error: Should be big arity!");
+  for (i=0; i<MAX_INTERN_BIG_ARITIES; i++) {
     if (big_arities[i] == 0) {
       big_arities[i] = big_arity;
       break;
     } else if (big_arities[i] == big_arity)
       break;
   }
-  if (i >= 140) xsb_abort("[intern_term] Too many big arity functors\n");
-  printf("Large arity: %d in position: %d\n",big_arity,i+257);
-  return i+257;
+  if (i >= MAX_INTERN_BIG_ARITIES)
+    xsb_abort("[intern_term] Too many big arity functors\n");
+  return i + BIG_ARITY_INDEX_BASE;
 }
+
+#define get_big_arity_from_index(index) big_arities[index-BIG_ARITY_INDEX_BASE]
 
 /* Called from gc_mark.h marking for garbage collection. */
 /* Must be called with interned term (isinternstr(term)is true). */
@@ -202,7 +206,6 @@ CPtr insert_interned_rec(int reclen, struct hc_block_rec *hc_blk_ptr, CPtr termr
   }
 
   hashindex = it_hash(hc_blk_ptr->hashtab_size,reclen,termrec);
-  //  prev = recptr = hc_blk_ptr->hashtab[hashindex];
   prev = recptr = clean_addr(hc_blk_ptr->hashtab[hashindex]);
   while (recptr) {
     found = 1;
@@ -216,7 +219,7 @@ CPtr insert_interned_rec(int reclen, struct hc_block_rec *hc_blk_ptr, CPtr termr
     prev = recptr;
     recptr = clean_addr(recptr->next);
   }
-  if (recptr = hc_blk_ptr->freechain) {
+  if ((recptr = hc_blk_ptr->freechain)) { // take available rec from freechain if is one
     hc_blk_ptr->freechain = recptr->next;
   } else {
     recptr = hc_blk_ptr->freedisp;
@@ -230,7 +233,6 @@ CPtr insert_interned_rec(int reclen, struct hc_block_rec *hc_blk_ptr, CPtr termr
       hc_blk_ptr->base = newblock;
       hc_blk_ptr->freedisp = &(newblock->recs);
       recptr = &(newblock->recs);
-      //    printf("Alloc new block for interned structs: %d, %p-%p\n",reclen,newblock,((char *)newblock)+((1+hc_num_in_block*(1+reclen))*sizeof(Cell)));
     }
     hc_blk_ptr->freedisp = (struct intterm_rec *)((CPtr)(hc_blk_ptr->freedisp) + reclen+1);
   }
@@ -240,14 +242,11 @@ CPtr insert_interned_rec(int reclen, struct hc_block_rec *hc_blk_ptr, CPtr termr
   for (i=0; i<reclen; i++) {
     cell(hc_term+i) = cell(termrec+i);
   }
-  /*printf("new %p\n",hc_term);*/
   return hc_term;
 }
 
 /* should be passed a term which is dereffed for which isinternstr is true! */
 int isinternstr_really(prolog_term term) {
-  //  if (islist(term)) printf("list\n");
-  //  else if (isconstr(term)) printf("term arity %d\n",get_arity(get_str_psc(term)));
   return is_interned_rec(term);
 }
 
@@ -257,26 +256,37 @@ int isinternstr_really(prolog_term term) {
    struct record.  It returns 0 if the struct record isn't of this
    form */
 
-prolog_term intern_rec(CTXTdeclc prolog_term term) {
+Cell intern_rec(CTXTdeclc prolog_term term) {
 
   int areaindex, reclen, i, j;
   CPtr hc_term;
-  Cell dterm[255];
+  static Cell *dterm = NULL;
+  static int dterm_len = 0;
   Cell arg;
   struct hc_block_rec *hc_blk_ptr;
 
   // create term-record with all fields dereffed in dterm
   XSB_Deref(term);
-  if (isinternstr(term)) {printf("old\n"); return term;}
+  if (isinternstr(term)) {
+    return term;
+  }
   if (isconstr(term)) {
     areaindex = get_arity(get_str_psc(term)); 
-    if (areaindex > 255) areaindex = get_big_arity_index(areaindex);
     reclen = areaindex + 1;
+    if (areaindex > 255) areaindex = get_big_arity_index(areaindex);
+    if (reclen > dterm_len) {
+      dterm = realloc(dterm,reclen*sizeof(Cell));
+      dterm_len = reclen;
+    }
     cell(dterm) = (Cell)get_str_psc(term); // copy psc ptr
     j=1;
   } else if (islist(term)) {
     areaindex = LIST_INDEX; 
     reclen = 2;
+    if (reclen > dterm_len) {
+      dterm = realloc(dterm,reclen*sizeof(Cell));
+      dterm_len = reclen;
+    }
     j=0;
   } else return 0;
   hc_blk_ptr = hc_block[areaindex];
@@ -301,30 +311,25 @@ prolog_term intern_rec(CTXTdeclc prolog_term term) {
 
 struct term_subterm *ts_array = 0;
 Integer ts_array_len = 0;
-// make bigger???
 #define init_ts_array_len 5000  
 #define check_ts_array_overflow \
   if (ti >= ts_array_len) {						\
     ts_array = mem_realloc(ts_array,ts_array_len*sizeof(*ts_array),	\
 			   ts_array_len*2*sizeof(*ts_array),OTHER_SPACE); \
     ts_array_len = ts_array_len*2;					\
-    /*printf("expanded ts_array: %p, %d\n",ts_array,ts_array_len);*/	\
   }
 
 
 /* caller must ensure enough heap space (term_size(term)*sizeof(Cell)) */
 prolog_term intern_term(CTXTdeclc prolog_term term) {
   Integer ti = 0;
-  Cell arg, newterm, interned_term, orig_term;
+  Cell arg, newterm, interned_term;
   unsigned int subterm_index;
 
   XSB_Deref(term);
   if (!(islist(term) || isconstr(term))) {return term;}
   if (isinternstr(term)) {return term;}
   if (is_cyclic(CTXTc term)) {xsb_abort("[intern_term/2] Cannot intern a cyclic term\n");}
-
-  orig_term = term;
-  //  printf("iti: ");printterm(stdout,orig_term,100);printf("\n");
 
   if (!ts_array) {
     ts_array = mem_alloc(init_ts_array_len*sizeof(*ts_array),OTHER_SPACE);
@@ -339,8 +344,6 @@ prolog_term intern_term(CTXTdeclc prolog_term term) {
     hreg += 2;
   }
   else {
-    //    if (isboxedinteger(term)) printf("interning boxed int\n");
-    //    else if (isboxedfloat(term)) printf("interning boxed float %f\n",boxedfloat_val(term));
     ts_array[0].subterm_index = 1;
     ts_array[0].newterm = makecs(hreg);
     new_heap_functor(hreg, get_str_psc(term));
@@ -357,20 +360,14 @@ prolog_term intern_term(CTXTdeclc prolog_term term) {
       /* all subterms of this term are interned processed */
       if (ts_array[ti].ground) {
 	interned_term = intern_rec(CTXTc newterm);
-	//	if (!interned_term) xsb_abort("error term should have been interned\n");
 	hreg = clref_val(newterm);  // reclaim used stack space
 	if (!ti) {
-	  //if (compare(CTXTc (void*)orig_term,(void*)interned_term) != 0) printf("NOT SAME\n");
-	  //printf("itg: ");printterm(stdout,interned_term,100);printf("\n"); 
 	  return interned_term;
 	}
 	ti--;
 	get_str_arg(ts_array[ti].newterm,ts_array[ti].subterm_index-1) = interned_term;
       } else {
-	//printf("hreg = %p, ti=%d\n",hreg,ti);
 	if (!ti) {
-	  //if (compare(CTXTc (void*)orig_term,(void*)newterm) != 0) printf("NOT SAME\n");
-	  //printf("ito: ");printterm(stdout,newterm,100);printf("\n"); 
 	  return newterm;
 	}
 	ti--;
@@ -409,8 +406,6 @@ prolog_term intern_term(CTXTdeclc prolog_term term) {
       case XSB_STRUCT:
 	if (isinternstr(arg)) get_str_arg(newterm,subterm_index) = arg;
 	else {
-	  //	  if (isboxedinteger(arg)) printf("interning boxed int\n");
-	  //	  else if (isboxedfloat(arg)) printf("interning boxed float %f\n",boxedfloat_val(arg));
 	  ti++;
 	  check_ts_array_overflow;
 	  ts_array[ti].term = arg;
@@ -429,14 +424,15 @@ prolog_term intern_term(CTXTdeclc prolog_term term) {
 
 void reclaim_internstr_recs() {
   struct intterm_block *block_ptr;
-  struct intterm_rec *rec_ptr, *prec_ptr, *lrec_ptr;
+  struct intterm_rec *rec_ptr, *lrec_ptr;
+  struct intterm_rec *prec_ptr = NULL;
   int areaindex, reclen;
   UInteger hashindex; 
   struct hc_block_rec *hc_blk_ptr;
 
   for (areaindex = 0; areaindex < 400; areaindex++) {
     if (areaindex == LIST_INDEX) reclen = 3; // including next pointer
-    else if (areaindex > 255) reclen = big_arities[areaindex]+2;
+    else if (areaindex > 255) reclen = get_big_arity_from_index(areaindex)+2;
     else reclen = areaindex+2;
     
     /* mark freechain recs so don't have to go thru hashtable to not find them */
@@ -481,7 +477,6 @@ void reclaim_internstr_recs() {
   }
     return;
 }
-
 
 /* hashstring is string that begins with }]]}, followed by hex that is
    the address of a prolog term. */
