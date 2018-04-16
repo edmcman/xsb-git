@@ -74,6 +74,58 @@
 
 
 
+600
+600
+604
+604
+608
+608
+612
+612
+616
+616
+620
+620
+624
+624
+628
+628
+632
+632
+636
+636
+640
+640
+644
+644
+648
+648
+652
+652
+656
+656
+660
+660
+664
+664
+668
+668
+672
+672
+676
+676
+680
+680
+684
+684
+688
+688
+692
+692
+696
+696
+700
+700
 Testing naive transitive closure on a cycle:
 Testing naive transitive closure on a tree:
 Testing rule-based transitive closure on a cycle:
@@ -114,8 +166,8 @@ pr4(3,2,3).
 pr4(3,3,2).
 pr4(3,3,3).
 pr5(1,27).
-rule_based_tc_count(100,10201)
-rule_based_tc_count(1000,17974)
+rule_based_tc_count(100,10203)
+rule_based_tc_count(1000,17976)
 seminaive_tc_count(100,10201)
 seminaive_tc_count(1000,17974)
 start_difference1
