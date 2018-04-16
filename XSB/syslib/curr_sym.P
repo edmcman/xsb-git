@@ -569,13 +569,11 @@ predicate_property(Term, Property) :-	% This takes care of global
 			% this PSC record directly without having to scan the 
 			% whole PSC-Pair list.
 %	 writeln(dyna),
-	        functor(Term,F,A),functor(Skel,F,A),
-		term_psc(Skel, PSC),
+		term_psc(Term, PSC),term_new(PSC,Skel),
 		predicate_property_1(PSC,Skel, Search_prop)
 	 ; Type =:= 5 ->  
-%	        warning(('predicate_property/2 called on term of type T_FILE: ',Term)),
+	        warning(('predicate_property/2 called on term of type T_FILE: ',Term)),
 		conpsc(Term, PSC),
-%	        functor(Term,F,A),functor(Skel,F,A),
 		predicate_property_1(PSC,Term, Search_prop)
 	; psc_scan_in_hash_table(0, PSC),
 	  psc_name(PSC, Name),
@@ -583,7 +581,7 @@ predicate_property(Term, Property) :-	% This takes care of global
 	  functor(Term, Name, Arity),
 	  predicate_property_1(PSC,Term, Search_prop)
 	).
-
+   :- import term_new/2 from machine.
 /* This is to ensure backward compatability with goals like
    predicate_property(X,tabled) */
 pred_prop_compat(Propin,Prop):-
