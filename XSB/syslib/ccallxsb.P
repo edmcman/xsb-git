@@ -187,3 +187,8 @@ set_thread_interrupt.
 :- import timer_interrupt_trap/2 from standard.
 '_$timer_int'(One,Two):- 
 	timer_interrupt_trap(One,Two).
+
+:- import lazy_reeval_trap/1 from increval.
+'_$lazy_reeval_int'(One,_Two):- 
+	lazy_reeval_trap(One).
+
