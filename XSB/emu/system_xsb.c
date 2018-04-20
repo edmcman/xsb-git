@@ -298,23 +298,25 @@ xsbBool sys_system(CTXTdeclc int callno)
 #endif
       return TRUE;
     }
-#ifdef USE_TEMPNAM
+
+#ifdef WIN_NT
   case GET_TMP_FILENAME:
     ctop_string(CTXTc 2,tempnam(NULL,NULL));
     return TRUE;
-#endif
+#else
   case GET_TMP_FILENAME:
     {
       char s[] = P_tmpdir "/xsbXXXXXX";
       int fd = mkstemp(s);
-      if (fd != -1) {
+      if (fd != -1 && close(fd) == 0) {
 	ctop_string(CTXTc 2,s);
 	return TRUE;
       } else {
 	xsb_abort(CTXTc "[GET_TMP_FILENAME] Unable to get temporary filename");
       }
     }
-  case IS_PLAIN_FILE:
+#endif
+   case IS_PLAIN_FILE:
   case IS_DIRECTORY:
   case STAT_FILE_TIME:
   case STAT_FILE_SIZE:
