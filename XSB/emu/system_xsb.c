@@ -312,7 +312,7 @@ xsbBool sys_system(CTXTdeclc int callno)
 	ctop_string(CTXTc 2,s);
 	return TRUE;
       } else {
-	xsb_abort(CTXTc "[GET_TMP_FILENAME] Unable to get temporary filename");
+	xsb_abort("[GET_TMP_FILENAME] Unable to get temporary filename");
       }
     }
 #endif

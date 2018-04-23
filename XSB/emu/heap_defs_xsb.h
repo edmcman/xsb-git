@@ -40,7 +40,6 @@
 #define ABOLISH_TABLES_DEFAULT       2
 
 /*--- The following are used for string-space collection ---------------*/
-
 #define mark_string_safe(tstr,msg)		\
   do {char *str = (tstr);			\
     Integer *pptr = ((Integer *)(str))-1;	\
@@ -48,11 +47,11 @@
     if (!( *(pptr) & 7)) {						\
       *(pptr) |= 1;							\
       if (gc_strings && str[0]=='}' && (flags[STRING_GARBAGE_COLLECT] == 1) \
-	  && (t = stringhash_to_term(str))) mark_interned_term(t);	\
+	  && (t = stringhash_to_term(CTXTc str))) mark_interned_term(CTXTc t); \
     }									\
   } while(0)    
 
-#define mark_string(tstr,msg) 				\
+#define mark_string(tstr,msg)				\
   do {char *str = (tstr);				\
     Cell t;						\
     if (str && string_find_safe(str) == str) {		\
@@ -60,7 +59,7 @@
       if (!( *(pptr) & 7)) {				\
 	*(pptr) |= 1;					\
 	if (gc_strings && str[0]=='}' && (flags[STRING_GARBAGE_COLLECT] == 1) \
-	    && (t = stringhash_to_term(str))) mark_interned_term(t);	\
+	    && (t = stringhash_to_term(CTXTc str))) mark_interned_term(CTXTc t); \
       }									\
     } else if (str)							\
       printf("Not interned (wrongly GC-ed?): %s: '%p',%s\n",msg,str,str); \
@@ -71,4 +70,5 @@
       if (isstring(acell)) 			\
 	mark_string(string_val(acell),msg);	\
   } while(0)
+
 /*----------------------------------------------------------------------*/

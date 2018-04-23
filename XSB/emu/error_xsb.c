@@ -1668,23 +1668,23 @@ void print_incomplete_tables_on_abort(CTXTdecl) {
 }
 
 /*
-void print_incomplete_tables_on_abort(CTXTdecl) {
-  FILE * abort_stream;
-  char etcdir[MAXPATHLEN];
-  char * tempnamptr;
-
-  if (openreg < COMPLSTACKBOTTOM && flags[EXCEPTION_PRE_ACTION]  ) {
-    snprintf(etcdir,MAXPATHLEN,"%s%cetc",install_dir_gl,SLASH);
-    tempnamptr = tempnam(etcdir,"scc_dump_");
-    strncpy(abort_file_gl,tempnamptr,2*MAXPATHLEN);
-    free(tempnamptr);
-    //    printf("abort file %s\n",abort_file_gl);
-    abort_stream = fopen(abort_file_gl,"w");
-    print_completion_stack(CTXTc abort_stream);
-    fflush(abort_stream);
-    fclose(abort_stream);
-  }
-}
+ * void print_incomplete_tables_on_abort(CTXTdecl) {
+ *   FILE * abort_stream;
+ *   char etcdir[MAXPATHLEN];
+ *   char * tempnamptr;
+ * 
+ *   if (openreg < COMPLSTACKBOTTOM && flags[EXCEPTION_PRE_ACTION]  ) {
+ *     snprintf(etcdir,MAXPATHLEN,"%s%cetc",install_dir_gl,SLASH);
+ *     tempnamptr = tempnam(etcdir,"scc_dump_");
+ *     strncpy(abort_file_gl,tempnamptr,2*MAXPATHLEN);
+ *     free(tempnamptr);
+ *     //    printf("abort file %s\n",abort_file_gl);
+ *     abort_stream = fopen(abort_file_gl,"w");
+ *     print_completion_stack(CTXTc abort_stream);
+ *     fflush(abort_stream);
+ *     fclose(abort_stream);
+ *   }
+ * }
 */
 
 int unwind_stack(CTXTdecl)

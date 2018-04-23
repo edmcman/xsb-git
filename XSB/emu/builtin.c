@@ -3200,7 +3200,7 @@ case WRITE_OUT_PROFILE:
 	  //printf("o %p\n",term);
 	  return unify(CTXTc term, iterm);
 	} else {  // build structured term for hash
-	  iiterm = term_to_stringhash(term);
+	  iiterm = term_to_stringhash(CTXTc term);
 	  return unify(CTXTc iterm, iiterm);
 	  }
       } else {
@@ -3208,7 +3208,7 @@ case WRITE_OUT_PROFILE:
 	return FALSE;
       }
     } else if (isstring(iterm)) {
-      iiterm = stringhash_to_term(string_val(iterm));
+      iiterm = stringhash_to_term(CTXTc string_val(iterm));
       if (iiterm) return unify(CTXTc term,iiterm);
       else if (ifHashIntern == 2) return FALSE;
       else return unify(CTXTc term,iterm);

@@ -78,8 +78,8 @@ int isinternstr_really(prolog_term term);
 prolog_term intern_rec(CTXTdeclc prolog_term term);
 prolog_term intern_term(CTXTdeclc prolog_term term);
 void reclaim_internstr_recs();
-prolog_term term_to_stringhash(prolog_term term);
-prolog_term stringhash_to_term(char *hashstring);
+prolog_term term_to_stringhash(CTXTdeclc prolog_term term);
+prolog_term stringhash_to_term(CTXTdeclc char *hashstring);
 
 extern int gc_strings;
 void mark_interned_term(CTXTdeclc Cell interned_term);

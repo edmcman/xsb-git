@@ -33,7 +33,7 @@ extern Structure_Manager smAssertBTN;
 extern PrRef dynpredep_to_prref(CTXTdeclc void *pred_ep);
 extern ClRef db_get_clause_code_space(PrRef, ClRef, CPtr *, CPtr *);
 extern void mark_findall_strings(CTXTdecl);
-extern void mark_open_filenames();
+extern void mark_open_filenames(CTXTdecl);
 extern void mark_hash_table_strings(CTXTdecl);
 extern int is_interned_rec(Cell);
 
@@ -137,7 +137,7 @@ void mark_interned_term(CTXTdeclc Cell interned_term) {
 
 /*=========================================================================*/
 /*
-hp_pointer_from_cell() returns the address,tag pair if a cell points
+Hp_pointer_from_cell() returns the address,tag pair if a cell points
 to part of the heap.  The trail needs a special function for this
 because of pre-image trailing used for handling attributed variables.
 The pre-image mark is handled correctly by the garbage collectors --
@@ -465,7 +465,7 @@ static int mark_root(CTXTdeclc Cell cell_val)
       if (!points_into_heap(cell_ptr)) return(0) ;
       v = *cell_ptr ;
 #ifndef NO_STRING_GC
-      if (gc_strings && (flags[STRING_GARBAGE_COLLECT] == 1 && flags[NUM_THREADS] == 1)) 
+      if (gc_strings && (flags[STRING_GARBAGE_COLLECT] == 1 && flags[NUM_THREADS] == 1))
 	mark_if_string(v,"attv 1");
 #endif
       pointer_from_cell(CTXTc v,&tag,&whereto) ;
@@ -999,7 +999,6 @@ size_t mark_heap(CTXTdeclc int arity, size_t *marked_dregs)
     }								\
   }
 
-
 void mark_trie_strings(CTXTdecl) {
 
   BTNptr pBTNStruct, *apBTNStruct;
@@ -1008,8 +1007,8 @@ void mark_trie_strings(CTXTdecl) {
 
 #ifdef MULTI_THREAD
   //  printf("marking private trie strings\n");
-  mark_trie_strings_for(*private_smTableBTN,BTNptr,pBTNStruct,apBTNStruct);
-  mark_trie_strings_for(*private_smAssertBTN,BTNptr,pBTNStruct,apBTNStruct);
+  mark_trie_strings_for( *private_smTableBTN,BTNptr,pBTNStruct,apBTNStruct);
+  mark_trie_strings_for( *private_smAssertBTN,BTNptr,pBTNStruct,apBTNStruct);
   //  printf("marked private trie strings\n");
 #endif  
   mark_trie_strings_for(smTableBTN,BTNptr,pBTNStruct,apBTNStruct);
@@ -1065,6 +1064,7 @@ void mark_atom_and_code_strings(CTXTdecl) {
       for (pair_ptr = (Pair)symbol_table.table[i]; pair_ptr != NULL;
 	   pair_ptr = pair_next(pair_ptr)) {
 	char *string = get_name(pair_psc(pair_ptr));
+	
 	mark_string(string,"usermod atom");
 	if (get_type(pair_psc(pair_ptr)) != T_ORDI && isstring(get_data(pair_psc(pair_ptr)))) {
 	  string = string_val((get_data((pair_psc(pair_ptr)))));
@@ -1119,7 +1119,7 @@ void mark_nonheap_strings(CTXTdecl) {
   mark_trie_strings(CTXT);
   mark_atom_and_code_strings(CTXT);
   mark_findall_strings(CTXT);
-  mark_open_filenames();
+  mark_open_filenames(CTXT);
   mark_hash_table_strings(CTXT);
 
 }

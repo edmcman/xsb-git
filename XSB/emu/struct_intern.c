@@ -481,7 +481,7 @@ void reclaim_internstr_recs() {
 /* hashstring is string that begins with }]]}, followed by hex that is
    the address of a prolog term. */
 
-prolog_term stringhash_to_term(char *hashstring) {
+prolog_term stringhash_to_term(CTXTdeclc char *hashstring) {
   UInteger val;
   int i, h, hexlen;
   
@@ -502,7 +502,7 @@ prolog_term stringhash_to_term(char *hashstring) {
 
 char hexcode[16] = "0123456789ABCDEF";
 
-prolog_term term_to_stringhash(prolog_term term) {
+prolog_term term_to_stringhash(CTXTdeclc prolog_term term) {
   char hashstring[21];
   int i, hexlen;
 

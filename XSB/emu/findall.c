@@ -1504,14 +1504,14 @@ void mark_findall_strings(CTXTdecl) {
 	for (cell=chunk+1; cell<(chunk+FINDALL_CHUNCK_SIZE); cell++) {
 	  mark_if_string(*cell,"findall");
 	  if (isconstr(*cell) && isinternstr(*cell))
-	    mark_interned_term(*cell);
+	    mark_interned_term(CTXTc *cell);
 	}
 	chunk = *(CPtr *)chunk;
       }
       for (cell=chunk+1; cell<(findall_solutions+i)->top_of_chunk; cell++) {
 	mark_if_string(*cell,"findall");
 	if (isconstr(*cell) && isinternstr(*cell))
-	  mark_interned_term(*cell);
+	  mark_interned_term(CTXTc *cell);
       }
     }
   }

@@ -1663,7 +1663,7 @@ int xsb_intern_file(CTXTdeclc char *context,char *addr, int *ioport,char *strmod
   }
 }
 
-void mark_open_filenames() {
+void mark_open_filenames(CTXTdecl) {
   int i;
 
   for (i=MIN_USR_OPEN_FILE; i < MAX_OPEN_FILES; i++) {
