@@ -15,26 +15,32 @@ test_dirs:-  writeln('-----'),
 test_dirs:-  writeln('-----'),
 	(dynamic d4/1 as tabled),
 	predicate_property(d4(_X),P),
+        P \= private,   % want ST and MT tests to be the same 
 	write(prop(d4,P)),writeln('.'),fail.
 test_dirs:-  writeln('-----'),
 	(table t1/1),
 	predicate_property(t1(_X),P),
+        P \= private, % want ST and MT tests to be the same 
 	write(prop(t1,P)),writeln('.'),fail.
 test_dirs:-  writeln('-----'),
 	(table t2/1 as incremental),
 	predicate_property(t2(_X),P),
+        P \= private,  % want ST and MT tests to be the same 
 	write(prop(t2,P)),writeln('.'),fail.
 test_dirs:-  writeln('-----'),
 	(table t3/1 as opaque),
 	predicate_property(t3(_X),P),
+        P \= private,  % want ST and MT tests to be the same 
 	write(prop(t3,P)),writeln('.'),fail.
 test_dirs:-  writeln('-----'),
 	(table t4/1 as variant),
 	predicate_property(t4(_X),P),
+        P \= private,  % want ST and MT tests to be the same 
 	write(prop(t4,P)),writeln('.'),fail.
 test_dirs:-  writeln('-----'),
 	(table t5/1 as subsumptive),
 	predicate_property(t5(_X),P),
+        P \= private,  % want ST and MT tests to be the same 
 	write(prop(t5,P)),writeln('.'),fail.
 test_dirs:-  writeln('-----'),
 	catch( ((table non_tabled/1),
@@ -52,13 +58,16 @@ p(1).
 
 test_dirs_1:-  writeln('-----'),fail.
 test_dirs_1:- p(_),fail.
-test_dirs_1:- predicate_property(p(_),Prop),write(prop(p1,Prop)),writeln('.'),fail.
+test_dirs_1:- predicate_property(p(_),Prop),
+              Prop \= private,  % want ST and MT tests to be the same 
+              write(prop(p1,Prop)),writeln('.'),fail.
 test_dirs_1:-  writeln('-----'),fail.
 test_dirs_1:- catch((table p/1 as incremental),error(permission_error(_,_,_),_),
 	(write(prop(p_inc,caught_permission_error_1)),writeln('.'))),fail.
 test_dirs_1:-  writeln('-----'),fail.
 test_dirs_1:- abolish_table_pred(p/1),fail.
 test_dirs_1:- (table p/1 as incremental),predicate_property(p(_),Prop),
+        Prop \= private,  % want ST and MT tests to be the same 
 	write(prop(p2,Prop)),writeln('.'),fail.
 test_dirs_1:-  writeln('-----'),fail.
 test_dirs_1:- p(_),fail.
@@ -67,6 +76,7 @@ test_dirs_1:- catch((table p/1 as opaque),error(permission_error(_,_,_),_),
 test_dirs_1:-  writeln('-----'),fail.
 test_dirs_1:- abolish_table_call(p(_)),fail.
 test_dirs_1:- (table p/1 as opaque),predicate_property(p(_),Prop),
+        Prop \= private,  % want ST and MT tests to be the same 
 	write(prop(p3,Prop)),writeln('.'),fail.
 test_dirs_1:-  writeln('-----'),fail.
 test_dirs_1:- p(_),fail.
@@ -75,6 +85,7 @@ test_dirs_1:- catch((table p/1 as nonincremental),error(permission_error(_,_,_),
 test_dirs_1:-  writeln('-----'),fail.
 test_dirs_1:- abolish_table_call(p(_)),fail.
 test_dirs_1:- (table p/1 as nonincremental),predicate_property(p(_),Prop),
+        Prop \= private,  % want ST and MT tests to be the same 
 	write(prop(p4,Prop)),writeln('.'),fail.
 test_dirs_1:-  writeln('-----'),fail.
 test_dirs_1:- (dynamic dd/1 as incremental),predicate_property(dd(_),Prop),
