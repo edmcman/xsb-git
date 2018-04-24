@@ -780,6 +780,21 @@ contcase:     /* the main loop */
     }
   XSB_End_Instr()
 
+    /* "avar" stands for anonymous variable */
+  XSB_Start_Instr(unikavars,_unikavars) /* PPA */
+    Def1op
+    Op1(get_xxa);
+    ADVANCE_PC(size_xxx);
+    if (!flag) {	/* if (flag == READ) */
+      sreg += op1;
+    }
+    else {
+      while (op1-- > 0) {
+	new_heap_free(hreg);
+      }
+    }
+  XSB_End_Instr()
+
   XSB_Start_Instr(unitval,_unitval) /* PPR */
     Def2ops
     Op1(Register(get_xxr));
@@ -2741,6 +2756,17 @@ argument positions.
     Def1op
     Op1(get_xxa);
     ADVANCE_PC(size_xxx);
+    biarg = bioldarg;
+    pcreg=lpcreg; 
+    if (builtin_call(CTXTc (byte)(op1))) {lpcreg=pcreg;}
+    else Fail1;
+  XSB_End_Instr()
+
+  XSB_Start_Instr(bi_instr,_bi_instr)
+    Def1op
+    Op1(get_xxa);
+    biarg = lpcreg+sizeof(Cell)-1; // point to byte before second op of instr: regs to use (starting from r0!)
+    ADVANCE_PC(size_xxxX);
     pcreg=lpcreg; 
     if (builtin_call(CTXTc (byte)(op1))) {lpcreg=pcreg;}
     else Fail1;

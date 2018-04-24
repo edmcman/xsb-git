@@ -1027,7 +1027,7 @@ void mark_code_strings(CTXTdeclc int pflag, CPtr inst_addr, CPtr end_addr) {
     for (oprand=1; oprand<=4; oprand++) {
       switch (inst_table[current_opcode][oprand]) {
       case A: case V: case R: case P: case PP: case PPP:
-      case PPR: case PRR: case RRR: case X:
+      case PPR: case PRR: case RRR: case RRRR: case X:
 	break;
       case S: case L: case N: case B: case F:
       case I: case T:	  

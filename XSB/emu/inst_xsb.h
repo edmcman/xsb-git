@@ -55,6 +55,8 @@ extern void init_inst_table(void);
 #define PRR 19  /* = P + R + R; for fun_test_ne */
 #define D   20  /* double float number 8 bytes (32-bits) generalize.. */
 #define H   21  /* internstr cell */
+#define RRRR 22 /* R+R+R+R for bi_instr */
+
 
 /************************************************************************/
 /*	Macros to fetch the instructions/operands.			*/
@@ -222,6 +224,7 @@ extern Cell inst_table[BUILTIN_TBL_SZ][5];
 #define getinternstr    0x27 /* has ptr to interned str (or list) */
 #define uniinternstr	0x28
 #define bldinternstr	0x29
+#define unikavars	0x2a /* k consecutive uniavar's */
 
 #define cmpreg		0x2c /* numeric compare op1 to op2 and put -1,0,1 in op2, op2 cmp op1 */
 #define addintfastuni	0x2d /* add int to t/p var and unify with t/p var */
@@ -352,6 +355,7 @@ extern Cell inst_table[BUILTIN_TBL_SZ][5];
 #define answer_return		0xc5
 #define resume_compl_suspension 0xc6
 #define tabletrysinglenoanswers	0xc7 /* incremental evaluations */
+#define bi_instr		0xcd /* builtin as instruction */
 #define check_interrupt		0xce
 #define new_answer_dealloc	0xcf
 
@@ -396,7 +400,7 @@ extern Cell inst_table[BUILTIN_TBL_SZ][5];
 #define allocate        0xe9
 #define deallocate      0xea
 #define proceed         0xeb
-#define xsb_execute         0xec
+#define xsb_execute     0xec
 #define deallocate_gc	0xed
 #define proceed_gc      0xee
 #define calld           0xef

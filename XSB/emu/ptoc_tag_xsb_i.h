@@ -29,14 +29,16 @@
 #include "binding.h"
 #include "error_xsb.h"
 
+extern byte *biarg;
 /*
  *  Returns the still-tagged value (a Cell) at the end of the deref chain
  *  leading from `regnum'.
  */
-static inline Cell ptoc_tag(CTXTdeclc int regnum)
+static inline Cell ptoc_tag(CTXTdeclc int argnum)
 {
   /* reg is global array in register.h */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr;
+  addr = cell(reg+ *(biarg+argnum));
 
   XSB_Deref(addr);
   return addr;
@@ -45,20 +47,20 @@ static inline Cell ptoc_tag(CTXTdeclc int regnum)
 extern char *canonical_term(CTXTdeclc Cell, int);
 
 /*
- *  Bind the variable pointed to by the "regnum"th argument register to the
+ *  Bind the variable pointed to by the "argnum"th argument register to the
  *  term at address "term".  Make an entry in the trail for this binding.
  */
 // TLS: added static for clang
-static inline  void ctop_tag(CTXTdeclc int regnum, Cell term)
+static inline  void ctop_tag(CTXTdeclc int argnum, Cell term)
 {
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   XSB_Deref(addr);
   if (isref(addr)) {
     bind_copy(vptr(addr), term);
   }
   else
-    xsb_abort("[CTOP_TAG] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+    xsb_abort("[CTOP_TAG] Argument %d of illegal type: %s",argnum,canonical_term(CTXTc addr, 0));
 }
 
 #endif

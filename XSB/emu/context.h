@@ -189,6 +189,8 @@ struct th_context
   int _level_num;
   CPtr _root_address;
 
+  byte *_biarg;  /* builtin argument indexes */
+
   CPtr _ptcpreg;
   CPtr _delayreg;
 
@@ -580,6 +582,8 @@ typedef struct th_context th_context ;
 #define xwammode		(th->_xwammode)
 #define level_num		(th->_level_num)
 #define root_address		(th->_root_address)
+
+#define biarg			(th->_biarg)
 
 #define ptcpreg			(th->_ptcpreg)
 #define delayreg		(th->_delayreg)

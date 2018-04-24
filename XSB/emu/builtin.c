@@ -234,6 +234,8 @@ extern int gc_dynamic(CTXTdecl);
 extern int sha1_string(prolog_term, char *);
 extern int md5_string(prolog_term, char *);
 
+extern byte *biarg;
+
 /* ------- variables also used in other parts of the system -----------	*/
 
 Cell flags[MAX_FLAGS];			  /* System flags + user flags */
@@ -247,13 +249,14 @@ Cell pflags[MAX_PRIVATE_FLAGS];		  /* Thread private flags */
 #include "ptoc_tag_xsb_i.h"
 
 
-DllExport prolog_int call_conv ptoc_int(CTXTdeclc int regnum)
+DllExport prolog_int call_conv ptoc_int(CTXTdeclc int argnum)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  //  register Cell addr = cell(reg+argnum);
+  register Cell addr = cell(reg + *(biarg+argnum));
 
   /* XSB_Deref and then check the type */
   XSB_Deref(addr);
@@ -266,22 +269,22 @@ DllExport prolog_int call_conv ptoc_int(CTXTdeclc int regnum)
   case XSB_ATTV:
   case XSB_LIST:
   case XSB_FLOAT: xsb_abort("[PTOC_INT] Argument %d of illegal type: %s\n",
-			    regnum, canonical_term(CTXTc addr, 0));
+			    argnum, canonical_term(CTXTc addr, 0));
   case XSB_STRING: return (prolog_int)string_val(addr);	/* dsw */
   case XSB_INT: return int_val(addr);
-  default: xsb_abort("[PTOC_INT] Argument %d of unknown type: %d",regnum,cell_tag(addr));
+  default: xsb_abort("[PTOC_INT] Argument %d of unknown type: %d",argnum,cell_tag(addr));
   }
   return FALSE;
 }
 
 /* TLS: unlike ptoc_int, this does NOT cast strings to integers */
-DllExport prolog_int call_conv iso_ptoc_int(CTXTdeclc int regnum,const char * PredString)
+DllExport prolog_int call_conv iso_ptoc_int(CTXTdeclc int argnum,const char * PredString)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   /* XSB_Deref and then check the type */
   XSB_Deref(addr);
@@ -289,15 +292,15 @@ DllExport prolog_int call_conv iso_ptoc_int(CTXTdeclc int regnum,const char * Pr
   switch (cell_tag(addr)) {
   case XSB_FREE:
   case XSB_REF1:
-  case XSB_ATTV: xsb_instantiation_error(CTXTc PredString,regnum);
+  case XSB_ATTV: xsb_instantiation_error(CTXTc PredString,argnum);
   case XSB_STRUCT:
     if (isboxedinteger(addr)) return(boxedint_val(addr));
   case XSB_LIST:
   case XSB_STRING:
-  case XSB_FLOAT: xsb_type_error(CTXTc "integer",addr,PredString,regnum);
+  case XSB_FLOAT: xsb_type_error(CTXTc "integer",addr,PredString,argnum);
 
   case XSB_INT: return int_val(addr);
-  default: xsb_abort("[PTOC_INT] Argument %d of unknown type: %d",regnum,cell_tag(addr));
+  default: xsb_abort("[PTOC_INT] Argument %d of unknown type: %d",argnum,cell_tag(addr));
   }
   return FALSE;
 }
@@ -306,13 +309,13 @@ DllExport prolog_int call_conv iso_ptoc_int(CTXTdeclc int regnum,const char * Pr
    iso_ptoc_int, but passes explicit argument for error message -- for
    use by thread_request and other non-builtin builtins.
 */
-DllExport prolog_int call_conv iso_ptoc_int_arg(CTXTdeclc int regnum,const char * PredString, int arg)
+DllExport prolog_int call_conv iso_ptoc_int_arg(CTXTdeclc int argnum,const char * PredString, int arg)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   /* XSB_Deref and then check the type */
   XSB_Deref(addr);
@@ -347,34 +350,34 @@ char *get_filename_for_psc(Psc psc) {
   return string_val(get_ep(psc_data));
 }
 
-inline Cell iso_ptoc_callable(CTXTdeclc int regnum,const char * PredString)
+inline Cell iso_ptoc_callable(CTXTdeclc int argnum,const char * PredString)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   /* XSB_Deref and then check the type */
   XSB_Deref(addr);
 
   if ((isconstr(addr) && !isboxed(addr)) || isstring(addr) || islist(addr))
     return addr;
-  else if (isref(addr))  xsb_instantiation_error(CTXTc PredString,regnum);
-  else xsb_type_error(CTXTc "callable",addr,PredString,regnum);
+  else if (isref(addr))  xsb_instantiation_error(CTXTc PredString,argnum);
+  else xsb_type_error(CTXTc "callable",addr,PredString,argnum);
   return FALSE;
 }
 
 /* TLS: this one is designed to pass through Prolog register offsets
    in PredString and arg -- that way ptocs for them need only be done
    if theres an error */
-inline Cell iso_ptoc_callable_arg(CTXTdeclc int regnum,const int PredString,const int arg)
+inline Cell iso_ptoc_callable_arg(CTXTdeclc int argnum,const int PredString,const int arg)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   /* XSB_Deref and then check the type */
   XSB_Deref(addr);
@@ -388,22 +391,22 @@ inline Cell iso_ptoc_callable_arg(CTXTdeclc int regnum,const int PredString,cons
   return FALSE;
 }
 
-inline void iso_check_var(CTXTdeclc int regnum,const char * PredString) {
-  register Cell addr = cell(reg+regnum);
+inline void iso_check_var(CTXTdeclc int argnum,const char * PredString) {
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   XSB_Deref(addr);
-  if (!isref(addr)) xsb_type_error(CTXTc "variable",addr,PredString,regnum);
+  if (!isref(addr)) xsb_type_error(CTXTc "variable",addr,PredString,argnum);
 }
 
 
 
-DllExport prolog_float call_conv ptoc_float(CTXTdeclc int regnum)
+DllExport prolog_float call_conv ptoc_float(CTXTdeclc int argnum)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   /* XSB_Deref and then check the type */
   XSB_Deref( addr );
@@ -414,50 +417,50 @@ DllExport prolog_float call_conv ptoc_float(CTXTdeclc int regnum)
   case XSB_LIST:
   case XSB_INT:
   case XSB_STRING:
-    xsb_abort("[PTOC_FLOAT] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+    xsb_abort("[PTOC_FLOAT] Argument %d of illegal type: %s",argnum,canonical_term(CTXTc addr, 0));
   case XSB_STRUCT:
       if (!isboxedfloat(addr))
-	xsb_abort("[PTOC_FLOAT] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+	xsb_abort("[PTOC_FLOAT] Argument %d of illegal type: %s",argnum,canonical_term(CTXTc addr, 0));
   case XSB_FLOAT: return (prolog_float)ofloat_val(addr);
   default:
-    xsb_abort("[PTOC_FLOAT] Argument %d of unknown type: %d",regnum,cell_tag(addr));
+    xsb_abort("[PTOC_FLOAT] Argument %d of unknown type: %d",argnum,cell_tag(addr));
   }
   return 0.0;
 }
 
 /* TLS: unlike ptoc_string, this throws an error if given a boxed int. */
-DllExport char* call_conv iso_ptoc_string(CTXTdeclc int regnum,char * PredString)
+DllExport char* call_conv iso_ptoc_string(CTXTdeclc int argnum,char * PredString)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   /* XSB_Deref and then check the type */
   XSB_Deref(addr);
   switch (cell_tag(addr)) {
   case XSB_FREE:
   case XSB_REF1:
-  case XSB_ATTV: xsb_instantiation_error(CTXTc PredString,regnum);
+  case XSB_ATTV: xsb_instantiation_error(CTXTc PredString,argnum);
   case XSB_STRUCT:
   case XSB_LIST:
   case XSB_INT:
-  case XSB_FLOAT: xsb_type_error(CTXTc "atom",addr,PredString,regnum);
+  case XSB_FLOAT: xsb_type_error(CTXTc "atom",addr,PredString,argnum);
   case XSB_STRING: return string_val(addr);
-  default: xsb_abort("[PTOC_INT] Argument %d of unknown type: %d",regnum,cell_tag(addr));
+  default: xsb_abort("[PTOC_INT] Argument %d of unknown type: %d",argnum,cell_tag(addr));
   }
   return FALSE;
 }
 
-DllExport char* call_conv ptoc_string(CTXTdeclc int regnum)
+DllExport char* call_conv ptoc_string(CTXTdeclc int argnum)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
 
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   /* XSB_Deref and then check the type */
   XSB_Deref(addr);
@@ -467,31 +470,31 @@ DllExport char* call_conv ptoc_string(CTXTdeclc int regnum)
   case XSB_ATTV:
   case XSB_LIST:
   case XSB_FLOAT:
-    xsb_abort("[PTOC_STRING] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+    xsb_abort("[PTOC_STRING] Argument %d of illegal type: %s",argnum,canonical_term(CTXTc addr, 0));
   case XSB_STRUCT:  /* tentative approach to fix boxed ints --lfcastro */
     if (isboxedinteger(addr))
       return (char *)boxedint_val(addr);
     else
-      xsb_abort("[PTOC_STRING] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+      xsb_abort("[PTOC_STRING] Argument %d of illegal type: %s",argnum,canonical_term(CTXTc addr, 0));
   case XSB_INT:
       return (char *)int_val(addr);
   case XSB_STRING:
       return string_val(addr);
   default:
-    xsb_abort("[PTOC_STRING] Argument %d of unknown type: %d",regnum,cell_tag(addr));
+    xsb_abort("[PTOC_STRING] Argument %d of unknown type: %d",argnum,cell_tag(addr));
   }
   return "";
 }
 
 /* Used to pass integer or float values to math functions
    that do the conversion. */
-DllExport prolog_float call_conv ptoc_number(CTXTdeclc int regnum)
+DllExport prolog_float call_conv ptoc_number(CTXTdeclc int argnum)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   /* XSB_Deref and then check the type */
   XSB_Deref(addr);
@@ -503,11 +506,11 @@ DllExport prolog_float call_conv ptoc_number(CTXTdeclc int regnum)
   case XSB_REF1:
   case XSB_ATTV:
   case XSB_LIST: xsb_abort("[PTOC_NUMBER] Float-convertable argument %d expected, found: %s",
-			   regnum,canonical_term(CTXTc addr, 0));
+			   argnum,canonical_term(CTXTc addr, 0));
   case XSB_FLOAT: return (prolog_float)float_val(addr);
   case XSB_STRING: return (prolog_float)(prolog_int)string_val(addr);	/* dsw */
   case XSB_INT: return (prolog_float)int_val(addr);
-  default: xsb_abort("[PTOC_NUMBER] Argument %d of unknown type: %d",regnum,cell_tag(addr));
+  default: xsb_abort("[PTOC_NUMBER] Argument %d of unknown type: %d",argnum,cell_tag(addr));
   }
   return 0.0;
 }
@@ -562,40 +565,40 @@ void constructString(CTXTdeclc Cell addr, int ivstr)
   }
 }
 
-DllExport char* call_conv ptoc_longstring(CTXTdeclc int regnum)
+DllExport char* call_conv ptoc_longstring(CTXTdeclc int argnum)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
   XSB_Deref(addr);
   if (isstring(addr)) return string_val(addr);
   if (isointeger(addr)) return (char *)oint_val(addr);
 
-  if (LSBuff[regnum]==NULL) {
-    XSB_StrCreate(&LSBuff[regnum]);
+  if (LSBuff[argnum]==NULL) {
+    XSB_StrCreate(&LSBuff[argnum]);
   }
-  XSB_StrSet(LSBuff[regnum],"");
-  constructString(CTXTc addr,regnum);
-  return(LSBuff[regnum]->string);
+  XSB_StrSet(LSBuff[argnum],"");
+  constructString(CTXTc addr,argnum);
+  return(LSBuff[argnum]->string);
 }
 
 /*
  *  For decoding object pointers, like PSC, PSC-PAIR and Subgoal frames.
  */
-#define ptoc_addr(regnum)	(void *)ptoc_int(CTXTc regnum)
+#define ptoc_addr(argnum)	(void *)ptoc_int(CTXTc argnum)
 #define is_encoded_addr(term)	(isointeger(term))
 #define decode_addr(term)	(void *)oint_val(term)
 
 
 /*
- *  Deref's the variable of register `regnum', trails the binding,
+ *  Deref's the variable of register `argnum', trails the binding,
  *  creates an INT Cell containing `value', and binds the variable to it.
  */
-DllExport void call_conv ctop_int(CTXTdeclc int regnum, prolog_int value)
+DllExport void call_conv ctop_int(CTXTdeclc int argnum, prolog_int value)
 {
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   XSB_Deref(addr);
   if (isref(addr)) {
@@ -603,76 +606,76 @@ DllExport void call_conv ctop_int(CTXTdeclc int regnum, prolog_int value)
   }
   else {
     xsb_abort("[CTOP_INT] Argument %d of illegal type: %s",
-	      regnum, canonical_term(CTXTc addr, 0));
+	      argnum, canonical_term(CTXTc addr, 0));
   }
 }
 
 /* from float value form an int node */
-DllExport void call_conv ctop_float(CTXTdeclc int regnum, prolog_float value)
+DllExport void call_conv ctop_float(CTXTdeclc int argnum, prolog_float value)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   XSB_Deref(addr);
   if (isref(addr)) {
     bind_boxedfloat(vptr(addr), (Float)value);
   }
-  else xsb_abort("[CTOP_FLOAT] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+  else xsb_abort("[CTOP_FLOAT] Argument %d of illegal type: %s",argnum,canonical_term(CTXTc addr, 0));
 }
 
 /* take a C string, form a string node */
-DllExport void call_conv ctop_string(CTXTdeclc int regnum, const char *value)
+DllExport void call_conv ctop_string(CTXTdeclc int argnum, const char *value)
 {
   /* reg is global array in register.h in the single-threaded engine
    * and is defined as a thread-specific macro in context.h in the
    * multi-threaded engine
    */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   XSB_Deref(addr);
   if (isref(addr)) {
     bind_string(vptr(addr), string_find(value,1));  //?? did not intern before??
   }
   else
-    xsb_abort("[CTOP_STRING] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+    xsb_abort("[CTOP_STRING] Argument %d of illegal type: %s",argnum,canonical_term(CTXTc addr, 0));
 }
 
 /* TLS: do not need to intern here, as ctop_string is now interning */
-DllExport void call_conv extern_ctop_string(CTXTdeclc int regnum, const char *value)
+DllExport void call_conv extern_ctop_string(CTXTdeclc int argnum, const char *value)
 {
-  ctop_string(CTXTc regnum,value) ;
+  ctop_string(CTXTc argnum,value) ;
 }
 
-inline static void ctop_constr(CTXTdeclc int regnum, Pair psc_pair)
+inline static void ctop_constr(CTXTdeclc int argnum, Pair psc_pair)
 {				/* from psc_pair ptr form an constr node */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   XSB_Deref(addr);
   if (isref(addr)) {
     bind_cs(vptr(addr), psc_pair);
   }
-  else xsb_abort("[CTOP_CONSTR] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+  else xsb_abort("[CTOP_CONSTR] Argument %d of illegal type: %s",argnum,canonical_term(CTXTc addr, 0));
 }
 
-inline static void ctop_list(CTXTdeclc int regnum, Pair psc_pair)
+inline static void ctop_list(CTXTdeclc int argnum, Pair psc_pair)
 {				/* from psc_pair ptr form an constr node */
-  register Cell addr = cell(reg+regnum);
+  register Cell addr = cell(reg+ *(biarg+argnum));
 
   XSB_Deref(addr);
   if (isref(addr)) {
     bind_list(vptr(addr), psc_pair);
   }
-  else xsb_abort("[CTOP_CONSTR] Argument %d of illegal type: %s",regnum,canonical_term(CTXTc addr, 0));
+  else xsb_abort("[CTOP_CONSTR] Argument %d of illegal type: %s",argnum,canonical_term(CTXTc addr, 0));
 }
 
 
 /*
  *  For encoding object pointer, like PSC, PSC-PAIR and Subgoal frames.
  */
-#define ctop_addr(regnum, val)    ctop_int(CTXTc regnum, (prolog_int)val)
+#define ctop_addr(argnum, val)    ctop_int(CTXTc argnum, (prolog_int)val)
 
 /* --------------------------------------------------------------------	*/
 
@@ -1472,15 +1475,16 @@ int builtin_call(CTXTdeclc byte number)
   case PSC_MOD: {	/* R1: +PSC; R2: -term */
 			/* prop: as a buffer pointer */
     Psc psc = (Psc)ptoc_addr(1);
-    // DSW: I dont see a reason for these tests now; So do get module for these predicates.
+    
     //    if ((get_type(psc) == T_PRED || get_type(psc) == T_DYNA) && get_env(psc) != T_IMPORTED) {
     //      char str[100];
     //      snprintf(str,100,"[psc_mod/2] Cannot get property of predicate: %s/%d\n",
-    //	      get_name(psc),get_arity(psc));
+    //      get_name(psc),get_arity(psc));
     //      xsb_warn(CTXTc str);
     //      return FALSE;
-    //    }
-    ctop_int(CTXTc 2, (Integer)(get_mod_for_psc(psc)));
+    //      ctop_int(CTXTc 2, (Integer)global_mod);  // global mod
+    //    } 
+      ctop_int(CTXTc 2, (Integer)(get_mod_for_psc(psc)));
     break;
   }
   case PSC_SET_PROP: {	       /* R1: +PSC; R2: +int */
@@ -1495,7 +1499,8 @@ int builtin_call(CTXTdeclc byte number)
 
   case CONGET_TERM: {
     Integer res = conget((Cell)ptoc_tag(CTXTc 1));
-    prolog_term arg2 = reg_term(CTXTc 2);
+    //    prolog_term arg2 = reg_term(CTXTc 2);
+    prolog_term arg2 = ptoc_tag(CTXTc 2);
     if (isref(arg2)) {
       c2p_int(CTXTc res,arg2);
       return TRUE;
@@ -1589,6 +1594,9 @@ int builtin_call(CTXTdeclc byte number)
       xsb_instantiation_error(CTXTc "term_new_mod/3",2);
       break;
     }
+    if (islist(term)) { // a list is a list is a list
+      return unify(term, ptoc_tag(CTXTc 3));
+    }
     termpsc = term_psc(term);
     modname = ptoc_string(CTXTc 1);
     if (strncmp(modname,"usermod(",strlen("usermod(")) == 0) {
@@ -1653,7 +1661,8 @@ int builtin_call(CTXTdeclc byte number)
     int  disp = (int) iso_ptoc_int(CTXTc 2,"term_set_arg/3");
     Cell term = iso_ptoc_callable(CTXTc 1,"term_set_arg/3");
     CPtr arg_loc = clref_val(term)+disp;
-    Cell new_val = cell(reg+3);
+    //    Cell new_val = cell(reg+3);
+    Cell new_val = ptoc_tag(CTXTc 3);  // dsw changed from previous, to go through standard interface
     int perm_flag = (int)ptoc_int(CTXTc 4);
     if (disp < 1) xsb_domain_error(CTXTc "positive_integer",ptoc_tag(CTXTc 2),"set_arg/3",2);
     if (perm_flag == 0) {
@@ -2239,7 +2248,9 @@ int builtin_call(CTXTdeclc byte number)
   case TERM_HASH: {		/* R1: +Term	*/
 				/* R2: +Size (of hash table) */
 				/* R3: -HashVal */
-    ctop_int(CTXTc 3, ihash(det_val_to_hash(ptoc_tag(CTXTc 1)),ptoc_int(CTXTc 2)));
+    Integer size = ptoc_int(CTXTc 2);
+    if (size) ctop_int(CTXTc 3, ihash(det_val_to_hash(ptoc_tag(CTXTc 1)),size));
+    else ctop_int(CTXTc 3, val_to_hash(ptoc_tag(CTXTc 1)));
     break;
   }
   case UNLOAD_SEG:	/* R1: -Code buffer */
@@ -2936,7 +2947,7 @@ case WRITE_OUT_PROFILE:
 
   case STORAGE_BUILTIN: {
     STORAGE_HANDLE *storage_handle =
-      storage_builtin(CTXTc (int)ptoc_int(CTXTc 1), (Cell)ptoc_tag(CTXTc 2), reg_term(CTXTc 3));
+      storage_builtin(CTXTc (int)ptoc_int(CTXTc 1), (Cell)ptoc_tag(CTXTc 2), (Cell)ptoc_tag(CTXTc 3));
     if (storage_handle != NULL) {
       ctop_int(CTXTc 4, (Integer)storage_handle->handle);
       ctop_int(CTXTc 5, (Integer)storage_handle->snapshot_number);
@@ -3020,7 +3031,8 @@ case WRITE_OUT_PROFILE:
   }
 
     case UNIFY_WITH_OCCURS_CHECK:
-      return unify_with_occurs_check(CTXTc cell(reg+1),cell(reg+2));
+      //      return unify_with_occurs_check(CTXTc cell(reg+1),cell(reg+2));
+      return unify_with_occurs_check(CTXTc ptoc_tag(CTXTc 1),ptoc_tag(CTXTc 2));
 
   case XSB_PROFILE:
     {
@@ -3207,6 +3219,8 @@ case WRITE_OUT_PROFILE:
 	//printf("of\n");
 	return FALSE;
       }
+    } else if (isstring(term)) {
+      return unify(CTXTc term,iterm);
     } else if (isstring(iterm)) {
       iiterm = stringhash_to_term(CTXTc string_val(iterm));
       if (iiterm) return unify(CTXTc term,iiterm);
@@ -3254,11 +3268,11 @@ case WRITE_OUT_PROFILE:
     prolog_term size_var;
     int size;
     xsbBool retcode;
-    size_var = reg_term(CTXTc 2);
+    size_var = ptoc_tag(CTXTc 2);
     if (! isref(size_var)) {
       xsb_abort("[IS_CHARLIST] Arg 2 must be a variable: %s",canonical_term(CTXTc size_var, 0));
     }
-    retcode = is_charlist(reg_term(CTXTc 1), &size);
+    retcode = is_charlist(ptoc_tag(CTXTc 1), &size);
     c2p_int(CTXTc size,size_var);
     return retcode;
   }
@@ -3466,8 +3480,8 @@ case WRITE_OUT_PROFILE:
     */
     {
       Integer type = ptoc_int(CTXTc 1);
-      prolog_term InputTerm = reg_term(CTXTc 2);
-      prolog_term Output = reg_term(CTXTc 3);
+      prolog_term InputTerm = ptoc_tag(CTXTc 2);
+      prolog_term Output = ptoc_tag(CTXTc 3);
       // SHA1 hash has 40 characters; MD5 has less
       char *Result = (char *)mem_alloc(41,BUFF_SPACE);
       int retcode;

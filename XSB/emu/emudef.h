@@ -62,6 +62,8 @@ CPtr openreg;
    registers, but could be removed, I think. */
 CPtr root_address;      
 
+byte *biarg;
+
 CPtr ptcpreg = NULL;
 CPtr delayreg;
 
@@ -77,6 +79,8 @@ VarString *tsgLBuff1;
 VarString *tsgLBuff2;
 VarString *tsgSBuff1;
 VarString *tsgSBuff2;
+
+byte bioldarg[20] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
 
 /*
  * interrupt_reg points to interrupt_counter, which stores the number of

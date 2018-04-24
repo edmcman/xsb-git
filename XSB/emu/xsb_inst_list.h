@@ -48,8 +48,8 @@ XSB_INST(0x26, getkpvars, _getkpvars, A,V,R, X);
 XSB_INST(0x27, getinternstr, _getinternstr, PP, R, H,X); // H for interned_term
 XSB_INST(0x28, uniinternstr, _uniinternstr, PPP, H, X,X);
 XSB_INST(0x29, bldinternstr, _bldinternstr, PPP, H, X,X);
+XSB_INST(0x2a, unikavars, _unikavars, PP, A,X,X);
 
-XSB_INST(0x2a, no_inst, _no_inst, PPP,X,X,X);
 XSB_INST(0x2b, no_inst, _no_inst, PPP,X,X,X);
 XSB_INST(0x2c, cmpreg,  _cmpreg,  P,R,R,X);
 XSB_INST(0x2d, addintfastuni, _addintfastuni, RRR,X,X,X);
@@ -224,7 +224,7 @@ XSB_INST(0xc9, no_inst, _no_inst, PPP,X,X,X);
 XSB_INST(0xca, no_inst, _no_inst, PPP,X,X,X);
 XSB_INST(0xcb, no_inst, _no_inst, PPP,X,X,X);
 XSB_INST(0xcc, no_inst, _no_inst, PPP,X,X,X);
-XSB_INST(0xcd, no_inst, _no_inst, PPP,X,X,X);
+XSB_INST(0xcd, bi_instr, _bi_instr, PP, A, RRRR, X);
 XSB_INST(0xce, check_interrupt, _check_interrupt, PP, A, S,X);
 XSB_INST(0xcf, new_answer_dealloc, _new_answer_dealloc, P, A, A, X);
 

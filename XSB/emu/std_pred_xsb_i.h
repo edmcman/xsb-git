@@ -42,7 +42,8 @@ inline static xsbBool functor_builtin(CTXTdecl)
   Integer value;
   Psc psc;
   char *name;
-  Cell functor, term, arity;
+  Cell functor, term, carity;
+  int arity;
   Pair sym;
 
   term = ptoc_tag(CTXTc 1);
@@ -62,10 +63,10 @@ inline static xsbBool functor_builtin(CTXTdecl)
     functor = ptoc_tag(CTXTc 2);
     if (isstring(functor) || isointeger(functor) || isofloat(functor) ||
 	(isconstr(term) && get_arity(get_str_psc(term)) == 0)) {
-      arity = ptoc_tag(CTXTc 3);
+      carity = ptoc_tag(CTXTc 3);
       /* tls: added !isnumber conjunct */
-      if (arity_integer(arity) && !xsb_isnumber(functor)) {
-	value = int_val(arity);
+      if (arity_integer(carity) && !xsb_isnumber(functor)) {
+	value = int_val(carity);
 	if (value == 0) return unify(CTXTc functor, term);
 	else {
 	  if (value == 2 && isstring(functor) 
@@ -93,16 +94,16 @@ inline static xsbBool functor_builtin(CTXTdecl)
       } else {
 	  if (xsb_isnumber(functor))
 	    return (unify(CTXTc term, functor) && 
-		    int_unify(CTXTc makeint(0), arity));
+		    int_unify(CTXTc makeint(0), carity));
 	  else {
-	    if (isnonvar(arity)) {
-	      if (isinteger(arity)) {
-			if (int_val(arity) >= 0)
+	    if (isnonvar(carity)) {
+	      if (isinteger(carity)) {
+			if (int_val(carity) >= 0)
 		  		xsb_representation_error(CTXTc "max_arity",
 		  					 makestring(string_find("Arity of term",1)),"functor/3",3);
-			else xsb_domain_error(CTXTc "not_less_than_zero",arity,"functor/3",3);
+			else xsb_domain_error(CTXTc "not_less_than_zero",carity,"functor/3",3);
 	      }
-	      else xsb_type_error(CTXTc "integer",arity,"functor/3",3); 
+	      else xsb_type_error(CTXTc "integer",carity,"functor/3",3); 
 	    }
 	  else xsb_instantiation_error(CTXTc "functor/3", 3);
 	  }

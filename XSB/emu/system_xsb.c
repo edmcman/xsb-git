@@ -301,8 +301,19 @@ xsbBool sys_system(CTXTdeclc int callno)
 
 #ifdef WIN_NT
   case GET_TMP_FILENAME:
-    ctop_string(CTXTc 2,tempnam(NULL,NULL));
-    return TRUE;
+    {
+      char tempdir[MAXFILENAME+1];
+      char tempfile[MAXFILENAME+1];
+      int ret;
+      ret = GetTempPath(MAXFILENAME,tempdir);
+      if (ret > MAXFILENAME || (ret == 0))
+	xsb_abort(CTXTc "[GET_TMP_FILENAME] Unable to get temporary filename");
+      ret = GetTempFileName(tempdir,"xsb",0,tempfile);
+      if (ret == 0)
+	xsb_abort(CTXTc "[GET_TMP_FILENAME] Unable to get temporary filename");
+      ctop_string(CTXTc 2,tempfile);
+      return TRUE;
+    }
 #else
   case GET_TMP_FILENAME:
     {

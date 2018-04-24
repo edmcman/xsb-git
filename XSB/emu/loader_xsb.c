@@ -479,6 +479,10 @@ static int load_text(FILE *fd, int seg_num, size_t text_bytes, int *current_tab)
 	dummy = get_obj_string(inst_addr,8);
 	inst_addr += 2;
 	break;
+      case RRRR:
+	get_obj_word(inst_addr);
+	inst_addr ++;
+	break;
       case B:                       // boxed integer
 	get_obj_word_bbsig_notag(inst_addr);
 	inst_addr ++;
@@ -763,6 +767,11 @@ void replace_form_by_act(char *name, prolog_term modformals, prolog_term modactu
 /* --------------------------------------------------------------------	*/
 
 #if defined(WIN_NT) || defined(CYGWIN)
+#if defined(CYGWIN)
+extern int toupper(int);
+#else
+__declspec(dllimport) int toupper(int);
+#endif
 #define file_strcmp(fn1,fn2) strcasecmp(fn1,fn2)
 #define isslash(c) ((c) == '/' || (c) == '\\')
 int file_strncmp(char *fn1, char *fn2, size_t len) {
