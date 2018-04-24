@@ -64,6 +64,7 @@ asm_inst(unitvar_getlist_uninumcon(R,A1,A2),4,35,[r(R),a(A1),a(A2)]).
 asm_inst(bldtval_putlist_bldnumcon(R,A1,A2),4,36,[r(R),a(A1),a(A2)]).
 asm_inst(bldtvar_list_numcon(R,A1,A2),4,37,[r(R),a(A1),a(A2)]).
 asm_inst(getkpvars(K,V,R),	4,	38,	[a(K), v(V), r(R)]).
+asm_inst(unikavars(K),		4,	42,	[pp,a(K)]	).
 
 asm_inst(cmpreg(R,R1),		4,	44,	[p, r(R), r(R1)]).
 asm_inst(addintfastuni(T,S,I),	4,	45,	[r(T),r(S),a(I)]).
@@ -162,6 +163,7 @@ asm_inst(fail,			4,	248,	[ppp]		).
 asm_inst(noop(A),		4,	249,	[pp, a(A)]	).
 asm_inst(halt,			4,	250,	[ppp]		).
 asm_inst(builtin(W),		4,	251,	[pp, a(W)]	).
+asm_inst(bi_instr(BI,R1,R2,R3,R4), 8,   205,    [pp, a(BI),r(R1),r(R2),r(R3),r(R4)]).
 asm_inst(unifunc(W,R),		4,	252,	[p, a(W), r(R)]	).
 %  asm_inst(straight_noop,	4,	252,	[ppp]		).
 asm_inst(jumpcof(W,R,L),	8,	254,	[p, a(W), r(R), l(L)]).

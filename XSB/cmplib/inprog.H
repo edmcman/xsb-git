@@ -33,3 +33,4 @@
      from varproc.
 :- import error/1 from auxlry.
 :- import find/3, addkey/4 from varproc.
+:- import is_builtin_instr/3 from builtin.

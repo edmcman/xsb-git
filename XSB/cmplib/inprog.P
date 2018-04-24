@@ -52,9 +52,8 @@ inprog(Sym, clause(Args,Body,CPrag), clause(NArgs,NBody,CPrag)) :-
     ; inp_body(Body, NBody, uncond, VarTab1, [], 1, _ChunkOut, VarListTab0,VarListTab1)
 		% The id of the first chunk is 1, same as the head.
     ),
-    varproc(VarListTab1, VarTab, PvarCount),
-    !,		% needed to cut unnecessary choice points... (bmd & kostis)
-    ( (need_alloc(Body) ; sym_type(Sym,tabled(_,_))) -> 
+    once(varproc(VarListTab1, VarTab, PvarCount)),
+    ( (need_alloc(NBody) ; sym_type(Sym,tabled(_,_))) -> 
 	ARSize is PvarCount + 2		/* tls changed for XWAM */
     ; ARSize = 0
     ),
@@ -79,20 +78,23 @@ need_alloc(Body) :- need_alloc(Body, 0, N, InlineEnd), N + InlineEnd > 1.
 
 need_alloc(and(Goal,Goals), N0, N1, InlineEnd) :-
     need_alloc(Goal, N0, N2, _),
-    ( N2 > 1, N1 = N2, InlineEnd = 0
-    ; N2 =< 1, need_alloc(Goals, N2, N1, InlineEnd)
-    ),
-    !.	% needed to cut unnecessary choice points... (bmd & kostis)
+    (N2 > 1
+     ->	N1 = N2, InlineEnd = 0
+     ;	need_alloc(Goals, N2, N1, InlineEnd)
+    ).
 need_alloc(or(_Goal,_Goals), _, 2, 0).
 need_alloc(if_then_else(_,Goal1,Goal2), N0, N1, 0) :-
     need_alloc(Goal1, N0, N2, Inend1),
-    ( N2 + Inend1 > 1, N1 = 2
-    ; need_alloc(Goal2, N0, N3, Inend2),
-	( N3 + Inend2 > 1, N1 = 2
-	; N1 = 1
+    (N2 + Inend1 > 1
+     ->	N1 = 2
+     ;	need_alloc(Goal2, N0, N3, Inend2),
+	(N3 + Inend2 > 1
+	 -> N1 = 2
+	 ;  N1 = 1
 	)
     ).
-need_alloc(goal(_Sym,_Args), N0, N1, 0) :- N1 is N0 + 1.
+need_alloc(goal(_Sym,_Args), N0, N1, 0) :-
+    N1 is N0 + 1.
 need_alloc(inlinegoal(_,_,_), N, N, 1).
 
 
@@ -123,11 +125,18 @@ inp_body(if_then_else(Test,Goal1,Goal2),if_then_else(NTest,NGoal1,NGoal2),_Cond,
     inp_body_test(Test,NTest,VarTab0, [],VarList0,VarList1,Ckin),
     inp_body(Goal1,NGoal1,cond,VarTab1,[],Ckin,_,VarList1,VarList2),
     inp_body(Goal2,NGoal2,cond,VarTab2,[],Ckin,_,VarList2,VarList).
-inp_body(goal(Sym,Args),goal(Sym,NArgs),Cond,VarTab,VarTabr,Ckin,Ckout,VarList0,VarList) :-
+inp_body(goal(Sym,Args),NGoal,Cond,VarTab,VarTabr,Ckin,Ckout,VarList0,VarList) :-
     sym_name(Sym,Name,Arity),
-    gennum(Ckout),
-    VarTab=[goal(Ckin,Name,Arity,VOList)|VarTabr],
-    inp_args(Args,NArgs,Cond,VOList,[],b,1,VarList0,VarList).
+    (is_builtin_instr(Name,Arity,Sym)
+     ->	Ckout = Ckin,
+	NGoal = inlinegoal(Name,Arity,NArgs),
+	VarTab=[inlinegoal(Ckin,Name,Arity,VOList)|VarTabr],
+	inp_args(Args,NArgs,Cond,VOList,[],i,1,VarList0,VarList)
+     ;	gennum(Ckout),
+	NGoal=goal(Sym,NArgs),
+	VarTab=[goal(Ckin,Name,Arity,VOList)|VarTabr],
+	inp_args(Args,NArgs,Cond,VOList,[],b,1,VarList0,VarList)
+    ).
 inp_body(inlinegoal(Name,Arity,Args),inlinegoal(Name,Arity,NArgs),Cond,
 		VarTab,VarTabr,Chunkno,Chunkno,VarList0,VarList) :-
 %%	(Name = (=), Arity =:= 2, Args = [Lhs,Rhs], Rhs = varocc(_), \+ Lhs = varocc(_)

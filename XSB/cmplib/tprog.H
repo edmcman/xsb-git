@@ -27,7 +27,7 @@
 :- export compile_clause/5.
 :- export force_tprog_loaded/0.
 
-:- import option/1 from auxlry.
+:- import option/1, error/1 from auxlry.
 :- import inprog/3 from inprog.
 :- import merge/3 from listutil.
 :- import flatten/2 from flatten.

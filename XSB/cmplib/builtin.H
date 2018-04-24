@@ -26,4 +26,7 @@
 
 
 :- export inline_predicate/2, inline_builtin/3, inline_jumpcof_cond/3, builtin_function/3.
+:- export builtin_instr/3, is_builtin_instr/3.
 
+:- import standard_symbol/3 from std_xsb.
+:- import sym_prop/2 from symtab.

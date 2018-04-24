@@ -72,6 +72,9 @@ compile_popt11(getpvar(V,R), [getpvar(V1,R1)|PilRest], [getkpvars(Cnt,V,R)|OptPi
 	V1 is V+1, R1 is R+1,
 	trim_count_getpvars(PilRest,V1,R1,2,Cnt,PilRest1),
 	compile_popt1(PilRest1,OptPilRest).
+compile_popt11(uniavar, [uniavar|PilRest], [unikavars(Cnt)|OptPilRest]) :-
+	trim_count_uniavars(PilRest,2,Cnt,PilRest1),
+	compile_popt1(PilRest1,OptPilRest).
 compile_popt11(getpvar(V,R), [putpval(V,R)|PilRest], OptPilRest) :-
 	compile_popt1([getpvar(V,R)|PilRest], OptPilRest).
 compile_popt11(putpvar(V,R), [getpval(V,R)|PilRest],
@@ -89,6 +92,8 @@ compile_popt11(gettval(R,R), PRest, OptPRest) :-
 	compile_popt1(PRest, OptPRest).
 compile_popt11(movreg(R,R), PRest, OptPRest) :- 
 	compile_popt1(PRest, OptPRest).
+compile_popt11(noop(0), PRest, OptPRest) :- 
+	compile_popt1(PRest, OptPRest).
 compile_popt11(call(Sym,A),[putpbreg(R),deallocate,proceed_gc|PilRest],
 	       [call(Sym,A)|OptPilRest]) :-
 	compile_popt1([putpbreg(R),deallocate,proceed|PilRest],OptPilRest).
@@ -96,8 +101,6 @@ compile_popt11(jump(L), [label(T,L)|PRest], [label(T,L)|OptPRest]) :-
 	compile_popt1(PRest,OptPRest).
 compile_popt11(jump(L), [label(T0,L0),label(T,L)|PRest], [label(T0,L0),label(T,L)|OptPRest]) :-
 	compile_popt1(PRest,OptPRest).
-
-
 % Dead-code elimination
 compile_popt11(jump(Addr), [Instr|PRest], OptCode) :-
 	( Instr = label(_,_) ->
@@ -328,6 +331,17 @@ trim_count_getpvars(PilInsts,V,R,Cnt0,Cnt,OutPilRest) :-
 	 ;	(PilInsts = [getpvar(V1,R1)|PilRest], V1 is V+1, R1 is R+1
 		 ->	Cnt1 is Cnt0+1,
 			trim_count_getpvars(PilRest,V1,R1,Cnt1,Cnt,OutPilRest)
+		 ;	Cnt = Cnt0,
+			OutPilRest = PilInsts
+		)
+	).
+
+trim_count_uniavars(PilInsts,Cnt0,Cnt,OutPilRest) :-
+	(PilInsts == []
+	 ->	Cnt = Cnt0, OutPilRest = []
+	 ;	(PilInsts = [uniavar|PilRest]
+		 ->	Cnt1 is Cnt0+1,
+			trim_count_uniavars(PilRest,Cnt1,Cnt,OutPilRest)
 		 ;	Cnt = Cnt0,
 			OutPilRest = PilInsts
 		)

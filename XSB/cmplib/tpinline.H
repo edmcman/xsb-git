@@ -39,5 +39,5 @@
 	  putvarinst/5
      from tp_var.
 :- import geninline_isindeed/8 from tp_eval.
-:- import inline_jumpcof_cond/3 from builtin.
+   :- import inline_jumpcof_cond/3, inline_builtin/3, builtin_instr/3 from builtin.
 :- import memberchk/2 from basics.

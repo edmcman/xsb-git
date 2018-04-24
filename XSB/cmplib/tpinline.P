@@ -43,9 +43,7 @@ geninline('_$savecp', [Arg], _, _, Pil, Pilr, Tin, Tout, _) :-
 	geninline_savecp(Arg, Pil, Pilr, Tin, Tout).
 geninline('_$cutto', [Arg], HoldR, ARSize, Pil, Pilr, Tin, Tout, _) :-
 	geninline_cutto(Arg, HoldR, ARSize, Pil, Pilr, Tin, Tout).
-
 geninline(is, [Arg1,Arg2], HoldR, _, Pil, Pilr, Tin, Tout, EPN) :-
-%	console_writeln(geninline_isindeed(Arg1, Arg2, HoldR, Pil, Pilr, Tin, Tout, EPN)),
 	geninline_isindeed(Arg1, Arg2, HoldR, Pil, Pilr, Tin, Tout, EPN).
 geninline(@=, [Arg1,Arg2], _HoldR, _, Pil, Pilr, Tin, Tout, _EPN) :-
 	geninl_load_lhs(Arg1, R1, Pil, Pilm, Tin, Tmid, _),
@@ -64,8 +62,7 @@ geninline(=, [Lhs,Rhs], HoldR, _, Pil, Pilr, Tin, Tout, _) :-
 		geninl_unload_lhs(Lhs, R, HoldR, Tmid3, Tout)
 	).
 geninline(Op, [Arg1,Arg2], HoldR, _, Pil, Pilr, Tin, Tout, EPN) :-
-	arithrelop(Op),
-	!,
+	arithrelop(Op),	!,
 	eval_relop(Op, Arg1, Arg2, HoldR, abs(-1),
 		   Pil, Pilr, Tin, Tout, EPN).
 geninline(TermCompOp, [Arg1,Arg2], HoldR, _, Pil, Pilr, Tin, Tout, _) :-
@@ -82,6 +79,34 @@ geninline(Cof, [Arg], HoldR, _, Pil, Pilr, Tin, Tout, _EPN) :-
 	geninl_load_lhs(Arg, R, Pil, 
 			[jumpcof(CofNum,R,abs(-1))|Pilr], Tin, Tmid, _),
 	geninl_unload_lhs(Arg, R, HoldR, Tmid, Tout).
+%%geninline(Name,Args,_,_,_,_,_,_,_) :- standard:writeln(userout,geninl(Name,Args)),fail.
+geninline(BiPred, [Arg1], _HoldR, _, Pil, Pilr, Tin, Tout, _EPN) :-
+    builtin_instr(BiPred,1,_), inline_builtin(BiPred,1,BiNum), !,
+%%    standard:writeln(userout,gen_biinstr(BiPred,1)),
+    geninl_load_lhs(Arg1, R1, Pil,
+		    [bi_instr(BiNum,R1,0,0,0)|Pilr], Tin, Tout, _).
+geninline(BiPred, [Arg1,Arg2], _HoldR, _, Pil, Pilr, Tin, Tout, _EPN) :-
+    builtin_instr(BiPred,2,_), inline_builtin(BiPred,2,BiNum), !,
+%%    standard:writeln(userout,gen_biinstr(BiPred,2)),
+    geninl_load_lhs(Arg1, R1, Pil, Pilm, Tin, Tmid, _),
+    geninl_load_lhs(Arg2, R2, Pilm,
+		    [bi_instr(BiNum,R1,R2,0,0)|Pilr], Tmid, Tout, _).
+geninline(BiPred, [Arg1,Arg2,Arg3], _HoldR, _, Pil, Pilr, Tin, Tout, _EPN) :-
+    builtin_instr(BiPred,3,_), inline_builtin(BiPred,3,BiNum), !,
+%%    standard:writeln(userout,gen_biinstr(BiPred,3)),
+    geninl_load_lhs(Arg1, R1, Pil, Pilm, Tin, Tmid, _),
+    geninl_load_lhs(Arg2, R2, Pilm, Pilm1, Tmid, Tmid1, _),
+    geninl_load_lhs(Arg3, R3, Pilm1,
+		    [bi_instr(BiNum,R1,R2,R3,0)|Pilr], Tmid1, Tout, _).
+geninline(BiPred, [Arg1,Arg2,Arg3,Arg4], _HoldR, _, Pil, Pilr, Tin, Tout, _EPN) :-
+    builtin_instr(BiPred,4,_), inline_builtin(BiPred,4,BiNum), !,
+%%    standard:writeln(userout,gen_biinstr(BiPred,4)),
+    geninl_load_lhs(Arg1, R1, Pil, Pilm, Tin, Tmid, _),
+    geninl_load_lhs(Arg2, R2, Pilm, Pilm1, Tmid, Tmid1, _),
+    geninl_load_lhs(Arg3, R3, Pilm1, Pilm2, Tmid1, Tmid2, _),
+    geninl_load_lhs(Arg4, R4, Pilm2,
+		    [bi_instr(BiNum,R1,R2,R3,R4)|Pilr], Tmid2, Tout, _).
+
 
 /*======================================================================*/
 /*======================================================================*/
