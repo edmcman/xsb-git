@@ -28,6 +28,7 @@
 :- export file_read_foe/3, file_read_fapoe/3.
 :- export vv/2.  %% this is a functor symbol, not a predicate
 %%:- export iso_file_read/3.
+:- export read_tokens/5.
 
 :- import '_$op'/3 from file_op.
 :- import file_put/2 from file_io.

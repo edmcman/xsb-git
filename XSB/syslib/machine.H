@@ -50,6 +50,7 @@
 	psc_init_info/1,
 	mark_term_cyclic/1,
 	term_new_mod/3,
+	term_new_mod_inline/3,
 	term_psc/2, 
 	term_type/2, 
 	term_compare/3, 
@@ -206,7 +207,7 @@
 
 :- export breg_retskel/4.
 
-:- export intern_term/2, intern_termhash/2.
+   :- export intern_term/2, intern_termhash/2, intern_termhash_test/2.
 
 :- export module_of_term/2.
 

@@ -662,19 +662,21 @@ proper_hilog(X) :-
 functor(T, F, N) :- functor(T, F, N).
 
 functor(Term,Mod,Fun,Arity) :-
-    (var(Term)
+    (atomic(Term)
+     ->	Mod = usermod, Fun = Term, Arity = 0
+     ; var(Term)
      ->	(Mod == usermod
 	 -> functor(Term,Fun,Arity)
-	 ;  functor(Term0,Fun,Arity),
-	    (var(Mod)
+	 ;  (var(Mod)
 	     ->	instantiation_error(functor/4,2,bound)
-	     ;	term_new_mod(Mod,Term0,Term)
+	     ;	functor(Term0,Fun,Arity),
+		term_new_mod(Mod,Term0,Term)
 	    )
 	)
-     ;	functor(Term,Fun,Arity),
-	(Term @= [_|_]
-	 -> Mod = usermod
-	 ;  term_psc(Term,Psc),
+     ;	(Term @= [_|_]
+	 -> Mod = usermod, Fun = '.', Arity = 2
+	 ;  functor(Term,Fun,Arity),
+	    term_psc(Term,Psc),
 	    psc_mod(Psc,MPsc),
 	    (MPsc =:= 0
 	     ->	Mod = usermod
@@ -895,6 +897,11 @@ int_fromlist([H|T], I) :- 	% It shouldn''t be empty.
 
 */
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/* (DSW) I think the following defn should now work (in all directions):
+atom_concat(One,Two,Three) :- concat_atom([One,Two],Three).
+(except errors? Maybe should change concat_atom errors to be right for here?)
+*/
 
 % ISO
 atom_concat(One,Two,Three) :-

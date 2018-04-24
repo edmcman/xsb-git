@@ -41,6 +41,7 @@
    get_calls_for_table/2,     /* table_dump and others */
    get_callsto_number/2,      /* table_dump */
    get_current_scc/2,         /* table_dump */
+   get_delay_lists/2,
    get_lastnode_cs_retskel/4, /* because it is used in intern.P */
    get_producer_call/3,
    get_ptcp/1,

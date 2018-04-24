@@ -122,11 +122,15 @@ psc_get_alt_semantics(PSC, CODE):-
 	incr_eval_builtin(PSC_GET_ALT_SEMANTICS, PSC, CODE).
 
 term_new_mod(Mod, Term, NewTerm) :-
-	(atom(Mod)
-	 ->	PMod = Mod
-	 ;	term_to_atom(Mod,PMod,[quoted(true)]) % if atom, must handle quotes
-	),
-	term_new_mod_inline(PMod, Term, NewTerm).
+    (atom(Mod)
+     ->	term_new_mod_inline(Mod, Term, NewTerm)
+     ;	term_new_mod1(Mod,Term,NewTerm)
+    ).
+
+term_new_mod1(Mod,Term,NewTerm) :-
+    term_to_atom(Mod,PMod,[quoted(true)]), % if atom, must handle quotes
+    term_new_mod_inline(PMod, Term, NewTerm).
+
 term_new_mod_inline(Mod,Term,NewTerm) :- term_new_mod_inline(Mod, Term, NewTerm).
 
 term_psc(Term, PSC) :- term_psc(Term, PSC).
@@ -356,6 +360,7 @@ mark_term_cyclic(_Term):- '_$builtin'(MARK_TERM_CYCLIC).
 
 intern_term(Term,InternedTerm) :- intern_term(Term,InternedTerm,0).
 intern_termhash(Term,InternedTerm) :- intern_term(Term,InternedTerm,1).
+intern_termhash_test(Term,InternedTerm) :- intern_term(Term,InternedTerm,2).
 intern_term(_Term,_InternedTerm,_IfHash) :- '_$builtin'(INTERN_TERM).
 
 '$$set_scope_marker':- '$$set_scope_marker'.
