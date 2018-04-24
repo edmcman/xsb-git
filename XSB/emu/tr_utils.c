@@ -5547,7 +5547,7 @@ int return_ans_depends_scc_list(CTXTdeclc SCCNode * nodes, Integer num_nodes){
     cur_node++;
   } while (cur_node  < num_nodes);
   follow(oldhreg) = makenil;                // cdr points to next car
-  return unify(CTXTc reg_term(CTXTc 3),reg_term(CTXTc 4));
+  return unify(CTXTc ptoc_tag(CTXTc 3),ptoc_tag(CTXTc 4));
 }
 
 extern void *  search_some(struct hashtable*, void *);
@@ -6236,7 +6236,7 @@ case CALL_SUBS_SLG_NOT: {
       follow(oldhreg) = makenil;
     else
       reg[3] = makenil;
-  return unify(CTXTc reg_term(CTXTc 3),reg_term(CTXTc 4));
+  return unify(CTXTc ptoc_tag(CTXTc 3),ptoc_tag(CTXTc 4));
   break;
   }
   
@@ -6332,7 +6332,7 @@ case CALL_SUBS_SLG_NOT: {
       follow(oldhreg) = makenil;
     else
       reg[4] = makenil;
-    return unify(CTXTc reg_term(CTXTc 3),reg_term(CTXTc 4));
+    return unify(CTXTc ptoc_tag(CTXTc 3),ptoc_tag(CTXTc 4));
   }
   case GET_NEG_AFFECTS: {   /* used for get_sdg_inf */
   CPtr oldhreg = NULL;
@@ -6357,7 +6357,7 @@ case CALL_SUBS_SLG_NOT: {
       follow(oldhreg) = makenil;
     else
       reg[4] = makenil;
-    return unify(CTXTc reg_term(CTXTc 3),reg_term(CTXTc 4));
+    return unify(CTXTc ptoc_tag(CTXTc 3),ptoc_tag(CTXTc 4));
   }
   case PSC_IMMUTABLE: {
     Psc psc = (Psc)ptoc_int(CTXTc 2);

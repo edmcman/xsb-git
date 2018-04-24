@@ -201,7 +201,7 @@ xsbBool substring(CTXTdecl)
 
   XSB_StrSet(&output_buffer,"");
 
-  input_term = reg_term(CTXTc 1);  /* Arg1: string to find matches in */
+  input_term = ptoc_tag(CTXTc 1);  /* Arg1: string to find matches in */
   if (isatom(input_term)) /* check it */
     input_string = string_val(input_term);
   else if (islist(input_term)) {
@@ -215,7 +215,7 @@ xsbBool substring(CTXTdecl)
   input_len = utf8_nchars((byte *)input_string);
 
   /* arg 2: beginning offset */
-  beg_offset_term = reg_term(CTXTc 2);
+  beg_offset_term = ptoc_tag(CTXTc 2);
   if (! (isointeger(beg_offset_term)))
     xsb_abort("[SUBSTRING] Arg 2 (the beginning offset) must be an integer");
   beg_offset = oint_val(beg_offset_term);
@@ -225,7 +225,7 @@ xsbBool substring(CTXTdecl)
     beg_offset = input_len;
 
   /* arg 3: ending offset */
-  end_offset_term = reg_term(CTXTc 3);
+  end_offset_term = ptoc_tag(CTXTc 3);
   if (isref(end_offset_term))
     end_offset = input_len;
   else if (! (isointeger(end_offset_term)))
@@ -239,7 +239,7 @@ xsbBool substring(CTXTdecl)
   else if (end_offset < beg_offset)
     end_offset = beg_offset;
 
-  output_term = reg_term(CTXTc 4);
+  output_term = ptoc_tag(CTXTc 4);
   if (! isref(output_term))
     xsb_abort("[SUBSTRING] Arg 4 (the output string) must be an unbound variable");
 
@@ -295,7 +295,7 @@ xsbBool string_substitute(CTXTdecl)
 
   XSB_StrSet(&output_buffer,"");
 
-  input_term = reg_term(CTXTc 1);  /* Arg1: string to find matches in */
+  input_term = ptoc_tag(CTXTc 1);  /* Arg1: string to find matches in */
   if (isatom(input_term)) /* check it */
     input_string = string_val(input_term);
   else if (islist(input_term)) {
@@ -308,16 +308,16 @@ xsbBool string_substitute(CTXTdecl)
   input_len = strlen(input_string);
 
   /* arg 2: substring specification */
-  subst_spec_list_term = reg_term(CTXTc 2);
+  subst_spec_list_term = ptoc_tag(CTXTc 2);
   if (!islist(subst_spec_list_term) && !isnil(subst_spec_list_term))
     xsb_abort("[STRING_SUBSTITUTE] Arg 2 must be a list [s(B1,E1),s(B2,E2),...]");
 
   /* handle substitution string */
-  subst_str_list_term = reg_term(CTXTc 3);
+  subst_str_list_term = ptoc_tag(CTXTc 3);
   if (! islist(subst_str_list_term))
     xsb_abort("[STRING_SUBSTITUTE] Arg 3 must be a list of strings");
 
-  output_term = reg_term(CTXTc 4);
+  output_term = ptoc_tag(CTXTc 4);
   if (! isref(output_term))
     xsb_abort("[STRING_SUBSTITUTE] Arg 4 (the output) must be an unbound variable");
 

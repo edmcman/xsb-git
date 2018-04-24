@@ -259,14 +259,14 @@ xsbBool fmt_write(CTXTdecl)
   XSB_StrSet(fmt_state._workspace,"");
 
   SET_FILEPTR(fptr, ptoc_int(CTXTc 2));
-  Fmt_term = reg_term(CTXTc 3);
+  Fmt_term = ptoc_tag(CTXTc 3);
   if (is_list(Fmt_term))
     Fmt = p_charlist_to_c_string(CTXTc Fmt_term,&FmtBuf,"FMT_WRITE","format string");
   else if (isstring(Fmt_term))
     Fmt = string_val(Fmt_term);
   else
     xsb_type_error(CTXTc "character string or atom",Fmt_term,"fmt_write/[2,3]",2);
-  ValTerm = reg_term(CTXTc 4);
+  ValTerm = ptoc_tag(CTXTc 4);
   if (isconstr(ValTerm) && !isboxed(ValTerm))
     Arity = get_arity(get_str_psc(ValTerm));
   else if (isref(ValTerm))
@@ -413,10 +413,10 @@ xsbBool fmt_write_string(CTXTdecl)
   fmt_state._workspace = tsgLBuff2;
   XSB_StrSet(fmt_state._workspace,"");
 
-  if (isnonvar(reg_term(CTXTc 2)))
+  if (isnonvar(ptoc_tag(CTXTc 2)))
     xsb_abort("[FMT_WRITE_STRING] Arg 1 must be an unbound variable");
   
-  Fmt_term = reg_term(CTXTc 3);
+  Fmt_term = ptoc_tag(CTXTc 3);
   if (islist(Fmt_term))
     Fmt = p_charlist_to_c_string(CTXTc Fmt_term, &FmtBuf,
 				 "FMT_WRITE_STRING", "format string");
@@ -425,7 +425,7 @@ xsbBool fmt_write_string(CTXTdecl)
   else
     xsb_abort("[FMT_WRITE_STRING] Format must be an atom or a character string");
 
-  ValTerm = reg_term(CTXTc 4);
+  ValTerm = ptoc_tag(CTXTc 4);
   if (isconstr(ValTerm) && ! isboxed(ValTerm))
     Arity = get_arity(get_str_psc(ValTerm));
   else if (isref(ValTerm))
@@ -572,7 +572,7 @@ xsbBool fmt_read(CTXTdecl)
   XSB_StrSet(fmt_state._workspace,"");
 
   SET_FILEPTR(fptr, ptoc_int(CTXTc 2));
-  Fmt_term = reg_term(CTXTc 3);
+  Fmt_term = ptoc_tag(CTXTc 3);
   if (islist(Fmt_term))
     Fmt = p_charlist_to_c_string(CTXTc Fmt_term,&FmtBuf,"FMT_READ","format string");
   else if (isstring(Fmt_term))
@@ -580,7 +580,7 @@ xsbBool fmt_read(CTXTdecl)
   else
     xsb_abort("[FMT_READ] Format must be an atom or a character string");
 
-  AnsTerm = reg_term(CTXTc 4);
+  AnsTerm = ptoc_tag(CTXTc 4);
   if (isconstr(AnsTerm))
     Arity = get_arity(get_str_psc(AnsTerm));
   else if (isref(AnsTerm)) {
@@ -602,7 +602,7 @@ xsbBool fmt_read(CTXTdecl)
     xsb_abort("Usage: fmt_read([IOport,] FmtStr, args(A1,A2,...), Feedback)");
 
   /* status variable */
-  if (isnonvar(reg_term(CTXTc 5)))
+  if (isnonvar(ptoc_tag(CTXTc 5)))
     xsb_abort("[FMT_READ] Arg 4 must be an unbound variable");
 
   next_format_substr(CTXTc Fmt, &fmt_state,current_fmt_spec,

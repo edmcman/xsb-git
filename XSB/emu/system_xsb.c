@@ -68,6 +68,8 @@
 #include "flags_xsb.h"
 #include "thread_defs_xsb.h"
 #include "thread_xsb.h"
+#include "deref.h"
+#include "ptoc_tag_xsb_i.h"
 
 extern void get_statistics(CTXTdecl);
 extern size_t getMemorySize();
@@ -339,7 +341,7 @@ xsbBool sys_system(CTXTdeclc int callno)
     prolog_term cmdspec_term;
     int index = 0;
     
-    cmdspec_term = reg_term(CTXTc 2);
+    cmdspec_term = ptoc_tag(CTXTc 2);
     if (islist(cmdspec_term)) {
       prolog_term temp, head;
       char *string_head=NULL;
@@ -405,7 +407,7 @@ xsbBool sys_system(CTXTdeclc int callno)
     else
       callname = "shell/[1,2,5]";
 
-    cmdspec_term = reg_term(CTXTc 2);
+    cmdspec_term = ptoc_tag(CTXTc 2);
     if (islist(cmdspec_term))
       params_are_in_a_list = TRUE;
     else if (isstring(cmdspec_term))
@@ -420,27 +422,27 @@ xsbBool sys_system(CTXTdeclc int callno)
 
     /* the user can indicate that he doesn't want either of the streams created
        by putting an atom in the corresponding argument position */
-    if (isref(reg_term(CTXTc 3)))
+    if (isref(ptoc_tag(CTXTc 3)))
       toproc_needed = TRUE;
-    if (isref(reg_term(CTXTc 4)))
+    if (isref(ptoc_tag(CTXTc 4)))
       fromproc_needed = TRUE;
-    if (isref(reg_term(CTXTc 5)))
+    if (isref(ptoc_tag(CTXTc 5)))
       fromstderr_needed = TRUE;
 
     /* if any of the arg streams is already used by XSB, then don't create
        pipes --- use these streams instead. */
-    if (isointeger(reg_term(CTXTc 3))) {
-      SET_FILEPTR(toprocess_fptr, oint_val(reg_term(CTXTc 3)));
+    if (isointeger(ptoc_tag(CTXTc 3))) {
+      SET_FILEPTR(toprocess_fptr, oint_val(ptoc_tag(CTXTc 3)));
     }
-    if (isointeger(reg_term(CTXTc 4))) {
-      SET_FILEPTR(fromprocess_fptr, oint_val(reg_term(CTXTc 4)));
+    if (isointeger(ptoc_tag(CTXTc 4))) {
+      SET_FILEPTR(fromprocess_fptr, oint_val(ptoc_tag(CTXTc 4)));
     }
-    if (isointeger(reg_term(CTXTc 5))) {
-      SET_FILEPTR(fromproc_stderr_fptr, oint_val(reg_term(CTXTc 5)));
+    if (isointeger(ptoc_tag(CTXTc 5))) {
+      SET_FILEPTR(fromproc_stderr_fptr, oint_val(ptoc_tag(CTXTc 5)));
     }
 
-    if (!isref(reg_term(CTXTc 6)))
-      xsb_type_error(CTXTc "variable (to return process id)",reg_term(CTXTc 6),callname,5);
+    if (!isref(ptoc_tag(CTXTc 6)))
+      xsb_type_error(CTXTc "variable (to return process id)",ptoc_tag(CTXTc 6),callname,5);
     //      xsb_abort("[%s] Arg 5 (process id) must be a variable", callname);
 
     if (params_are_in_a_list) {
@@ -532,7 +534,7 @@ xsbBool sys_system(CTXTdeclc int callno)
 	       of the form [process(Pid,To,From,Stderr,Cmdline), ...] */
     int i;
     prolog_term table_term_tail, listHead;
-    prolog_term table_term=reg_term(CTXTc 2);
+    prolog_term table_term=ptoc_tag(CTXTc 2);
 
     SYS_MUTEX_LOCK( MUTEX_SYS_SYSTEM );
     init_process_table();
@@ -559,11 +561,11 @@ xsbBool sys_system(CTXTdeclc int callno)
     }
     c2p_nil(CTXTc table_term_tail); /* bind tail to nil */
     SYS_MUTEX_UNLOCK( MUTEX_SYS_SYSTEM );
-    return p2p_unify(CTXTc table_term, reg_term(CTXTc 2));
+    return p2p_unify(CTXTc table_term, ptoc_tag(CTXTc 2));
   }
 
   case PROCESS_STATUS: {
-    prolog_term pid_term=reg_term(CTXTc 2), status_term=reg_term(CTXTc 3);
+    prolog_term pid_term=ptoc_tag(CTXTc 2), status_term=ptoc_tag(CTXTc 3);
 
     SYS_MUTEX_LOCK( MUTEX_SYS_SYSTEM );
 
@@ -605,7 +607,7 @@ xsbBool sys_system(CTXTdeclc int callno)
   case PROCESS_CONTROL: {
     /* sys_system(PROCESS_CONTROL, +Pid, +Signal). Signal: wait, kill */
     int status;
-    prolog_term pid_term=reg_term(CTXTc 2), signal_term=reg_term(CTXTc 3);
+    prolog_term pid_term=ptoc_tag(CTXTc 2), signal_term=ptoc_tag(CTXTc 3);
 
     SYS_MUTEX_LOCK( MUTEX_SYS_SYSTEM );
     init_process_table();
@@ -655,9 +657,9 @@ xsbBool sys_system(CTXTdeclc int callno)
    
   case LIST_DIRECTORY: {
     /* assume all type- and mode-checking is done in Prolog */
-    prolog_term handle = reg_term(CTXTc 2); /* ref for handle */
+    prolog_term handle = ptoc_tag(CTXTc 2); /* ref for handle */
     char *dir_name = ptoc_longstring(CTXTc 3); /* +directory name */
-    prolog_term filename = reg_term(CTXTc 4); /* reference for name of file */
+    prolog_term filename = ptoc_tag(CTXTc 4); /* reference for name of file */
     
     if (is_var(handle)) 
       return xsb_find_first_file(CTXTc handle,dir_name,filename);
@@ -1129,18 +1131,18 @@ xsbBool file_stat(CTXTdeclc int callno, char *file)
        the least significant 24.
        ***This probably breaks 64 bit systems, so David will look into it!
        */
-    int functor_arg3 = isconstr(reg_term(CTXTc 3));
+    int functor_arg3 = isconstr(ptoc_tag(CTXTc 3));
     if (!retcode && functor_arg3) {
       /* file exists & arg3 is a term, return 2 words*/
-      c2p_int(CTXTc (prolog_int)(stat_buff.st_mtime >> 24),p2p_arg(reg_term(CTXTc 3),1));
-      c2p_int(CTXTc 0xFFFFFF & stat_buff.st_mtime,p2p_arg(reg_term(CTXTc 3),2));
+      c2p_int(CTXTc (prolog_int)(stat_buff.st_mtime >> 24),p2p_arg(ptoc_tag(CTXTc 3),1));
+      c2p_int(CTXTc 0xFFFFFF & stat_buff.st_mtime,p2p_arg(ptoc_tag(CTXTc 3),2));
     } else if (!retcode) {
       /* file exists, arg3 non-functor:  issue an error */
       ctop_int(CTXTc 3, (prolog_int)stat_buff.st_mtime);
     } else if (functor_arg3) {
       /* no file, and arg3 is functor: return two 0's */
-      c2p_int(CTXTc 0, p2p_arg(reg_term(CTXTc 3),2));
-      c2p_int(CTXTc 0, p2p_arg(reg_term(CTXTc 3),1));
+      c2p_int(CTXTc 0, p2p_arg(ptoc_tag(CTXTc 3),2));
+      c2p_int(CTXTc 0, p2p_arg(ptoc_tag(CTXTc 3),1));
     } else {
       /* no file, no functor: return 0 */
       ctop_int(CTXTc 3, 0);
@@ -1163,7 +1165,7 @@ xsbBool file_stat(CTXTdeclc int callno, char *file)
       tail = p2p_cdr(tail); c2p_nil(CTXTc tail);
       c2p_int(CTXTc stat_buff.st_size >> 24, elt1);
       c2p_int(CTXTc 0xFFFFFF & stat_buff.st_size, elt2);
-      p2p_unify(CTXTc size_lst,reg_term(CTXTc 3));
+      p2p_unify(CTXTc size_lst,ptoc_tag(CTXTc 3));
       return TRUE;
     } else  /* no file */
       return FALSE;

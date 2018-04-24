@@ -722,7 +722,7 @@ static int assert_code_to_buff_p(CTXTdeclc prolog_term);
 
 int assert_code_to_buff( CTXTdecl /* Clause */)
 {
-  return assert_code_to_buff_p(CTXTc reg_term(CTXTc 1));
+  return assert_code_to_buff_p(CTXTc ptoc_tag(CTXTc 1));
 }
 
 static int assert_code_to_buff_p(CTXTdeclc prolog_term Clause)
@@ -1409,11 +1409,11 @@ xsbBool assert_buff_to_clref_p(CTXTdeclc prolog_term,byte,PrRef,int,
 xsbBool assert_buff_to_clref(CTXTdecl /*Head,Arity,Prref,AZ,Indexes,HashTabSize,Clref*/)
 {
   ClRef Clref;
-  assert_buff_to_clref_p(CTXTc reg_term(CTXTc 1),
+  assert_buff_to_clref_p(CTXTc ptoc_tag(CTXTc 1),
 			 (byte)ptoc_int(CTXTc 2),
 			 (PrRef)ptoc_int(CTXTc 3),
 			 (int)ptoc_int(CTXTc 4),
-			 reg_term(CTXTc 5),
+			 ptoc_tag(CTXTc 5),
 			 (int)ptoc_int(CTXTc 6),
 			 &Clref);
   /* ctop_int(7, (Integer Clref)); */
@@ -3210,7 +3210,7 @@ xsbBool db_get_clause( CTXTdecl /*+CC, ?CI, ?CIL, +PredEP, +Head, +Failed, -Clau
   PrRef Pred = (PrRef)ptoc_int(CTXTc 4);
   int IndexLevel = 0, IndexArg = 0;
   ClRef Clause ;
-  prolog_term Head = reg_term(CTXTc 5);
+  prolog_term Head = ptoc_tag(CTXTc 5);
   CPtr EntryPoint = 0;
   Integer failed = ptoc_int(CTXTc 6) ;
 
@@ -4161,7 +4161,7 @@ int trie_assert(CTXTdecl)
   BTNptr inst_node_ptr;
   int  found = 1;
 
-  Clause = reg_term(CTXTc 1);
+  Clause = ptoc_tag(CTXTc 1);
   psc    = (Psc)ptoc_int(CTXTc 2);
   Prref  = (CPtr)ptoc_int(CTXTc 4);
 

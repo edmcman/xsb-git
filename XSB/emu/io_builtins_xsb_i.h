@@ -203,7 +203,7 @@ inline static xsbBool file_function(CTXTdecl)
     char string_mode[3];
 
     tmpstr = ptoc_longstring(CTXTc 2);
-    pterm = reg_term(CTXTc 3);
+    pterm = ptoc_tag(CTXTc 3);
 
     SYS_MUTEX_LOCK( MUTEX_IO );
 
@@ -367,7 +367,7 @@ inline static xsbBool file_function(CTXTdecl)
 			-BytesWritten) */
     /* Write ByteCount bytes into IOport from String beginning with Offset in
        that string	      */
-    pterm = reg_term(CTXTc 4);
+    pterm = ptoc_tag(CTXTc 4);
     if (islist(pterm))
       addr = 
 	p_charlist_to_c_string(CTXTc pterm,&VarBuf,"FILE_PUTBUF","input string");
@@ -491,7 +491,7 @@ inline static xsbBool file_function(CTXTdecl)
   /* Like FILE_PUTBUF, but ByteCount=Line length. Also, takes atoms and lists
      of characters: file_function(11, +IOport, +String, +Offset) */
   case FILE_WRITE_LINE:
-    pterm = reg_term(CTXTc 3);
+    pterm = ptoc_tag(CTXTc 3);
     if (islist(pterm))
       addr =
 	p_charlist_to_c_string(CTXTc pterm,&VarBuf,"FILE_WRITE_LINE","input string");
@@ -513,7 +513,7 @@ inline static xsbBool file_function(CTXTdecl)
   case FILE_REOPEN: 
     /* file_function(FILE_REOPEN, +Filename,+Mode,+IOport,-ErrorCode) */
     tmpstr = ptoc_string(CTXTc 2);
-    pterm = reg_term(CTXTc 3);
+    pterm = ptoc_tag(CTXTc 3);
     if (isointeger(pterm))
       mode = (int)oint_val(pterm);
     else if (isstring(pterm)) {
@@ -597,7 +597,7 @@ inline static xsbBool file_function(CTXTdecl)
     prolog_term dest_fptr_term;
 
     src_xsb_fileno = (int)ptoc_int(CTXTc 2);
-    dest_fptr_term = reg_term(CTXTc 3);
+    dest_fptr_term = ptoc_tag(CTXTc 3);
     XSB_STREAM_LOCK(src_xsb_fileno);
     XSB_STREAM_LOCK(int_val(dest_fptr_term));
     SET_FILEPTR(src_fptr, src_xsb_fileno);
@@ -703,7 +703,7 @@ inline static xsbBool file_function(CTXTdecl)
     int fd_flags;
 #endif
     pipe_fd = (int)ptoc_int(CTXTc 2); /* the C file descriptor */
-    pterm = reg_term(CTXTc 4);
+    pterm = ptoc_tag(CTXTc 4);
 
     if (isstring(pterm)) {
       if ((string_val(pterm))[0] == 'u') {
